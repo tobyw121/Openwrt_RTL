@@ -1,0 +1,33 @@
+#!/bin/sh
+
+. /lib/functions.sh
+. /lib/functions/network.sh
+
+[ "$ACTION" = "start" ] && {
+#	config_load network
+	config_load iptv
+	
+#	config_get _igmp "lan" igmp_snooping
+	config_get _iptv "iptv" enable
+	config_get igmp_enable "iptv" igmp_enable 
+#	[ "$_igmp" = "1" -a "$_iptv" = "on" ] && {
+#	[ "$_iptv" = "on" ] && {	
+	# FIX release then renew WAN IP, IPTV can't play bug
+	# IGMP Proxy also need these rules.
+	[ "$_iptv" = "on" -o "$igmp_enable" = "on"  ] && {
+		# Add filter rules
+		local r1 r2 r3 r4
+	
+		r1=$(fw list 4 f zone_wan|grep "\-p igmp")
+		[ -z "$r1" ] && fw add 4 f zone_wan ACCEPT ^ { -p igmp }
+		
+		r2=$(fw list 4 f zone_wan|grep "\-d 224.0.0.0/4")
+		[ -z "$r2" ] && fw add 4 f zone_wan ACCEPT ^ { -p udp -d 224.0.0.0/4 }
+		
+		r3=$(fw list 4 f zone_wan_forward|grep "\-d 224.0.0.0/4")
+		[ -z "$r3" ] && fw add 4 f zone_wan_forward zone_lan_ACCEPT ^ { -p udp -d 224.0.0.0/4 }
+        
+		r4=$(fw list 6 f zone_wan_forward|grep -i "\-d FF00::/8")
+		[ -z "$r4" ] && fw add 6 f zone_wan_forward zone_lan_ACCEPT 1 { -p udp -d FF00::/8 }        		
+	}
+}

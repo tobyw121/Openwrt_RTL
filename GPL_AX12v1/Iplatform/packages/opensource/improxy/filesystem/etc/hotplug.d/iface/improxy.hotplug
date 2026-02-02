@@ -1,0 +1,123 @@
+#!/bin/sh
+# Copyright (c) 2014 The Linux Foundation. All rights reserved.
+
+[ "$INTERFACE" == "vpn" ] && exit 0
+
+. /lib/functions.sh
+. /usr/share/libubox/jshn.sh
+
+config_load network
+
+config_get wantype "wan" "wan_type"
+
+config_get sec_proto "wan" "proto"
+
+config_get iface "wan" "ifname"
+
+config_get rely_dev "wan" "relydev"
+
+[ -n $rely_dev ] && {
+    [ "$ACTION" = "ifdown" -a "$rely_dev" != "nodev" ] && {
+        iface=$rely_dev
+    }
+}
+
+get_extraip()
+{
+    local lanMac
+    json_load "$(devstatus br-lan)"
+    json_get_var lanMac macaddr 
+    lanMac=${lanMac:12}
+    local Num1=${lanMac:0:2}
+    Num1=`printf "%d" 0x$Num1`
+    Num1=$((Num1 % 254 + 1))
+    local Num2=${lanMac:3:2}
+    Num2=`printf "%d" 0x$Num2`
+    Num2=$((Num2 % 254 + 1))
+
+    echo "169.254.${Num1}.${Num2}"
+}
+
+is_setextraip()
+{
+    local exip=$(get_extraip)
+    local ipaddr=`ip addr show dev $iface | grep "$exip"`
+    [ -n "$ipaddr" ] && {
+        #echo "ip addr has set">/dev/console
+        return 0
+    }
+    #echo "ip addr has not set">/dev/console
+    return 1
+}
+
+op_extraip()
+{
+    local op="$1"
+
+    local exip=$(get_extraip)
+
+    case "$op" in
+        add)
+            #echo ip addr add $exip dev $iface >/dev/console
+            ip addr add $exip dev $iface && uci_toggle_state network wan relydev "$iface"
+            ;;
+        del)
+            #echo ip addr del $exip dev $iface >/dev/console
+            ip addr del $exip dev $iface && uci_toggle_state network wan relydev "nodev"
+            ;;
+        *)
+            echo "Param Error">/dev/console
+            ;;
+    esac
+}
+
+
+/etc/init.d/improxy enabled && [ "$ACTION" = "ifup" ] && {
+
+    [ "$wantype" = "pppoe"  -o "$wantype" = "pppoeshare" ] && {
+        case "$sec_proto" in
+            none)
+                #ip addr add 169.254.33.34 dev $iface
+                ! is_setextraip && op_extraip add
+                ;;
+            dhcp)
+                [ "$INTERFACE" = "internet" ] && {
+                    is_setextraip && op_extraip del
+                }   
+                ;;
+            static)
+                is_setextraip && op_extraip del
+                ;;
+            *)
+                echo "wrong param" >/dev/console
+                ;;
+        esac
+        
+    }
+
+    [ "$wantype" != "pppoe"  -a "$wantype" != "pppoeshare" ] && {
+        [ "$INTERFACE" = "internet" -o "$INTERFACE" = "wan" ] && {
+            is_setextraip && op_extraip del
+        }
+    }
+
+    /etc/init.d/improxy restart
+}
+
+/etc/init.d/improxy enabled && [ "$ACTION" = "ifdown" ] &&  {
+    # pppoe disconnect
+    [ "$INTERFACE" = "internet" ] && {
+        is_setextraip && {
+            op_extraip del
+            /etc/init.d/improxy restart
+			exit 0
+        }
+    }
+
+    [ "$INTERFACE" = "wan" ] && {
+ 		/etc/init.d/improxy restart
+    }
+}
+
+
+
