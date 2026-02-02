@@ -1,0 +1,21 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2007-2011 OpenWrt.org
+
+START=90
+
+SERVICE_USE_PID=1
+SERVICE_PID_FILE=/var/run/ndppd.pid
+NDPPD_CONF_FILE=/var/etc/ndppd.conf
+
+start() {
+	mkdir -p /var/run
+	mkdir -p /var/etc
+	
+	[ -z "$NDPPD_CONF_FILE" ] && return 1
+
+	service_start /usr/sbin/ndppd -p $SERVICE_PID_FILE -c $NDPPD_CONF_FILE -d
+}
+
+stop() {
+	service_stop /usr/sbin/ndppd
+}
