@@ -1,0 +1,242 @@
+#!/bin/sh /etc/rc.common
+# Copyright (c) 2014 The Linux Foundation. All rights reserved.
+# Copyright (C) 2010-2014 OpenWrt.org
+
+START=99
+STOP=10
+
+SERVICE_DAEMONIZE=1
+SERVICE_WRITE_PID=1
+CONF_FILE="/etc/improxy.conf"
+
+improxy_pinstance() {
+	local upstream downstream
+	local ipv6_enable
+
+	#default WAN
+	config_load network
+	# wan ifname first gets from /var/state/network,if not found,get from /etc/config/network
+	config_get upstream wan ifname
+	config_get wantype  wan wan_type
+	config_get type     wan type
+	config_get devicewan  wan device
+
+	# When iptv is enable & wan ifname can't found in /var/state/network,upstream may contain more
+	# than one interfaces.To avoid this condition,when type is bridge,make upstream="br-wan"
+	[ "$type" = "bridge" ] && upstream="br-wan"
+	
+	if [ "$wantype" = "pppoe" -o "$wantype" = "pppoeshare" ] ; then
+		if [ "$wantype" = "pppoe" ]; then
+			local pppif="pppoe-internet" # Ugly, we should get the pppoe interface dynamicly.
+		else
+			local pppif="share-internet" # Ugly, we should get the pppoe interface dynamicly.
+		fi
+        if ip addr show "$pppif" | grep "inet " > /dev/null 2>&1 ; then
+			echo -e "upstream \t$pppif" >>$CONF_FILE
+        fi		
+	fi
+	
+	#L2TP/PPTP igmp proxy, add by wangheng 2021/01/21
+	if [ "$wantype" = "l2tp" -o "$wantype" = "pptp" ] ; then
+		if [ "$wantype" = "l2tp" ] ; then
+			local ptpif="l2tp-internet"
+		else
+			local ptpif="pptp-internet"
+		fi
+		if ip addr show "$ptpif" | grep "inet " > /dev/null 2>&1 ; then
+			echo -e "upstream \t$ptpif" >>$CONF_FILE
+		fi
+	fi
+	#add end
+	
+	echo -e "upstream \t$upstream" >>$CONF_FILE
+	
+	if [ "$wantype" = "v6plus" -o "$wantype" = "dslite" ] ; then
+		echo -e "upstream \t$devicewan" >>$CONF_FILE
+	fi
+	#default LAN
+	config_load network
+	config_get downstream lan ifname
+	echo -e "downstream \t$downstream" >>$CONF_FILE
+	# ipv6
+	config_load protocol
+	config_get ipv6_enable "wanv6" enable
+	if [ "$ipv6_enable" = "on" ]; then
+		if [ -z "$(ifconfig $upstream |grep "inet6")" ]; then
+
+	    	echo 1 > /proc/sys/net/ipv6/conf/$upstream/disable_ipv6
+	    	sleep 1
+	    	echo 0 > /proc/sys/net/ipv6/conf/$upstream/disable_ipv6
+		fi
+
+		if [ -z "$(ifconfig $downstream |grep "inet6")" ]; then
+
+	    	echo 1 > /proc/sys/net/ipv6/conf/$downstream/disable_ipv6
+	    	sleep 1
+	    	echo 0 > /proc/sys/net/ipv6/conf/$downstream/disable_ipv6
+		fi
+	fi
+}
+
+igmp_add_fw_rules() {
+	local r1 r2 r3 r4
+	
+	r1=$(fw list 4 f zone_wan|grep "\-p igmp")
+	[ -z "$r1" ] && fw add 4 f zone_wan ACCEPT ^ { -p igmp }
+	
+	r2=$(fw list 4 f zone_wan|grep "\-d 224.0.0.0/4")
+	[ -z "$r2" ] && fw add 4 f zone_wan ACCEPT ^ { -p udp -d 224.0.0.0/4 }
+	
+	r3=$(fw list 4 f zone_wan_forward|grep "\-d 224.0.0.0/4")
+	[ -z "$r3" ] && fw add 4 f zone_wan_forward zone_lan_ACCEPT ^ { -p udp -d 224.0.0.0/4 }
+    
+	r4=$(fw list 6 f zone_wan_forward|grep -i "\-d FF00::/8")
+	[ -z "$r4" ] && fw add 6 f zone_wan_forward zone_lan_ACCEPT ^ { -p udp -d FF00::/8 }
+}
+
+igmp_del_fw_rules() {
+	fw del 4 f zone_wan ACCEPT { -p igmp }
+	fw del 4 f zone_wan ACCEPT { -p udp -d 224.0.0.0/4 }
+	fw del 4 f zone_wan_forward zone_lan_ACCEPT { -p udp -d 224.0.0.0/4 }
+	fw del 6 f zone_wan_forward zone_lan_ACCEPT { -p udp -d FF00::/8 }
+}
+
+#  for 6756(ax55v2 ...) , kernel 4.19.151, igmp/mld version is configed in another sys file
+igmp_mld_version_set(){
+	local igmp_version
+	config_load iptv
+	config_get igmp_version "iptv" igmp_version "2"
+
+	[ -f "/proc/br_igmpVersion" ] && echo $igmp_version > /proc/br_igmpVersion
+	
+	[ -f "/sys/devices/virtual/net/br-lan/bridge/multicast_igmp_version" ] && echo $igmp_version > /sys/devices/virtual/net/br-lan/bridge/multicast_igmp_version
+
+	[ -f "/sys/devices/virtual/net/br-wan/bridge/multicast_igmp_version" ] && echo $igmp_version > /sys/devices/virtual/net/br-wan/bridge/multicast_igmp_version
+
+	[ -f "/sys/devices/virtual/net/br-iptv/bridge/multicast_igmp_version" ] && echo $igmp_version > /sys/devices/virtual/net/br-iptv/bridge/multicast_igmp_version
+
+	[ -f "/sys/devices/virtual/net/br-ipphone/bridge/multicast_igmp_version" ] && echo $igmp_version > /sys/devices/virtual/net/br-ipphone/bridge/multicast_igmp_version
+
+
+	[ -f "/sys/devices/virtual/net/br-lan/bridge/multicast_mld_version" ] && echo $((igmp_version-1)) > /sys/devices/virtual/net/br-lan/bridge/multicast_mld_version
+
+	[ -f "/sys/devices/virtual/net/br-wan/bridge/multicast_mld_version" ] && echo $((igmp_version-1)) > /sys/devices/virtual/net/br-wan/bridge/multicast_mld_version
+
+	[ -f "/sys/devices/virtual/net/br-iptv/bridge/multicast_mld_version" ] && echo $((igmp_version-1)) > /sys/devices/virtual/net/br-iptv/bridge/multicast_mld_version
+
+	[ -f "/sys/devices/virtual/net/br-ipphone/bridge/multicast_mld_version" ] && echo $((igmp_version-1)) > /sys/devices/virtual/net/br-ipphone/bridge/multicast_mld_version	
+
+}
+
+# solve bug477165 - set wan port as static multicast_router port, to solve problem that igmpv2 join message doesn't forward to wan, until wan receive general query
+
+multicast_router_set(){
+	local ifname=$(uci get profile.@wan[0].wan_ifname -c /etc/profile.d -q)
+	for i in `find /sys/devices/virtual/net/ -name "${ifname}*" -type d -maxdepth 1`;do
+		[ -f "$i/brport/multicast_router" ] && echo 2 > "$i/brport/multicast_router" 
+	done
+}
+start() {
+	config_clear
+#	local status
+#	config_load network
+	local igmp_enable 
+	local igmp_version
+	local udproxy_enable
+	local igmp_snooping_enable
+	local model="$(uci get profile.@global[0].model -c /etc/profile.d -q)"
+	config_load iptv
+	
+#	config_get status "lan" igmp_snooping
+	config_get igmp_enable "iptv" igmp_enable 
+	config_get udproxy_enable "iptv" udp_proxy_enable
+	config_get igmp_version "iptv" igmp_version "2"
+	config_get igmp_snooping_enable "iptv" igmp_snooping_enable
+#	if [ "$status" = "1" -a "$iptv_on" = "on" ]; then
+	is_ap_model=`uci get profile.@global[0].is_ap_model -c "/etc/profile.d" -q`
+	if [ "$igmp_enable" = "on" ]; then
+		echo $igmp_version > /proc/sys/net/ipv4/conf/all/force_igmp_version
+		
+		if [ "$model" = "QCA_IPQ50XX" -o "$model" = "QCA_IPQ95XX" ];then
+			##QCA, Fix Bug422192
+			echo 140 > /proc/sys/net/ipv4/igmp_max_memberships
+		else
+			##BCM
+			echo 60 > /proc/sys/net/ipv4/igmp_max_memberships
+		fi
+		
+		igmp_add_fw_rules			
+
+		# ipv4
+		config_load network
+		config_get ifname wan ifname	
+		ipv4=`ip addr show $ifname |grep "inet "`
+    	if [ -n "$ipv4" ];then
+        		echo -e "igmp \tenable \tversion \t$igmp_version" >$CONF_FILE
+    	else                               
+        		echo -e "igmp \tdisable \tversion \t$igmp_version" >$CONF_FILE
+		fi 
+
+		# ipv6
+		config_load protocol
+		config_get ipv6_enable "wanv6" enable
+		config_load network
+		config_get wan6_type wanv6 wan_type
+		
+		if [ "$ipv6_enable" = "on" ]; then
+		echo -e "mld \tenable" >>$CONF_FILE
+		else
+			echo -e "mld \tdisable" >>$CONF_FILE
+		fi
+
+		# snooping 
+		if [ "$igmp_snooping_enable" = "on" ]; then
+		echo -e "snooping \ton" >>$CONF_FILE
+		else
+			echo -e "snooping \toff" >>$CONF_FILE
+		fi
+		
+		improxy_pinstance
+		
+		service_start /usr/sbin/improxy -c $CONF_FILE -p "/tmp/improxy.pid"
+#If improxy is enabled, we should let improxy take control of sending query as a querier, and close br->multicast_querier instead
+		#echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-close querier" > /dev/console
+		if [ "$is_ap_model" != "yes" -a "$model" != "RTL_8197" ];then
+			echo 0 > /sys/class/net/br-lan/bridge/multicast_querier
+		fi
+
+		if [ "$model" = "RTL_8197" ]; then
+			echo 1 > /proc/br_igmpProxy
+		fi
+	else
+		if [ "$udproxy_enable" != "on" ]; then
+			igmp_del_fw_rules
+		fi
+
+		echo $igmp_version > /proc/sys/net/ipv4/conf/all/force_igmp_version
+#if improxy is disabled, we should let bridge take control of sending query as a querier
+		#echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-open querier" > /dev/console
+		if [ "$is_ap_model" != "yes" -a "$model" != "RTL_8197" ];then
+			echo 1 > /sys/class/net/br-lan/bridge/multicast_querier
+		fi
+
+		if [ "$model" = "RTL_8197" ]; then
+			echo 0 > /proc/br_igmpProxy
+		fi
+	fi
+
+	igmp_mld_version_set
+	multicast_router_set
+
+	#Fix Bug430751
+	if [ -d /sys/module/ecm ]; then
+        echo "$(grep -E "upstream|downstream" $CONF_FILE)" > /sys/kernel/debug/ecm/updown_stream_list
+    fi
+
+	return 0
+}
+
+stop() {	
+	service_stop /usr/sbin/improxy
+	return 0
+}
