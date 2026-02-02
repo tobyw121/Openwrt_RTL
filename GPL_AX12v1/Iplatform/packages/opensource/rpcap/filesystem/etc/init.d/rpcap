@@ -1,0 +1,12 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+start()
+{
+	 rpcapd -n -p 22334 -d
+}
+
+stop()
+{
+	killall rpcapd
+}
