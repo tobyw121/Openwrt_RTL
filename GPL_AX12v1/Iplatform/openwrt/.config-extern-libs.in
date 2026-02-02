@@ -1,0 +1,54 @@
+menuconfig EXTERN_LIBS
+	bool "On-off for iplatform extern libs (for developers)"
+	default n
+
+	config IFADDRS
+		bool "on-off for ifaddrs" if EXTERN_LIBS
+		default n
+		help
+		  on-off for libifaddrs.so
+	config VERSIONSORT
+		bool "on-off for versionsort" if EXTERN_LIBS
+		default n
+		help
+		  on-off for libversionsort.so
+	config OPENAT
+		bool "on-off for openat" if EXTERN_LIBS
+		default n
+		help
+		  on-off for libopenat.so
+	config UNSHARE
+		bool "on-off for unshare" if EXTERN_LIBS
+		default n
+		help
+		  on-off for libunshare.so
+	config EX_CRYPTO
+		bool "on-off for crypto" if EXTERN_LIBS
+		default n
+		help
+		  on-off for libcrypto.so
+	config FDOPENDIR
+		bool "on-off for fdopendir" if EXTERN_LIBS
+		default n
+		help
+		  on-off for libfdopendir.so
+	config EX_SSL
+		bool "on-off for ssl" if EXTERN_LIBS
+		default n
+		help
+		  on-off for libssl.so
+	config EX_GCC
+		bool "on-off for gcc" if EXTERN_LIBS
+		default n
+		help
+		  on-off for libgcc.a
+	config LIB_GCC_PATH
+		string "lib gcc path" if EX_GCC
+		default ""
+		help
+			setting the path for libgcc.a
+	config EX_LIBPATH
+		bool "on-off for new libpath" if EXTERN_LIBS
+		default n
+		help
+		  on-off for ex_libpath: some modules's lib need to link uClibc lib, but it doesn't add the search path to the linker
