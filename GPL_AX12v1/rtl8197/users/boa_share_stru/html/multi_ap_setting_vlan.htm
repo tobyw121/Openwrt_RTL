@@ -1,0 +1,619 @@
+<style>
+tbody.for_top_margin::before
+{
+  content: '';
+  display: block;
+  height: 20px;
+}
+</style>
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html">
+        <% getIndex("no-cache"); %>
+        <title>EasyMesh Interface Setup </title>
+        <% language=javascript %>
+        <script type="text/javascript" src="util_gw.js"> </script>
+        <% getInfo("include_css"); %>
+        <SCRIPT>
+            // ---global variables---
+            var enable_vlan =<% getIndex("enable_vlan"); %> ;
+            var primary_vid =<% getIndex("primary_vid"); %> ;
+            var default_sec_vid =<% getIndex("default_sec_vid"); %> ;
+            var primary_ssid_nr = 1;
+            var default_secondary_ssid_nr = 1;
+            var secondary_ssid_nr = [];
+            // var sum = secondary_ssid_nr.reduce((a, b) => a + b, 0);
+            var sum = secondary_ssid_nr.reduce(function (a, b) {return a + b;} , 0);
+            var secondary_vid_count = 0;
+            var ssid_unique = [];
+            var ssid_enabled = new Array();
+            var vid_enabled = new Array();
+            var vid_ssid_dict = {};
+            var vid_rearranged = Array.apply(null, { length: 10 }).map(function () { return 0; });
+            // var vid_rearranged = new Array(10).fill(0);
+            var primary_network_ssid = new Array();
+            var primary_network_ssid_unique = [];
+            var default_secondary_network_ssid = new Array();
+            var default_secondary_network_ssid_unique = [];
+            var selected_options_values = [];
+            // ----------------------
+
+            // --load mib from flash--
+            var fronthaul = new Array(10);
+            fronthaul[0] = <% getIndex("map_fronthaul_bss_00"); %>;
+            fronthaul[1] = <% getIndex("map_fronthaul_bss_01"); %>;
+            fronthaul[2] = <% getIndex("map_fronthaul_bss_02"); %>;
+            fronthaul[3] = <% getIndex("map_fronthaul_bss_03"); %>;
+            fronthaul[4] = <% getIndex("map_fronthaul_bss_04"); %>;
+            fronthaul[5] = <% getIndex("map_fronthaul_bss_10"); %>;
+            fronthaul[6] = <% getIndex("map_fronthaul_bss_11"); %>;
+            fronthaul[7] = <% getIndex("map_fronthaul_bss_12"); %>;
+            fronthaul[8] = <% getIndex("map_fronthaul_bss_13"); %>;
+            fronthaul[9] = <% getIndex("map_fronthaul_bss_14"); %>;
+
+            var ssid = new Array(10);
+            ssid[0] = "<% getInfo("interface_info_query_00"); %>";
+            ssid[1] = "<% getInfo("interface_info_query_01"); %>";
+            ssid[2] = "<% getInfo("interface_info_query_02"); %>";
+            ssid[3] = "<% getInfo("interface_info_query_03"); %>";
+            ssid[4] = "<% getInfo("interface_info_query_04"); %>";
+            ssid[5] = "<% getInfo("interface_info_query_10"); %>";
+            ssid[6] = "<% getInfo("interface_info_query_11"); %>";
+            ssid[7] = "<% getInfo("interface_info_query_12"); %>";
+            ssid[8] = "<% getInfo("interface_info_query_13"); %>";
+            ssid[9] = "<% getInfo("interface_info_query_14"); %>";
+
+            var vid = new Array(10);
+            vid[0] = <% getIndex("map_vid_00"); %>;
+            vid[1] = <% getIndex("map_vid_01"); %>;
+            vid[2] = <% getIndex("map_vid_02"); %>;
+            vid[3] = <% getIndex("map_vid_03"); %>;
+            vid[4] = <% getIndex("map_vid_04"); %>;
+            vid[5] = <% getIndex("map_vid_10"); %>;
+            vid[6] = <% getIndex("map_vid_11"); %>;
+            vid[7] = <% getIndex("map_vid_12"); %>;
+            vid[8] = <% getIndex("map_vid_13"); %>;
+            vid[9] = <% getIndex("map_vid_14"); %>;
+
+            // -----------------------
+            function onlyUnique(value, index, self) {
+                return self.indexOf(value) === index;
+            }
+
+            function loadInfo()
+            {
+                LoadedInfoFiltering();
+
+                // secondary_vid_count = Math.max(...vid) / 10 + 1;
+                secondary_vid_count = Math.max.apply(null, vid) / 10 + 1;
+
+                if (enable_vlan == 0) {
+                    document.getElementById("enable_vlan").checked = false;
+                } else if (enable_vlan == 1) {
+                    document.getElementById("enable_vlan").checked = true;
+                    // primary vid
+                    document.getElementById("primary_vid_text").value = primary_vid;
+                    for (var ssid in vid_ssid_dict[primary_vid]) {
+                        addMoreSSID('PRIMARY', 0, ssid);
+                    }
+
+                    // secondary vid
+                    for (var sec_vid in vid_ssid_dict) {
+                        if ((primary_vid != sec_vid) && (default_sec_vid != sec_vid)) {
+                            addMoreSecondaryVLAN(sec_vid);
+                            for (var ssid in vid_ssid_dict[sec_vid]) {
+                                addMoreSSID('SECONDARY', secondary_ssid_nr.length - 1, ssid);
+                            }
+                        }
+                    }
+                    // default secondary vid
+                    document.getElementById("default_secondary_vid_text").value = default_sec_vid;
+                    for (var ssid in vid_ssid_dict[default_sec_vid]) {
+                        addMoreSSID('DEFAULT_SECONDARY', 0, ssid);
+                    }
+                }
+                enableVLANOnClick();
+            }
+
+            function rearrangeVidInfo()
+            {
+                //primary network info
+                primary_network_ssid = new Array();
+                default_secondary_network_ssid = new Array();
+                var els = document.getElementsByName("primary_ssid");
+                primary_vid = document.getElementById("primary_vid_text").value;
+                [].forEach.call(els, function (el) {
+                    for (i = 0; i < ssid.length; i++) {
+                        if (ssid[i] == el.options[el.selectedIndex].innerText) {
+                            vid_rearranged[i] = primary_vid;
+                            primary_network_ssid.push(ssid[i]);
+                            // primary_network_capacity += 1;
+                        }
+                    }
+                });
+
+                //secondary network info
+                for (j = 0; j < secondary_ssid_nr.length; j++) {
+                    var els = document.getElementsByName("secondary_ssid_" + j);
+                    [].forEach.call(els, function (el) {
+                        var vid_tmp = el.parentNode.parentNode.parentNode.parentNode.childNodes[1].childNodes[5].childNodes[1].value;
+                        for (i = 0; i < ssid.length; i++) {
+                            if (ssid[i] == el.options[el.selectedIndex].innerText)
+                                vid_rearranged[i] = vid_tmp;
+                        }
+                    });
+                }
+
+                //default secondary network info
+                var els = document.getElementsByName("default_secondary_ssid");
+                default_sec_vid = document.getElementById("default_secondary_vid_text").value;
+                [].forEach.call(els, function (el) {
+                    for (i = 0; i < ssid.length; i++) {
+                        if (ssid[i] == el.options[el.selectedIndex].innerText) {
+                            vid_rearranged[i] = default_sec_vid;
+                            default_secondary_network_ssid.push(ssid[i]);
+                            // default_secondary_network_capacity += 1;
+                        }
+                    }
+                });
+            }
+
+            function zeroEverything()
+            {
+                document.getElementById("primary_vid_text").value = '0';
+                document.getElementById("default_secondary_vid_text").value = '0';
+                document.getElementById("vid_info").value = '0_0_0_0_0_0_0_0_0_0';
+            }
+
+            function handleUnseletedSSIDs()
+            {
+                if (ssid_unique.length != selected_options_values.length) {
+                    //check primary selected ssid
+                    if ((0 == primary_network_ssid_unique.length) && (0 != default_secondary_network_ssid_unique)) {
+                        if (!confirm("Unselected SSIDs are about to be categorized under Primary Network. Click OK to confirm.")) {
+                            return false;
+                        }
+                        for (j = 0; j < ssid_unique.length; j++) {
+                            // if (!selected_options_values.includes(j.toString())) {
+                            if (selected_options_values.indexOf(j.toString()) < 0) {
+                                for (i = 0; i < ssid.length; i++) {
+                                    if (ssid[i] == ssid_unique[j]) {
+                                        vid_rearranged[i] = primary_vid;
+                                        primary_network_ssid.push(ssid[i]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    //check default secondary selected ssid
+                    else if (0 != primary_network_ssid_unique.length) {
+                        if (!confirm("Unselected SSIDs are about to be categorized under Default Guest Network. Click OK to confirm.")) {
+                            return false;
+                        }
+                        for (j = 0; j < ssid_unique.length; j++) {
+                            // if (!selected_options_values.includes(j.toString())) {
+                            if (selected_options_values.indexOf(j.toString()) < 0) {
+                                for (i = 0; i < ssid.length; i++) {
+                                    if (ssid[i] == ssid_unique[j]) {
+                                        vid_rearranged[i] = default_sec_vid;
+                                        default_secondary_network_ssid.push(ssid[i]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        alert("Primary Network and Default Guest Network are not allowed to be left both empty!");
+		                return false;
+                    }
+                } else if (0 == primary_network_ssid_unique.length) {
+                    alert("Primary Network is not allowed to be left empty!");
+		            return false;
+                } else if (ssid_unique.length == primary_network_ssid_unique.length) {
+                    alert("SSIDs are all added into Primary Network! Please check again.");
+		            return false;
+                }
+                document.getElementById("vid_info").value = vid_rearranged.join('_');
+                return true;
+            }
+
+            function resetClick()
+            {
+                location.reload(true);
+            }
+
+            function saveChanges()
+            {
+                //check duplicate vid
+                if (true == document.getElementById("enable_vlan").checked) {
+                    vid_dic = {};
+                    var els = document.getElementsByClassName("vid_number");
+                    for(i = 0; i < els.length; i++) {
+                        if(parseInt(els[i].value) < 10) {
+                            alert("VID cannot be single digit! Please edit.");
+                            return false;
+                        }
+                        if(els[i].value in vid_dic) {
+                            alert("Duplicate VID is found! Please edit.");
+                            return false;
+                        } else {
+                            vid_dic[els[i].value] = 1;
+                        }
+                    }
+
+                    rearrangeVidInfo();
+                    // primary_network_ssid_unique = [...(new Set(primary_network_ssid))];
+                    // default_secondary_network_ssid_unique = [...(new Set(default_secondary_network_ssid))];
+                    primary_network_ssid_unique = primary_network_ssid.filter( onlyUnique );
+                    default_secondary_network_ssid_unique = default_secondary_network_ssid.filter( onlyUnique );
+
+                    if(!handleUnseletedSSIDs()) {
+                        return false;
+                    }
+                } else {
+                    zeroEverything();
+                }
+
+                console.log(document.getElementById("vid_info").value);
+
+                return true;
+            }
+
+            function enableVLANOnClick()
+            {
+                if (document.getElementById("enable_vlan").checked == true) {
+                    // document.getElementsByClassName("display_content").style.display = "";
+                    var els = document.getElementsByClassName("display_content");
+                    [].forEach.call(els, function (el) {
+                        el.style.display = "";
+                    });
+                    document.getElementById("enable_vlan_click").value = 'ON';
+                } else {
+                    var els = document.getElementsByClassName("display_content");
+                    [].forEach.call(els, function (el) {
+                        el.style.display = "none";
+                    });
+                    document.getElementById("enable_vlan_click").value = 'OFF';
+                }
+
+            }
+
+            function deleteSSID(r)
+            {
+                if ('delete_primary_ssid' == r.name) {
+                    primary_ssid_nr--;
+                // } else if (r.name.includes("delete_secondary_ssid_")) {
+                } else if (r.name.indexOf("delete_secondary_ssid_") > -1) {
+                    secondary_ssid_nr[parseInt(r.name.substring(r.name.length - 1, r.name.length))]--;
+                } else if ('delete_default_secondary_ssid' == r.name) {
+                    default_secondary_ssid_nr--;
+                }
+                // r.parentNode.parentNode.remove();
+                var child = r.parentNode.parentNode;
+                child.parentNode.removeChild(child);
+                // var i = r.parentNode.parentNode.rowIndex;
+                // document.getElementById("vlan_configuration").deleteRow(i - 3);
+                rearrangeSelectOptions();
+            }
+
+            function deleteSecondaryVLAN(r)
+            {
+                id_tmp = r.parentNode.parentNode.parentNode.id;
+                idx = id_tmp.substring(id_tmp.length - 1, id_tmp.length);
+                secondary_ssid_nr.splice(idx, 1);
+                // r.parentNode.parentNode.parentNode.remove();
+                var child = r.parentNode.parentNode.parentNode;
+                child.parentNode.removeChild(child);
+                sec_name_tbodys = document.getElementsByClassName("secondary_vlan_name");
+                count = 0;
+                [].forEach.call(sec_name_tbodys, function (el) {
+                    el.id = "secondary_vlan_configuration" + count;
+                    el.childNodes[1].childNodes[1].innerHTML = "<font size=2><b>Guest Network " + count + "</b>";
+                    el.childNodes[el.childNodes.length - 2].childNodes[1].innerHTML = '<input type="button" id="add_secondary_ssid" name="add_secondary_ssid" value="+ Add more SSID" onclick="addMoreSSID(\'SECONDARY\', ' + count + ')">';
+                    count++;
+                });
+                rearrangeSelectOptions();
+            }
+
+            function addMoreSSID(vlan_idx, secondary_vlan_idx, vid_ssid)
+            {
+                if(vid_ssid === undefined) {
+                    vid_ssid = "";
+                }
+
+                if ('PRIMARY' == vlan_idx) {
+                    var ssid_tbody = document.getElementById("primary_vlan_configuration");
+                    var row = ssid_tbody.insertRow(primary_ssid_nr);
+                    var ssid = row.insertCell(0);
+                    var ssid_deleted = row.insertCell(1);
+                    tmp_html = SetSSIDSettingOption(vid_ssid);
+                    ssid.innerHTML = '\
+                    <font size=2>\
+                    <select class="ssid_select" size="1" name="primary_ssid" onchange="rearrangeSelectOptions();">'
+                        + tmp_html +
+                        '</select>';
+                    ssid.colSpan = 2;
+                    ssid_deleted.innerHTML = '<td width="100%" style="text-align:right">\
+                    <input type="button" id="delete_primary_ssid" name="delete_primary_ssid" value="- Delete SSID" onclick="deleteSSID(this)">\
+                    </td>';
+                    primary_ssid_nr++;
+                } else if ('SECONDARY' == vlan_idx) {
+                    var ssid_tbody = document.getElementById("secondary_vlan_configuration" + secondary_vlan_idx);
+                    var row = ssid_tbody.insertRow(secondary_ssid_nr[secondary_vlan_idx]);
+                    var ssid = row.insertCell(0);
+                    var ssid_deleted = row.insertCell(1);
+                    tmp_html = SetSSIDSettingOption(vid_ssid);
+                    ssid.innerHTML = '\
+                    <font size=2>\
+                    <select class="ssid_select" size="1" name="secondary_ssid_'+ secondary_vlan_idx.toString() + '" onchange="rearrangeSelectOptions();">'
+                        + tmp_html +
+                        '</select>';
+                    ssid.colSpan = 2;
+                    ssid_deleted.innerHTML = '<td width="100%" style="text-align:right">\
+                    <input type="button" id="delete_secondary_ssid_' + secondary_vlan_idx + '" name="delete_secondary_ssid_ ' + secondary_vlan_idx + '" value="- Delete SSID" onclick="deleteSSID(this)">\
+                    </td>';
+                    secondary_ssid_nr[secondary_vlan_idx]++;
+                } else if ('DEFAULT_SECONDARY' == vlan_idx) {
+                    var ssid_tbody = document.getElementById("default_secondary_vlan_configuration");
+                    var row = ssid_tbody.insertRow(default_secondary_ssid_nr);
+                    var ssid = row.insertCell(0);
+                    var ssid_deleted = row.insertCell(1);
+                    tmp_html = SetSSIDSettingOption(vid_ssid);
+                    ssid.innerHTML = '\
+                    <font size=2>\
+                    <select class="ssid_select" size="1" name="default_secondary_ssid" onchange="rearrangeSelectOptions();">'
+                        + tmp_html +
+                        '</select>';
+                    ssid.colSpan = 2;
+                    ssid_deleted.innerHTML = '<td width="100%" style="text-align:right">\
+                    <input type="button" id="delete_default_secondary_ssid" name="delete_default_secondary_ssid" value="- Delete SSID" onclick="deleteSSID(this)">\
+                    </td>';
+                    default_secondary_ssid_nr++;
+                }
+                rearrangeSelectOptions();
+            }
+
+            function addMoreSecondaryVLAN(sec_vid)
+            {
+                if(sec_vid === undefined) {
+                    sec_vid = 0;
+                }
+
+                var vlan_table = document.getElementById("vlan_table");
+                var secondary_vlan_tbody = document.createElement("tbody");
+                secondary_vlan_tbody.id = "secondary_vlan_configuration" + secondary_ssid_nr.length;
+                secondary_vlan_tbody.className = "display_content secondary_vlan_name for_top_margin";
+                // secondary_vlan_tbody.style = "display:none;"
+                secondary_vlan_tbody.innerHTML = '\
+                <tr style="background-color:#aaddff;">\
+                    <td width="60%" style="padding: 0; margin: 0;"><font size=2><b>Guest Network '+ secondary_ssid_nr.length + '</b></td>\
+                    <td width="30%" align="right" style="padding: 0; margin: 0;"><font size=2><b style="display:none">VID:</b></td>\
+                    <td width="10%" style="padding: 0; margin: 0;">\
+                        <input type="text" id="secondary_vid_text" name="secondary_vid_text" class="vid_number" style="display:none" value="' + ((0 == sec_vid) ? (secondary_vid_count * 10).toString() : sec_vid) + '">\
+                    </td>\
+                </tr>\
+                <tr>\
+                    <td width="100%" colspan="3" style="text-align:right">\
+                        <input type="button" id="add_secondary_ssid" name="add_secondary_ssid" value="+ Add more SSID" onclick="addMoreSSID(\'SECONDARY\', '+ secondary_ssid_nr.length + ')">\
+                    </td>\
+                </tr>\
+                <tr>\
+                    <td width="100%" colspan="3" style="text-align:right">\
+                        <input type="button" id="delete_secondary_vlan" name="delete_secondary_vlan" align="right" style="font-weight:bold;" value="- Delete Guest Network" onclick="deleteSecondaryVLAN(this)">\
+                    </td>\
+                </tr>';
+                vlan_table.insertBefore(secondary_vlan_tbody, document.getElementById("default_secondary_vlan_configuration"));
+                secondary_ssid_nr.push(1);
+                secondary_vid_count++;
+            }
+
+            function rearrangeSelectOptions()
+            {
+                els = document.getElementsByClassName("ssid_select");
+                selected_options_values = [];
+                [].forEach.call(els, function (el) {
+                    if (0 != el.selectedIndex) {
+                        selected_options_values.push(el.options[el.selectedIndex].value);
+                    }
+                });
+
+                // reconstruct all selects
+                [].forEach.call(els, function (el) {
+                    var curr_selected_value = el.options[el.selectedIndex].value;
+
+                    ret_string = ("<option value=\"100\"><font face=\"Arial\" style=\"font-size: 8pt\">--Select SSID--</font></option>");
+                    for (i = 0; i < ssid_unique.length; i++) {
+                        // if (selected_options_values.includes(i.toString()) && i != curr_selected_value) {
+                        if ((selected_options_values.indexOf(i.toString()) > -1) && i != curr_selected_value) {
+                            continue;
+                        }
+                        if (i == curr_selected_value) {
+                            ret_string += ("<option value=\"" + i + "\" selected><font face=\"Arial\" style=\"font-size: 8pt\">");
+                        } else {
+                            ret_string += ("<option value=\"" + i + "\"><font face=\"Arial\" style=\"font-size: 8pt\">");
+                        }
+                        ret_string += ssid_unique[i];
+                        ret_string += ("</font></option>");
+                    }
+                    el.innerHTML = ret_string;
+                });
+
+            }
+
+            function SetSSIDSettingOption(ssid)
+            {
+                if(ssid === undefined) {
+                    ssid = "";
+                }
+
+                ret_string = ("<option value=\"100\"><font face=\"Arial\" style=\"font-size: 8pt\">--Select SSID--</font></option>");
+
+                // //remove duplicated ssid
+                // ssid_unique = [...(new Set(ssid_enabled))];
+                ssid_unique = ssid_enabled.filter( onlyUnique );
+                for (i = 0; i < ssid_unique.length; i++) {
+                    if (ssid_unique[i] == ssid) {
+                        ret_string += ("<option value=\"" + i + "\" selected><font face=\"Arial\" style=\"font-size: 8pt\">");
+                    } else {
+                        ret_string += ("<option value=\"" + i + "\"><font face=\"Arial\" style=\"font-size: 8pt\">");
+                    }
+                    ret_string += ssid_unique[i];
+                    ret_string += ("</font></option>");
+                }
+
+                return ret_string;
+            }
+
+            function LoadedInfoFiltering()
+            {
+                // if route interface is disabled, disable all sub vaps
+                if (!fronthaul[0]) {
+                    for (i = 1; i < 5; i++) {
+                        fronthaul[i] = 0;
+                    }
+                }
+                if (!fronthaul[5]) {
+                    for (i = 6; i < 10; i++) {
+                        fronthaul[i] = 0;
+                    }
+                }
+
+                //filter out disabled and non-fronthaul interface
+                for (i = 0; i < ssid.length; i++) {
+                    if (fronthaul[i]) {
+                        ssid_enabled.push(ssid[i]);
+                        vid_enabled.push(vid[i]);
+                    }
+                }
+
+                for (i = 0; i < vid_enabled.length; i++) {
+                    if (vid_enabled[i] in vid_ssid_dict) {
+                        if (ssid_enabled[i] in vid_ssid_dict[vid_enabled[i]]) {
+                            // already have the key, skip
+                        } else {
+                            (vid_ssid_dict[vid_enabled[i]])[ssid_enabled[i]] = 0;
+                        }
+                    } else {
+                        vid_ssid_dict[vid_enabled[i]] = {};
+                        (vid_ssid_dict[vid_enabled[i]])[ssid_enabled[i]] = 0;
+                    }
+                }
+            }
+
+
+
+
+        </SCRIPT>
+    </head>
+
+    <body onload="loadInfo();">
+        <blockquote>
+            <h2>EasyMesh Network Vlan Setting</h2>
+
+            <form action=/boafrm/formMultiAPVLAN method=POST name="MultiAPVLAN">
+                <table id="vlan_table" border=0 width="500" cellspacing=4 cellpadding=0
+                    style="border-collapse: collapse;">
+                    <tr>
+                        <font size=2>
+                            This page configures the vlan setting of EasyMesh network
+                    </tr>
+                    <tr>
+                        <hr size=1 noshade align=top>
+                    </tr>
+                    <tr>
+                        <td width="100%" colspan=3>
+                            <font size=2><b>
+                                    <input type="checkbox" id="enable_vlan" value="OFF"
+                                        onclick="enableVLANOnClick()">&nbsp;&nbsp;Enable Guest Network</b>
+                        </td>
+                    </tr>
+                    <tbody id="primary_vlan_configuration" class="display_content" style="display:none">
+                        <tr id="primary_vlan" style="background-color:#aaddff;">
+                            <td width="60%" style="padding: 0; margin: 0;">
+                                <font size=2><b>Primary Network</b>
+                            </td>
+                            <td width="30%" align="right" style="padding: 0; margin: 0;">
+                                <font size=2><b style="display:none">VID:</b>
+                            </td>
+                            <td width="10%" style="padding: 0; margin: 0;">
+                                <input type="text" id="primary_vid_text" name="primary_vid_text" class="vid_number" style="display:none"
+                                    value="10">
+                            </td>
+                        </tr>
+                        <!-- <tr>
+                            <td width="30%">
+                                <font size=2>
+                                <select size="1" name="primary_ssid0" onchange="">
+                                    <option value="3">5 GHz (A)</option><option value="7">5 GHz (N)</option><option value="11">5 GHz (A+N)</option><option value="63">5 GHz (AC)</option><option value="71">5 GHz (N+AC)</option><option value="75">5 GHz (A+N+AC)</option>
+                                </select>
+                            </td>
+                        </tr> -->
+                        <tr style="text-align:right">
+                            <td width="100%" colspan="3">
+                                <input type="button" id="add_primary_ssid" name="add_primary_ssid"
+                                    value="+ Add more SSID"
+                                    onclick="addMoreSSID('PRIMARY', 0)">
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tbody id="default_secondary_vlan_configuration" class="display_content for_top_margin" style="display:none;">
+                        <tr id="default_secondary_vlan" style="background-color:#aaddff;">
+                            <td width="60%" style="padding: 0; margin: 0;">
+                                <font size=2><b>Default Guest Network</b>
+                            </td>
+                            <td width="30%" align="right" style="padding: 0; margin: 0;">
+                                <font size=2><b style="display:none">VID:</b>
+                            </td>
+                            <td width="10%" style="padding: 0; margin: 0;">
+                                <input type="text" id="default_secondary_vid_text" name="default_secondary_vid_text" class="vid_number" style="display:none"
+                                value="15">
+                            </td>
+                        </tr>
+                        <tr style="text-align:right">
+                            <td width="100%" colspan="3">
+                                <input type="button" id="add_default_secondary_ssid" name="add_default_secondary_ssid"
+                                    value="+ Add more SSID"
+                                    onclick="addMoreSSID('DEFAULT_SECONDARY', 0)">
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tbody id="add_secondary_vlan" class="display_content" style="display:none">
+                        <tr style="text-align:right">
+                            <td width="100%" colspan="3">
+                                <input type="button" id="add_secondary_vid" name="add_secondary_vid"
+                                    style="font-weight:bold;" value="+ Add more Guest Network"
+                                    onclick="addMoreSecondaryVLAN()">
+                            </td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+
+
+
+
+                <br>
+                <% getInfo("apply_prompt_comment_start");%>
+                <input type="submit" value="Apply Changes" name="save" onClick="return saveChanges()">&nbsp;&nbsp;
+                <input type="reset" value="Reset" name="reset" onClick="resetClick()">
+                <% getInfo("apply_prompt_comment_end");%>
+                <% getInfo("apply_direct_comment_start");%>
+                <input type="submit" value="Save" name="save" onClick="return saveChanges()">&nbsp;&nbsp;
+                <input type="submit" value="Save & Apply" name="save_apply" onClick="return saveChanges()">&nbsp;&nbsp;
+                <input type="reset" value="Reset" name="reset" onClick="resetClick()">
+                <% getInfo("apply_direct_comment_end");%>
+
+
+
+                <input type="hidden" value="/multi_ap_setting_vlan.htm" name="submit-url">
+                <input type="hidden" value="" name="vid_info" id="vid_info">
+                <input type="hidden" value="" name="enable_vlan" id="enable_vlan_click">
+                <input type="hidden" value="" name="role_prev" id="role_prev">
+            </form>
+        </blockquote>
+    </body>
+
+</html>

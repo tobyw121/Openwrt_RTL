@@ -1,0 +1,79 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>Save/Reload Setting</title>
+<script type="text/javascript" src="util_gw.js"> </script>
+<% getInfo("include_css"); %>
+<SCRIPT language=Javascript src="<% getInfo("lang");%>"></SCRIPT>
+<script>
+function fileCheck()
+{
+	var oFile = document.getElementById('binary'); 
+    	if(oFile.value == ""){ 
+		alert(saveconf_load_from_file_empty);
+		return false;
+	} 
+	return true;
+}
+
+function resetClick()
+{
+   if ( !confirm(saveconf_reset_to_default_confm) ) {
+	return false;
+  }
+  else
+	return true;
+}
+
+function saveClick(url)
+{
+	var saveConfig= "<% getInfo("saveConfig"); %>";
+  if (verifyBrowser() == "ie4" ) {
+	window.location.href = url;
+	return false;
+  }
+  else
+  	return true;
+}
+
+</script>
+
+</head>
+<body>
+<blockquote>
+<h2><script>dw(saveconf_header)</script></h2>
+  <table border="0" cellspacing="4" width="500">
+  <tr><font size=2>
+  <script>dw(saveconf_header_explain)</script>
+  </tr>
+  <tr><hr size=1 noshade align=top></tr>
+  <form action=/boafrm/formSaveConfig method=POST name="saveConfig">
+  <tr>
+    <td width="32%"><font size=2><b><script>dw(saveconf_save_to_file)</script></b></td>
+    <td width="30%"><font size=2>
+        <p><input type="submit" value="Save..." name="save" onclick="return saveClick('/config.dat')"></p>
+        <script>document.saveConfig.save.value = saveconf_save;</script>
+   </tr>
+  </form>
+  <form method="post" action="boafrm/formUploadConfig" enctype="multipart/form-data" name="uploadConfig">
+  	<input type="hidden" value="/saveconf.htm" name="submit-url">
+  <tr>
+    <td width="32%"><font size=2><b><script>dw(saveconf_load_from_file)</script></b></td>
+    <td width="30%"><font size=2><input type="file" name="binary" id="binary" size=24></td>
+    <td width="20%"><font size=2><input type="submit" value="Upload" name="load" onclick="return fileCheck()"></td>
+    <script>document.uploadConfig.load.value = saveconf_load;</script>
+  </tr>
+  </form>
+  <form action=/boafrm/formSaveConfig method=POST name="saveConfig">
+  <tr>
+    <td width="32%"><font size=2><b><script>dw(saveconf_reset_to_default)</script></b></td>
+    <td width="30%"><font size=2><input type="submit" value="Reset" name="reset" onclick="return resetClick()"></td>
+    <script>document.saveConfig[1].reset.value = saveconf_reset;</script>
+  </tr>
+  </form>
+</table>
+</blockquote>
+</body>
+</html>

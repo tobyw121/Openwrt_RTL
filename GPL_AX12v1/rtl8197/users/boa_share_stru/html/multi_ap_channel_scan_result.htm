@@ -1,0 +1,43 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>EasyMesh Interface Setup </title>
+<% language=javascript %>
+<script type="text/javascript" src="util_gw.js"> </script>
+<% getInfo("include_css"); %>
+<SCRIPT>
+
+function loadInfo()
+{
+    if (null != document.getElementById("reload")) {
+        setInterval(function(){ location.reload(true); }, 1000);
+    }
+}
+
+function saveChanges()
+{
+    if(null != document.getElementById("band_select_1") && document.getElementById("band_select_1").checked == true) {
+        document.getElementById("band_select_1").value = "selected";
+    }
+    if(null != document.getElementById("band_select_2") && document.getElementById("band_select_2").checked == true) {
+        document.getElementById("band_select_2").value = "selected";
+    }
+    return true;
+}
+
+</SCRIPT>
+</head>
+
+<body onload="loadInfo();">
+<blockquote>
+<h2>EasyMesh Channel Scan Result</h2>
+<form action=/boafrm/formChannelScan method=POST name="MultiAP">
+<% showChannelScanResults(); %>
+<input type="hidden" value="/multi_ap_channel_scan.htm" name="submit-url">
+</form>
+</blockquote>
+</body>
+
+</html>
