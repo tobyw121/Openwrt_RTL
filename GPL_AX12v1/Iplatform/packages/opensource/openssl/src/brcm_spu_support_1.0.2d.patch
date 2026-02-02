@@ -1,0 +1,238 @@
+diff -ruN src_1.0.2d/Configure src_1.0.2d_p/Configure
+--- src_1.0.2d/Configure	2017-06-28 05:55:35.534965330 -0400
++++ src_1.0.2d_p/Configure	2017-06-28 05:42:33.038715609 -0400
+@@ -366,6 +366,7 @@
+ # *-generic* is endian-neutral target, but ./config is free to
+ # throw in -D[BL]_ENDIAN, whichever appropriate...
+ "linux-generic32","gcc:-O3 -fomit-frame-pointer -Wall::-D_REENTRANT::-ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_INT DES_UNROLL BF_PTR:${no_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
++"linux-bcmmips","gcc:::-D_REENTRANT::-ldl::${no_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+ "linux-ppc",	"gcc:-DB_ENDIAN -O3 -Wall::-D_REENTRANT::-ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_RISC1 DES_UNROLL:${ppc32_asm}:linux32:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+ 
+ #######################################################################
+@@ -396,6 +397,7 @@
+ #       ./Configure linux-armv4 -march=armv6 -D__ARM_MAX_ARCH__=8
+ #
+ "linux-armv4",	"gcc: -O3 -Wall::-D_REENTRANT::-ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_INT DES_UNROLL BF_PTR:${armv4_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
++"linux-bcmarm","gcc:::-D_REENTRANT::-ldl::${armv4_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+ "linux-aarch64","gcc: -O3 -Wall::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK DES_INT DES_UNROLL BF_PTR:${aarch64_asm}:linux64:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+ # Configure script adds minimally required -march for assembly support,
+ # if no -march was specified at command line. mips32 and mips64 below
+diff -ruN src_1.0.2d/crypto/engine/eng_cryptodev.c src_1.0.2d_p/crypto/engine/eng_cryptodev.c
+--- src_1.0.2d/crypto/engine/eng_cryptodev.c	2017-06-28 05:55:35.498965330 -0400
++++ src_1.0.2d_p/crypto/engine/eng_cryptodev.c	2017-06-28 05:38:13.441561443 -0400
+@@ -53,7 +53,7 @@
+ #else
+ 
+ # include <sys/types.h>
+-# include <crypto/cryptodev.h>
++# include <cryptodev.h>
+ # include <openssl/dh.h>
+ # include <openssl/dsa.h>
+ # include <openssl/err.h>
+diff -ruN src_1.0.2d/crypto/evp/openbsd_hw.c src_1.0.2d_p/crypto/evp/openbsd_hw.c
+--- src_1.0.2d/crypto/evp/openbsd_hw.c	2017-06-28 05:55:35.522965330 -0400
++++ src_1.0.2d_p/crypto/evp/openbsd_hw.c	2017-06-28 05:38:30.724723030 -0400
+@@ -67,7 +67,7 @@
+ #  include <stdio.h>
+ #  include <errno.h>
+ #  include <sys/ioctl.h>
+-#  include <crypto/cryptodev.h>
++#  include <cryptodev.h>
+ #  include <unistd.h>
+ #  include <assert.h>
+ 
+diff -ruN src_1.0.2d/crypto/Makefile src_1.0.2d_p/crypto/Makefile
+--- src_1.0.2d/crypto/Makefile	2017-06-28 05:55:35.498965330 -0400
++++ src_1.0.2d_p/crypto/Makefile	2017-06-28 05:41:01.269505340 -0400
+@@ -85,11 +85,11 @@
+ 	@if [ -z "$(THIS)" ]; then $(MAKE) -f $(TOP)/Makefile reflect THIS=$@; fi
+ 
+ subdirs:
+-	@target=all; $(RECURSIVE_MAKE)
++	+@target=all; $(RECURSIVE_MAKE)
+ 
+ files:
+ 	$(PERL) $(TOP)/util/files.pl "CPUID_OBJ=$(CPUID_OBJ)" Makefile >> $(TOP)/MINFO
+-	@target=files; $(RECURSIVE_MAKE)
++	+@target=files; $(RECURSIVE_MAKE)
+ 
+ links:
+ 	@$(PERL) $(TOP)/util/mklink.pl ../include/openssl $(EXHEADER)
+@@ -100,18 +100,18 @@
+ # lib: $(LIB): are splitted to avoid end-less loop
+ lib:	$(LIB)
+ 	@touch lib
+-$(LIB):	$(LIBOBJ)
++$(LIB):	$(LIBOBJ) | subdirs
+ 	$(AR) $(LIB) $(LIBOBJ)
+ 	test -z "$(FIPSLIBDIR)" || $(AR) $(LIB) $(FIPSLIBDIR)fipscanister.o
+ 	$(RANLIB) $(LIB) || echo Never mind.
+ 
+ shared: buildinf.h lib subdirs
+-	if [ -n "$(SHARED_LIBS)" ]; then \
++	+if [ -n "$(SHARED_LIBS)" ]; then \
+ 		(cd ..; $(MAKE) $(SHARED_LIB)); \
+ 	fi
+ 
+ libs:
+-	@target=lib; $(RECURSIVE_MAKE)
++	+@target=lib; $(RECURSIVE_MAKE)
+ 
+ install:
+ 	@[ -n "$(INSTALLTOP)" ] # should be set by top Makefile...
+@@ -120,21 +120,21 @@
+ 	(cp $$i $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i; \
+ 	chmod 644 $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i ); \
+ 	done;
+-	@target=install; $(RECURSIVE_MAKE)
++	+@target=install; $(RECURSIVE_MAKE)
+ 
+ lint:
+ 	@target=lint; $(RECURSIVE_MAKE)
+ 
+ update: local_depend
+-	@[ -z "$(THIS)" ] || (set -e; target=update; $(RECURSIVE_MAKE) )
++	+@[ -z "$(THIS)" ] || (set -e; target=update; $(RECURSIVE_MAKE) )
+ 	@if [ -z "$(THIS)" ]; then $(MAKE) -f $(TOP)/Makefile reflect THIS=$@; fi
+ 
+ depend: local_depend
+-	@[ -z "$(THIS)" ] || (set -e; target=depend; $(RECURSIVE_MAKE) )
++	+@[ -z "$(THIS)" ] || (set -e; target=depend; $(RECURSIVE_MAKE) )
+ 	@if [ -z "$(THIS)" ]; then $(MAKE) -f $(TOP)/Makefile reflect THIS=$@; fi
+ local_depend:
+ 	@[ -z "$(THIS)" -o -f buildinf.h ] || touch buildinf.h # fake buildinf.h if it does not exist
+-	@[ -z "$(THIS)" ] || $(MAKEDEPEND) -- $(CFLAG) $(INCLUDE) $(DEPFLAG) -- $(PROGS) $(LIBSRC)
++	+@[ -z "$(THIS)" ] || $(MAKEDEPEND) -- $(CFLAG) $(INCLUDE) $(DEPFLAG) -- $(PROGS) $(LIBSRC)
+ 	@[ -z "$(THIS)" -o -s buildinf.h ] || rm buildinf.h
+ 
+ clean:
+diff -ruN src_1.0.2d/crypto/objects/Makefile src_1.0.2d_p/crypto/objects/Makefile
+--- src_1.0.2d/crypto/objects/Makefile	2017-06-28 05:55:35.514965330 -0400
++++ src_1.0.2d_p/crypto/objects/Makefile	2017-06-28 05:38:54.726826403 -0400
+@@ -44,11 +44,9 @@
+ # objects.pl both reads and writes obj_mac.num
+ obj_mac.h: objects.pl objects.txt obj_mac.num
+ 	$(PERL) objects.pl objects.txt obj_mac.num obj_mac.h
+-	@sleep 1; touch obj_mac.h; sleep 1
+ 
+ obj_xref.h: objxref.pl obj_xref.txt obj_mac.num
+ 	$(PERL) objxref.pl obj_mac.num obj_xref.txt > obj_xref.h
+-	@sleep 1; touch obj_xref.h; sleep 1
+ 
+ files:
+ 	$(PERL) $(TOP)/util/files.pl Makefile >> $(TOP)/MINFO
+diff -ruN src_1.0.2d/crypto/x509/x509_vfy.c src_1.0.2d_p/crypto/x509/x509_vfy.c
+--- src_1.0.2d/crypto/x509/x509_vfy.c	2017-06-28 05:55:35.514965330 -0400
++++ src_1.0.2d_p/crypto/x509/x509_vfy.c	2017-06-28 05:39:21.494020060 -0400
+@@ -857,7 +857,7 @@
+ {
+     X509_CRL *crl = NULL, *dcrl = NULL;
+     X509 *x;
+-    int ok, cnum;
++    int ok = 1, cnum;
+     unsigned int last_reasons;
+     cnum = ctx->error_depth;
+     x = sk_X509_value(ctx->chain, cnum);
+diff -ruN src_1.0.2d/engines/Makefile src_1.0.2d_p/engines/Makefile
+--- src_1.0.2d/engines/Makefile	2017-06-28 05:55:35.534965330 -0400
++++ src_1.0.2d_p/engines/Makefile	2017-06-28 05:41:53.399915611 -0400
+@@ -72,7 +72,7 @@
+ 
+ all:	lib subdirs
+ 
+-lib:	$(LIBOBJ)
++lib:	$(LIBOBJ) | subdirs
+ 	@if [ -n "$(SHARED_LIBS)" ]; then \
+ 		set -e; \
+ 		for l in $(LIBNAMES); do \
+@@ -89,7 +89,7 @@
+ 
+ subdirs:
+ 	echo $(EDIRS)
+-	@target=all; $(RECURSIVE_MAKE)
++	+@target=all; $(RECURSIVE_MAKE)
+ 
+ files:
+ 	$(PERL) $(TOP)/util/files.pl Makefile >> $(TOP)/MINFO
+@@ -128,7 +128,7 @@
+ 			  mv -f $(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR)/engines/$$pfx$$l$$sfx.new $(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR)/engines/$$pfx$$l$$sfx ); \
+ 		done; \
+ 	fi
+-	@target=install; $(RECURSIVE_MAKE)
++	+@target=install; $(RECURSIVE_MAKE)
+ 
+ tags:
+ 	ctags $(SRC)
+diff -ruN src_1.0.2d/Makefile.org src_1.0.2d_p/Makefile.org
+--- src_1.0.2d/Makefile.org	2017-06-29 05:15:35.365253845 -0400
++++ src_1.0.2d_p/Makefile.org	2017-06-28 07:14:30.617099685 -0400
+@@ -1,4 +1,3 @@
+-##
+ ## Makefile for OpenSSL
+ ##
+ 
+@@ -278,17 +277,17 @@
+ build_libssl: build_ssl libssl.pc
+ 
+ build_crypto:
+-	@dir=crypto; target=all; $(BUILD_ONE_CMD)
++	+@dir=crypto; target=all; $(BUILD_ONE_CMD)
+ build_ssl: build_crypto
+-	@dir=ssl; target=all; $(BUILD_ONE_CMD)
++	+@dir=ssl; target=all; $(BUILD_ONE_CMD)
+ build_engines: build_crypto
+-	@dir=engines; target=all; $(BUILD_ONE_CMD)
++	+@dir=engines; target=all; $(BUILD_ONE_CMD)
+ build_apps: build_libs
+-	@dir=apps; target=all; $(BUILD_ONE_CMD)
+-build_tests: build_libs
++	+@dir=apps; target=all; $(BUILD_ONE_CMD)
++build_tests:
+ 	@dir=test; target=all; $(BUILD_ONE_CMD)
+ build_tools: build_libs
+-	@dir=tools; target=all; $(BUILD_ONE_CMD)
++	+@dir=tools; target=all; $(BUILD_ONE_CMD)
+ 
+ all_testapps: build_libs build_testapps
+ build_testapps:
+@@ -336,7 +335,7 @@
+ 		fi; \
+ 	done
+ 
+-link-shared:
++link-shared: do_$(SHLIB_TARGET)
+ 	@ set -e; for i in $(SHLIBDIRS); do \
+ 		$(MAKE) -f $(HERE)/Makefile.shared -e $(BUILDENV) \
+ 			LIBNAME=$$i LIBVERSION=$(SHLIB_MAJOR).$(SHLIB_MINOR) \
+@@ -457,10 +456,10 @@
+ 	@$(PERL) util/selftest.pl
+ 
+ update: errors stacks util/libeay.num util/ssleay.num TABLE
+-	@set -e; target=update; $(RECURSIVE_BUILD_CMD)
++	+@set -e; target=update; $(RECURSIVE_BUILD_CMD)
+ 
+ depend:
+-	@set -e; target=depend; $(RECURSIVE_BUILD_CMD)
++	+@set -e; target=depend; $(RECURSIVE_BUILD_CMD)
+ 
+ lint:
+ 	@set -e; target=lint; $(RECURSIVE_BUILD_CMD)
+diff -ruN src_1.0.2d/Makefile.shared src_1.0.2d_p/Makefile.shared
+--- src_1.0.2d/Makefile.shared	2017-06-28 05:55:35.490965330 -0400
++++ src_1.0.2d_p/Makefile.shared	2017-06-28 05:54:38.341245749 -0400
+@@ -104,6 +104,7 @@
+     SHAREDFLAGS="$${SHAREDFLAGS:-$(CFLAGS) $(SHARED_LDFLAGS)}"; \
+     LIBPATH=`for x in $$LIBDEPS; do echo $$x; done | sed -e 's/^ *-L//;t' -e d | uniq`; \
+     LIBPATH=`echo $$LIBPATH | sed -e 's/ /:/g'`; \
++    [ -e $$SHLIB$$SHLIB_SOVER$$SHLIB_SUFFIX ] && exit 0; \
+     $${SHAREDCMD} $${SHAREDFLAGS} \
+ 	-o $$SHLIB$$SHLIB_SOVER$$SHLIB_SUFFIX \
+ 	$$ALLSYMSFLAGS $$SHOBJECTS $$NOALLSYMSFLAGS $$LIBDEPS \
+@@ -120,6 +121,7 @@
+ 			done; \
+ 		fi; \
+ 		if [ -n "$$SHLIB_SOVER" ]; then \
++		[ -e "$$SHLIB$$SHLIB_SUFFIX" ] || \
+ 			( $(SET_X); rm -f $$SHLIB$$SHLIB_SUFFIX; \
+ 			  ln -s $$prev $$SHLIB$$SHLIB_SUFFIX ); \
+ 		fi; \
