@@ -1,0 +1,97 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2008-2012 OpenWrt.org
+
+START=99
+
+WEBPAGES_LOGO_TMP_PATH="/www/tmp/portal_logo.png"
+WEBPAGES_BACK_TMP_PATH="/www/tmp/portal_back.jpg"
+DEFAULT_LOGO_PATH="/etc/wifidog/portal_logo.png"
+DEFAULT_BACK_PATH="/etc/wifidog/portal_back.jpg"
+USER_WIFIDOG_CONFIG_PATH="/var/etc/wifidog.conf"
+IMG_BACK_LIMIT_SIZE=2*1024*1024
+IMG_LOGO_LIMIT_SIZE=100*1024
+
+portal_jpg() {
+
+	nvrammanager -r $WEBPAGES_LOGO_TMP_PATH -p portal-logo
+	logo_size=`ls -l $WEBPAGES_LOGO_TMP_PATH | awk '{print $5}'`
+
+	if [[ -s $WEBPAGES_LOGO_TMP_PATH ]] && [[ $logo_size -lt $((IMG_LOGO_LIMIT_SIZE)) ]]; then
+		echo "read portal_logo.png form partion table: porta-logo"
+	else
+		if [ -f $DEFAULT_LOGO_PATH ]; then
+			cp $DEFAULT_LOGO_PATH $WEBPAGES_LOGO_TMP_PATH
+		fi
+	fi
+
+	if [ -f $WEBPAGES_LOGO_TMP_PATH ]; then
+		chmod 644 $WEBPAGES_LOGO_TMP_PATH
+	fi
+	
+	nvrammanager -r $WEBPAGES_BACK_TMP_PATH -p portal-back
+	back_size=`ls -l $WEBPAGES_BACK_TMP_PATH | awk '{print $5}'`
+	if [[ -s $WEBPAGES_BACK_TMP_PATH ]] && [[ $back_size -lt $((IMG_BACK_LIMIT_SIZE)) ]]; then
+		echo "read portal_back.jpg form partion table: porta-back"
+	else
+		if [ -f $DEFAULT_BACK_PATH ]; then
+			cp $DEFAULT_BACK_PATH $WEBPAGES_BACK_TMP_PATH
+		fi
+	fi
+	if [ -f $WEBPAGES_BACK_TMP_PATH ]; then
+		chmod 644 $WEBPAGES_BACK_TMP_PATH
+	fi
+
+	if [ -f $WEBPAGES_BACK_TMP_PATH ]; then
+		chmod 644 $WEBPAGES_BACK_TMP_PATH
+	fi
+
+}
+
+set_language() {
+	
+	config_load locale
+	local locale
+	config_get locale sysinfo locale
+	local portal_lan_path="/etc/wifidog/locale/$locale/lan.js"
+    local portal_lan_path_default="/etc/wifidog/lan.js"
+    if [ -f $portal_lan_path ]; then
+         cp  $portal_lan_path $portal_lan_path_default 
+    fi
+
+}
+
+
+start() {
+    portal_jpg
+    set_language
+
+	if ps | grep -v grep| grep '/usr/bin/wifidog' > /dev/null;then
+		/usr/bin/wdctl restart &
+	else
+		if [ -e $USER_WIFIDOG_CONFIG_PATH ]; then
+			insmod /lib/modules/iplatform/br_wifidog.ko
+			/usr/bin/wifidog &
+		else
+			echo "wifidog no config file, start end"
+		fi
+	fi
+
+}
+
+# restart wifidog without clean the current connected client.
+restart() {
+    set_language
+	/usr/bin/wdctl restart &
+}
+
+stop() {
+	if ps | grep -v grep| grep 'wifidog' > /dev/null;then
+		service_stop /usr/bin/wifidog
+		service_stop /usr/bin/wdctl
+		rmmod /lib/modules/iplatform/br_wifidog.ko
+	else
+		echo "wifidog not start, no need to stop" > /dev/console
+	fi
+}
+
+

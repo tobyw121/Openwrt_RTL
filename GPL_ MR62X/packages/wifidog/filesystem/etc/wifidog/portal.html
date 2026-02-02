@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport"
+		content="initial-scale = 1,user-scalable = no , width= device-width,minimum-scale=1.0,maximum-scale=1.0">
+	<title>Portal</title>
+	<link rel="icon" href="data:image/ico;base64,aWNv">
+	<script type="text/javascript" src="jquery.min.js"></script>
+	<script type="text/javascript" src="lan.js"></script>
+	<script type="text/javascript">
+		var auth_type = "$auth_type";
+		var term_of_use = "$content";
+		var title = "$title";
+		var font_color = "$font_color";
+		var theme_color = "$theme_color";
+		var font_opacity = "$font_opacity";
+		var theme_opacity = "$theme_opacity";
+	</script>
+	<style type="text/css">
+		html {
+			height: 100%;
+		}
+
+		html,
+		body,
+		div,
+		input,
+		textarea {
+			margin: 0;
+			padding: 0;
+		}
+
+		.hidden {
+			display: none;
+		}
+
+		body {
+			width: 100%;
+			height: 100%;
+			text-align: center;
+			font-family: Arial, Sans-Serif, Geneva, Verdana;
+		}
+
+		@media all and (orientation: landscape) {
+			/* body {
+				height: auto;
+			} */
+
+			form#protal {
+				padding-bottom: 2.09rem;
+			}
+
+			/* div.content div#alert {
+				top: 10%;
+			} */
+		}
+
+		.main-background-img {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			min-height: 100%;
+		}
+
+		div.content {
+			width: 100%;
+			max-width: 600px;
+			display: inline-block;
+			/* background: url("portal_back.jpg") no-repeat center; */
+			/* background-size: cover; */
+			min-height: 100%;
+			overflow: hidden;
+			position: relative;
+		}
+
+		/* div.mask {
+			background: rgba(54, 68, 75, 0.46);
+			width: 100%;
+			min-height: 100%;
+			height: 100%;
+			position: absolute;
+			left: 0;
+			top: 0;
+		} */
+
+		div.container {
+			position: absolute;
+			height: 90%;
+			width: 100%;
+			top: 15%;
+			overflow: auto;
+		}
+
+		div.content div#logo_image {
+			/* padding-top: 4.88rem; */
+			/*padding-top: 115px;*/
+			padding-bottom: 2%;
+			height: 17%;
+			margin: 0 auto 0 auto;
+			/* width: 29.4%; */
+			text-align: center;
+
+		}
+
+		div.content div.portal_title {
+			margin: 0 auto;
+			width: 84%;
+			height: 10%;
+			text-align: center;
+		}
+
+		div.content div.portal_title span {
+			word-wrap: break-word;
+			white-space: normal;
+			font-size: 1.2rem;
+			color: #36444B;
+		}
+
+		div#logo_image span.icon {
+			min-width: 6.375rem;
+			max-width: 14.375rem;
+			height: 100%;
+			margin: 0 auto;
+			display: block;
+			background: url(portal_logo.png) no-repeat center;
+			background-size: contain;
+			position: relative;
+		}
+
+		div#logo_image span#login_welcome_text {
+			word-wrap: break-word;
+			color: #FFFFFF;
+			font-size: 1.25rem;
+		}
+
+		div.content div#protal_login_ctn {
+			background-color: rgba(255, 255, 255, 0.80);
+			box-shadow: 0 3px 20px 0 rgba(0, 85, 100, 0.10);
+			border-radius: 6.81px;
+			margin: 20% auto 0 auto;
+			padding: 10% 6% 12% 6%;
+			width: 72%;
+		}
+
+		div.password-container {
+			position: relative;
+			width: 100%;
+		}
+
+		form#protal {
+			padding-bottom: 2.0875rem;
+		}
+
+		div.password-container span.password-icon {
+			position: absolute;
+			right: 0.8125rem;
+			top: 0.48rem;
+			width: 1.5rem;
+			height: 1.5rem;
+			display: inline-block;
+		}
+
+		.visible-icon {
+			background: url("Visible.png") no-repeat center;
+			background-size: cover;
+		}
+
+		.invisible-icon {
+			background: url("Invisible.png") no-repeat center;
+			background-size: cover;
+		}
+
+		input#protal_password {
+			height: 2.25rem;
+			width: 75%;
+			padding-left: 5%;
+			padding-right: 20%;
+			border: none;
+			border-radius: 0.3125rem;
+			outline: none;
+			font-size: 0.875rem;
+			text-align: center;
+		}
+
+		
+		input#protal_password::-ms-clear,
+		::-ms-reveal {
+			display: none;
+		}
+
+		div.password-container div.password-wrap {
+			border-radius: 0.33rem;
+			border: solid 1px #ffffff;
+			overflow: hidden;
+		}
+
+		div.password-container div.password-wrap.error {
+			border-color: #ffffff;
+		}
+
+		button#protal_login_btn {
+			background: #4acbd6;
+			border-radius: 0.3125rem;
+			border: none;
+			color: #ffffff;
+			height: 2.125rem;
+			width: 100%;
+			margin-top: 0.5rem;
+			outline: none;
+			font-size: 0.875rem;
+		}
+
+		button#protal_login_btn.disable {
+			background: #b2b2b2;
+		}
+
+		div.term-container {
+			width: 100%;
+			color: #36444B;
+			margin-top: 0.592rem;
+			cursor: pointer;
+			text-align: center;
+		}
+
+		div#protal_login_ctn span.icon {
+			width: 1.1rem;
+			height: 1.1rem;
+			display: inline-block;
+			vertical-align: top;
+			margin-right: 0.2rem;
+			background: url("Enable1.png") no-repeat center;
+			background-size: cover;
+		}
+
+		div#protal_login_ctn span.click {
+			background: url("Enable2.png") no-repeat center;
+			background-size: cover;
+		}
+
+		div#protal_login_ctn {
+			font-size: 0;
+		}
+
+		a.link {
+			color: #36444B;
+			font-size: 0.75rem;
+		}
+
+		#accept_note {
+			font-size: 0.75rem;
+			display: inline-block;
+			vertical-align: top;
+			line-height: 0.95rem;
+			max-width: 65%;
+			word-wrap: break-word;
+			white-space: normal;
+		}
+
+		div#alert {
+			position: absolute;
+			left: 8%;
+			top: 28%;
+			width: 72%;
+			height: 3.125rem;
+			background: rgba(255, 255, 255, 0.80);
+			box-shadow: 0 3px 23px 0 rgba(0, 85, 100, 0.10);
+			border-radius: 8px;
+			font-size: 1.066rem;
+			text-align: center;
+			padding: 0 6%;
+			z-index: 99;
+		}
+
+		div#alert span {
+			display: inline-block;
+			position: relative;
+			top: 50%;
+			transform: translateY(-50%);
+			height: 1.82rem;
+			color: #36444B;
+		}
+
+		div.error-tips-content {
+			color: #c11c66;
+			line-height: 1.25rem;
+			font-size: 0.875rem;
+		}
+
+		span.widget-error-tips-icon {
+			width: 1.5rem;
+			height: 1.5rem;
+			margin-right: 0.2rem;
+			display: inline-block;
+			vertical-align: middle;
+			background: url(red-eclamation.png) no-repeat center;
+			background-size: cover;
+		}
+
+		div.widget-error-tips-wrap {
+			display: inline-block;
+			vertical-align: middle;
+		}
+
+		div.textbox-error-tips {
+			margin-top: 0.125rem;
+			text-align: left;
+		}
+
+		span.text-hint {
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+		}
+
+		input.password-hint {
+			height: 2.125rem;
+			width: 94.4%;
+			color: #ccc;
+			border: none;
+			outline: hidden;
+			padding: 2px 8px 2px 8px;
+			background: transparent;
+			text-align: center;
+			font-size: 0.875rem;
+		}
+
+		input.password-hint::-ms-input-placeholder {
+			text-align: center;
+		}
+
+		input.password-hint::-webkit-input-placeholder {
+			text-align: center;
+		}
+
+		input.password-hint::-moz-placeholder {
+			text-align: center;
+		}
+
+		div.fix {
+			width: 100%;
+			position: absolute;
+			bottom: 0;
+			left: 0;
+		}
+
+		div.term_of_use {
+			position: relative;
+			width: 80%;
+			max-height: 14rem;
+			margin-top: 0.625rem;
+			padding: 1.066rem 0 1rem 0;
+			margin: 0.625rem auto 0 auto;
+			background: #FFFFFF;
+			box-shadow: 0 3px 23px 0 rgba(0, 85, 100, 0.10);
+			border-radius: 8px;
+			font-size: 0.875rem;
+			resize: none;
+			text-align: center;
+		}
+
+		div.term_of_use .term-of-use-title {
+			margin: 0 0 1.066rem 0;
+			font-size: 1rem;
+			color: #000000;
+			font-weight: 600;
+		}
+
+		div.term_of_use .term-of-use-content {
+			font-family: Arial, Sans-Serif, Geneva, Verdana;
+			max-height: 10.5rem;
+			padding: 0 1.1rem;
+			font-size: 0.78rem;
+			color: rgba(0, 0, 0, 0.50);
+			line-height: 1.2rem;
+			overflow: auto;
+			word-wrap: break-word;
+			white-space: pre-wrap;
+		}
+
+		div.term_of_use .close-term-of-use {
+			position: absolute;
+			top: 0.9rem;
+			right: 1rem;
+			width: 1.5rem;
+			height: 1.5rem;
+			display: inline-block;
+			vertical-align: middle;
+			background: url(Close.png) no-repeat center;
+			background-size: cover;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="content">
+		<img src="./portal_back.jpg" class="main-background-img">
+		<!-- <div class="mask"></div> -->
+		<div class="container">
+			<div id="alert" class="hidden">
+				<span></span>
+			</div>
+			<div id="logo_image">
+				<span class="icon"></span>
+			</div>
+			<div class="portal_title">
+				<span class="text" id="login_welcome_text"></span>
+			</div>
+
+			<form id="protal">
+				<div id="protal_login_ctn">
+					<div class="password-container">
+						<div class="password-wrap">
+							<label>
+								<input type="password" id="protal_password" />
+								<span id="password_icon" class="password-icon invisible-icon"></span>
+							</label>
+							<span class="text-hint">
+								<input class="password-hint" readonly="true">
+							</span>
+						</div>
+						<div class="textbox-error-tips hidden">
+							<span class="widget-error-tips-icon"> </span>
+							<div class="widget-error-tips-wrap">
+								<div class="error-tips-content"></div>
+							</div>
+						</div>
+					</div>
+
+					<button type="button" id="protal_login_btn" class="disable"></button>
+					<div id="term-container" class="term-container">
+
+						<label for radio>
+							<span class="icon" id="span_radio"></span>
+							<input type="radio" name="radio" class="hidden" id="input_radio">
+							<span id="accept_note"></span>
+						</label>
+
+					</div>
+
+				</div>
+			</form>
+
+			<div class="term_of_use hidden" id="term" readonly="readonly">
+				<span id="close_term_of_use" class="close-term-of-use"></span>
+				<p id="term_of_use_title" class="term-of-use-title"></p>
+				<pre class="term-of-use-content">
+					<span></span>
+				</pre>
+			</div>
+			<iframe id="portal_iframe" class="hidden"></iframe>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+	var setRootFontSize = function () {
+		var winWidth = window.innerWidth;
+		if (winWidth > 600) {
+			winWidth = 600;
+		}
+		var devicePixelRatio = Math.floor(window.devicePixelRatio);
+		if (devicePixelRatio <= 0) {
+			devicePixelRatio = 1;
+		}
+		if (winWidth / devicePixelRatio > 540) {
+			winWidth = 540 * devicePixelRatio;
+		}
+
+		var v = devicePixelRatio >= 3 ? 24 : 20;
+		var rootFontSize = winWidth / v;
+		return rootFontSize;
+	}
+
+	var escapeHTML = function (string) {
+		var r = string.toString();
+			r = r.replace(/\&/g, "&amp;");
+			r = r.replace(/\</g, "&lt;");
+			r = r.replace(/\>/g, "&gt;");
+			r = r.replace(/\"/g, "&quot;");
+			r = r.replace(/[ \f\r\t\v]/g ,"&nbsp;");
+			r = r.replace(/\n/g ,"&#10;");
+
+		return r;
+	};
+
+	var unEscapeHtml = function (string) {
+
+		var r = string.toString();
+			r = r.replace(/&amp;/g, "&");
+			r = r.replace(/&lt;/g, "<");
+			r = r.replace(/&gt;/g, ">");
+			r = r.replace(/&quot;/g, '"');
+			r = r.replace(/&nbsp;/g ,' ');
+			r = r.replace(/&#10;/g ,'\n');
+
+		return r;
+	};
+
+	$(window).on("resize", function () {
+		var fontsize = setRootFontSize();
+		$("html").css("font-size", fontsize);
+		//这三句必须保留，兼容UC
+		$("span.password-icon").css("width", "1.5rem");
+		$("#accept_note").css("font-size", "0.75rem");
+		$("#span_radio").css("width", "1.1rem");
+	});
+
+	$(document).ready(function () {
+		var fontsize = setRootFontSize();
+		fontsize = fontsize + "px";
+		$("html").css("font-size", fontsize);
+
+		$("#alert span").text($.su.CHAR.PROTAL.SUCCESS);
+		if (!title) {
+			$("#login_welcome_text").text($.su.CHAR.PROTAL.WELCOME);
+		} else {
+			$("#login_welcome_text").text(unEscapeHtml(title));
+		}
+
+		$('#term_of_use_title').text($.su.CHAR.PROTAL.TERMS_OF_USE);
+		$("#protal_login_btn").text($.su.CHAR.PROTAL.LOGIN);
+		$("#accept_note").html($.su.CHAR.PROTAL.ACCEPT_TERMS_OF_USE);
+		$("input.password-hint").val($.su.CHAR.PROTAL.PASSWORD);
+
+		term_of_use = unEscapeHtml(term_of_use);
+		//term_of_use = term_of_use.replace(/<br\/>/g, '\r\n');
+
+		if (!/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/g.test(font_color)) {
+			font_color = "ffffff";
+		}
+		if (!/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/g.test(theme_color)) {
+			theme_color = "4acbd6";
+		}
+
+		$("#login_welcome_text").css("color", hexToRgb(font_color, font_opacity));
+		$("#protal_login_btn").css("background", hexToRgb(theme_color, theme_opacity));
+
+		$("pre.term-of-use-content").text(term_of_use);
+
+		var judgeBroswer = function () {
+			var userAgent = navigator.userAgent.toLowerCase();
+			var flag = userAgent.indexOf("android");
+			if (flag > 0) {
+				return "Android";
+			}
+		}
+
+		var judgeUC = function () {
+			var userAgent = navigator.userAgent.toLowerCase();
+			var flag = userAgent.indexOf("uc");
+			if (flag > 0) {
+				return "UC";
+			}
+		}
+
+		var agent = judgeUC();
+		if (agent == "UC") {
+			var fontsize = setRootFontSize();
+			$("html").css("font-size", fontsize);
+			$("span.password-icon").css("width", "1.5rem");
+			$("#accept_note").css("font-size", "0.75rem");
+			$("#span_radio").css("width", "1.1rem");
+		}
+
+
+		if (auth_type == "none") {
+			$("div.password-container").addClass("hidden");
+		} else {
+			$("div.password-container").removeClass("hidden");
+		}
+
+		if (term_of_use == "") {
+			$("#term-container").addClass("hidden");
+			$("#span_radio").addClass("click");
+			$("#protal_login_btn").removeClass("disable");
+		}
+
+
+		//同意用户协议
+		$("span#span_radio").click(function (e) {
+			e.stopPropagation();
+			e.preventDefault();
+			var display = $("#alert").css("display");
+			if (display != "none") {
+				return;
+			}
+			var beClicked = $("#span_radio").hasClass("click");
+			if (beClicked) {
+				$("#span_radio").removeClass("click");
+				$("#protal_login_btn").addClass("disable");
+			} else {
+				$("#span_radio").addClass("click");
+				$("#protal_login_btn").removeClass("disable");
+			}
+		});
+
+		String.prototype.trim = function () {
+			return this.replace(/(^\s*)|(\s*$)/g, "");
+		}
+
+		var guestLogin = function (data) {
+			var data = data || {};
+			$.ajax({
+				url: "/auth",
+				timeout: 10000,
+				type: "get",
+				async: false,
+				data: data,
+				success: function (data) {
+					data = $.parseJSON(data);
+					var url = data.url;
+					var redirect_url = "";
+					var pattern = /((http|ftp|https):\/\/)/;
+					var result = url.match(pattern);
+					if (result) {
+						redirect_url = url.trim();
+					} else {
+						redirect_url = "http://" + url.trim();
+					}
+
+					var status = data.loginstatus;
+					if (status == "success") {
+						$("#alert span").text($.su.CHAR.PROTAL.SUCCESS);
+						$("#protal_login_ctn").addClass("hidden");
+						$("#alert").fadeIn(500, function () {
+							if (redirect_url && url != "none") {
+								$("#alert").fadeOut(3000);
+								window.location.href = redirect_url;
+							}
+							if (url == "none") {
+								$("div.password-container").addClass("hidden");
+								$("#portal_iframe").attr("src", window.location.href);
+							}
+						});
+					}
+					if (status == "failed") {
+						// $("#alert span").text($.su.CHAR.PROTAL.FAILED);
+						// $("#alert span").css("color", "#c11c66");
+						// $("#protal_login_btn").addClass("disable");
+						// $("#alert").fadeIn(500, function () {
+						// 	$("#alert").fadeOut(3000, function () {
+						// 		$("#protal_login_btn").removeClass("disable");
+						// 	});
+						// });
+						var ctn = $("div#protal_login_ctn");
+						cancleClick = true;
+						$("div.error-tips-content").text($.su.CHAR.ERROR["00000003"]);
+						content = ctn.find("div.error-tips-content").css({
+							"width": "inherit",
+							"white-space": "normal"
+						});
+						ctn.find("div.textbox-error-tips").removeClass("hidden");
+						$("div.password-wrap").css("border-color", "#c11c66");
+					}
+				},
+				error: function () {
+					$("#alert span").text($.su.CHAR.PROTAL.FAILED);
+					$("#alert span").css("font-size", "0.746rem");
+					$("#alert span").css("color", "#c11c66");
+					$("#alert").fadeIn(150, function () {
+						$("#alert").fadeOut(3000);
+					});
+				}
+			})
+		};
+
+
+		var cancleClick = false;
+
+		$("#protal_login_btn").click(function (e) {
+			e.preventDefault();
+			e.preventDefault();
+			$("#alert span").removeAttr("style");
+			//判断是否被禁用
+			var disable = $(this).hasClass("disable");
+			if (disable) {
+				$("#alert span").text($.su.CHAR.PROTAL.TERMS_OF_USE_ERROR);
+				$("#alert span").css("font-size", "0.746rem");
+				$("#alert span").css("color", "#c11c66");
+				$("#alert").fadeIn(150, function () {
+					$("#alert").fadeOut(3000);
+				});
+				return;
+			}
+			var password = $("#protal_password").val();
+
+			//判断radio标签有没有被勾选
+			var beClicked = $("#span_radio").hasClass("click");
+			var ctn = $("div#protal_login_ctn");
+
+			//发到后台的数据
+			var data = {};
+			if (beClicked && password != "") {
+				data.password = password;
+				guestLogin(data);
+			}
+			if (!password) {
+				cancleClick = true;
+				$("div.error-tips-content").text($.su.CHAR.ERROR["00000001"]);
+				content = ctn.find("div.error-tips-content").css({
+					"width": "inherit",
+					"white-space": "normal"
+				});
+				ctn.find("div.textbox-error-tips").removeClass("hidden");
+				$("div.password-wrap").css("border-color", "#c11c66");
+				$("input.password-hint").css("display", "block");
+			}
+			if (beClicked && auth_type == "none") {
+				guestLogin(data);
+			}
+		});
+
+		//失焦验证
+		$("#protal_password").blur(function (e) {
+			e.stopPropagation();
+
+			var password = $("#protal_password").val();
+			var disable = $("#protal_login_btn").hasClass("disable");
+			if (disable) {
+				if (!password) {
+					$("input.password-hint").css("display", "block");
+				}
+				return;
+			}
+			var ctn = $("div#protal_login_ctn");
+			if (!password) {
+				cancleClick = true;
+				$("div.error-tips-content").text($.su.CHAR.ERROR["00000001"]);
+				content = ctn.find("div.error-tips-content").css({
+					"width": "inherit",
+					"white-space": "normal"
+				});
+				ctn.find("div.textbox-error-tips").removeClass("hidden");
+				$("div.password-wrap").css("border-color", "#c11c66");
+				$("input.password-hint").css("display", "block");
+			}
+		});
+
+		//password获得焦点
+		$("#protal_password").focus(function () {
+			var ctn = $("div#protal_login_ctn");
+			ctn.find("div.textbox-error-tips").addClass("hidden");
+			$("div.password-wrap").css("border-color", "#ffffff");
+			$("input.password-hint").css("display", "none");
+		});
+
+		//password的提示信息
+		$("input.password-hint").click(function (e) {
+			$(this).css("display", "none");
+			$("#protal_password").focus();
+		});
+
+		$("a.link").click(function (e) {
+			e.preventDefault();
+			var hidden = $("#term").hasClass("hidden");
+			if (hidden) {
+				$("#protal").addClass("hidden");
+				$("#term").removeClass("hidden");
+			} else {
+				$("#protal").removeClass("hidden");
+				$("#term").addClass("hidden");
+			}
+		});
+
+		$("#close_term_of_use").click(function (e) {
+			e.stopPropagation();
+			e.preventDefault();
+			$("#protal").removeClass("hidden");
+			$("#term").addClass("hidden");
+		});
+
+		//点击页面
+		$("html").click(function (e) {
+			e.stopPropagation();
+			var c = $("div#protal_login_ctn");
+			var hidden = c.find("div.textbox-error-tips").hasClass("hidden");
+			if (!cancleClick) {
+				c.find("div.textbox-error-tips").addClass("hidden");
+			}
+			cancleClick = false;
+		});
+
+		$("#password_icon").click(function (e) {
+			e.stopPropagation();
+			var passwordIcon = $('#password_icon');
+			var showPwd = $("#protal_password");
+			if (passwordIcon.hasClass('invisible-icon')) {
+				passwordIcon.removeClass('invisible-icon').addClass('visible-icon');//密码可见
+				showPwd.prop('type', 'text');
+			} else {
+				passwordIcon.removeClass('visible-icon').addClass('invisible-icon');//密码不可见
+				showPwd.prop('type', 'password');
+			};
+		});
+
+		function hexToRgb(hex, opacity) {
+			opacity = Number(opacity);
+			if (!opacity || isNaN(Number(opacity))) {
+				opacity = 100;
+			}
+			var shorthandRegex = /^([a-f\d])([a-f\d])([a-f\d])$/i;
+			hex = hex.replace(shorthandRegex, function (m, r, g, b) {
+				return r + r + g + g + b + b;
+			});
+			var result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+			return (opacity === 100) ?
+				"rgb(" + Math.round(parseInt(result[1], 16)) + ", " + Math.round(parseInt(result[2], 16)) + ", " + Math.round(parseInt(result[3], 16)) + ")" :
+				"rgba(" + Math.round(parseInt(result[1], 16)) + ", " + Math.round(parseInt(result[2], 16)) + ", " + Math.round(parseInt(result[3], 16)) + ", " + opacity / 100 + ")";
+		}
+
+	});
+
+</script>
+
+</html>

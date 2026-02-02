@@ -1,0 +1,8 @@
+#!/bin/sh
+
+[ "$DEVICE" == "lo" ] && exit 0
+
+
+if [ "$INTERFACE" == "lan"  -a "$ACTION" == "ifup" ]; then
+	/etc/init.d/wifidog restart &
+fi
