@@ -1,0 +1,6 @@
+[gerrit]
+host=psp.sdlc.rd.realtek.com
+port=29418
+project=rsdk/uclibc
+defaultbranch=release/uclibc-0.9.33
+defaultremote=origin
