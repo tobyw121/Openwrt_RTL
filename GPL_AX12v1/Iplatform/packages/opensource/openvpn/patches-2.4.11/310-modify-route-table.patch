@@ -1,0 +1,93 @@
+--- a/src/openvpn/options.c
++++ b/src/openvpn/options.c
+997a998
+> 	setenv_int (es, "role", o->mode);
+--- a/src/openvpn/route.c
++++ b/src/openvpn/route.c
+1527a1528,1552
+> /*
+>  * Given an environmental variable name, search
+>  * the envp array for its value, returning it
+>  * if found or NULL otherwise.
+>  */
+> static const char *
+> get_env (const char *name, const char *envp[])
+> {
+>     if (envp)
+>     {
+>         int i;
+>         const int namelen = strlen (name);
+>         for (i = 0; envp[i]; ++i)
+>         {
+>             if (!strncmp (envp[i], name, namelen))
+>             {
+>                 const char *cp = envp[i] + namelen;
+>                 if (*cp == '=')
+>                     return cp + 1;
+>             }
+>         }
+>     }
+>     return NULL;
+> }
+> 
+1543a1569,1570
+> 	unsigned char role=255;
+> 	char *const *envp = NULL;
+1576,1583c1603,1622
+<     if (is_on_link(is_local_route, flags, rgi))
+<     {
+<         argv_printf_cat(&argv, "dev %s", rgi->iface);
+<     }
+<     else
+<     {
+<         argv_printf_cat(&argv, "via %s", gateway);
+<     }
+---
+> 	envp = (char *const *)make_env_array (es, true, &gc);
+> 	role = *(get_env("role", envp));
+> 	msg(M_DEBUG, "role:%d",role);
+> 	if ( 48 == role )
+> 	{
+> 		//means this daemon works as mode_p2p: client,so add route to table vpn
+> 		msg(M_DEBUG, "works as client, add route to table vpn");
+> 		if (is_on_link (is_local_route, flags, rgi))
+> 			argv_printf_cat (&argv, "dev %s table vpn", rgi->iface);
+> 		else
+> 			argv_printf_cat (&argv, "via %s table vpn", gateway);
+> 	}
+> 	else //if ( 49 == role )
+> 	{
+> 		msg(M_DEBUG, "works as server, add route to table main");
+> 		if (is_on_link (is_local_route, flags, rgi))
+> 			argv_printf_cat (&argv, "dev %s", rgi->iface);
+> 		else
+> 			argv_printf_cat (&argv, "via %s", gateway);
+> 	}
+2150a2190,2191
+> 	unsigned char role = 255;
+> 	char *const *envp = NULL;
+2175,2178c2216,2234
+<     argv_printf(&argv, "%s route del %s/%d",
+<                 iproute_path,
+<                 network,
+<                 netmask_to_netbits2(r->netmask));
+---
+> 	envp = (char *const *)make_env_array (es, true, &gc);
+> 	role = *(get_env("role", envp));
+> 	if ( 48 == role )
+> 	{
+> 		msg(M_DEBUG, "works as client, delete route from table vpn");
+>   argv_printf (&argv, "%s route del %s/%d table vpn",
+> 		  iproute_path,
+> 	      network,
+>		  netmask_to_netbits2(r->netmask));
+> 	}
+> 	else //if ( 49 == role )
+> 	{
+> 		msg(M_DEBUG, "works as server, delete route from table main");
+>    argv_printf (&argv, "%s route del %s/%d",
+>    	  iproute_path,
+>  	      network,
+>		  netmask_to_netbits2(r->netmask));
+> 
+> 	}
