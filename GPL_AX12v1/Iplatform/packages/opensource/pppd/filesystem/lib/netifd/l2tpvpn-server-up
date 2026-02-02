@@ -1,0 +1,52 @@
+#!/bin/sh
+
+#IFNAME=pppdrv0
+#IPLOCAL=10.9.0.1
+#PPPLOGNAME=root
+#ORIG_UID=0
+#SPEED=150
+#IPREMOTE=10.9.0.14
+#PPPD_PID=2021
+#PWD=/
+#PEERNAME=admin
+#DEVICE=/dev/pts/0
+
+CONSOLE="/dev/console"
+echo "$0 processing" > $CONSOLE
+env > $CONSOLE
+LAN="br-lan"
+
+ipmark="peer-ip:"
+connmark="ESTABLISHED"
+connection="L2TP-VPNS-PSK"
+
+. /lib/functions.sh
+
+config_load l2tpoveripsec
+config_get encryption l2tpoveripsec encryption
+echo $0 $encryption > $CONSOLE
+
+if [ $encryption = "true" ]; then
+	info=/tmp/tunnel-ppp-"$PPPD_PID"
+	ip_info=$(grep "$ipmark" $info)
+	if [ -n $ip_info ]; then
+		ip=${ip_info##$ipmark}
+	fi
+	echo $0 $info $ip_info $ip > $CONSOLE
+
+	ipsec_info=$(ipsec status $connection|grep $connmark|grep $ip)
+	words=$(expr length "$ipsec_info")
+	echo $0 ="$ipsec_info"= ="$words"= > $CONSOLE
+
+	#ugly
+	if [ $words -eq 0 -o "$word" = "0" ]; then
+		echo "$ip haven't got ipsec tunnel with us, disconnect" > $CONSOLE
+		kill -9 $PPPD_PID
+	else
+		echo "$ip have got ipsec tunnel with us ="$ipsec_info"=  ="$words"= > $CONSOLE
+	fi
+
+	rm -f $info
+else
+	echo "l2tp server is unecrypted" > $CONSOLE
+fi

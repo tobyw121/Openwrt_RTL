@@ -1,0 +1,17 @@
+#!/bin/sh
+
+#IFNAME=pppdrv0
+#IPLOCAL=10.9.0.1
+#PPPLOGNAME=root
+#ORIG_UID=0
+#SPEED=150
+#IPREMOTE=10.9.0.14
+#PPPD_PID=2021
+#PWD=/
+#PEERNAME=admin
+#DEVICE=/dev/pts/0
+
+CONSOLE="/dev/console"
+echo "$0 processing" > $CONSOLE
+env > $CONSOLE
+LAN="br-lan"

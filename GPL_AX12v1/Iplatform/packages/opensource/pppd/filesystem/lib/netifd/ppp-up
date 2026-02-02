@@ -1,0 +1,44 @@
+#!/bin/sh
+PPP_IPPARAM="$6"
+
+. /lib/netifd/netifd-proto.sh
+. /lib/functions.sh
+
+proto_init_update "$IFNAME" 1 1
+proto_set_keep 1
+[ -n "$PPP_IPPARAM" ] && {
+	[ -n "$IPLOCAL" ] && proto_add_ipv4_address "$IPLOCAL" 32
+	[ -n "$IPREMOTE" ] && {
+		[ -f /tmp/server.l2tp-internet ] && {
+			cat /tmp/server.l2tp-internet | grep -w $IPREMOTE && ROUTE_PRE=0
+		}
+		[ -f /tmp/server.pptp-internet ] && {
+			cat /tmp/server.pptp-internet | grep -w $IPREMOTE && ROUTE_PRE=0
+		}
+		proto_add_ipv4_route 0.0.0.0 0 "$IPREMOTE" "$ROUTE_PRE"
+	}
+	[ -n "$LLLOCAL" ] && proto_add_ipv6_address "$LLLOCAL" 128
+	[ -n "$LLREMOTE" ] && proto_add_ipv6_route "::0" 0 "$LLREMOTE"
+	[ -n "$DNS1" ] && proto_add_dns_server "$DNS1"
+	[ -n "$DNS2" -a "$DNS1" != "$DNS2" ] && proto_add_dns_server "$DNS2"
+}
+proto_send_update "$PPP_IPPARAM"
+
+json_load "`ubus call network.interface.wanv6 status`"
+json_get_var proto_v6 proto
+json_get_var connectable connectable
+if [ $proto_v6 = "6to4" ] && [ $connectable = "1" ]; then
+	config_load network
+	config_get proto_v4 internet proto
+	if [ $proto_v4 = "l2tp" ] || [ $proto_v4 = "pptp" ]; then
+		ubus call network.interface.wanv6 disconnect
+		ubus call network.interface.wanv6 connect
+	fi
+fi
+
+[ -d /etc/ppp/ip-up.d ] && {
+	for SCRIPT in /etc/ppp/ip-up.d/*
+	do
+		[ -x "$SCRIPT" ] && "$SCRIPT" "$@"
+	done
+}
