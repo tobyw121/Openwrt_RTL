@@ -1,0 +1,7 @@
+
+.PHONY: romfs
+romfs:
+	$(ROMFSINST) /lib/libcrypto$(SHLIB_EXT)
+	$(ROMFSINST) /lib/libssl$(SHLIB_EXT)
+	$(ROMFSINST) -s libcrypto$(SHLIB_EXT) /lib/libcrypto.so
+	$(ROMFSINST) -s libssl$(SHLIB_EXT) /lib/libssl.so
