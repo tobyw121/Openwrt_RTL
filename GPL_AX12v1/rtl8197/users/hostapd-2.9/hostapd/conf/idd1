@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+
+if [ $# -lt 1 ]; then echo "Usage: $0 <offset>";  exit 1 ; fi
+
+echo 0x$1 4 > /proc/net/rtl8852ae/wlan1/read_reg
+cat /proc/net/rtl8852ae/wlan1/read_reg
+
