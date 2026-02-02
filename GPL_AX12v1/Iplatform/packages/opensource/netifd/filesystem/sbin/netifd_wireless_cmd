@@ -1,0 +1,70 @@
+#!/usr/bin/lua
+
+local sys   = require "luci.sys"
+local util  = require "luci.util"
+local uci   = require "luci.model.uci"
+local inetm  = require "luci.model.internet"
+local uci_r    = uci.cursor()
+local internet = inetm.Internet()
+local changed = false
+
+if arg[1] == nil or arg[2] == nil then
+    return
+end
+
+local ifname = arg[1]
+local vap = arg[2]
+
+local enable = uci_r:get("wireless", vap, "enable") or "off"
+if enable ~= "on" then
+	return
+end
+
+local wan_ifname = uci_r:get("network", "wan", "ifname")
+local wanv6_ifname = uci_r:get("network", "wanv6", "ifname")
+
+if wan_ifname ~= nil and wan_ifname ~= ifname then
+	changed = true
+	uci_r:set("network", "wan", "ifname", ifname)
+end
+
+if wanv6_ifname ~= nil and wanv6_ifname ~= ifname then
+	changed = true
+	uci_r:set("network", "wanv6", "ifname", ifname)
+end
+
+uci_r:foreach("protocol", "proto",
+    function(section)
+        local name = section["ifname"]
+        local proto = section[".name"]
+        
+        if proto == "dhcp" or proto == "static" or proto == "dhcpv6" or proto == "staticv6" then
+            if ifname ~= name then
+               uci_r:set("protocol", proto, "ifname", ifname)
+               changed = true
+            end
+        end
+    end)
+
+
+if changed == true then
+    uci_r:commit("protocol")
+    uci_r:commit("network")
+    internet:reload()
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

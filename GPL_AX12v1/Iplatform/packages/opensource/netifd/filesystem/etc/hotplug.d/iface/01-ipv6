@@ -1,0 +1,230 @@
+#!/bin/sh
+
+include /lib/network
+
+. /lib/functions.sh
+. /lib/functions/network.sh
+. /usr/share/libubox/jshn.sh
+. /lib/netifd/netifd-proto.sh
+
+get_iface_gateway() {
+	local iface="$1"
+	local var="$2"
+	gwstr=`ubus call network.interface.$iface status | grep -A2 '"target": "::"' | grep '"nexthop": '`
+	gwstr=${gwstr##*: \"}
+	gwstr=${gwstr%%\"}
+	
+	eval "export -- \"$var=$gwstr\""
+}
+
+get_iface_l3_device() {
+	local iface="$1"
+	local var="$2"
+	ifstr=`ubus call network.interface.$iface status | grep '"l3_device": '`
+	ifstr=${ifstr##*: \"}
+	ifstr=${ifstr%%\",}
+	
+	eval "export -- \"$var=$ifstr\""
+}
+
+get_gw_route_gateway() {
+	local gw_route=`ip -6 route|grep default`
+	local var="$1"
+			
+	[ -n "$gw_route" ] && {
+		local oIFS="$IFS";IFS=" "; set -- $gw_route;IFS="oIFS"
+		eval "export -- \"$var=$3\""
+	}
+}
+
+get_gw_route_dev () {
+	local gw_route=`ip -6 route|grep default`
+	local var="$1"
+	
+	[ -n "$gw_route" ] && {
+		local oIFS="$IFS";IFS=" "; set -- $gw_route;IFS="oIFS"
+		eval "export -- \"$var=$5\""
+	}
+}
+
+setup_wanv6_gateway() {
+	local ifname
+	
+	local gw_route=`ip -6 route|grep default`
+	[ -z ${gw_route} ] && {
+	        config_load /etc/config/network
+	
+		config_get proto wanv6 proto
+	        config_get ifname wanv6 ifname
+		
+		[ "$proto" = static ] && {
+			config_get ip6gw wanv6 ip6gw
+			[ -n "$ip6gw" ] && ip -6 route add "::/0" via "$ip6gw" dev "$ifname"
+		}
+		
+		[ "$proto" = dhcp6c ] && {
+		        local gateway=`cat /proc/sys/net/ipv6/conf/$ifname/default_gateway`
+		        [ ${#gateway} -ne 0 ] && ip -6 route add "::/0" via "$gateway" dev "$ifname"
+	        }
+		ip -6 route|grep default > /dev/console
+	}
+}
+
+[ "$ACTION" == "ifup" -a "$INTERFACE" == "wanv6" ] && {
+    local proto
+    local ip_mode
+    local prefix
+    local wanv6_addr
+    local lan_proto
+    local wanv6_ifname
+    local element
+    local lanv6_prefix lanv6_ifname
+
+    config_load /etc/config/network
+    config_get proto wanv6 proto
+    config_get ip_mode wanv6 ip_mode
+    config_get wanv6_ifname wanv6 ifname
+    config_get lan_proto lanv6 proto
+    config_get lanv6_ifname lanv6 ifname
+
+    local model=$(uci get profile.@global[0].model -c /etc/profile.d -q)
+    if [ "$model" = "RTL_8197" ]; then
+        if [ "$proto" == "static" ]; then
+            echo "wanv6->ifup: ${proto}" > /dev/console
+            proto_setup_ipv6_acl
+        fi
+    fi
+
+    if [ "$proto" == "dhcp6c" -o "$proto" == "pppoev6" ]; then
+        if [ "$ip_mode" == "prefix" -a "$lan_proto" != "ndp" ]; then
+            prefix=`cat /tmp/dhcp6c/prefix.info`
+            if [ $? -ne 0 -o -z "$prefix" ]; then
+                exit 0
+            fi
+
+            uci get network.lanv6
+            if [ $? -ne 0 ]; then
+                uci batch <<EOF
+set network.lanv6='interface'
+set network.lanv6.proto='slaac'
+set network.lanv6.ifname='$(uci get protocol.slaac.ifname)'
+set network.lanv6.auto='$(uci get protocol.slaac.auto)'
+set network.lanv6.prefixlen='$(uci get protocol.slaac.prefixlen)'
+set network.lanv6.prefix='$prefix'
+EOF
+                uci commit network
+                uci set protocol.dhcp6s.prefix="$prefix"
+                uci set protocol.slaac.prefix="$prefix"
+                uci set protocol.rdnss.prefix="$prefix"
+                uci commit protocol
+                ubus call network reload
+                exit 0
+            else
+                uci set network.lanv6.prefix="$prefix" 
+                if [ $? -eq 0 ]; then
+                    uci commit network
+                    uci set protocol.dhcp6s.prefix="$prefix"
+                    uci set protocol.slaac.prefix="$prefix"
+                    uci set protocol.rdnss.prefix="$prefix"
+                    uci commit protocol
+                fi
+            fi
+        fi
+    elif [ "$proto" == "6to4" ]; then
+        uci get network.lanv6
+        if [ $? -ne 0 ]; then
+            uci batch <<EOF
+set network.lanv6='interface'
+set network.lanv6.proto='slaac'
+set network.lanv6.ifname='$(uci get protocol.slaac.ifname)'
+set network.lanv6.auto='$(uci get protocol.slaac.auto)'
+set network.lanv6.prefixlen='$(uci get protocol.slaac.prefixlen)'
+set network.lanv6.prefix='2002::'
+EOF
+            uci commit network
+            uci set protocol.dhcp6s.prefix="2002::"
+            uci set protocol.slaac.prefix="2002::"
+            uci set protocol.rdnss.prefix="2002::"
+            uci commit protocol
+            ubus call network reload
+            exit 0
+        else
+            uci set network.lanv6.prefix="2002::"
+            uci commit network
+            uci set protocol.dhcp6s.prefix="2002::"
+            uci set protocol.slaac.prefix="2002::"
+            uci set protocol.rdnss.prefix="2002::"
+            uci commit protocol
+        fi
+    elif [ "$proto" == "6rd" ]; then
+        prefix=$(uci get network.wanv6.ip6prefix)
+        uci get network.lanv6
+        if [ $? -ne 0 ]; then
+            uci batch <<EOF
+set network.lanv6='interface'
+set network.lanv6.proto='slaac'
+set network.lanv6.ifname='$(uci get protocol.slaac.ifname)'
+set network.lanv6.auto='$(uci get protocol.slaac.auto)'
+set network.lanv6.prefixlen='$(uci get protocol.slaac.prefixlen)'
+set network.lanv6.prefix='$prefix'
+EOF
+            uci commit network
+            uci set protocol.dhcp6s.prefix="$prefix"
+            uci set protocol.slaac.prefix="$prefix"
+            uci set protocol.rdnss.prefix="$prefix"
+            uci commit protocol
+            ubus call network reload
+            exit 0
+        else
+            uci set network.lanv6.prefix="$prefix"
+            uci commit network
+            uci set protocol.dhcp6s.prefix="$prefix"
+            uci set protocol.slaac.prefix="$prefix"
+            uci set protocol.rdnss.prefix="$prefix"
+            uci commit protocol
+        fi
+    fi
+
+    if [ "$lan_proto" == "ndp" ]; then
+        json_load "`ubus call network.interface.wanv6 status`"
+        json_get_var ifname_l3 l3_device
+
+        while read line                                                                          
+        do                                                                                       
+            [ $ifname_l3 != ${line##* } ] && continue                     
+            [ "fe80" = ${line:0:4} ] && continue                              
+            element=${line:0:32}                                      											 
+            ip6addr=${element:0:4}:${element:4:4}:${element:8:4}:${element:12:4}     
+            new_ip6addr=$ip6addr:${element:16:4}:${element:20:4}:${element:24:4}:${element:28:4}                                                                                                
+        done </proc/net/if_inet6
+			
+        [ -n "$new_ip6addr" ] && {
+            lanv6_prefix=$(lua /lib/netifd/lanv6_genrate_ndp_prefix.lua $new_ip6addr)
+            echo "$lanv6_prefix" > /tmp/dhcp6c/ndp_prefix
+        }
+
+        [ -n "$lanv6_prefix" ] && {
+            echo "hotplug.d iface 01-ipv6 $lanv6_prefix" > /dev/console
+            uci set network.lanv6.prefix="$lanv6_prefix"
+            uci set protocol.ndp.prefix="$lanv6_prefix"
+            uci set network.lanv6.prefixlen="64"
+            uci set protocol.ndp.prefixlen="64"
+            uci commit network
+            uci commit protocol
+        }
+    fi
+	
+	forwarding=`cat /proc/sys/net/ipv6/conf/all/forwarding`
+	[ $forwarding -ne 1 ] && echo "1" > /proc/sys/net/ipv6/conf/all/forwarding 
+	ubus call network.interface.lanv6 down
+	sleep 1
+	ubus call network.interface.lanv6 up
+	setup_wanv6_gateway
+}
+
+[ "$ACTION" == "ifdown" -a "$INTERFACE" == "wanv6" ] && {
+	local ifname
+	get_gw_route_dev ifname
+	[ -n "$ifname" ] && ip -6 route del "::/0" dev "$ifname"
+}
+
