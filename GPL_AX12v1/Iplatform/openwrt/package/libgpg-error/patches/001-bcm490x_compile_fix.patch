@@ -1,0 +1,22 @@
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -133,7 +133,7 @@ code-to-errno.h: Makefile mkerrnos.awk e
+ # It is correct to use $(CPP).  We want the host's idea of the error codes.
+ mkerrcodes.h: Makefile mkerrcodes.awk $(gpg_extra_headers)
+ 	$(AWK) -f $(srcdir)/mkerrcodes1.awk $(srcdir)/errnos.in >_$@
+-	$(CPP) $(extra_cppflags) _$@ | grep GPG_ERR_ | \
++	$(CPP) $(extra_cppflags) -P _$@ | grep GPG_ERR_ | \
+                $(AWK) -f $(srcdir)/mkerrcodes.awk >$@
+ 	-rm _$@
+ 
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -841,7 +841,7 @@ code-to-errno.h: Makefile mkerrnos.awk e
+ # It is correct to use $(CPP).  We want the host's idea of the error codes.
+ mkerrcodes.h: Makefile mkerrcodes.awk $(gpg_extra_headers)
+ 	$(AWK) -f $(srcdir)/mkerrcodes1.awk $(srcdir)/errnos.in >_$@
+-	$(CPP) $(extra_cppflags) _$@ | grep GPG_ERR_ | \
++	$(CPP) $(extra_cppflags) -P _$@ | grep GPG_ERR_ | \
+                $(AWK) -f $(srcdir)/mkerrcodes.awk >$@
+ 	-rm _$@
+ 
