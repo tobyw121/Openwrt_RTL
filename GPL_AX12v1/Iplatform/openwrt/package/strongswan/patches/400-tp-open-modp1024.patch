@@ -1,0 +1,18 @@
+--- a/src/libstrongswan/crypto/proposal/proposal.c
++++ b/src/libstrongswan/crypto/proposal/proposal.c
+@@ -1187,7 +1187,6 @@
+ 				/* only for testing purposes */
+ 				break;
+ 			case MODP_768_BIT:
+-			case MODP_1024_BIT:
+ 			case MODP_1536_BIT:
+ 				/* weak */
+ 				break;
+@@ -1202,6 +1201,7 @@
+ 			case NTRU_112_BIT:
+ 				/* rarely used */
+ 				break;
++			case MODP_1024_BIT:
+ 			case MODP_2048_BIT:
+ 				add_algorithm(this, DIFFIE_HELLMAN_GROUP, group, 0);
+ 				break;

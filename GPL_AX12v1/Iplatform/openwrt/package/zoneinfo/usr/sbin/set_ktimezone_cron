@@ -1,0 +1,42 @@
+#! /bin/sh
+
+. /lib/functions.sh
+
+local minute_start=$1
+local hour_start=$2
+local month_start=$3
+local day_start=$4
+
+local minute_end=$5
+local hour_end=$6
+local month_end=$7
+local day_end=$8
+
+local CRON_FILE="/etc/crontabs/root"
+local TMP_CRONTAB="/tmp/set_kernel_timezone_cron"
+local SET_KERNEL_TIMEZONE_START="date -k"
+local SET_KERNEL_TIMEZONE_END="date -k "
+local new_cron_item_start="$minute_start $hour_start * $month_start $day_start ${SET_KERNEL_TIMEZONE_START}"
+local new_cron_item_end="$minute_end $hour_end * $month_end $day_end ${SET_KERNEL_TIMEZONE_END}"
+
+local dst_enable=`uci get system.dst.dst_enable`
+if [ "A$dst_enable" != "Aon" ]; then
+	crontab -l | grep -v "date -k" | crontab -
+	exit 1
+fi
+
+cron_item=`grep "${SET_KERNEL_TIMEZONE_START}" ${CRON_FILE}`
+[ "${cron_item}" != "${new_cron_item_start}" ] && {
+	echo "${new_cron_item_start}" > ${TMP_CRONTAB}
+	crontab -l | grep -v "${SET_KERNEL_TIMEZONE_START}" | cat - "${TMP_CRONTAB}" | crontab -
+	rm -f ${TMP_CRONTAB}
+}
+
+cron_item=`grep "${SET_KERNEL_TIMEZONE_END}" ${CRON_FILE}`
+[ "${cron_item}" != "${new_cron_item_end}" ] && {
+	echo "${new_cron_item_end}" > ${TMP_CRONTAB}
+	crontab -l | grep -v "${SET_KERNEL_TIMEZONE_END}" | cat - "${TMP_CRONTAB}" | crontab -
+	rm -f ${TMP_CRONTAB}
+}
+
+

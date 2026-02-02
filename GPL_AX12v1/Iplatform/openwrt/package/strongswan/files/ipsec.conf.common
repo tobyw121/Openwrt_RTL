@@ -1,0 +1,19 @@
+# /etc/ipsec.conf - strongSwan IPsec configuration file
+
+#is rekey necessary ? 
+
+config setup
+	charondebug="ike 4, knl 1, cfg 4"
+
+conn %default
+	ikelifetime=38430s
+	lifetime=36225s
+	keyexchange=ikev1
+	aggressive=no
+	authby=secret
+	dpdaction=restart
+	dpddelay=30s
+	dpdtimeout=150s
+	margintime=30s
+	rekeyfuzz=100%
+

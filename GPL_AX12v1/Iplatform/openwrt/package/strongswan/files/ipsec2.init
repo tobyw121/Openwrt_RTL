@@ -1,0 +1,155 @@
+#!/bin/sh /etc/rc.common
+# IPsec startup and shutdown script
+# ipsec init.d script for starting and stopping
+# the IPsec security subsystem starter
+
+#. /usr/share/libubox/jshn.sh
+. /lib/functions/network.sh
+
+#FBI: only customized to l2tp/ipsec server only.
+START=99
+
+SECRETS=/etc/ipsec.secrets
+SECRETS_TEMP=/etc/ipsec.secrets.server
+SECRETS_CLIENT=/etc/ipsec.secrets.client
+
+CONF=/etc/ipsec.conf
+CONF_SERVER=/etc/ipsec.conf.server
+CONF_CLIENT=/etc/ipsec.conf.client
+CONF_COMMON=/etc/ipsec.conf.common
+#just for debug onboard, do not open it in compiling
+DEBUG=0
+
+L2TP_VPN_CLIENT_OPEN=no
+L2TP_VPN_CLIENT_RUNNING=no
+
+get_l2tp_vpn_client_status() {
+	config_load vpn
+	config_get_bool enabled client 'enabled' 0
+	config_get vpntype client vpntype
+	config_get ipsec client ipsec
+
+	pid=$(pidof charon)
+	if [ $enabled -ne 0 -a $vpntype = "l2tpvpn" -a $ipsec = "1" ];then
+		L2TP_VPN_CLIENT_OPEN=yes
+		if [ ! -z $pid ]; then
+			L2TP_VPN_CLIENT_RUNNING=yes
+		fi
+	fi	
+}
+setup_global_config_in_teardown() {
+	cp ${CONF_COMMON} ${CONF}
+	cat ${CONF_CLIENT} >> ${CONF}
+	cp ${SECRETS_CLIENT} ${SECRETS}
+}
+setup_global_config() {
+#ipsec.conf is generated statically while compiling strongswan install, just process PSK here
+	
+#	need to set left/our-own internet ip address.
+	network_find_wan iface
+	network_get_ipaddr serverip $iface
+	if [ ! $serverip ]; then
+		echo "left= ?" > /dev/console
+		return 1
+	fi
+	#process conf
+	cp ${CONF_COMMON} ${CONF}
+	cat ${CONF_SERVER} >> ${CONF}
+	echo "	left=%any" >> ${CONF}
+	echo "" >> ${CONF} #important
+	if [ $L2TP_VPN_CLIENT_RUNNING = "yes" ];then	
+		echo "l2tpvpn client is running. append its conf" > /dev/console
+		cat ${CONF_CLIENT} >> ${CONF}
+	else
+		echo "l2tpvpn client not running. drop its conf" > /dev/console
+	fi
+
+	#process secrets
+	config_load l2tpoveripsec
+	config_get psk l2tpoveripsec psk
+	if [ ! "$psk" ]; then
+		echo "psk= ?" > /dev/console
+		return 1
+	fi
+	echo ": PSK \"$psk\"" > ${SECRETS_TEMP}
+	cp ${SECRETS_TEMP} ${SECRETS}
+	if [ $L2TP_VPN_CLIENT_RUNNING = "yes" ];then	
+		cat ${SECRETS_CLIENT} >> ${SECRETS}
+	fi
+		
+	return 0
+}
+
+start() {
+	local model=$(uci get profile.@global[0].model -c /etc/profile.d -q)
+	config_load l2tpoveripsec
+	config_get_bool enabled l2tpoveripsec 'enabled' 0
+	config_get encryption l2tpoveripsec encryption
+	echo $0 $enabled $encryption > /dev/console
+	[ "$enabled" -eq 0 ] && return 1
+	[ "$encryption" = "false" ] && return 1
+
+	get_l2tp_vpn_client_status
+
+	setup_global_config 
+	if [ $? -ne 0 ]; then
+		echo "setup_global_config error" > /dev/console
+		exit 1
+	fi
+
+	fw ipsec_access
+
+	if [ $L2TP_VPN_CLIENT_RUNNING = "no" ];then
+		echo "start:start ipsec in server" > /dev/console
+		if [ $DEBUG -ge 1 ];then
+			ipsec start --nofork
+		else	
+			ipsec start
+		fi
+		[ "$model" = "RTL_8197" ] && sysctl -w net.core.dev_weight=16
+	else
+		echo "start:update ipsec in server" > /dev/console
+		ipsec reload
+		ipsec update
+        ipsec rereadsecrets
+	fi
+}
+
+stop() {
+	local model=$(uci get profile.@global[0].model -c /etc/profile.d -q)
+
+	echo "ipsec down L2TP-VPNS-PSK" > /dev/console
+	ipsec stroke down-nb L2TP-VPNS-PSK
+
+	fw ipsec_block
+
+	get_l2tp_vpn_client_status
+
+	if [ $L2TP_VPN_CLIENT_OPEN = "yes" ];then
+		echo "stop:l2tp/ipsec vpnc is open, update ipsec" > /dev/console
+		setup_global_config_in_teardown
+		ipsec reload
+		ipsec update
+        ipsec rereadsecrets
+	else
+		echo "stop:l2tp/ipsec vpnc not open, stop ipsec" > /dev/console
+		: > ${CONF}
+		: > ${SECRETS}
+		ipsec stop
+		[ "$model" = "RTL_8197" ] && sysctl -w net.core.dev_weight=64
+	fi
+}
+
+restart() {
+	stop
+	start
+}
+
+status() {
+	echo "ipsec status:" > /dev/console
+	ipsec status
+	echo "xfrm policy:" > /dev/console
+	ip -s xfrm policy
+	echo "xfrm state:" > /dev/console
+	ip -s xfrm state 
+}

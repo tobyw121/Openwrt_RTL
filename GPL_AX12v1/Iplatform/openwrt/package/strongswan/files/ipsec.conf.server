@@ -1,0 +1,7 @@
+conn L2TP-VPNS-PSK 
+	leftfirewall=yes
+	right=%any
+	rightprotoport=17/%any
+	type=transport
+	rekey=no
+	auto=add

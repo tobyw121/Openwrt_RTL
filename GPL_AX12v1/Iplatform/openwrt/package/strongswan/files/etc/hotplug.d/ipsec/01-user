@@ -1,0 +1,204 @@
+#!/bin/sh
+
+[ -e "/etc/ipsec.user" ] && {
+	. /etc/ipsec.user "$2"
+}
+
+[ -x /usr/sbin/xl2tpd ] || exit 0
+
+. /lib/functions.sh
+. /lib/netifd/netifd-proto.sh
+
+l2tpdir="/tmp/l2tpvpn"
+conffile="/tmp/l2tpvpn/l2tpvpn.conf"
+controlfile="/tmp/l2tpvpn/l2tpvpn-control"
+pidfile="/tmp/l2tpvpn/l2tpvpn.pid"
+optfile="/tmp/l2tpvpn/options.vpn"
+terminal="/dev/console"
+
+localport=1702
+peerport=1701
+
+lac_section=TP_L2TPVPN
+
+escaped_str()
+{
+	word=$1
+	word=${word//\\/\\\\}
+	echo ${word//\"/\\\"}
+}
+
+check_IPsec_client_on() {
+	config_load vpn
+	config_get enabled client enabled
+	config_get vpntype client vpntype
+	config_get ipsec client ipsec
+
+	if [ "$enabled" != "on" -o "$vpntype" != "l2tpvpn" -o "$ipsec" != "1" ]; then
+		return 0
+	else
+		return 1
+	fi
+}
+check_IPsec_server_on() {
+	config_load l2tpoveripsec
+	config_get enabled l2tpoveripsec enabled
+	config_get encryption l2tpoveripsec encryption
+
+	if [ "$enabled" != "on" -o "$encryption" != "true" ]; then
+		return 0
+	else
+		return 1
+	fi
+}
+stop_xl2tpd_client() {
+	pid=$(cat $pidfile)
+	echo "stop connection and kill xl2tpd" > $terminal
+#echo 'd TP_L2TPVPN' > $controlfile
+	xl2tpd-control -c $controlfile disconnect $lac_section
+	sleep 2
+	kill -9 $pid
+	#leave this clean job to 'start', cause this will cause problem.
+#rm -rf ${l2tpdir}
+#rm -f ${optfile}
+}
+
+start_xl2tpd_client() {
+
+	#check if xl2tpd already start, this is a duplicate hotplug message
+	if [ -d ${l2tpdir} -a -f $pidfile ]; then
+		pid=$(cat ${pidfile})
+		if [ -d /proc/$pid ]; then
+			echo "xl2pd $pid already started." > $terminal
+			if [ -z "$(ifconfig l2tp-vpn|grep UP)" ]; then
+				echo "vpn ppp interface(l2tp-vpn) is not up, restart xl2tpd." > $terminal
+				stop_xl2tpd_client
+			else
+				echo "vpn ppp interface(l2tp-vpn) is up, duplicate up-host message." > $terminal
+				return 0
+			fi
+		fi
+	fi
+	rm -rf ${l2tpdir}
+	mkdir -p ${l2tpdir}
+
+	config="vpn"
+	config_load network
+	config_get username $config username
+	config_get password $config password
+	config_get mru $config mru
+	config_get parent $config parent
+	config_get iface $parent ifname
+	: > "${optfile}"
+#	echo "${keepalive:+lcp-echo-interval $interval lcp-echo-failure ${keepalive%%[, ]*}}" > "${optfile}"
+#	echo "ipcp-accept-local" >>"${optfile}"
+#	echo "ipcp-accept-remote" >>"${optfile}"
+#	echo "refuse-pap" >>"${optfile}"
+#	echo "refuse-chap" >>"${optfile}"
+	echo "refuse-eap" >>"${optfile}"
+#	echo "require-mschap-v2" >>"${optfile}"
+#	echo "noccp" >> "${optfile}"
+#	echo "noauth" >> "${optfile}"
+#	echo "crtscts" >> "${optfile}"
+	echo "nopcomp" >> "${optfile}"
+	echo "noaccomp" >> "${optfile}"
+	echo "nobsdcomp" >> "${optfile}"
+	echo "nodeflate" >> "${optfile}"
+	echo "usepeerdns" >> "${optfile}"
+	echo "nodefaultroute" >> "${optfile}"
+	echo "default-asyncmap" >> "${optfile}"
+	echo "${username:+user \"$(escaped_str "$username")\" password \"$(escaped_str "$password")\"}" >> "${optfile}" 
+	echo "ipparam \"$config\"" >> "${optfile}"
+	echo "ifname \"l2tp-$config\"" >> "${optfile}"
+	echo "ip-up-script /lib/netifd/pppvpn-up" >> "${optfile}"
+	echo "ip-down-script /lib/netifd/pppvpn-down" >> "${optfile}"
+	echo "persist" >> ${optfile}
+	# Don't wait for LCP term responses; exit immediately when killed.
+#	echo "lcp-max-terminate 0" >> "${optfile}"
+#	echo "${ipv6:++ipv6} ${pppd_options}" >> "${optfile}"
+#	echo "${mtu:+mtu $mtu mru $mtu}" >> "${optfile}"
+	echo "${mru:+mtu $mru mru $mru}" >> "${optfile}"
+	echo "${iface:+nic-ifname $iface}" >> "${optfile}"
+
+#	xl2tpd-control add l2tp-${config} pppoptfile=${optfile} lns=${server} redial=yes redial timeout=20
+#	xl2tpd-control connect l2tp-${config}
+
+	config_load vpn
+	config_get ipsecServerIP client ipsecServerIP
+	echo "[global]" >  "${conffile}"
+	echo "port = $localport" >>  "${conffile}"
+	echo "[lac $lac_section]" >>  "${conffile}"
+	echo "lns = $ipsecServerIP" >>  "${conffile}"
+	echo "redial=yes" >> "${conffile}"
+	echo "redial timeout=20" >> "${conffile}"
+	echo "pppoptfile = $optfile" >>  "${conffile}"
+
+	/usr/sbin/xl2tpd -C $controlfile -c $conffile -p $pidfile
+	#ugly, but make sure conrtrolfile exsit before start connect
+	if [ ! -f $controlfile ]; then
+		sleep 2
+	fi
+	#pid=$(cat $pidfile)
+	#echo 'start connect l2tp' > $terminal
+	#echo "c TP_L2TPVPN" > ${controlfile}
+	xl2tpd-control -c $controlfile connect $lac_section
+}
+
+echo "verb : $PLUTO_VERB" > $terminal
+case "$PLUTO_VERB" in
+up-host)
+	env > $terminal
+	check_IPsec_client_on
+	if [ $? -eq 1 ]; then
+		echo "$0 ipsec hotplud for l2tp..." > $terminal
+	else
+		echo "$0 ipsec client is not running, exit" > $terminal
+		exit 0
+	fi
+
+	config_load vpn
+	config_get ipsecServerIP client ipsecServerIP
+
+	check_IPsec_server_on
+	if [ $? -eq 1 ]; then
+		echo "$0 ipsec server is running, make judgement" > $terminal
+
+		if [ $PLUTO_PEER = $ipsecServerIP -a $PLUTO_PEER_PORT = $peerport -a $PLUTO_MY_PORT = $localport ]; then
+			echo "connected to ipsec server, start l2tp connection" > $terminal
+			start_xl2tpd_client
+		else
+			echo "ipsec client connected to us, currently ignore it" > $terminal
+		fi
+	else
+		echo "$0 ipsec server is not running, start l2tp connection" > $terminal
+		start_xl2tpd_client
+	fi
+
+	# connection to me coming up
+	# If you are doing a custom version, firewall commands go here.
+	;;
+down-host)
+	config_load vpn
+	config_get ipsecServerIP client ipsecServerIP
+
+	if [ $PLUTO_PEER = $ipsecServerIP -a $PLUTO_PEER_PORT = $peerport -a $PLUTO_MY_PORT = $localport ]; then
+		echo "disconnected to ipsec server, stop l2tp connection" > $terminal
+		stop_xl2tpd_client
+	else
+		echo "ipsec client disconnected from us, currently ignore it" > $terminal
+	fi
+	# connection to me going down
+	# If you are doing a custom version, firewall commands go here.
+	;;
+up-client)
+	# connection to my client subnet coming up
+	# If you are doing a custom version, firewall commands go here.
+	;;
+down-client)
+	# connection to my client subnet going down
+	# If you are doing a custom version, firewall commands go here.
+	;;
+*)
+	echo "unknow verb $PLUTO_VERB" > $terminal
+	;;
+esac
