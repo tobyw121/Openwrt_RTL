@@ -1,0 +1,26 @@
+var structmac__ax__gpio__info =
+[
+    [ "status", "structmac__ax__gpio__info.html#ae683308306e80b2bf2b865e983fb378b", null ],
+    [ "sw_io_0", "structmac__ax__gpio__info.html#abb587d17bbe056642642390f2d2e803d", null ],
+    [ "sw_io_1", "structmac__ax__gpio__info.html#ab19c19cff01dac40ce081daf249d71d5", null ],
+    [ "sw_io_10", "structmac__ax__gpio__info.html#a209bda4f174932327822ab1e97ab7352", null ],
+    [ "sw_io_11", "structmac__ax__gpio__info.html#ab96989edddc29ea4ebb3e56accabaaa4", null ],
+    [ "sw_io_12", "structmac__ax__gpio__info.html#ab460956c68d500b84a168dbbf4f69444", null ],
+    [ "sw_io_13", "structmac__ax__gpio__info.html#a000fe267c626b0f9e8a2bc76a62a9682", null ],
+    [ "sw_io_14", "structmac__ax__gpio__info.html#ad2219936cf485b7fbade51cde5344b8f", null ],
+    [ "sw_io_15", "structmac__ax__gpio__info.html#a14336e21a6ef028dd6a04d2b72277851", null ],
+    [ "sw_io_2", "structmac__ax__gpio__info.html#a961414338a75b0cb9d63d03cf94b3740", null ],
+    [ "sw_io_3", "structmac__ax__gpio__info.html#a966341bd214afaa2d2166e4d37930daa", null ],
+    [ "sw_io_4", "structmac__ax__gpio__info.html#a18de5e49b3e1a70e1815af12289906dc", null ],
+    [ "sw_io_5", "structmac__ax__gpio__info.html#a518e5530bb40e1725087df345bbac750", null ],
+    [ "sw_io_6", "structmac__ax__gpio__info.html#a5f29f06647cfa87f05a770200cd921c7", null ],
+    [ "sw_io_7", "structmac__ax__gpio__info.html#a6bf2cf55454320635615e3ff19660fcc", null ],
+    [ "sw_io_8", "structmac__ax__gpio__info.html#acff68d2a9825ec263402cf30b80a4755", null ],
+    [ "sw_io_9", "structmac__ax__gpio__info.html#a42080cb2175c2b007ea479ba1cbda10d", null ],
+    [ "sw_io_output", "structmac__ax__gpio__info.html#a90c6233923c9d68c0aea2bb371c86cfd", null ],
+    [ "uart_rx_gpio14", "structmac__ax__gpio__info.html#af3141057839cd72751703318f98d15b8", null ],
+    [ "uart_rx_gpio6", "structmac__ax__gpio__info.html#a9d66743659da52bab13ebf14adc0e1a4", null ],
+    [ "uart_tx_gpio5", "structmac__ax__gpio__info.html#ad2f180d26558b3ead1fa7df515097f93", null ],
+    [ "uart_tx_gpio7", "structmac__ax__gpio__info.html#a1ee0a558947e24672f6eac71a3504727", null ],
+    [ "uart_tx_gpio8", "structmac__ax__gpio__info.html#aef9116cec079b8a89a552fae7bfcd74a", null ]
+];
