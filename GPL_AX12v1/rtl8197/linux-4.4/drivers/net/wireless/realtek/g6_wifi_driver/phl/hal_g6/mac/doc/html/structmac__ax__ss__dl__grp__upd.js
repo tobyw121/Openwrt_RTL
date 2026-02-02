@@ -1,0 +1,25 @@
+var structmac__ax__ss__dl__grp__upd =
+[
+    [ "ac_bitmap_u0", "structmac__ax__ss__dl__grp__upd.html#a74224c27a11b105284a112a3bfe0e96c", null ],
+    [ "ac_bitmap_u1", "structmac__ax__ss__dl__grp__upd.html#a2ab3d04259d412156cb8f6016525b19d", null ],
+    [ "ac_bitmap_u2", "structmac__ax__ss__dl__grp__upd.html#ad5a3f3bec42dc63a5907f3d56901689f", null ],
+    [ "ac_bitmap_u3", "structmac__ax__ss__dl__grp__upd.html#ae0591a063ee8d38dd414a06ca02d8379", null ],
+    [ "ac_bitmap_u4", "structmac__ax__ss__dl__grp__upd.html#ab44fdd5d33e1d8c01bc640adf4a7acd8", null ],
+    [ "ac_bitmap_u5", "structmac__ax__ss__dl__grp__upd.html#ad2f12005b2d3b5dcc04536648d9ca329", null ],
+    [ "ac_bitmap_u6", "structmac__ax__ss__dl__grp__upd.html#a1602747f55c690e3bc7fea036f7fb669", null ],
+    [ "ac_bitmap_u7", "structmac__ax__ss__dl__grp__upd.html#a4d346a93841689139f88f66c9b213603", null ],
+    [ "grp_id", "structmac__ax__ss__dl__grp__upd.html#a1f2028965617020f06e781082b93cdae", null ],
+    [ "grp_valid", "structmac__ax__ss__dl__grp__upd.html#a86cb00469061acbff7f4fb06114c3f83", null ],
+    [ "is_hwgrp", "structmac__ax__ss__dl__grp__upd.html#a8ef54111c98959674c60c4593a502cbd", null ],
+    [ "macid_u0", "structmac__ax__ss__dl__grp__upd.html#aabc9695bd9b819fc81fafcc945d3d9d6", null ],
+    [ "macid_u1", "structmac__ax__ss__dl__grp__upd.html#a25908b859617db9816ba7909fabab090", null ],
+    [ "macid_u2", "structmac__ax__ss__dl__grp__upd.html#acfb311226d28da8feb9e3ed1595f3ff2", null ],
+    [ "macid_u3", "structmac__ax__ss__dl__grp__upd.html#a4d7d9791a07a6ec530732ff342f6087c", null ],
+    [ "macid_u4", "structmac__ax__ss__dl__grp__upd.html#a04a6b080001c7739c9ca510676a40b40", null ],
+    [ "macid_u5", "structmac__ax__ss__dl__grp__upd.html#acb4eea5ed6d02c22e9d4dee7e4accae0", null ],
+    [ "macid_u6", "structmac__ax__ss__dl__grp__upd.html#a890dfd007212eefa8e4181bef6e0763e", null ],
+    [ "macid_u7", "structmac__ax__ss__dl__grp__upd.html#ad3df7b441b7d769b048c0f552a69dccf", null ],
+    [ "next_protecttype", "structmac__ax__ss__dl__grp__upd.html#a429f141e7060edd62acc148839b8959c", null ],
+    [ "next_rsptype", "structmac__ax__ss__dl__grp__upd.html#a34c265301574fb07a80abe8cb62ba2b2", null ],
+    [ "rsvd", "structmac__ax__ss__dl__grp__upd.html#a651dccb591fc5683fbc6c7ba1dd7830d", null ]
+];
