@@ -1,0 +1,20 @@
+menu "TP-LINK kernel features"
+config SFE_PPP_HEADER
+        bool "kernel support for sfe ppp header build"
+        default n
+        help
+          Say 'y' here if want to enable ppp header building for sfe
+
+config SFE_TUNNEL_HEADER
+        bool "kernel support for sfe tunnel header build"
+        default n
+        help
+          Say 'y' here if want to enable tunnel header building for sfe
+
+config TP_BRIDGE
+        bool "kernel support for tplink hyfi-bridge"
+        default n
+        help
+          Say 'y' here if want to enable hyfi-bridge
+
+endmenu
