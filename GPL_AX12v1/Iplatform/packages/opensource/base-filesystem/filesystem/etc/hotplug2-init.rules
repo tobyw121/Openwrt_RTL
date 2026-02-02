@@ -1,0 +1,6 @@
+$include /etc/hotplug2-common.rules
+
+SUBSYSTEM == button {
+	exec echo "button hotplug detect in preinit, but don't halt"
+	#exec kill -USR1 1
+}

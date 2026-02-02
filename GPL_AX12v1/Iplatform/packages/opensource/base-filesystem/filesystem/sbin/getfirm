@@ -1,0 +1,227 @@
+#! /bin/sh
+
+usage()
+{
+	echo "getfirm <info>"
+	echo "        MAC"
+	echo "        SSID"
+	echo "        PIN"
+	echo "        MODEL"
+	echo "        FIRM"
+	echo "        WEBSITE"
+	echo "        HARDVERSION"
+	echo "        SOFTVERSION"
+	echo "        LANGUAGE"
+	echo "        PRODUCT_ID"
+	echo "        SPECIAL_ID"
+	echo "        DEV_ID"
+	echo "        HW_ID"
+	echo "        FW_ID"
+	echo "        OEM_ID"
+	echo "        COUNTRY"
+	echo "        HW_VER"
+	echo "        DEVICE_NAME"
+	echo "        HOSTNAME_NO_BLANK"
+	echo "        PASSWORD"
+}
+
+factory_random_mac(){
+	local DEFAULT_MAC="$1"
+	local prefix=$(echo $DEFAULT_MAC|cut -c1-8)
+	local dev_id_file="/tmp/dev_id-"$$
+	nvrammanager -r $dev_id_file -p device-id > /dev/null 2>&1
+	local suffix=$(grep 'dev_id' $dev_id_file | cut -d : -f 2- | cut -c35-)
+	rm -f $dev_id_file >/dev/null 2>&1
+
+	if [ ${#suffix} -ge 6 ];then
+		local suffix_1=$(echo $suffix|cut -c1-2)
+		local suffix_2=$(echo $suffix|cut -c3-4)
+		local suffix_3=$(echo $suffix|cut -c5-6)
+		local mac_random="$prefix-$suffix_1-$suffix_2-$suffix_3"
+		echo "$mac_random"
+	else
+		echo "$DEFAULT_MAC"
+	fi
+}
+
+option="$1"
+factoryLanMac="00-0A-EB-13-7B-00"
+
+case $option in
+	MAC)
+	mac_file="/tmp/default-mac-"$$
+	nvrammanager -r $mac_file -p default-mac >/dev/null 2>&1
+	if [ -s $mac_file ];then
+		echo $(grep 'MAC'  $mac_file | cut -d : -f 2-)
+	else
+		local factory_random_mac=$(uci get profile.@global[0].factory_random_mac -c "/etc/profile.d/" -q)
+		local factory=$(uci get factory.factorymode.enable)
+		if [ "$factory_random_mac" = "yes" -a "$factory" = "yes" ];then
+			factory_random_mac $factoryLanMac
+		else
+			echo  $factoryLanMac
+		fi
+	fi
+
+	rm -f $mac_file >/dev/null 2>&1
+	;;
+
+	SSID)
+	local SSID_PREFIX=$(uci get profile.@tplink[0].SSID_PREFIX -c "/etc/profile.d" -q)
+	if [ -n "$SSID_PREFIX" ];then
+		echo "$SSID_PREFIX"
+	else
+		local TPLink=$(uci get profile.@tplink[0].TPLINK_TPLink -c "/etc/profile.d" -q)
+		if [ "$TPLink" = "yes" ];then
+			echo  "TP-Link"
+		else
+			echo  "TP-LINK"
+		fi
+	fi
+	;;
+
+	PIN)
+	pin_file="/tmp/pin-"$$
+	nvrammanager -r $pin_file -p pin >/dev/null 2>&1
+	echo $(cat $pin_file)
+	rm -f $pin_file >/dev/null 2>&1
+	;;
+
+	MODEL)
+	productinfo="/tmp/productinfo-"$$
+	nvrammanager -r $productinfo -p product-info > /dev/null 2>&1
+	echo $(grep 'product_name' $productinfo | cut -d : -f 2-)
+	rm -f $productinfo >/dev/null 2>&1
+	;;
+	
+	DEVICE_NAME)
+	productinfo="/tmp/productinfo-"$$
+	nvrammanager -r $productinfo -p product-info > /dev/null 2>&1
+	echo $(grep 'device_name' $productinfo | cut -d : -f 2-)
+	rm -f $productinfo >/dev/null 2>&1
+	;;
+	
+	HOSTNAME_NO_BLANK)    # show hostname like ArcherA6v3
+	productinfo="/tmp/productinfo-"$$
+	nvrammanager -r $productinfo -p product-info > /dev/null 2>&1
+	hostname=$(grep 'product_name' $productinfo | cut -d : -f 2- | sed "s/ //g")
+	version=$(grep 'product_ver' $productinfo | cut -d : -f 2-)
+	version=${version%%.*}
+	echo "${hostname}v${version}"
+	rm -f $productinfo >/dev/null 2>&1
+	;;
+
+	FIRM)
+	productinfo="/tmp/productinfo-"$$
+	nvrammanager -r $productinfo -p product-info > /dev/null 2>&1
+	echo $(grep 'vendor_name' $productinfo | cut -d : -f 2-)
+	rm -f $productinfo >/dev/null 2>&1
+	;;
+
+	WEBSITE)
+	productinfo="/tmp/productinfo-"$$
+	nvrammanager -r $productinfo -p product-info > /dev/null 2>&1
+	echo $(grep 'vendor_url' $productinfo | cut -d : -f 2-)
+	rm -f $productinfo >/dev/null 2>&1
+	;;
+
+	HARDVERSION)
+	productinfo="/tmp/productinfo-"$$
+	nvrammanager -r $productinfo -p product-info > /dev/null 2>&1
+	echo $(grep 'product_ver' $productinfo | cut -d : -f 2-)
+	rm -f $productinfo >/dev/null 2>&1
+	;;
+
+	LANGUAGE)
+	productinfo="/tmp/productinfo-"$$
+	nvrammanager -r $productinfo -p product-info > /dev/null 2>&1
+	echo $(grep 'language' $productinfo | cut -d : -f 2-)
+	rm -f $productinfo >/dev/null 2>&1
+	;;
+
+	PRODUCT_ID)
+	productinfo="/tmp/productinfo-"$$
+	nvrammanager -r $productinfo -p product-info > /dev/null 2>&1
+	echo $(grep 'product_id' $productinfo | cut -d : -f 2-)
+	rm -f $productinfo >/dev/null 2>&1
+	;;
+
+	SPECIAL_ID)
+	productinfo="/tmp/productinfo-"$$
+	nvrammanager -r $productinfo -p product-info > /dev/null 2>&1
+	echo $(grep 'special_id' $productinfo | cut -d : -f 2-)
+	rm -f $productinfo >/dev/null 2>&1
+	;;
+
+	DEV_ID)
+	devID_file="/tmp/devID-"$$
+	nvrammanager -r $devID_file -p device-id > /dev/null 2>&1
+	echo $(grep 'dev_id' $devID_file | cut -d : -f 2-)
+	rm -f $devID_file >/dev/null 2>&1
+	;;
+
+	HW_ID)
+	productinfo="/tmp/productinfo-"$$
+	nvrammanager -r $productinfo -p product-info > /dev/null 2>&1
+	echo $(grep 'hw_id' $productinfo | cut -d : -f 2-)
+	rm -f $productinfo >/dev/null 2>&1
+	;;
+
+	SOFTVERSION)
+	softversion_file="/tmp/softversion-"$$
+	nvrammanager -r $softversion_file -p soft-version >/dev/null 2>&1
+	echo $(grep 'soft_ver' $softversion_file | cut -d : -f 2-)
+	rm -f $softversion_file >/dev/null 2>&1
+	;;
+
+	FW_ID)
+	softversion_file="/tmp/softversion-"$$
+	nvrammanager -r $softversion_file -p soft-version >/dev/null 2>&1
+	echo $(grep 'fw_id' $softversion_file | cut -d : -f 2-)
+	rm -f $softversion_file >/dev/null 2>&1
+	;;
+
+	OEM_ID)
+	productinfo="/tmp/productinfo-"$$
+	nvrammanager -r $productinfo -p product-info > /dev/null 2>&1
+	echo $(grep 'oem_id' $productinfo | cut -d : -f 2-)
+	rm -f $productinfo >/dev/null 2>&1
+	;;
+
+	COUNTRY)
+	productinfo="/tmp/productinfo-"$$
+	nvrammanager -r $productinfo -p product-info > /dev/null 2>&1
+	echo $(grep 'country' $productinfo | cut -d : -f 2-)
+	rm -f $productinfo >/dev/null 2>&1
+	;;
+
+	HW_VER)
+	productinfo="/tmp/productinfo-"$$
+	nvrammanager -r $productinfo -p product-info > /dev/null 2>&1
+	echo $(grep 'hw_ver' $productinfo | cut -d : -f 2-)
+	rm -f $productinfo >/dev/null 2>&1
+	;;
+
+	PASSWORD)
+	pwd1=`getfirm MAC | md5sum | head -c 5 | tr 'a-z' 'A-Z'`
+	pwd2=`echo $pwd1 | md5sum | head -c 5`
+	case ${pwd1:0:1} in
+		[0-4])
+		echo ${pwd1:0:1}${pwd2:0:1}${pwd1:1:1}${pwd2:1:1}${pwd1:2:1}${pwd2:2:1}${pwd1:3:1}${pwd2:3:1}${pwd1:4:1}${pwd2:4:1}
+		;;
+		[5-9])
+		echo ${pwd2:0:1}${pwd1:0:1}${pwd2:1:1}${pwd1:1:1}${pwd2:2:1}${pwd1:2:1}${pwd2:3:1}${pwd1:3:1}${pwd2:4:1}${pwd1:4:1}
+		;;
+		[A-N])
+		echo ${pwd1:4:1}${pwd2:4:1}${pwd1:3:1}${pwd2:3:1}${pwd1:2:1}${pwd2:2:1}${pwd1:1:1}${pwd2:1:1}${pwd1:0:1}${pwd2:0:1}
+		;;
+		*)
+		echo ${pwd2:4:1}${pwd1:4:1}${pwd2:3:1}${pwd1:3:1}${pwd2:2:1}${pwd1:2:1}${pwd2:1:1}${pwd1:1:1}${pwd2:0:1}${pwd1:0:1}
+		;;
+	esac
+	;;
+
+	*)
+	usage
+	;;
+esac

@@ -1,0 +1,36 @@
+#!/bin/sh
+. /lib/functions.sh
+
+SYS_SET_TIME=$(uci_get_state systime core sync)
+config_load /etc/config/system
+config_get type ntp type
+
+[ "$type" = "auto" -a $SYS_SET_TIME -eq 1 ] && {
+    auto_update_support=$(uci get profile.@firmware_upgrade[0].auto_update_support -c "/etc/profile.d" -q)
+    if [ -f "/tmp/auto_saveconfig_lock.lua" ];then
+    {
+        for i in `seq 15`
+        do {
+            if [ -f "/tmp/auto_saveconfig_lock.lua" ];then
+                sleep 2
+            else
+                break
+            fi
+        }
+        done
+        if [ "$auto_update_support" = "yes" ];then
+            [ ! -f "/tmp/auto_update_lock.lua" ] && reboot
+        else
+            reboot
+        fi
+    }
+	else
+    {
+        if [ "$auto_update_support" = "yes" ];then
+            [ ! -f "/tmp/auto_update_lock.lua" ] && reboot
+        else
+            reboot
+        fi
+    }
+	fi
+}

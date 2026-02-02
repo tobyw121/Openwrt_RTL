@@ -1,0 +1,100 @@
+#!/bin/sh
+
+. /lib/functions.sh
+
+WIFIDEVICES=
+SIDLIST="UN US EU CA KR BR JP AU RU TW SG AS"
+
+#define special id for country code
+UN_sid=00000000
+US_sid=55530000
+EU_sid=45550000
+CA_sid=43410000
+KR_sid=4B520000
+BR_sid=42520000
+JP_sid=4A500000
+AU_sid=41550000
+RU_sid=52550000
+TW_sid=54570000
+SG_sid=53470000
+AS_sid=41530000
+
+#define country for country code
+US_country="US"
+EU_country="GB BZ DE"
+CA_country="CA"
+KR_country="KR"
+BR_country="BR"
+JP_country="JP"
+AU_country="AU NZ"
+RU_country="RU"
+TW_country="TW"
+SG_country="SG"
+AS_country="AS"
+
+#define default for each country code
+US_default_country="US"
+EU_default_country="DE"
+CA_default_country="CA"
+KR_default_country="KR"
+BR_default_country="BR"
+JP_default_country="JP"
+AU_default_country="AU"
+RU_default_country="RU"
+TW_default_country="TW"
+SG_default_country="SG"
+AS_default_country="AS"
+
+check_country(){
+	local SID="$(getfirm SPECIAL_ID)"
+	local country=""
+	local countryCode="UN"
+	local change_flag=""
+
+	for sid in $SIDLIST; do
+		local sid_value
+		eval sid_value=\$${sid}_sid
+		if [ $SID = $sid_value ]; then
+			countryCode=$sid
+		fi
+	done
+
+	for device in ${1:-$WIFIDEVICES}; do
+		local match="yes"
+		config_get country "$device" country
+		if [ $country = "SG" ]; then
+			country="US"
+		fi
+		if [ $countryCode = "SG" ]; then
+			countryCode="US"
+		fi
+
+		if [ $countryCode != "UN" ]; then
+			eval echo \$${countryCode}_country | grep -wq $country && match="yes" || match="no"
+		fi
+
+		if [ $match = "no" ]; then
+			eval country=\$${countryCode}_default_country
+			uci set wireless.$device.country=$country
+			change_flag="1"
+		fi
+	done
+
+	if [ "$change_flag" = "1" ]; then
+		wifi_commit
+	fi
+}
+
+config_cb() {
+	local type="$1"
+	local section="$2"
+
+	case "$type" in
+		wifi-device)
+			append WIFIDEVICES "$section"
+		;;
+	esac
+}
+
+config_load wireless
+check_country

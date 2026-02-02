@@ -1,0 +1,18 @@
+#!/usr/bin/lua
+
+local acc = require "luci.model.accountmgnt"
+local sys = require "luci.sys"
+local dbg = require "luci.tools.debug"
+local uci = require "luci.model.uci"
+local uci_r = uci.cursor()
+
+dbg.print("setRePasswd go")
+
+if arg[1] then
+    dbg.print("setRePasswd arg 1 is not empty, set arg1 as pwd")
+    b64pwd = acc.password_renew(arg[1])
+    uci_r:set("accountmgnt", "admin", "password", b64pwd)
+    uci_r:commit("accountmgnt")
+    dbg.print("setRePasswd uci commit ok")
+    return
+end

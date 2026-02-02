@@ -1,0 +1,100 @@
+#!/bin/sh
+
+mac_to_decimal(){
+    # Convert to decimal
+    local mac_decimal
+    mac=$(echo $mac|tr '-' ' ')
+    for var in ${mac}
+    do
+        var=$((0x$var))
+        if [ -z "$mac_decimal" ];then
+            mac_decimal="$var"
+        else
+            mac_decimal="$mac_decimal"-"$var"
+        fi
+    done
+    echo $mac_decimal
+}
+
+inc_mac(){
+	local mac_decimal=$(mac_to_decimal $1)
+	echo $mac_decimal | awk 'BEGIN{FS="-";add=1}{for(i=6;i>0;i--){j=$i;\
+	if(i>3){if(j+add>255){j=j+add-256;add=1;}else{j=j+add;add=0;}}printf("%02x",j);printf "-"}}' \
+	| awk 'BEGIN{FS="-"}{for(i=6;i>0;i--){printf $i;if(i>1){printf "-"}}}'
+}
+
+dec_mac(){
+	local mac_decimal=$(mac_to_decimal $1)
+	echo $mac_decimal | awk 'BEGIN{FS="-";dec=1}{for(i=6;i>0;i--){j=$i;\
+	if(i>3){if(j-dec<0){j=j-dec+256;dec=1;}else{j=j-dec;dec=0;}}printf("%02x",j);printf "-"}}' \
+	| awk 'BEGIN{FS="-"}{for(i=6;i>0;i--){printf $i;if(i>1){printf "-"}}}'
+}
+
+virtual_mac(){
+	local mac_decimal=$(mac_to_decimal $1)
+	echo $mac_decimal | awk 'BEGIN{FS="-"}{for(i=6;i>0;i--){j=$i;\
+	if(i>5){addr5="0x"$i};if(i<2){j=96+(addr5%15)*8;j=or(j,2)};printf("%02x",j);{printf "-"}}}' \
+	| awk 'BEGIN{FS="-"}{for(i=6;i>0;i--){printf $i;if(i>1){printf "-"}}}'
+}
+
+local mac=$(getfirm MAC)
+
+if [ "$1" == "lan" ]; then
+    echo $mac
+elif [ "$1" == "wan" ]; then
+    mac=$(inc_mac $mac)
+    echo $mac
+elif [ "$1" == "lan_inc2" ]; then
+	mac=$(inc_mac $mac)
+	mac=$(inc_mac $mac)
+	echo $mac
+elif [ "$1" == "wireless_2.4" ]; then
+    mac=$(dec_mac $mac)
+    echo $mac
+elif [ "$1" == "wireless_5" ]; then
+    mac=$(dec_mac $mac)
+    mac=$(dec_mac $mac)
+    echo $mac
+elif [ "$1" == "lan_dec1" ]; then
+    mac=$(dec_mac $mac)
+    echo $mac
+elif [ "$1" == "lan_dec2" ]; then
+    mac=$(dec_mac $mac)
+    mac=$(dec_mac $mac)
+    echo $mac
+elif [ "$1" == "lan_dec3" ]; then
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	echo $mac
+elif [ "$1" == "lan_dec4" ]; then
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	echo $mac
+elif [ "$1" == "lan_dec4" ]; then
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	echo $mac
+elif [ "$1" == "lan_dec5" ]; then
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	echo $mac
+elif [ "$1" == "lan_dec6" ]; then
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	mac=$(dec_mac $mac)
+	echo $mac
+elif [ "$1" == "virtual" ]; then
+	mac=$(virtual_mac $2)
+	echo $mac
+fi

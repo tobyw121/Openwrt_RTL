@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# temporarily close advance features for factory
+# !!! NO "nvram commit" !!! #
+
+nvram set _tp_close_txbf_tmp=1
+nvram set _tp_close_dfs_tmp=1
