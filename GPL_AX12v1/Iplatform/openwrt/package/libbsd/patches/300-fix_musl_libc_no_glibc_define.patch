@@ -1,0 +1,22 @@
+--- libbsd-0.3.0/src/fgetln.c	2011-05-29 08:49:37.000000000 +0800
++++ libbsd-0.3.0_new/src/fgetln.c	2021-08-30 16:13:04.987345001 +0800
+@@ -30,7 +30,7 @@
+ #include <sys/types.h>
+ #include <string.h>
+ 
+-#ifdef __GLIBC__
++#if defined(__GLIBC__) || defined(CONFIG_LIBC_USE_MUSL)
+ char *
+ fgetln(FILE *stream, size_t *len)
+ {
+--- libbsd-0.3.0/src/fpurge.c	2011-05-16 19:23:17.000000000 +0800
++++ libbsd-0.3.0_new/src/fpurge.c	2021-08-30 16:13:11.398171369 +0800
+@@ -30,7 +30,7 @@
+ #include <stdio.h>
+ #include <stdio_ext.h>
+ 
+-#ifdef __GLIBC__
++#if defined(__GLIBC__) || defined(CONFIG_LIBC_USE_MUSL)
+ int
+ fpurge(FILE *fp)
+ {
