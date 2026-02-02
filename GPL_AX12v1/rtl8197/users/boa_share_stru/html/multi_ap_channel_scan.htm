@@ -1,0 +1,46 @@
+<html>
+<! Copyright (c) Realtek Semiconductor Corp., 2003. All Rights Reserved. ->
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<% getIndex("no-cache"); %>
+<title>EasyMesh Interface Setup </title>
+<% language=javascript %>
+<script type="text/javascript" src="util_gw.js"> </script>
+<% getInfo("include_css"); %>
+<SCRIPT>
+
+</SCRIPT>
+</head>
+
+<body onload="loadInfo();">
+<blockquote>
+<h2>EasyMesh Channel Scan</h2>
+
+<form action=/boafrm/formChannelScan method=POST name="MultiAP">
+<table border=0 width="500" cellspacing=4 cellpadding=0>
+  <tr><font size=2>
+    This page is used to trigger agents in EasyMesh network to do channel scan on selected bands. Channel scan results and suggested best channel will be dispayed.
+  </tr>
+  <tr><hr size=1 noshade align=top></tr>
+
+	<tr id="channel_scan_band">
+		<td width="30%"><font size=2><b>Scan Band:</b></td>
+		<td width="70%"><font size=2>
+		<input type="radio" id="band_5G" name="scan_band" value="5G">5G&nbsp;&nbsp;
+		<input type="radio" id="band_2G" name="scan_band" value="2G">2.4G&nbsp;&nbsp;
+		<input type="radio" id="band_all" name="scan_band" value="all" checked="checked">All</td>
+	</tr>
+
+</table>
+<br>
+
+	<input type="submit" value="Start" name="channel_scan" onclick="">
+
+	<input type="hidden" value="/multi_ap_channel_scan.htm" name="submit-url">
+
+</form>
+
+</blockquote>
+</body>
+
+</html>
