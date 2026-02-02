@@ -1,0 +1,60 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2008-2010 OpenWrt.org
+
+START=99
+SERVICE_USE_PID=1
+ROOT_CRONTAB="/etc/crontabs/root"
+TMP_CRONTAB="/tmp/cron"
+
+start() {
+	local hour minute cron_item new_cron_item
+
+	config_load autoreboot
+	config_get enabled "reboot" "enable"
+	config_get time "reboot" "time" "03:00"
+	config_get cycle "reboot" "cycle" "week"
+	
+	[ -z "$(ls /etc/crontabs/)" ] && exit 1
+
+	hour=`echo $time | awk -F':' '{printf "%d\n", $1}'`
+	munite=`echo $time | awk -F':' '{printf "%d\n", $2}'`
+	case "$cycle" in
+		"day")
+			new_cron_item="${munite} ${hour} * * * sh /usr/sbin/dut_auto_reboot"
+			;;
+		"week")
+			config_get day "reboot" "day" "Mon"
+			new_cron_item="${munite} ${hour} * * ${day} sh /usr/sbin/dut_auto_reboot"
+			;;
+		"month")
+			config_get day "reboot" "day" "1"
+			new_cron_item="${munite} ${hour} ${day} * * sh /usr/sbin/dut_auto_reboot"
+			;;
+	esac
+
+	cron_item=`grep "dut_auto_reboot" ${ROOT_CRONTAB}`
+	if [ "x$enabled" == "xon" ] ; then
+		[ "${cron_item}" != "${new_cron_item}" ] && {
+			cp -f $ROOT_CRONTAB ${TMP_CRONTAB}
+			[ "x${cron_item}" != "x" ] && sed '/dut_auto_reboot/d' $ROOT_CRONTAB > ${TMP_CRONTAB}
+			echo "${new_cron_item}" >> ${TMP_CRONTAB}
+			crontab ${TMP_CRONTAB}
+			rm -f ${TMP_CRONTAB}
+		}
+	else
+		[ "x${cron_item}" != "x" ] && {
+			sed '/dut_auto_reboot/d' $ROOT_CRONTAB > ${TMP_CRONTAB}
+			crontab ${TMP_CRONTAB}
+			rm -f ${TMP_CRONTAB}
+		}
+	fi
+}
+
+stop() {
+	start $@
+}
+
+restart() {
+	start $@
+}
+

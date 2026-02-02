@@ -1,0 +1,57 @@
+#!/bin/sh
+# Copyright (C) 2006 OpenWrt.org
+
+. /lib/functions.sh
+
+run_scripts_K() {
+	timeout_reboot_f &
+	for i in /etc/rc.d/$1*; do
+		config_load sysmode
+		config_get initlist sysmode initial
+		config_get init_mode sysmode initial_mode 0
+		find=0
+		fname=`echo $i | sed 's/\/etc\/rc\.d\/K[0-9]*//g'`
+		for j in $initlist; do
+			[ "$j" = "$fname" ] && {
+				let find=1
+				break
+			}
+		done
+		[ $find -eq $init_mode -a -x $i ] && $i $2 2>&1
+	done | $LOGGER
+}
+
+run_scripts() {
+	for i in /etc/rc.d/$1*; do
+		config_load sysmode
+		config_get initlist sysmode initial
+		config_get init_mode sysmode initial_mode 0
+		find=0
+		fname=`echo $i | sed 's/\/etc\/rc\.d\/S[0-9]*//g'`
+		for j in $initlist; do
+			[ "$j" = "$fname" ] && {
+				let find=1
+				break
+			}
+		done	
+		[ $find -eq $init_mode -a -x $i ] && $i $2 2>&1
+	done | $LOGGER
+}
+
+system_config() {
+	config_get_bool foreground $1 foreground 0
+}
+
+LOGGER="cat"
+[ -x /usr/bin/logger ] && LOGGER="logger -s -p 6 -t sysinit"
+
+config_load system
+config_foreach system_config system
+
+if [ "$1" = "S" -a "$foreground" != "1" ]; then
+	run_scripts "$1" "$2" &
+elif [ "$1" = "K" ]; then
+	run_scripts_K "$1" "$2"
+else
+	run_scripts "$1" "$2"
+fi

@@ -1,0 +1,54 @@
+#!/bin/sh
+
+# Copyright (C) 2009 OpenWrt.org
+
+# echo ACTION=$ACTION, DEVPATH=$DEVPATH, SUBSYSTEM=$SUBSYSTEM, BUSNUM=$BUSNUM >/dev/console
+
+# echo "--------------" >>/dev/console
+#echo "busnum=$BUSNUM" >> /dev/console
+#echo "action=$ACTION" >> /dev/console
+#echo "intf=$INTERFACE" >> /dev/console
+#echo "devnum=$DEVNUM" >> /dev/console
+#echo "dev=$DEVICE" >> /dev/console
+#echo "pdt=$PRODUCT" >> /dev/console
+#echo "type=$TYPE" >> /dev/console
+#echo "--------------" >>/dev/console
+
+PORTNUM=`echo $DEVPATH | cut -d "-" -f 2 | cut -d ":" -f 1`
+
+echo "USB port event happened -- port=$PORTNUM" >> /dev/console
+case "$PORTNUM" in
+    1)
+        USB="USB3"
+        ;;
+    2)
+        USB="USB1"
+        ;;
+    *)
+        exit 0
+        ;;
+esac
+
+. /lib/usb/usb.sh
+
+case "$ACTION" in
+	add)
+		# update LEDs
+	        ledcli ${USB}_twinkle
+
+		usb_devconn $DEVPATH $BUSNUM $DEVNUM
+		;;
+	remove)
+		# update LEDs
+        	uci set ledctrl.$USB.ledon='0'
+		[ x"$(uci get profile.@usbshare[0].single_usb_port -c "/etc/profile.d")" != x"1" ] && ledcli $usb || {
+			[ x"$(uci get ledctrl.USB1.ledon)" == x"0" ] && [ x"$(uci get ledctrl.USB3.ledon)" == x"0" ] && {
+				ledcli USB1
+				ledcli USB3
+			}
+		}
+
+		usb_devdisconn $DEVPATH $BUSNUM $DEVNUM
+		;;
+esac
+

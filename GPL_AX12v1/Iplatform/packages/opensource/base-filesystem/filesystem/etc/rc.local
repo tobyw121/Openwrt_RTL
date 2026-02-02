@@ -1,0 +1,13 @@
+# Put your custom commands here that should be executed once
+# the system init finished. By default this file does nothing.
+local disable_tddp=$(uci get profile.@global[0].user_disable_tddp -c /etc/profile.d -q)
+local factory_mode=$(uci get factory.factorymode.enable -q)
+if [ "$disable_tddp" == "yes" ]; then
+	if [ "$factory_mode" == "yes" ]; then
+		tddp &
+	fi
+else
+	tddp &
+fi
+
+exit 0
