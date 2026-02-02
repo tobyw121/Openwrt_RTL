@@ -1,0 +1,254 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006 OpenWrt.org
+
+. /lib/functions/network.sh
+START=60
+BIN=/usr/sbin/xl2tpd
+RUN_D=/var/run/xl2tpd
+CONFIG=/var/l2tp/xl2tpd.conf
+CONFIG_LNS=/var/l2tp/xl2tpd.lns.conf
+OPTIONS=/var/l2tp/options.xl2tpd
+CONFIG_LNS_STR_TMP="exclusive=yes length bit=yes name=TP-Link lac=0.0.0.0-255.255.255.255 pppoptfile=$OPTIONS hidden bit=no require chap=yes refuse pap=yes "
+CONFIG_PID=/var/run/xl2tpd/xl2tpd.pid
+PPTPDIR=/var/pptp
+L2TPDIR=/var/l2tp
+L2TP_CHAP_SECRETS=$L2TPDIR/chap-secrets
+L2TP_PAP_SECRETS=$L2TPDIR/pap-secrets
+PPTP_CHAP_SECRETS=$PPTPDIR/chap-secrets
+PPTP_PAP_SECRETS=$PPTPDIR/pap-secrets
+IFNAME=l2tp-pppdrv
+
+PUBLIC_DNS=8.8.8.8
+
+controlfile="/var/run/xl2tpd/l2tp-control"
+pidfile="/var/run/xl2tpd/xl2tpd.pid"
+optfile="/var/l2tp/options.internet"
+sname="l2tp-server"
+
+CONF_IPSEC_SECRETS=/etc/ipsec.secrets
+
+calc_ip_net() {
+   sip="$1"
+   snetmask="$2"
+ 
+   local ipFIELD1=$(echo "$sip" |cut -d. -f1)
+   local ipFIELD2=$(echo "$sip" |cut -d. -f2)
+   local ipFIELD3=$(echo "$sip" |cut -d. -f3)
+   local ipFIELD4=$(echo "$sip" |cut -d. -f4)
+         
+   local netmaskFIELD1=$(echo "$snetmask" |cut -d. -f1)
+   local netmaskFIELD2=$(echo "$snetmask" |cut -d. -f2)
+   local netmaskFIELD3=$(echo "$snetmask" |cut -d. -f3)
+   local netmaskFIELD4=$(echo "$snetmask" |cut -d. -f4)
+ 
+   local tmpret1=$(($ipFIELD1&$netmaskFIELD1))
+   local tmpret2=$(($ipFIELD2&$netmaskFIELD2))
+   local tmpret3=$(($ipFIELD3&$netmaskFIELD3))
+   local tmpret4=$(($ipFIELD4&$netmaskFIELD4))
+
+   echo "$tmpret1.$tmpret2.$tmpret3.$tmpret4"
+}
+
+setup_login() {
+	local section="$1"
+
+	config_get username "$section" username
+	config_get password "$section" password
+	[ -n "$username" ] || return 0
+	[ -n "$password" ] || return 0
+
+	echo "\"$username\" l2tp-server \"$password\" *" >> $L2TP_CHAP_SECRETS
+	echo "\"$username\" l2tp-server \"$password\" *" >> $L2TP_PAP_SECRETS
+}
+
+setup_config() {
+	local section="$1"
+	config_get_bool enabled "$section" 'enabled' 0
+	[ "$enabled" -eq 0 ] && return 1
+	
+	config_get localip "$section" localip
+	config_get remoteip "$section" remoteip
+	if [ -n "$localip" ] && [ -n "$remoteip" ]; then
+		echo $CONFIG_LNS_STR_TMP"local ip=$localip ""ip range=$remoteip " > $CONFIG_LNS
+	else
+		return 1
+	fi
+	
+	return 0
+}
+
+setup_ipsec_psk() {
+	local section="$1"
+	config_get psk "$section" psk
+	echo ": PSK \"$psk\"" > $CONF_IPSEC_SECRETS
+	cat $CONF_IPSEC_SECRETS > /dev/console
+
+}
+
+setup_global_config() {
+	local saref
+
+	mkdir -p $L2TPDIR && \
+	echo "[global]" > $CONFIG
+	echo "listen-addr = 0.0.0.0" >> $CONFIG
+	echo "port = 1701" >> $CONFIG
+	echo "auth file = var/l2tp/xl2tp-secrets" >>  $CONFIG
+	echo "access control = no" >> $CONFIG
+
+	# FIXME: set yes if ipsec_saref="yes", unset for "unset", others no ?
+	#  xl2tpd works in user mode with saref option now
+	#  unset to work in kernel mode
+	config_get saref "l2tpoveripsec" "ipsec_saref"
+	[ x"$saref" == x"unset" ] || {
+		echo "ipsec saref = no" >> $CONFIG
+	}
+
+	echo "[lns default]" >> $CONFIG
+#	echo "[lns $sname]" >> $CONFIG
+#	echo "exclusive = yes" >> $CONFIG
+#	echo "length bit = yes" >> $CONFIG
+#	echo "name = TP-Link" >> $CONFIG
+#	echo "lac = 0.0.0.0 - 255.255.255.255" >> $CONFIG
+}
+
+setup_options() {
+	local mppeoption="mppe required,stateless"
+	local wan_type=$(uci get network.wan.wan_type)
+	local wan_mtu=1500
+	local vpn_mtu=1360
+	
+	cp -f /etc/ppp/options.xl2tpd $OPTIONS
+
+	if [ "${wan_type}" == "static" -o "${wan_type}" == "dhcp" ]; then
+		wan_mtu=$(uci get network.wan.mtu)
+	else
+		wan_mtu=$(uci get network.internet.mru)
+	fi
+	vpn_mtu=$((${wan_mtu} - 140))
+	echo "mtu ${vpn_mtu}"  >> $OPTIONS
+	echo "mru ${vpn_mtu}"  >> $OPTIONS
+
+	config_get localip l2tpoveripsec localip
+	[ -n "$localip" ] && echo "ms-dns $localip" >> $OPTIONS
+	[ -n "$PUBLIC_DNS" ] && echo "ms-dns $PUBLIC_DNS" >> $OPTIONS
+	echo "ifname $IFNAME"  >> $OPTIONS
+}
+
+start_xl2tpd() {
+	mkdir -p $RUN_D
+	for m in arc4 sha1_generic slhc crc-ccitt ppp_generic ppp_async ppp_mppe; do
+		insmod $m >/dev/null 2>&1
+	done
+	
+	[ -e $CONFIG_PID ] || $BIN -c $CONFIG -C $controlfile -p $pidfile> /dev/console 2>&1
+}
+
+add_lns() {
+	local wait_timeout=0
+	while [ ! -p $controlfile ]; do
+		wait_timeout=$(($wait_timeout + 1))
+		[ "$wait_timeout" -gt 5 ] && {
+			echo "Cannot find xl2tpd control file." > /dev/console
+			exit 1
+		}
+		sleep 1
+	done
+	xl2tpd-control -c $controlfile add-lns $sname $(cat $CONFIG_LNS) > /dev/console 2>&1 || {
+		echo "xl2tpd-control: Add lns $sname failed" > /dev/console
+	}
+}
+
+start() {
+#no need here, leave psk process to /etc/init.d/ipsec
+#setup_ipsec_psk
+	config_load l2tpoveripsec
+	setup_global_config
+	config_get_bool enabled l2tpoveripsec 'enabled' 0
+	[ "$enabled" -eq 0 ] && {
+		#config_get_bool xl2tpd_enabled l2tpoveripsec 'xl2tpd_enabled' 0
+		#[ "$xl2tpd_enabled" -eq 0 ] && return 1
+		return 1
+	}
+	start_xl2tpd
+	setup_config l2tpoveripsec || return
+	: > $L2TP_CHAP_SECRETS
+	: > $L2TP_PAP_SECRETS
+	: > /etc/ppp/chap-secrets
+	: > /etc/ppp/pap-secrets
+	config_foreach setup_login login
+	[ -e $L2TP_CHAP_SECRETS ] && cat $L2TP_CHAP_SECRETS >> /etc/ppp/chap-secrets
+	[ -e $L2TP_PAP_SECRETS ] && cat $L2TP_PAP_SECRETS >> /etc/ppp/pap-secrets
+	[ -e $PPTP_CHAP_SECRETS ] && cat $PPTP_CHAP_SECRETS >> /etc/ppp/chap-secrets
+	[ -e $PPTP_PAP_SECRETS ] && cat $PPTP_PAP_SECRETS >> /etc/ppp/pap-secrets
+	setup_options
+	add_lns
+
+	fw l2tp_access
+#	for now, netbios and samba access follow pptp
+#	config_get smbacc "l2tpoveripsec" "samba_access"
+	config_get netbios "l2tpoveripsec" "netbios_pass"
+	if [ "$netbios" == "on" ]; then
+		nice -n 10 bcrelay -d -i br-lan -o l2tp-pppdrv[0-9].* -p 137,138 -n
+	fi
+
+	local ignore_filename="/tmp/dhcp_hostsfile/l2tp_ignore"
+	# always remove old ignore file
+	rm -rf "$ignore_filename"
+	mkdir /tmp/dhcp_hostsfile/ >/dev/null 2>&1
+	config_get localip "l2tpoveripsec" "localip"
+	config_get remoteip "l2tpoveripsec" "remoteip"
+	local lanipaddr=`uci get network.lan.ipaddr`
+	local lanmask=`uci get network.lan.netmask`
+	local tmp_local_ip=`calc_ip_net $localip $lanmask`
+	local tmp_lan_ip=`calc_ip_net $lanipaddr $lanmask`
+	if [ "$tmp_local_ip" == "$tmp_lan_ip" ]; then
+		echo "l2tp: localip in lanip, add dhcp ignore" > /dev/console
+		[ -n "$localip" ] && echo "$localip,ignore" >$ignore_filename
+		if [ -n "$remoteip" ]; then
+			local prefix=$(echo "$remoteip" | cut -d '.' -f1-3)
+			local first=$(echo "$remoteip" | cut -d '-' -f1 | cut -d '.' -f4)
+			local last=$(echo "$remoteip" | cut -d '-' -f2)
+			for i in $(seq $first $last)
+			do
+   		 		echo "$prefix.""$i"",ignore" >>$ignore_filename
+			done
+		fi
+        uci set dhcp.dnsmasq.dhcphostsfile='/tmp/dhcp_hostsfile/'
+        uci commit
+	fi
+	/etc/init.d/dnsmasq reload
+}
+
+stop() {
+	tunnels=$(ls /tmp/tunnelid* 2>/dev/null)
+	if [ ! -z "$tunnels" ]; then
+	for tunnel in $tunnels
+		do
+			#echo delete vpn_rule $temp > /dev/console
+			#temp=$(cat $tunnel | awk '{print $2}')
+			#iptables -D forwarding_rule_vpn -s $temp -o eth0.4094 -j DROP
+			#echo $tunnel | tr -cd "[0-9]" | xargs xl2tpd-control disconnect-lac
+			rm -rf $tunnel
+		done
+	fi
+	#destroy tunnel-ppp_*
+	rm -rf /tmp/tunnel-ppp-*
+    for pid in $(ps -ww | grep "bcrelay -d -i br-lan -o l2tp-pppdrv\[0-9\].*" | awk '{print $1}'); do  
+       kill -9 $pid
+    done
+	#[ -e $optfile ] || ([ -e $CONFIG_PID ] && kill -15 $(cat $CONFIG_PID))
+	#[ -e $optfile ] && (xl2tpd-control remove-lns $sname /dev/console 2>&1 || {
+			#echo "xl2tpd-control: Remove $sname failed" > /dev/console
+		#})
+	[ -e $CONFIG_PID ] && kill -15 $(cat $CONFIG_PID)
+	fw l2tp_block
+	rm -f $L2TP_CHAP_SECRETS $L2TP_PAP_SECRETS $OPTIONS $CONFIG_LNS
+	#echo f >/proc/net/nf_conntrack 2>/dev/null
+	rm -rf /tmp/dhcp_hostsfile/l2tp_ignore
+	/etc/init.d/dnsmasq reload
+}
+
+restart() {
+	stop
+	start
+}

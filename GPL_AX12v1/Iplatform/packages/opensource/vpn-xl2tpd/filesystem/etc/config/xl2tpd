@@ -1,0 +1,11 @@
+config service 'xl2tpd'
+        option samba_access 'on'
+        option localip '192.168.0.10'
+        option unencrypted_access 'on'
+        option netbios_pass 'on'
+        option remoteip '192.168.0.11-20'
+        option enabled 'off'
+
+config login 'account'
+	option 'username' 'admin'
+	option 'password' 'admin'

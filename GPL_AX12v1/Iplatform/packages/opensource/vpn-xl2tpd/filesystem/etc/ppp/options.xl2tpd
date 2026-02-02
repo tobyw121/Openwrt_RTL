@@ -1,0 +1,26 @@
+#debug
+#logfile /var/log/xl2tpd.log
+auth
+name "l2tp-server"
+lcp-echo-failure 3
+lcp-echo-interval 60
+default-asyncmap
+#mtu 1460
+#mru 1460
+#nobsdcomp
+#nodeflate
+#noproxyarp
+proxyarp
+#nomppc
+#mppe no56,stateless
+require-mschap-v2
+require-chap
+require-mschap
+refuse-eap
+require-pap
+#ms-dns 172.16.1.1
+#plugin radius.so
+#radius-config-file /etc/radius.conf
+nomppe
+ip-up-script /lib/netifd/l2tpvpn-server-up
+ip-down-script /lib/netifd/l2tpvpn-server-down
