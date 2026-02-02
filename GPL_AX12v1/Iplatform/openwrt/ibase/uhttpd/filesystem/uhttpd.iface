@@ -1,0 +1,6 @@
+#!/bin/sh
+
+if [ "$INTERFACE" == "lan" -o "$INTERFACE" == "lanv6" ] && [ "$ACTION" == "ifup" ]; then
+	echo "======== uhttpd: lan or lanv6 update ========"
+	ubus call uhttpd lan_update '{}'
+fi
