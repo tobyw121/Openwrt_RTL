@@ -1,0 +1,233 @@
+#!/bin/sh /etc/rc.common
+#
+# (C) Copyright 2016, TP-Link Inc
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of
+# the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+# MA 02111-1307 USA
+#
+#
+
+START=70
+
+SERVICE_USE_PID=1
+
+USB_SHARE="/etc/config/usbshare"
+
+debug() {
+
+	echo "[$1] $2" >dev/null 2>&1  # >>/tmp/.sftp_log
+}
+
+boot() {
+
+    # "Checking if FTTP server should be started"
+    PRSTART=$(awk '{print $1*1000}' /proc/uptime)
+
+    debug "???" "Doing boot time initialization of SFTP"
+
+    config_load usbshare
+
+    local sftp_en="$(uci_get usbshare.global.sftp)"
+
+    debug "???" "Got such SFTP-enable parameter: [$sftp_en]"
+
+    if [ "$sftp_en" = "on" ] ; then
+
+        debug "???" "Should start the SFTP server. Starting it ......"
+
+	# Calling start() with no parametes, see below
+	start
+
+        debug "???" "  ... done."
+
+    else
+        debug "???" "Should NOT start the SFTP"
+    fi	
+
+#    debug "usbshare boot end"
+    PREND=$(awk '{print $1*1000}' /proc/uptime)
+
+    PRDIFF=$(($PREND-$PRSTART))
+
+    debug "???" "Boot time initialization of SFTP done in $PRDIFF ms"
+}
+
+start() {
+
+	PRSTART=$(awk '{print $1*1000}' /proc/uptime)
+
+	debug "+++" "START lauched"
+
+	if [ ! -d "/tmp/.sftp" ]; then
+
+		# Check if filename not empty 
+		if [ -z "$USB_SHARE" ]
+		then
+			# Empty filename
+			debug "+++" "Empty filename of USBSHARE"
+
+			return 1
+		fi
+
+		# Check is regular file with such a filename does exist
+		if [ ! -f "$USB_SHARE" ]
+		then
+			# Empty filename
+			debug "+++" "File <$USB_SHARE> does not exist "
+
+			# Empty filename
+			return 1
+		fi
+
+		# Extract all passwords into STDIN
+		rawSTRING=$(awk '/password/ {print $3}' $USB_SHARE)
+
+		# Collect them from STDOUT into file
+		echo $rawSTRING > /var/.tmpPasswd
+
+		# take ony first occurrance 
+		rawSTRING=$(awk '{print $1}' /var/.tmpPasswd)
+
+		# Remove "'" and put (non empty) string onto STDOUT
+		echo $rawSTRING | cut -d "'" -f 2 > /var/.tmpPasswd
+
+		PasswdVal=$(cat /var/.tmpPasswd)
+
+		# Don't need this file anymore? Clean after yourself
+		rm -f /var/.tmpPasswd
+
+		debug "+++" "Extracted such password [$PasswdVal] from $USB_SHARE"
+
+		if [  ! -z $PasswdVal  ] 
+		then 
+
+			debug "+++" "Password is NOT EMPTY."
+
+			# 1. Preservr [admin], rename [sftpusr] -> [admin]
+			sed -e s/admin/istrator/g /etc/passwd > /etc/passwd.tmp && mv /etc/passwd.tmp /etc/passwd
+			sed -e s/sftpusr/admin/g /etc/passwd > /etc/passwd.tmp && mv /etc/passwd.tmp /etc/passwd
+
+			sed -e s/admin/istrator/g /etc/shadow > /etc/shadow.tmp && mv /etc/shadow.tmp /etc/shadow
+
+			sed -e s/sftpusr/admin/g /etc/group > /etc/group.tmp && mv /etc/group.tmp /etc/group
+			echo "[+++] Renamed account and group [sftpusr] into [admin]"
+
+			#2. Created temporary directories, set permissions
+			mkdir /tmp/sftpdir
+			chmod 755 /tmp/sftpdir
+			chown admin:admin /tmp/sftpdir
+
+			ln -s /mnt/sda1/ /tmp/sftpdir/
+			chown admin:admin /tmp/sftpdir/sda1/
+			chmod 755 /tmp/sftpdir/sda1/
+			debug "+++" "Created temp. folder for [admin], a.k.a [sftpusr]"
+
+			# 3. Assign password (going from assumptin it won't creash. otherwise: check and return {0/1})
+			echo -e "$PasswdVal\n$PasswdVal" | passwd admin
+
+			debug "+++" "Assigned password [$PasswdVal] to admin"
+
+			# Create marker of started server
+			mkdir /tmp/.sftp
+
+			# Start the SSH server, which will start sybsystem </usr/lib/sftp-server> at Port #622
+
+
+			# 17 sec --> 5 sec
+			/usr/sbin/open-ssh-sshd start                          &
+
+			debug "+++" "Marker created and server (TCP port #622) started"	
+
+		else
+			debug "+++" "Password is EMPTY."
+
+			# SFTP service was not started
+			return 1
+		fi
+
+	else
+		debug "+++" "Can't run START. Service already have been started"
+
+		# SFTP service was not started
+		return 1
+	fi
+
+	PREND=$(awk '{print $1*1000}' /proc/uptime)
+
+	PRDIFF=$(($PREND-$PRSTART))
+	
+	debug "+++" "START DONE in $PRDIFF ms"
+
+	# Only place we returen a success 
+	return 0
+
+}
+
+stop() {
+
+	PRSTART=$(awk '{print $1*1000}' /proc/uptime)
+
+	debug "---" "STOP launched"
+
+	if [ -d "/tmp/.sftp" ]; then
+
+		# 3. Point 3. of start() implies no inversion.
+
+		# 2. Revert directory changes
+		debug "---" "Deleted temporary folder for [admin], a.k.a [sftpusr]"
+
+		# 1. rename [admin] -> [sftpusr], restore [admin]. 
+
+		sed -e s/admin/sftpusr/g /etc/passwd > /etc/passwd.tmp && mv /etc/passwd.tmp /etc/passwd
+		sed -e s/istrator/admin/g /etc/passwd > /etc/passwd.tmp && mv /etc/passwd.tmp /etc/passwd
+
+		sed -e s/istrator/admin/g /etc/shadow > /etc/shadow.tmp && mv /etc/shadow.tmp /etc/shadow
+
+		sed -e s/admin/sftpusr/g /etc/group > /etc/group.tmp && mv /etc/group.tmp /etc/group
+
+		debug "---" "Renamed account and group [admin] into [sftpusr]"
+
+		# Let's revert changes done in start(). 
+		debug "---" "Admin's password left intact"	
+
+		# Delete marker of started server
+		rmdir /tmp/.sftp
+
+		# Stop the SSH server, which handles the sybsystem </usr/lib/sftp-server>
+		/usr/sbin/open-ssh-sshd stop	
+
+		# Kill process responding on port #622
+		killall sftp-server
+
+		debug "---" "Marker deleted and server (on TCP port #622) stopped"
+	else
+		debug "---" "Can't run STOP. Service already have been stopped"
+	fi
+
+	PREND=$(awk '{print $1*1000}' /proc/uptime)
+
+	PRDIFF=$(($PREND-$PRSTART))
+	
+	debug "---" "STOP done in $PRDIFF ms"
+
+	return 0
+
+}
+
+shutdown() {
+
+	debug "---" "SHUTDOWN laucned"
+
+}
