@@ -1,0 +1,196 @@
+#!/bin/sh
+. /lib/functions.sh
+. /lib/netifd/netifd-proto.sh
+
+
+
+IFNAME=$ifname
+INTERFACE=$interface
+STATE=$new_dhcpc_state
+V6PLUS_IFNAME="v6plus-wan"
+
+
+[ -z "$INTERFACE" ] && exit 1
+[ -z "$IFNAME" ] && exit 1
+
+deconfig_interface() {
+       proto_init_update "$IFNAME" 0
+       proto_send_update "$INTERFACE"
+}
+
+setup_interface () {
+
+	prefix="::"
+	proto_init_update "$IFNAME" 1
+	
+	config_load /etc/config/network
+	config_get ip_config wanv6 ip_config
+	config_get wan_proto wan proto
+	config_get lan_proto lanv6 proto
+	config_get dynamic_mode wan dynamic_mode
+
+	mbit=`cat /proc/sys/net/ipv6/conf/$IFNAME/ndisc_mbit`
+	[ $mbit -eq 0 -o "$ip_config" == "slaac" ] && [ "$ip_config" == "slaac" -o "$ip_config" == "auto" ] && {
+		### Note - V6plus need get correct address!
+		if [ "$wan_proto" == "v6plus" ]; then
+			while read line
+			do
+				[ $V6PLUS_IFNAME != ${line##* } ] && continue
+				[ "fe80" = ${line:0:4} ] && continue
+
+				element=${line:0:32}
+
+				v6plusaddr=${element:0:4}:${element:4:4}:${element:8:4}:${element:12:4}
+				v6plusaddr=$v6plusaddr:${element:16:4}:${element:20:4}:${element:24:4}:${element:28:4}
+
+				v6plus_ip6addr=$v6plusaddr
+			done </proc/net/if_inet6
+		fi
+
+		while read line
+		do
+			[ $IFNAME != ${line##* } ] && continue
+			[ "fe80" = ${line:0:4} ] && continue
+
+			element=${line:0:32}
+
+			ip6addr=${element:0:4}:${element:4:4}:${element:8:4}:${element:12:4}
+			ip6addr=$ip6addr:${element:16:4}:${element:20:4}:${element:24:4}:${element:28:4}
+
+			[ -n "$ip6addr" ] && [ "$ip6addr" == "$v6plus_ip6addr" ] && {
+				echo "cycle v6plus-wan address $ip6addr, so we add it here" > /dev/console
+				proto_add_ipv6_address "$ip6addr" "64"
+			} || {
+				new_ip6addr=$ip6addr
+			}
+
+		done </proc/net/if_inet6
+
+		[ -n "$new_ip6addr" ] &&  [ ! -f "/tmp/slaac_addr" ] && {
+			echo $new_ip6addr > /tmp/slaac_addr
+		}
+		[ -z "$new_ip6addr" ] && {
+			proto_notify_error "$INTERFACE" "NO ADDRESS"
+			sleep 3 
+			proto_setup_failed "$INTERFACE"
+			return
+		}
+	}
+	
+	if [ "$wan_proto" == "v6plus" -o "$wan_proto" == "dslite" ] && [ $mbit -eq 1 -a -n "$new_ip6prefix" -a -z "$new_ip6addr" ]; then
+		new_ip6addr=${new_ip6prefix%?}
+		new_ip6addr=${new_ip6addr%?}
+		count1=`echo $new_ip6addr |tr -cd : |wc -c`
+		let "count=3 - $count1"
+
+		while [ $count -ne 0 ]; do
+			new_ip6addr=${new_ip6addr}:0
+			let "count=count - 1"
+		done
+		
+		while read line
+		do
+			[ $IFNAME != ${line##* } ] && continue
+			[ "fe80" = ${line:0:4} ] && {
+				element=${line:0:32}
+				new_ip6addr=${new_ip6addr}:${element:16:4}:${element:20:4}:${element:24:4}:${element:28:4}
+				echo new_ip6addr[consist of pd] is : $new_ip6addr > /dev/console
+			}
+		done </proc/net/if_inet6
+	fi
+
+	[ $mbit -eq 1 -o "$ip_config" == "dhcpv6" ] && [ "$ip_config" == "dhcpv6" -o "$ip_config" == "auto" ] && {
+		local dhcpv6_addr="$(cat /tmp/dhcp6c/dhcpv6_addr)"
+		[ -n "$dhcpv6_addr" ] && [ -n "$new_ip6addr" ] && [ "$new_ip6addr" != "$dhcpv6_addr" ] && {
+			[ "$wan_proto" == "v6plus" -o "$wan_proto" == "dslite" ] && {
+				echo dhcpv6_addr change, restart wan !!!!! > /dev/console
+				ubus call network.interface.wan down
+				ubus call network.interface.wan up
+			}
+			[ "$lan_proto" == "ndp" ] && {
+				local lanv6_prefix=$(lua /lib/netifd/lanv6_genrate_ndp_prefix.lua $new_ip6addr)
+				echo "$lanv6_prefix" > /tmp/dhcp6c/ndp_prefix
+				uci set network.lanv6.prefix="$lanv6_prefix"
+				uci commit network
+				uci set protocol.ndp.prefix="$lanv6_prefix"
+				uci commit protocol
+				ubus call network.interface.lanv6 down
+				sleep 1
+				ubus call network.interface.lanv6 up
+			}
+		}
+		[ -n "$new_ip6addr" ] && echo $new_ip6addr > /tmp/dhcp6c/dhcpv6_addr
+	}
+
+	if [ -n "$new_ip6addr" ]; then
+                proto_add_ipv6_address "$new_ip6addr" "64"
+        elif [ -z "$new_ip6prefix" ] && [ $ip_config != "non_address" ]; then
+                deconfig_interface
+                return
+        fi
+
+	[ -n "$new_domain_name_servers" ] && {
+		DNS2=${new_domain_name_servers##*[, ]}
+		DNS1=${new_domain_name_servers%%[, ]*}
+		[ -n "$DNS1" ] && proto_add_dns_server "$DNS1"
+		[ -n "$DNS1" -a -n "$DNS2" -a "$DNS1" != "$DNS2" ] && proto_add_dns_server "$DNS2"
+	}
+
+	[ -n "$new_ip6prefix" ] && {
+		prefix="$new_ip6prefix"
+		local dhcpv6_pd="$(cat /tmp/dhcp6c/prefix.info)"
+		[ -n "$dhcpv6_pd" ] && [ "$dhcpv6_pd" != "$prefix" ] && [ "$lan_proto" != "ndp" ] && {
+			echo pd change !!!!!!!!  > /dev/console
+			uci set network.lanv6.prefix="$prefix"
+			uci commit network
+			uci set protocol.dhcp6s.prefix="$prefix"
+			uci set protocol.slaac.prefix="$prefix"
+			uci set protocol.rdnss.prefix="$prefix"
+			uci commit protocol
+			ubus call network.interface.lanv6 down
+			sleep 1
+			ubus call network.interface.lanv6 up
+		}
+	}
+	[ -n "$prefix" ] && echo "$prefix" > /tmp/dhcp6c/prefix.info
+	
+	if [ "$wan_proto" == "dslite" -a $dynamic_mode -eq 1 ]; then
+		[ -n "$new_aftr_name" ] && {
+			echo "Get auto domain name success" > /dev/console
+			echo "$new_aftr_name" |grep -q ":"
+			if [ $? -eq 0 ]; then
+				uci_set dsliteV6plus wan peeraddr "$new_aftr_name"
+				uci_commit dsliteV6plus
+			else
+				uci_set dsliteV6plus wan AFTR_name "$new_aftr_name"
+				uci_commit dsliteV6plus
+			fi
+		}
+	fi
+	proto_send_update "$INTERFACE"
+
+	sleep 3
+	local gw_route=`ip -6 route|grep default`
+	[ -z ${gw_route} ] && {
+		local gateway=`cat /proc/sys/net/ipv6/conf/$IFNAME/default_gateway`
+		[ ${#gateway} -ne 0 ] && ip -6 route add "::/0" via "$gateway" dev "$IFNAME"
+	}
+
+}
+
+# code=0 is equal to [ -n "$new_ip6addr" -o -n "$new_ip6prefix" ]
+case "$STATE" in
+	"2" | "3")
+		#if [ -n "$code" -a "$code" == "0" ]; then
+			 setup_interface
+		#else
+		#	deconfig_interface
+		#fi
+	;;
+
+	"6")
+		deconfig_interface
+	;;
+esac
+
+exit 0
