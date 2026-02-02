@@ -1,0 +1,155 @@
+opengt
+ set com 115200n81
+ set comecho off
+ set senddelay 0.02
+ waitquiet 0.2 0.2
+
+let $x=$env("ATMODE")
+let $y=$env("ATBAND")
+
+if $x = "xx" goto band
+ send $x
+send "\"^m"
+ get 5 "" $t
+
+:band
+if $y = "xx" goto noband
+ send $y
+send "\"^m"
+ get 5 "" $t
+
+:noband
+ let $c="AT+CSQ^m"
+ let $r="+CSQ"
+ gosub readatcmd
+
+ let $c="AT*CNTI=0^m"
+ let $r="*CNTI"
+ gosub readatcmd
+
+ let $c="AT!SELRAT?^m"
+ let $r="!SELRAT"
+ gosub readatcmd
+
+ let $c="AT+ECIO?^m"
+ let $r="Car0"
+ gosub readatcmd2
+
+ let $c="AT+RSCP?^m"
+ let $r="Car0"
+ gosub readatcmd2
+
+let $c="AT!UMTSCHAN?^m"
+ let $r="Channel"
+ gosub readatcmd2
+
+ let $c="AT!GSTATUS?^m"
+ let $r="WCDMA"
+ gosub readatcmd3
+
+ let $c="AT!GSTATUS?^m"
+ let $r="RX"
+ gosub readatcmd3
+
+ let $c="AT!GSTATUS?^m"
+ let $r="RSSI"
+ gosub readatcmd3
+
+ exit 0
+
+:readatcmd
+ let i=5
+ send $c
+:loop
+ get 1 "^m" $s
+ let l=len($r)
+ if len($s) < l goto loop1
+ if $mid($s,1,l) <> $r goto loop1
+ print $s
+ return
+
+:loop1
+ if len($s) < 2 goto loop2
+ if $mid($s,1,2) = "ER" return
+ if $mid($s,1,2) = "CO" return
+:loop2
+ if i = 0 return
+ let i=i-1
+ sleep 0.25
+ goto loop
+
+:readatcmd2
+ let i=5
+ send $c
+:loop6
+ get 1 "^m" $s
+ let l=len($r)
+ if len($s) < l goto loop7
+ if $mid($s,1,l) <> $r goto loop7
+ print $s
+ get 1 "^m" $s
+ print $s
+ return
+
+:loop7
+ if len($s) < 2 goto loop8
+ if $mid($s,1,3) = "ERR" return
+ if $mid($s,1,2) = "CO" return
+:loop8
+ if i = 0 return
+ let i=i-1
+ sleep 0.25
+ goto loop6
+
+:readatcmd3
+ let i=15
+ send $c
+:loop9
+ get 1 "^m" $s
+ let l=len($r)
+ if len($s) < l goto loop10
+ if $mid($s,1,l) <> $r goto loop10
+ print $s
+ get 1 "^m" $s
+ print $s
+ get 1 "^m" $s
+ print $s
+ get 1 "^m" $s
+ print $s
+ return
+
+:loop10
+ if len($s) < 2 goto loop11
+ if $mid($s,1,3) = "ERR" return
+ if $mid($s,1,2) = "CO" return
+:loop11
+ if i = 0 return
+ let i=i-1
+ sleep 0.25
+ goto loop9
+
+:readatcmdnr
+ let i=10
+ send $c
+:loop3
+ get 1 "^m" $s
+ if len($s) < 2 goto loop5
+ if $mid($s,1,2) = "ER" goto loop4
+ if $mid($s,1,2) = "OK" goto loop5
+ if $mid($s,1,2) = "AT" goto loop5
+ if $mid($s,1,2) = "TE" goto loop5
+ if $mid($s,1,1) = "+"  goto loop5
+ if $mid($s,1,1) = "\^"  goto loop5
+ let l=len($s)
+ let $s=$mid($s,1,l)
+ return
+
+:loop4
+ let $s=""
+ return
+
+:loop5
+ if i = 0 return
+ let i=i-1
+ sleep 0.25
+ goto loop3

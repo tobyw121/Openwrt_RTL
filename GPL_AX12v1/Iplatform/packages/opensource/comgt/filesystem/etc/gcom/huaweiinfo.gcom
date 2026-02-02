@@ -1,0 +1,72 @@
+opengt
+ set com 115200n81
+ set comecho off
+ set senddelay 0.02
+ waitquiet 0.2 0.2
+
+let $x=$env("ATMODE")
+let $y=$env("ATBAND")
+
+if $x = "xx" goto band
+ send $x
+send "\"^m"
+ get 5 "" $t
+
+:band
+if $y = "xx" goto noband
+ send $y
+send "\"^m"
+ get 5 "" $t
+
+:noband
+ let $c="AT+CSQ^m"
+ let $r="+CSQ"
+ gosub readatcmd
+
+ let $c="AT\^CSNR?^m"
+ let $r="\^CSNR"
+ gosub readatcmd
+
+ let $c="AT\^SYSINFOEX^m"
+ let $r="\^SYSINFOEX"
+ gosub readatcmd
+
+ let $c="AT\^SYSCFGEX?^m"
+ let $r="\^SYSCFGEX"
+ gosub readatcmd
+
+ let $c="AT\^SYSCFG?^m"
+ let $r="\^SYSCFG"
+ gosub readatcmd
+
+ let $c="AT\^SYSINFO^m"
+ let $r="\^SYSINFO"
+ gosub readatcmd
+
+ let $c="AT\^LTERSRP?^m"
+ let $r="\^LTERSRP"
+ gosub readatcmd
+
+ exit 0
+
+:readatcmd
+ let i=5
+ send $c
+:loop
+ get 1 "^m" $s
+ let l=len($r)
+ if len($s) < l goto loop1
+ if $mid($s,1,l) <> $r goto loop1
+ print $s
+ return
+
+:loop1
+ if len($s) < 2 goto loop2
+ if $mid($s,1,2) = "ER" return
+ if $mid($s,1,2) = "CO" return
+:loop2
+ if i = 0 return
+ let i=i-1
+ sleep 0.25
+ goto loop
+

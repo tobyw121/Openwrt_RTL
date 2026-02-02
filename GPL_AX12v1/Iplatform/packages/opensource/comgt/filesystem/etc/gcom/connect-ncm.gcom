@@ -1,0 +1,20 @@
+opengt
+ set com 115200n81
+ set comecho off
+ set senddelay 0.05
+ waitquiet 1 0.2
+
+:start
+let $x=$env("SETAPN")
+let $y=$env("SETUSER")
+let $z=$env("SETPASS")
+let $a=$env("SETAUTH")
+send "AT^^NDISDUP=1,1,\""
+send $x
+if $a="0" send "\"^m"
+else send "\",\"" send $y send "\",\"" send $z send "\"," send $a send "^m"
+ get 5 "" $s
+ print $s
+
+:continue
+ exit 0

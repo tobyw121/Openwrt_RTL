@@ -1,0 +1,21 @@
+opengt
+ set com 115200n81
+ set comecho off
+ set senddelay 0.05
+ waitquiet 1 0.2
+
+:start
+send "AT+CMGF=1^m"
+ get 5 "" $s
+ print $s
+let $x=$env("ATCMD")
+send $x
+send "^m"
+ get 5 "" $s
+ print $s
+send "AT+CMGF=0^m"
+ get 5 "" $s
+ print $s
+
+:continue
+ exit 0

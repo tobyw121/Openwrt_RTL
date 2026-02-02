@@ -1,0 +1,18 @@
+opengt
+ set com 115200n81
+ set comecho off
+ set senddelay 0.02
+ waitquiet 0.2 0.2
+ flash 0.1
+
+:start
+ send "AT+CIMI^m"
+ let c=0
+:continue
+ get 1 "^m" $s
+ let y = len($s)
+ if y>10 print $s goto finish
+ else inc c goto continue
+ if c>=5 goto finish
+:finish
+ exit 0

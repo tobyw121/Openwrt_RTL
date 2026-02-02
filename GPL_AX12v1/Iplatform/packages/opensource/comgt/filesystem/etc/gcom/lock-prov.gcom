@@ -1,0 +1,40 @@
+opengt
+ set com 115200n81
+ set comecho off
+ set senddelay 0.05
+ waitquiet 1 0.2
+
+:start
+send "AT+COPS=0^m"
+get 5 "" $s
+let $x=$env("MCCMNC")
+send "AT+COPS=1,2,\""
+send $x
+send "\",2^m"
+gosub wait_ok
+
+:continue
+ exit 0
+
+:wait_ok
+let t=0
+:get_again
+get 1 " ^m" $s
+let $a=$s
+if len($a)>=3 let $b=$right($a,2)
+if $b="OK" goto got_ok
+if $b="ER" goto got_err
+if $b="CO" goto got_err
+else inc t
+print $s
+if t<200 goto get_again
+:got_err
+let $s="ERROR"
+print $s
+send "AT+COPS=0^m"
+get 5 "" $s
+return
+
+:got_ok
+print $s
+return

@@ -1,0 +1,31 @@
+opengt
+ set com 115200n81
+ set comecho off
+ set senddelay 0.05
+ waitquiet 1 0.2
+
+:start
+let $x=$env("ATCMD")
+send $x
+send "^m"
+gosub wait_ok
+
+:continue
+ exit 0
+
+:wait_ok
+let t=0
+:get_again
+get 1 " ^m" $s
+let $a=$s
+if len($a)>=3 let $b=$right($a,2)
+if $b="OK" goto got_ok
+if $b="ER" goto got_ok
+if $b="CO" goto got_ok
+else inc t
+print $s
+if t<45 goto get_again
+
+:got_ok
+print $s
+return
