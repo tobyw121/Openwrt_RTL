@@ -1,0 +1,70 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2010-2012 OpenWrt.org
+
+#START=70
+#SERVICE_DAEMONIZE=1
+
+AFPD_BIN="/usr/sbin/afpd"
+CNID_METAD_BIN="/usr/sbin/cnid_metad"
+AFP_CONF_FILE="/tmp/netatalk/afp.conf"
+
+start()
+{
+	local dir
+	local dbdir
+	local limitsize
+	local account=$1 #may input the alias name
+
+	[ ! -d "/tmp/netatalk" ] && mkdir -p /tmp/netatalk
+	[ -f "/tmp/netatalk/afp.conf" ] && rm -f /tmp/netatalk/afp.conf
+
+	#get the path
+	tm_getpath
+	[ -f "/tmp/netatalk/tmppath" ] || return
+	dir=`cat "/tmp/netatalk/tmppath"`
+
+	[ ! -d "$dir" ] && return
+	dbdir="$dir/CNID"
+	mkdir -p "$dbdir"
+
+	[ "x$account" == "x" ] && {
+		config_load usbshare
+		config_get account account username ""
+	}
+
+	config_load time_machine
+	config_get limitsize settings limitsize "0"
+
+	echo "[Global]"                     >  $AFP_CONF_FILE
+	echo "save password = no"           >> $AFP_CONF_FILE
+	echo "log level = default:severe"   >> $AFP_CONF_FILE # lever: -/severe/error/warn/note/info/debug
+	echo "log file = /var/log/afpd.log" >> $AFP_CONF_FILE # log file
+	echo "vol dbpath = $dbdir"          >> $AFP_CONF_FILE # database path
+	echo "sleep time = 1"               >> $AFP_CONF_FILE
+	echo "signature = XXXXXX"           >> $AFP_CONF_FILE # no signature store
+	echo "max connections = 20"         >> $AFP_CONF_FILE
+
+	[ "x$account" != "x" ] && {
+		echo "user alias = $account"    >> $AFP_CONF_FILE # login account replase user origi
+		echo "user origi = admin"       >> $AFP_CONF_FILE
+	}
+
+	echo ""                             >> $AFP_CONF_FILE
+	echo "[BackupTM]"                   >> $AFP_CONF_FILE
+	echo "path = $dir"                  >> $AFP_CONF_FILE # path
+	echo "cnid scheme = dbd"            >> $AFP_CONF_FILE
+	echo "ea = auto"                    >> $AFP_CONF_FILE
+	echo "time machine = yes"           >> $AFP_CONF_FILE
+	
+	[ "x$limitsize" != "x0" ]  && echo "vol size limit = $(($limitsize / 1024 / 1024))" >> $AFP_CONF_FILE   #for size limit
+
+	service_start $AFPD_BIN -F $AFP_CONF_FILE
+	service_start $CNID_METAD_BIN -F $AFP_CONF_FILE
+}
+
+stop()
+{
+	service_stop $AFPD_BIN
+	service_stop $CNID_METAD_BIN
+}
+
