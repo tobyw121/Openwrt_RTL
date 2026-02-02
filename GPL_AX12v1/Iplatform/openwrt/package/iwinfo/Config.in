@@ -1,0 +1,41 @@
+menu "General Configuration"
+
+config PACKAGE_WIFI_DBDC_MODE
+	bool "if wifi works in DBDC mode."
+	default n
+	help
+		This is config for wifi dbdc.
+
+if PACKAGE_WIFI_DBDC_MODE
+config PACKAGE_WIFI_DBDC_CHIP_TYPE
+	string "type of wifi chip working in DBDC mode."
+	default ""
+	help
+		This is config for type of wifi chip working in DBDC mode	
+endif
+
+config IWINFO_DFS_CHANNEL_SUPPORT
+	bool "if support DFS Channels."
+	default n
+	help
+		This is config for channel show when wifi disabled.
+
+config IWINFO_WIFI_TRIBAND
+	bool "if wifi support TriBand."
+	default n
+	help
+		This is config for wifi TriBand.
+
+config IWINFO_DOT11_EHT_BE
+	bool "if wifi support 11be."
+	default n
+	help
+		This is config for wifi 11be.
+
+config USE_SDK_NL_TINY
+	bool "if use SDK nl-tiny."
+	default n
+	help
+		This is config for SDK nl-tiny using.
+
+endmenu
