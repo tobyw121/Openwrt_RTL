@@ -1,0 +1,358 @@
+#!/bin/sh /etc/rc.common
+
+. /lib/functions.sh
+. /lib/functions/network.sh 
+
+START=99
+
+CONFIG_FILE="/var/etc/wireguard_server.conf"
+CLIENT_CONFIG="/tmp/wg/"
+STATUS_FILE="/tmp/wg_status.lua"
+
+WG_ADDRESS=""
+SERVER_PUBLIC_KEY=""
+SERVER_LISTEN_PORT=""
+SERVER_WAN_ADDRESS=""
+ROUTE_ADDRESS=""
+DNS=""
+ACCESS=""
+LAN=""
+MTU=""
+PERSISTENT_KEEPALIVE=""
+
+get_network() {
+	local ipaddr="$1"
+	local netmask="$2"
+
+	echo "$ipaddr-$netmask" | awk -F '[.-]' '{ ip = lshift($1, 24) + lshift($2, 16) + lshift($3, 8) + $4; \
+		mask = lshift($5, 24) + lshift($6, 16) + lshift($7, 8) + $8; \
+		net = and(ip, mask); \
+		printf("%d.%d.%d.%d", and(rshift(net, 24), 255), and(rshift(net, 16), 255), and(rshift(net, 8), 255), and(net, 255)); \
+	}'
+}
+
+mask2cdr() {
+   local x=${1##*255.}
+   set -- 0^^^128^192^224^240^248^252^254^ $(( (${#1} - ${#x})*2 )) ${x%%.*}
+   x=${1%%$3*}
+   echo $(( $2 + (${#x}/4) ))
+}
+
+netenclose() {
+    local o1 o2 o3 o4 m1
+    local p1 p2 p3 p4 m2
+    local ip1 ip2 min
+
+    net1=`echo "$1" | cut -d "/" -f 1`
+    net2=`echo "$2" | cut -d "/" -f 1`
+    m1=`echo "$1" | cut -d "/" -f 2`
+    m2=`echo "$2" | cut -d "/" -f 2`
+    
+    o1="`echo $net1 | awk -v FS="." '{print $1}'`"
+    o2="`echo $net1 | awk -v FS="." '{print $2}'`"
+    o3="`echo $net1 | awk -v FS="." '{print $3}'`"
+    o4="`echo $net1 | awk -v FS="." '{print $4}'`"
+    p1="`echo $net2 | awk -v FS="." '{print $1}'`"
+    p2="`echo $net2 | awk -v FS="." '{print $2}'`"
+    p3="`echo $net2 | awk -v FS="." '{print $3}'`"
+    p4="`echo $net2 | awk -v FS="." '{print $4}'`"
+
+    min=$m1
+    if [ $m1 -gt $m2 ]; then
+        min=$m2
+    fi
+
+    ip1=$(((o1<<24)+(o2<<16)+(o3<<8)+o4))
+    ip2=$(((p1<<24)+(p2<<16)+(p3<<8)+p4))
+
+    ip1_r=$((ip1>>(32-min)))
+    ip2_r=$((ip2>>(32-min)))
+
+    if [ $ip1_r -eq $ip2_r ]; then
+        return 1
+    else
+        return 0
+    fi
+}
+
+setup_wg_interface()
+{
+    local enabled
+    local private_key
+    local lan_ipaddr="`uci get network.lan.ipaddr`"                                   
+    local lan_netmask="`uci get network.lan.netmask`"
+
+    config_get enabled $1 enabled
+
+    if [ "$enabled" != "true" ]; then
+        echo "wireguard vpn if off, exit" > /dev/console
+        exit 1
+    fi
+
+    echo "[Interface]" >"${CONFIG_FILE}"
+
+    config_get WG_ADDRESS $1 "address"
+    config_get SERVER_LISTEN_PORT $1 "listen_port"
+	config_get private_key $1 "private_key"
+	config_get SERVER_PUBLIC_KEY $1 "public_key"
+    config_get DNS $1 "dns"
+    config_get ACCESS $1 "access"
+    config_get PERSISTENT_KEEPALIVE $1 "persistent_keepalive"
+
+    LAN="$(get_network $lan_ipaddr $lan_netmask)"
+    local mask="$(mask2cdr $lan_netmask)"
+    LAN="${LAN}/${mask}"
+
+    config_clear wireguard
+    local domain              
+    if [ $(/usr/sbin/ddns logined noip) -eq 1 ]; then
+        config_load ddns              
+        config_get domain noip domain
+        config_clear ddns
+    fi
+
+    if [ $(/usr/sbin/ddns logined dyndns) -eq 1 ]; then
+        config_load ddns                 
+        config_get domain dyndns domain
+        config_clear ddns
+    fi
+    config_load wireguard 
+                               
+    if [ -n "$domain" ]; then                                           
+        SERVER_WAN_ADDRESS=$domain
+    else         
+        . /lib/functions/network.sh
+        local wanip="0.0.0.0"
+        ubus call network.interface.internet status 1>/dev/null 2>&1
+        if [ $? -eq 0 ]; then               
+            network_get_ipaddr wanip "internet"
+        else
+            network_get_ipaddr wanip "wan"
+        fi
+        SERVER_WAN_ADDRESS=$wanip
+    fi
+
+    [ -z "$SERVER_LISTEN_PORT" ] && return 1
+	echo -e "ListenPort = $SERVER_LISTEN_PORT" >>"$CONFIG_FILE"
+    if [ "$private_key" != "" ];then
+		echo -e "PrivateKey = $private_key\n" >>"$CONFIG_FILE"
+	fi
+	
+    return 0
+}
+
+get_wg_mtu()
+{
+    config_load 'network'
+    local basic_mtu
+    network_get_currnetwork curr_nw
+    config_get type "wan" "wan_type"
+    case $curr_nw in
+        MOBILE) 
+            config_get basic_mtu "mobile" "mtu"
+            ;;
+        *)
+            case $type in
+                static|dhcp) 
+                    config_get basic_mtu "wan" "mtu"
+                    ;;
+                dslite)
+                    basic_mtu=$(uci get protocol.dslite.static_mtu)
+                    ;;
+                v6plus)
+                    basic_mtu=$(uci get protocol.v6plus.static_mtu)
+                    ;;
+                *)
+                    config_get basic_mtu "internet" "mru"
+                    ;;
+            esac
+            ;;
+    esac
+
+    if [ -n "$basic_mtu" ]; then
+        if [ "$type" == "dslite" ] || [ "$type" == "v6plus" ]; then
+            MTU=$((basic_mtu-120))
+        else
+            MTU=$((basic_mtu-60))
+        fi
+    else
+        MTU=1420
+    fi
+}
+
+add_route()
+{
+    OLD_IFS="$IFS"
+    IFS=','
+
+    for var in $ROUTE_ADDRESS
+    do
+        ip route add $var dev wg_s
+    done
+    IFS="$OLD_IFS"
+}
+
+setup_peer()
+{
+    local client_private_key
+    local client_public_key
+    local preshared_key
+    local psk_enabled
+    local client_address
+    local allowed_client
+    local allowed_server
+    local client_file=$CLIENT_CONFIG"wg_client_"
+    local key
+    local all_client="0.0.0.0/0"
+
+    config_get client_public_key $1 "client_public_key"
+    config_get client_private_key $1 "client_private_key"
+    config_get preshared_key $1 "preshared_key"
+    config_get psk_enabled $1 "psk_enabled"
+    # server allowed-ips is client tunnel address
+    config_get client_address $1 "client_address"
+    config_get allowed_client $1 "allowed_client"
+    config_get allowed_server $1 "allowed_server"
+    config_get key $1 "key"
+
+    if [ -z "$ROUTE_ADDRESS" ]; then
+        ROUTE_ADDRESS="${allowed_server}"
+    else
+        ROUTE_ADDRESS="${ROUTE_ADDRESS},${allowed_server}"
+    fi
+
+	echo -e "[Peer]" >>"$CONFIG_FILE"
+    [ -n "$client_public_key" ] && echo -e "PublicKey = $client_public_key" >>"$CONFIG_FILE"
+    if [ "$psk_enabled" == "true" ] ; then
+	    [ -n "$preshared_key" ] && echo -e "PresharedKey = $preshared_key" >>"$CONFIG_FILE"
+    fi
+	[ -n "$allowed_server" ] && echo -e "AllowedIPs = $allowed_server" >>"$CONFIG_FILE"
+    if [ "$PERSISTENT_KEEPALIVE" == "" ];then
+		echo -e "PersistentKeepalive = 25" >>"$CONFIG_FILE"
+	else
+		echo -e "PersistentKeepalive = $PERSISTENT_KEEPALIVE" >>"$CONFIG_FILE"
+	fi
+
+    # always access lan except collision
+    local result=$(echo $allowed_client | grep "${all_client}")
+    if [[ "$result" != "" ]]; then
+        allowed_client="0.0.0.0/0"
+    else
+        # if allowed_client has multiple address
+        local collision=0
+        OLD_IFS="$IFS"
+        IFS=","
+        for var in $allowed_client
+        do
+            netenclose $var $LAN
+            if [ $? -eq 1 ]; then
+                collision=1
+            fi
+        done
+        IFS="$OLD_IFS"
+        if [ $collision -eq 1  ]; then
+            allowed_client="$allowed_client"
+        else
+            allowed_client="$allowed_client","$LAN"
+        fi
+    fi
+
+    # generate client config file
+    client_file=$client_file$key".conf"
+    echo "[Interface]" >"${client_file}"
+    [ -n "$client_private_key" ] && echo -e "PrivateKey = $client_private_key" >>"$client_file"
+    [ -n "$client_address" ] && echo -e "Address = $client_address" >>"$client_file"
+    [ -n "$DNS" ] && echo -e "DNS = $DNS\n" >>"$client_file"
+	echo -e "[Peer]" >>"$client_file"
+    [ -n "$SERVER_PUBLIC_KEY" ] && echo -e "PublicKey = $SERVER_PUBLIC_KEY" >>"$client_file"
+    if [ "$psk_enabled" == "true" ] ; then
+        [ -n "$preshared_key" ] && echo -e "PresharedKey = $preshared_key" >>"$client_file"
+    fi
+	[ -n "$allowed_client" ] && echo -e "AllowedIPs = $allowed_client" >>"$client_file"
+    [ -n "$SERVER_WAN_ADDRESS" ] && echo -e "Endpoint = $SERVER_WAN_ADDRESS:$SERVER_LISTEN_PORT" >> $client_file
+    if [ "$PERSISTENT_KEEPALIVE" == "" ];then
+		echo -e "PersistentKeepalive = 25\n" >>"$client_file"
+	else
+		echo -e "PersistentKeepalive = $PERSISTENT_KEEPALIVE\n" >>"$client_file"
+	fi
+}
+
+start()
+{
+    ip link del dev wg_s 1>/dev/null 2>&1
+    mkdir -p $CLIENT_CONFIG
+    local access="home"
+
+    get_wg_mtu
+    config_load 'wireguard'
+    config_get access "wireguard" "access"
+    setup_wg_interface wireguard || return
+
+    echo -e "wg_status={status=20}" >"$STATUS_FILE"
+
+    config_foreach setup_peer peer
+
+    echo -e "wg_status={status=50}" >"$STATUS_FILE"
+
+    local load
+	for module in wireguard; do
+		grep -q "$module" /proc/modules && continue
+		/sbin/insmod $module 2>&- >&-
+		load=1
+	done
+	[ "$load" = "1" ] && sleep 1
+
+    ip link add dev wg_s type wireguard
+    ip addr add "$WG_ADDRESS" dev wg_s
+	ip link set up dev wg_s
+    ip link set mtu "$MTU" wg_s
+
+    echo -e "wg_status={status=60}" >"$STATUS_FILE"
+
+    wg setconf wg_s $CONFIG_FILE
+    runflag=`echo $?`
+    if [ "$runflag" != 0 ]; then
+        ip link del wg_s
+        rm -rf $CONFIG_FILE
+    fi
+
+    echo -e "wg_status={status=70}" >"$STATUS_FILE"
+
+    add_route
+
+    echo -e "wg_status={status=80}" >"$STATUS_FILE"
+
+    
+    fw wireguard_access $SERVER_LISTEN_PORT $ACCESS
+    echo "wireguard server start success, exit" > /dev/console
+
+    echo -e "wg_status={status=100}" >"$STATUS_FILE"
+}
+
+stop()
+{
+    config_load 'wireguard'
+    local port=""
+    local access="home"
+
+    config_get port "wireguard" "listen_port"
+    config_get access "wireguard" "access"
+
+    # iptables -D FORWARD -i wg_s -j ACCEPT
+    # iptables -D FORWARD -o wg_s -j ACCEPT
+    # iptables -D INPUT -p udp --dport $SERVER_LISTEN_PORT -j ACCEPT
+    # iptables -D OUTPUT -p udp --sport $SERVER_LISTEN_PORT -j ACCEPT
+    fw wireguard_block $port $access
+
+    ip link del dev wg_s 1>/dev/null 2>&1
+    rm -rf $CONFIG_FILE
+    rm -rf $CLIENT_CONFIG
+    echo "wireguard server stop success, exit" > /dev/console
+}
+
+restart()
+{
+	stop
+    echo -e "wg_status={status=10}" >"$STATUS_FILE"
+	start
+}

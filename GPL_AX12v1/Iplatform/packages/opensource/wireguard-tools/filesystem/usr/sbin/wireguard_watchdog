@@ -1,0 +1,73 @@
+#!/bin/sh
+[ -x /usr/bin/wg ] || exit 0
+
+. /lib/netifd/netifd-proto.sh
+. /lib/functions.sh
+
+DELAY=5
+LOGGER=/dev/console
+IPLOCAL=""
+WG_DNS=""
+WG_DNS_BK=""
+CONNECTED=0
+
+set_wg_connected()
+{
+    proto_init_update "wg_c" 1 1
+    proto_set_keep 1
+    [ -n "$IPLOCAL" ] && proto_add_ipv4_address "$IPLOCAL" 32
+    [ -n "$WG_DNS" ]  && proto_add_dns_server "$WG_DNS"
+    [ -n "$WG_DNS_BK" -a "$WG_DNS" != "$WG_DNS_BK" ]  && proto_add_dns_server "$WG_DNS_BK"
+    proto_send_update "vpn" 
+}
+
+set_wg_connecting()
+{
+    proto_init_update "wg_c" 0
+    proto_send_update "vpn"
+}
+
+check_peer_activity()
+{
+    local last_handshake
+    local idle_seconds
+
+    last_handshake=$(wg show wg_c latest-handshakes | awk '{print $2}')
+    [ -z ${last_handshake} ] && return
+
+    idle_seconds=$(($(date +%s)-${last_handshake}))
+
+    if [ ${idle_seconds} -lt 180 ]; then
+        # in connected status
+        if [ "$CONNECTED" -eq 0 ]; then
+            CONNECTED=1
+            set_wg_connected
+        fi
+    else
+        # idle too long, peer seems to offline
+        CONNECTED=0
+        set_wg_connecting
+    fi
+}
+
+while true; do
+    sleep $DELAY
+
+    config_load vpn
+    config_get enabled client enabled
+    config_get vpntype client vpntype
+
+    config_load network
+    config_get iplocal vpn "address"
+    IPLOCAL=`echo "$iplocal" | cut -d "/" -f1`
+    config_get WG_DNS vpn "wg_dns"
+    config_get WG_DNS_BK vpn "wg_dns_bk"
+
+    if [ "$enabled" != "on" -o "$vpntype" != "wireguardvpn" ]; then
+        echo "wireguard vpn client not running" > $LOGGER
+        return
+    fi
+
+    check_peer_activity
+
+done

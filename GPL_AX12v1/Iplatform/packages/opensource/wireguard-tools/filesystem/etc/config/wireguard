@@ -1,0 +1,3 @@
+config service 'wireguard'
+    option         access 'internet'
+    option         persistent_keepalive '25'
