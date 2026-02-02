@@ -1,0 +1,195 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006 OpenWrt.org
+
+START=60
+BIN=/usr/sbin/pptpd
+DEFAULT=/etc/default/$BIN
+RUN_D=/var/run
+PID_F=$RUN_D/$BIN.pid
+CONFIG=/var/etc/pptpd.conf
+CHAP_SECRETS=/var/etc/chap-secrets
+PAP_SECRETS=/var/etc/pap-secrets
+PPTPDIR=/var/pptp
+L2TPDIR=/var/l2tp
+L2TP_CHAP_SECRETS=$L2TPDIR/chap-secrets
+L2TP_PAP_SECRETS=$L2TPDIR/pap-secrets
+PPTP_CHAP_SECRETS=$PPTPDIR/chap-secrets
+PPTP_PAP_SECRETS=$PPTPDIR/pap-secrets
+
+[ -f /lib/vpn/vpn_fc.sh ] && . /lib/vpn/vpn_fc.sh
+
+
+OPTIONS_SAMPLE=/etc/ppp/options.pptpd.sample
+PUBLIC_DNS=8.8.8.8
+
+calc_ip_net() {
+   sip="$1"
+   snetmask="$2"
+ 
+   local ipFIELD1=$(echo "$sip" |cut -d. -f1)
+   local ipFIELD2=$(echo "$sip" |cut -d. -f2)
+   local ipFIELD3=$(echo "$sip" |cut -d. -f3)
+   local ipFIELD4=$(echo "$sip" |cut -d. -f4)
+         
+   local netmaskFIELD1=$(echo "$snetmask" |cut -d. -f1)
+   local netmaskFIELD2=$(echo "$snetmask" |cut -d. -f2)
+   local netmaskFIELD3=$(echo "$snetmask" |cut -d. -f3)
+   local netmaskFIELD4=$(echo "$snetmask" |cut -d. -f4)
+ 
+   local tmpret1=$(($ipFIELD1&$netmaskFIELD1))
+   local tmpret2=$(($ipFIELD2&$netmaskFIELD2))
+   local tmpret3=$(($ipFIELD3&$netmaskFIELD3))
+   local tmpret4=$(($ipFIELD4&$netmaskFIELD4))
+
+   echo "$tmpret1.$tmpret2.$tmpret3.$tmpret4"
+}
+
+setup_login() {
+	local section="$1"
+
+	config_get username "$section" username
+	config_get password "$section" password
+	[ -n "$username" ] || return 0
+	[ -n "$password" ] || return 0
+
+	echo "\"$username\" pptp-server \"$password\" *" >> $PPTP_CHAP_SECRETS
+	echo "\"$username\" pptp-server \"$password\" *" >> $PPTP_PAP_SECRETS
+}
+
+setup_config() {
+	local section="$1"
+	local wanproto=$(uci get network.wan.wan_type)
+	[ "$wanproto" = "dslite" -o "$wanproto" = "v6plus" ] && {
+		echo "pptpvpn not support dial type dslite or v6plus now"
+		return 1
+	}
+	config_get_bool enabled "$section" 'enabled' 0
+	[ "$enabled" -eq 0 ] && return 1
+
+	mkdir -p /var/etc
+	cp /etc/pptpd.conf $CONFIG
+
+	config_get localip "$section" localip
+	config_get remoteip "$section" remoteip
+	config_get connections "$section" connections 
+	[ -n "$localip" ] && echo "localip  $localip" >> $CONFIG
+	[ -n "$remoteip" ] && echo "remoteip  $remoteip" >> $CONFIG
+	[ -n "$connections" ] && echo "connections  $connections" >> $CONFIG
+	return 0
+}
+
+setup_options() {
+	local mppeoption="mppe required,stateless"
+
+	[ -f /etc/ppp/options.pptpd ] && rm /etc/ppp/options.pptpd
+
+	config_get unencrypted_allow "pptpd" "unencrypted_access"
+	if [ "$unencrypted_allow" == "on" ]; then
+		mppeoption="mppe no56,stateless"
+	else
+		mppeoption="mppe required,stateless"
+	fi
+	sed -e "/^mppe*/c $mppeoption" $OPTIONS_SAMPLE >/etc/ppp/options.pptpd
+	config_get localip pptpd localip
+	[ -n "$localip" ] && echo "ms-dns $localip" >> /etc/ppp/options.pptpd
+	[ -n "$PUBLIC_DNS" ] && echo "ms-dns $PUBLIC_DNS" >> /etc/ppp/options.pptpd
+	# Modify the mtu/mru of pppdrv+
+	local wan_type
+	local basic_mtu
+	config_load network
+	config_get wan_type "wan" "wan_type"
+	if [ "$wan_type" == "static" ] || [ "$wan_type" == "dhcp" ]; then
+		config_get basic_mtu "wan" "mtu"
+	else
+		config_get basic_mtu "internet" "mru"
+	fi
+	local mtu=`expr $basic_mtu - 80`
+	local mtuoption="mtu"" ""$mtu"
+	local mruoption="mru"" ""$mtu"
+	sed -i -e "s/.*mtu.*/$mtuoption/" /etc/ppp/options.pptpd
+	sed -i -e "s/.*mru.*/$mruoption/" /etc/ppp/options.pptpd
+}
+
+start_pptpd() {
+	[ -f $DEFAULT ] && . $DEFAULT
+	mkdir -p $RUN_D
+	for m in arc4 sha1_generic slhc crc-ccitt ppp_generic ppp_async ppp_mppe; do
+		insmod $m >/dev/null 2>&1
+	done
+	ln -sfn $CHAP_SECRETS /etc/ppp/chap-secrets
+	ln -sfn $PAP_SECRETS /etc/ppp/pap-secrets
+	service_start $BIN  -c $CONFIG
+}
+
+start() {
+	mkdir -p $PPTPDIR
+	config_load pptpd
+	setup_config pptpd || return
+
+	config_get smbacc "pptpd" "samba_access"
+	fw pptp_access $smbacc
+
+	: > $CHAP_SECRETS
+	: > $PAP_SECRETS
+	: > $PPTP_CHAP_SECRETS
+	: > $PPTP_PAP_SECRETS
+	config_foreach setup_login login
+	[ -e $PPTP_CHAP_SECRETS ] && cat $PPTP_CHAP_SECRETS >> $CHAP_SECRETS
+	[ -e $PPTP_PAP_SECRETS ] && cat $PPTP_PAP_SECRETS >> $PAP_SECRETS
+	[ -e $L2TP_CHAP_SECRETS ] && cat $L2TP_CHAP_SECRETS >> $CHAP_SECRETS
+	[ -e $L2TP_PAP_SECRETS ] && cat $L2TP_PAP_SECRETS >> $PAP_SECRETS
+	setup_options
+	start_pptpd
+
+	config_get netbios "pptpd" "netbios_pass"
+	if [ "$netbios" == "on" ]; then
+		nice -n 10 bcrelay -d -i br-lan -o pppdrv[0-9].* -p 137,138 -n
+	fi
+
+	local ignore_filename="/tmp/dhcp_hostsfile/pptp_ignore"
+	# always remove old ignore file
+	rm -rf "$ignore_filename"
+	mkdir /tmp/dhcp_hostsfile/ >/dev/null 2>&1
+	config_get localip "pptpd" "localip"
+	config_get remoteip "pptpd" "remoteip"
+	local lanipaddr=`uci get network.lan.ipaddr`
+	local lanmask=`uci get network.lan.netmask`
+	local tmp_local_ip=`calc_ip_net $localip $lanmask`
+	local tmp_lan_ip=`calc_ip_net $lanipaddr $lanmask`
+	if [ "$tmp_local_ip" == "$tmp_lan_ip" ]; then
+		echo "pptp: localip in lanip, add dhcp ignore" > /dev/console
+		[ -n "$localip" ] && echo "$localip,ignore" >$ignore_filename
+		if [ -n "$remoteip" ]; then
+			local prefix=$(echo "$remoteip" | cut -d '.' -f1-3)
+			local first=$(echo "$remoteip" | cut -d '-' -f1 | cut -d '.' -f4)
+			local last=$(echo "$remoteip" | cut -d '-' -f2)
+			for i in $(seq $first $last)
+			do
+   		 		echo "$prefix.""$i"",ignore" >>$ignore_filename
+			done
+		fi
+		uci set dhcp.dnsmasq.dhcphostsfile='/tmp/dhcp_hostsfile/'
+        uci commit
+
+	fi
+	/etc/init.d/dnsmasq reload
+}
+
+stop() {
+        for pid in $(ps -ww | grep "bcrelay -d -i br-lan -o pppdrv\[0-9\].*" | awk '{print $1}'); do 
+            kill -9 $pid
+        done
+        for pid in $(pidof pppd); do 
+            cmdline=$(cat /proc/$pid/cmdline | grep pptpd) 
+            if [ "$cmdline" != "" ]; then
+                kill $pid
+            fi
+        done
+	service_stop $BIN
+	fw pptp_block
+	#echo f >/proc/net/nf_conntrack 2>/dev/null
+	rm -f $PPTP_CHAP_SECRETS $PPTP_PAP_SECRETS
+
+	rm -rf /tmp/dhcp_hostsfile/pptp_ignore
+	/etc/init.d/dnsmasq reload
+}

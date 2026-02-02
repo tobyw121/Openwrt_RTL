@@ -1,0 +1,12 @@
+diff --git a/src/plugins/Makefile b/src/plugins/Makefile
+index 36242b495..039e28ebb 100755
+--- a/plugins/Makefile
++++ b/plugins/Makefile
+@@ -2,7 +2,6 @@ CC	= gcc
+ COPTS	= -O2 -g
+ CFLAGS	= $(COPTS) -I.. -I../../include -fPIC
+ LDFLAGS	= -shared
+-LDADD   = -lutil
+ INSTALL	= install -o root
+ prefix  = /usr/local
+ 
