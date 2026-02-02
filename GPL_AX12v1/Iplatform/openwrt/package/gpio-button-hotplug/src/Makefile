@@ -1,0 +1,4 @@
+ifdef FORCE_HOTPLUG_BUTTON_CODE
+    EXTRA_CFLAGS += -DFORCE_HOTPLUG_BUTTON_CODE=$(FORCE_HOTPLUG_BUTTON_CODE)
+endif
+obj-m += gpio-button-hotplug.o

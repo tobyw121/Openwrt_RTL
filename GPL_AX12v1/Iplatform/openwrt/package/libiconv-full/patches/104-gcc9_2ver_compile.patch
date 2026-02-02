@@ -1,0 +1,22 @@
+--- a/lib/aliases.h
++++ b/lib/aliases.h
+@@ -1679,7 +1679,7 @@
+   };
+ 
+ #ifdef __GNUC__
+-__inline
++//__inline
+ #endif
+ const struct alias *
+ aliases_lookup (register const char *str, register unsigned int len)
+--- a/lib/iconv.c
++++ b/lib/iconv.c
+@@ -161,7 +161,7 @@
+ #undef S
+ };
+ #ifdef __GNUC__
+-__inline
++//__inline
+ #endif
+ const struct alias *
+ aliases2_lookup (register const char *str)
