@@ -1,0 +1,1 @@
+wpa_supplicant -Dnl80211 -iwlan0 -c /var/run/wpas_conf -B
