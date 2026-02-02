@@ -1,0 +1,7 @@
+/* Generated automatically. */
+static const char configuration_arguments[] = "/home/RTDOMAIN/jenkins/workspace/sdk-builder/gcc-6/configure --prefix=/tmp/builder-jenkins/msdk-6.4.1-3055/release/msdk-6.4.1/linux/uclibc --build=i686-pc-linux --host=i686-pc-linux --target=mips-linux-uclibc --enable-languages=c,c++ --enable-threads --enable-shared --enable-lto --enable-multilib --enable-target-optspace --enable-__cxa_atexit --enable-linker-build-id --disable-sjlj-exceptions --disable-decimal-float --enable-tls --disable-nls --disable-libatomic --disable-libssp --disable-libgomp --disable-libmudflap --disable-libquadmath --disable-libffi --disable-libitm --disable-libstdc__-v3 --disable-libsanitizer --disable-fixed-point --with-arch=mips32r2 --with-gnu-ld --with-gnu-as --with-dwarf2 --with-headers=yes --with-sdk=msdk --with-sysroot='/tmp/builder-jenkins/msdk-6.4.1-3055/release/msdk-6.4.1/linux/uclibc' --with-build-sysroot=/tmp/builder-jenkins/msdk-6.4.1-3055/release/msdk-6.4.1/linux/uclibc --with-pkgversion='Realtek MSDK-6.4.1 Build 3055' --with-mpfr=/tmp/builder-jenkins/msdk-6.4.1-3055/stage/msdk-6.4.1/uclibc/mpfr-build/out --with-gmp=/tmp/builder-jenkins/msdk-6.4.1-3055/stage/msdk-6.4.1/uclibc/gmp-build/out --with-mpc=/tmp/builder-jenkins/msdk-6.4.1-3055/stage/msdk-6.4.1/uclibc/mpc-build/out --with-mips-plt";
+static const char thread_model[] = "posix";
+
+static const struct {
+  const char *name, *value;
+} configure_default_options[] = { { "arch", "mips32r2" }, { "llsc", "llsc" }, { "mips-plt", "plt" } };
