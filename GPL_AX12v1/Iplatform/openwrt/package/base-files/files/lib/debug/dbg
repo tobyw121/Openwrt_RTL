@@ -1,0 +1,12 @@
+#!/bin/sh
+#DBG=1
+STDOUT="/dev/null"
+
+if [ "$DBG" = "1" ];then
+	DEBUG=echo
+	STDOUT="/dev/console"
+fi
+
+tpdbg () {
+	${DEBUG:-:} "$*" >$STDOUT
+}
