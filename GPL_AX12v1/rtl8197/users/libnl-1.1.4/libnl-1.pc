@@ -1,0 +1,10 @@
+prefix=/home/chuangsw/Huawei/branch-rtl819x-sdk-v3.4.11_huawei_20160707/users/lib
+exec_prefix=/home/chuangsw/Huawei/branch-rtl819x-sdk-v3.4.11_huawei_20160707/users/lib
+libdir=${exec_prefix}/lib
+includedir=/home/chuangsw/Huawei/branch-rtl819x-sdk-v3.4.11_huawei_20160707/users/lib/include
+
+Name: libnl
+Description: Convenience library for netlink sockets
+Version: 1.1.4
+Libs: -L${libdir} -lnl
+Cflags:
