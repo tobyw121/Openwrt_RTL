@@ -1,0 +1,1451 @@
+#
+# Wireless LAN device configuration
+#
+config RTL8192CD
+	tristate "RTL8192C/D 802.11b/g/n support"
+	select WIRELESS_EXT
+config WIRELESS_LAN_MODULE
+	depends on RTL8192CD
+    bool "Let 8192CD Support module"
+    default y
+##########################################################################
+# Select the interface WiFi device connects to
+##########################################################################
+config WIFI_HCI
+	bool
+	default y
+
+config PCI_HCI
+	bool
+	depends on WIFI_HCI && (USE_PCIE_SLOT_0 || USE_PCIE_SLOT_1 || SOC_WIFI)
+	default y
+
+##########################################################################
+# Select WiFi device on Lextra Bus
+##########################################################################
+config WLAN_HAL_8197G
+        bool "Realtek 8197G wireless support "
+	depends on RTL8192CD
+	select SOC_WIFI
+	select RTL_ODM_WLAN_DRIVER
+	select RTL_819X
+	default n
+
+config WLAN_HAL_8197G_2MAC
+        bool "Realtek 8197G 2MAC wireless support "
+	depends on RTL8192CD
+	default n
+
+config WLAN_HAL_8197F
+        bool "Realtek 8197F wireless support "
+	depends on RTL_8197F && RTL8192CD
+	select SOC_WIFI
+	select RTL_ODM_WLAN_DRIVER
+	default n
+
+choice
+	prompt "RFE Type"
+	default SOC_RFE_TYPE_1
+	depends on (WLAN_HAL_8197F || WLAN_HAL_8197G || WLAN_HAL_8198F)
+
+	config SOC_RFE_TYPE_0
+	bool "Type 0: internal PA/LNA"
+	select FREE_WBB_PIN
+
+	config SOC_RFE_TYPE_1
+	depends on (WLAN_HAL_8197F || WLAN_HAL_8198F)
+	bool "Type 1: external PA/LNA (SKY85309)"
+	select SOC_EXT_PA
+	select SOC_EXT_LNA
+
+	config SOC_RFE_TYPE_2
+	depends on WLAN_HAL_8197F
+	bool "Type 2: internal PA/LNA 2-LAYER"
+	select FREE_WBB_PIN
+
+	config SOC_RFE_TYPE_3
+	depends on WLAN_HAL_8197F
+	bool "Type 3: internal PA/LNA with TRSW"
+
+	config SOC_RFE_TYPE_4
+	depends on WLAN_HAL_8197F
+	bool "Type 4: internal PA + external LNA(BFU725F/N1) "
+	select SOC_EXT_LNA
+
+	config SOC_RFE_TYPE_5
+	depends on (WLAN_HAL_8197F || WLAN_HAL_8197G)
+	bool "Type 5: external PA/LNA (SKY85325)"
+	select SOC_EXT_PA
+	select SOC_EXT_LNA
+
+	config SOC_RFE_TYPE_6
+	depends on (WLAN_HAL_8197F || WLAN_HAL_8197G)
+	bool "Type 6: internal PA + external LNA(BFU725F/N1) 2-LAYER "
+	select SOC_EXT_LNA
+endchoice
+
+config SOC_TX_BEAMFORMING
+	bool "Enable Tx Beamforming"
+	depends on (WLAN_HAL_8198F || WLAN_HAL_8197F || WLAN_HAL_8881A)
+	default n
+
+config RTL_8197F_ANT_SWITCH
+	bool "Realtek 8197F 2T3R mode"
+	depends on (WLAN_HAL_8197F)
+	default n
+choice
+	prompt "Choose Antenna Diversity Type"
+	depends on (RTL_8197F_ANT_SWITCH)
+	default 2G_CGCS_RX_DIVERSITY_8197F
+config 	NO_2G_DIVERSITY_8197F
+	bool "Not Support 2.4G Antenna Diversity"
+config 	2G_CGCS_RX_DIVERSITY_8197F
+	bool "Enable 2.4G RX Antenna Diversity"
+config 	2G_CG_TRX_DIVERSITY_8197F
+	bool "Enable 2.4G TRX Antenna Diversity"
+endchoice
+
+config SOC_ENABLE_EFUSE
+	bool "eFUSE Support for WiSoC"
+	depends on WLAN_HAL_8197F
+	select ENABLE_EFUSE
+	default n
+##########################################################################
+# Select WiFi device on PCIe slot 0
+##########################################################################
+
+config USE_PCIE_SLOT_0
+	bool "[8192CD]Use PCIe slot 0 WiFi device"
+	depends on RTL8192CD
+	default n
+
+choice
+	prompt "PCIe Slot 0 device"
+	depends on USE_PCIE_SLOT_0
+	default SLOT_0_92C
+
+config SLOT_0_8192EE
+        bool "Realtek 8192EE wireless support "
+	select RTL_ODM_WLAN_DRIVER
+
+
+
+
+config SLOT_0_8812
+	bool "Realtek 8812 wireless support"
+	select RTL_5G_SLOT_0
+config SLOT_0_8812AR_VN
+	bool "Realtek 8812AR-VN wireless support"
+	select RTL_5G_SLOT_0
+
+config SLOT_0_8814AE
+        bool "Realtek 8814AE wireless support "
+		select RTL_ODM_WLAN_DRIVER
+		select RTL_5G_SLOT_0
+config SLOT_0_8194AE
+        bool "Realtek 8194AE wireless support "
+		select RTL_ODM_WLAN_DRIVER
+config SLOT_0_8822BE
+        bool "Realtek 8822BE wireless support "
+		select RTL_ODM_WLAN_DRIVER
+		select RTL_5G_SLOT_0		
+		
+config SLOT_0_8821CE
+        bool "Realtek 8821CE wireless support "
+		select RTL_ODM_WLAN_DRIVER
+		select RTL_5G_SLOT_0		
+
+config SLOT_0_8192FE
+        bool "Realtek 8192FE wireless support "
+		select RTL_ODM_WLAN_DRIVER
+
+config SLOT_0_8814BE
+        bool "Realtek 8814BE wireless support "
+		select RTL_ODM_WLAN_DRIVER
+		select RTL_5G_SLOT_0
+config SLOT_0_8822CE
+        bool "Realtek 8822CE wireless support "
+		select RTL_ODM_WLAN_DRIVER
+		select RTL_5G_SLOT_0	
+config SLOT_0_8812FE
+        bool "Realtek 8812FE wireless support "
+		select RTL_ODM_WLAN_DRIVER
+		select RTL_5G_SLOT_0			
+endchoice
+	
+choice
+
+	prompt "RFE Type"
+	depends on USE_PCIE_SLOT_0 && (SLOT_0_8814AE || SLOT_0_8194AE || SLOT_0_8822BE|| SLOT_0_8821CE|| SLOT_0_8814BE|| SLOT_0_8822CE|| SLOT_0_8812FE|| SLOT_0_8192FE)
+	default SLOT_0_RFE_TYPE_2
+
+	config SLOT_0_RFE_TYPE_0
+	depends on (SLOT_0_8822BE || SLOT_0_8822CE || SLOT_0_8812FE)
+	bool "Type 0: internal PA/LNA"
+
+	config SLOT_0_RFE_TYPE_1
+	depends on (SLOT_0_8822BE || SLOT_0_8814BE || SLOT_0_8822CE)
+	bool "Type 1: external PA/LNA HIGH(SKY85728/85735)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+
+if SLOT_0_8812FE
+	config SLOT_0_RFE_TYPE_1
+	depends on (SLOT_0_8812FE)
+	bool "Type 1: external PA/LNA HIGH(SKY85746)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+	
+	config SLOT_0_RFE_TYPE_2
+	depends on (SLOT_0_8812FE)
+	bool "Type 2: internal PA/LNA (Triband)"
+	
+	config SLOT_0_RFE_TYPE_3
+	depends on (SLOT_0_8812FE )
+	bool "Type 3: external PA/LNA HIGH(SKY85743)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+	
+	config SLOT_0_RFE_TYPE_4
+	depends on (SLOT_0_8812FE )
+	bool "Type 4: external PA/LNA HIGH(KCT8535C)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+endif	
+	
+	config SLOT_0_RFE_TYPE_2
+	depends on (SLOT_0_8814BE)
+	bool "Type 2: internal PA/LNA(TSSI)"	
+	
+	config SLOT_0_RFE_TYPE_2
+	depends on (SLOT_0_8814AE || SLOT_0_8194AE)
+	bool "Type 2: external PA/LNA (2G SKY85300, 5G LX5586A)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+
+	config SLOT_0_RFE_TYPE_3
+	depends on (SLOT_0_8814AE || SLOT_0_8194AE)
+	bool "Type 3: external PA/LNA (2G SE2623L/SKY85201-11, 5G SKY85405/SKY85605-11)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+
+	config SLOT_0_RFE_TYPE_3
+	depends on (SLOT_0_8192FE)
+	bool "Type 3: internal PA/LNA"
+	
+	config SLOT_0_RFE_TYPE_4
+	depends on (SLOT_0_8814AE || SLOT_0_8194AE)
+	bool "Type 4: external PA/LNA (2G SKY85303, 5G SKY85717)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+
+	config SLOT_0_RFE_TYPE_4
+	depends on (SLOT_0_8814BE)
+	bool "Type 4: external PA/LNA (SKY85735)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+
+	#config SLOT_0_RFE_TYPE_4
+	#depends on (SLOT_0_8822BE || SLOT_0_8822CE || SLOT_0_8812FE )
+	#bool "Type 4: external PA/LNA TFBGA(SKY85742)"
+	#select SLOT_0_EXT_PA
+	#select SLOT_0_EXT_LNA
+
+	config SLOT_0_RFE_TYPE_5
+	depends on (SLOT_0_8814AE || SLOT_0_8194AE)
+	bool "Type 5: external PA/LNA (2G SE2623L/SKY85201-11, 5G SKY85405/SKY85605-11)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+
+	config SLOT_0_RFE_TYPE_5
+	depends on (SLOT_0_8814BE)
+	bool "Type 5: external PA/LNA (QPF4519)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+
+	config SLOT_0_RFE_TYPE_6
+	depends on (SLOT_0_8822BE || SLOT_0_8822CE)
+	bool "Type 6: external PA/LNA NORMAL 2-LAYER(SKY85742)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+
+	config SLOT_0_RFE_TYPE_7
+	depends on (SLOT_0_8814AE || SLOT_0_8194AE)
+	bool "Type 7: internal"	
+
+	config SLOT_0_RFE_TYPE_7
+	depends on (SLOT_0_8822BE || SLOT_0_8822CE)
+	bool "Type 7: external PA/LNA NORMAL 4-LAYER(SKY85742/85734/85712)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+
+	config SLOT_0_RFE_TYPE_7
+	depends on (SLOT_0_8814BE)
+	bool "Type 7: internal(TypeB Thermal Power Tracking)"	
+
+	config SLOT_0_RFE_TYPE_8
+	depends on (SLOT_0_8822BE  || SLOT_0_8821CE || SLOT_0_8822CE)
+	bool "Type 8: internal PA/LNA TFBGA"
+
+	config SLOT_0_RFE_TYPE_8
+	depends on (SLOT_0_8814AE || SLOT_0_8194AE)
+	bool "Type 8: external PA/LNA 2L (2G SKY85300, 5G LX5586A)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+
+	config SLOT_0_RFE_TYPE_8
+	depends on (SLOT_0_8814BE)
+	bool "Type 8: internal(TypeC Thermal Power Tracking)"	
+
+	config SLOT_0_RFE_TYPE_8
+	depends on (SLOT_0_8192FE)
+	bool "Type 8: external PA/LNA (RTL6691+BFP740+RTC6603)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+
+	config SLOT_0_RFE_TYPE_9
+	depends on (SLOT_0_8814AE || SLOT_0_8194AE)
+	bool "Type 9: internal 2L"	
+	
+	config SLOT_0_RFE_TYPE_9
+	depends on (SLOT_0_8822BE || SLOT_0_8822CE)
+	bool "Type 9: external LNA NORMAL 4-LAYER(SKY85608)"
+	select SLOT_0_EXT_LNA
+
+	config SLOT_0_RFE_TYPE_9
+	depends on (SLOT_0_8192FE)
+	bool "Type 9: iPA + iLNA + TRSW"
+
+
+	config SLOT_0_RFE_TYPE_10
+	depends on (SLOT_0_8822BE || SLOT_0_8822CE)
+	bool "Type 10: internal PA/LNA with TRSW(GW2159/SKY13351)"
+
+	config SLOT_0_RFE_TYPE_10
+	depends on (SLOT_0_8814AE || SLOT_0_8194AE)
+	bool "Type 10: external PA/LNA (2G SKY85303 ,5G SKY85746-11)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+	
+	config SLOT_0_RFE_TYPE_11
+	depends on (SLOT_0_8822BE || SLOT_0_8822CE)
+	bool "Type 11: external PA/LNA TFBGA(SKY85742)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+
+	config SLOT_0_RFE_TYPE_11
+	depends on (SLOT_0_8814AE || SLOT_0_8194AE)
+	bool "Type 11: external PA/LNA (2G RTC7625HE ,5G RTC5638H)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+
+	config SLOT_0_RFE_TYPE_12
+	depends on (SLOT_0_8192FE)
+	bool "Type 12: external PA/LNA (RWL2305-21)"
+	select SLOT_0_EXT_PA
+	select SLOT_0_EXT_LNA
+
+	config SLOT_0_RFE_TYPE_13
+	depends on (SLOT_0_8822BE || SLOT_0_8822CE)
+	bool "Type 13: internal PA/LNA with TRSW 2L"
+
+	config SLOT_0_RFE_TYPE_14
+	depends on (SLOT_0_8822BE || SLOT_0_8822CE)
+	bool "Type 14: internal PA/LNA with TRSW"
+	
+        config SLOT_0_RFE_TYPE_15
+        depends on (SLOT_0_8192FE)
+        bool "Type 15: internal PA/external LNA"
+	
+	config SLOT_0_RFE_TYPE_17
+	depends on (SLOT_0_8192FE)
+	bool "Type 17:RTC7646"
+
+        config SLOT_0_RFE_TYPE_18
+        depends on (SLOT_0_8192FE)
+        bool "Type 18: external PA/external LNA"
+
+	config SLOT_0_RFE_TYPE_19
+	depends on (SLOT_0_8192FE)
+	bool "Type 19:Maxscend_MXD7220CT"
+
+	config SLOT_0_RFE_TYPE_20
+	depends on (SLOT_0_8192FE)
+	bool "Type 20: internal PA/external LNA"
+
+        config SLOT_0_RFE_TYPE_21
+        depends on (SLOT_0_8192FE)
+        bool "Type 21: external PA/external LNA"
+endchoice
+
+
+config SLOT_0_EXT_PA
+	bool "PCIe slot 0 Enable external PA"
+	depends on USE_PCIE_SLOT_0 && ((SLOT_0_92C || SLOT_0_88E || SLOT_0_8812 || SLOT_0_8812AR_VN || SLOT_0_8192EE) || ((SLOT_0_8814AE || SLOT_0_8194AE)&&(!SLOT_0_RFE_TYPE_7)&&(!SLOT_0_RFE_TYPE_9)) || (SLOT_0_8822BE && (!SLOT_0_RFE_TYPE_0 && !SLOT_0_RFE_TYPE_8 && !SLOT_0_RFE_TYPE_9 && !SLOT_0_RFE_TYPE_10 && !SLOT_0_RFE_TYPE_13 && !SLOT_0_RFE_TYPE_14))|| ((SLOT_0_8821CE) && (!SLOT_0_RFE_TYPE_0 && !SLOT_0_RFE_TYPE_8 && !SLOT_0_RFE_TYPE_9 && !SLOT_0_RFE_TYPE_10 && !SLOT_0_RFE_TYPE_13 && !SLOT_0_RFE_TYPE_14)) || (SLOT_0_8822CE && (!SLOT_0_RFE_TYPE_0 && !SLOT_0_RFE_TYPE_8 && !SLOT_0_RFE_TYPE_9 && !SLOT_0_RFE_TYPE_10 && !SLOT_0_RFE_TYPE_13 && !SLOT_0_RFE_TYPE_14)) || (SLOT_0_8812FE && (!SLOT_0_RFE_TYPE_0 && !SLOT_0_RFE_TYPE_2 && !SLOT_0_RFE_TYPE_8 && !SLOT_0_RFE_TYPE_9 && !SLOT_0_RFE_TYPE_10 && !SLOT_0_RFE_TYPE_13 && !SLOT_0_RFE_TYPE_14)) \
+	|| (SLOT_0_8814BE && (!SLOT_0_RFE_TYPE_2 ) && (!SLOT_0_RFE_TYPE_7 ) && (!SLOT_0_RFE_TYPE_8 )))
+	default n
+
+config SLOT_0_EXT_LNA
+	bool "PCIe slot 0 Enable external LNA"
+	depends on USE_PCIE_SLOT_0 && ((SLOT_0_92C || SLOT_0_88E || SLOT_0_8812 || SLOT_0_8812AR_VN || SLOT_0_8192EE) || ((SLOT_0_8814AE || SLOT_0_8194AE) && (!SLOT_0_RFE_TYPE_7) && (!SLOT_0_RFE_TYPE_9)) || ((SLOT_0_8822BE) && (!SLOT_0_RFE_TYPE_0 && !SLOT_0_RFE_TYPE_8 && !SLOT_0_RFE_TYPE_10 && !SLOT_0_RFE_TYPE_13 && !SLOT_0_RFE_TYPE_14))|| ((SLOT_0_8821CE) && (!SLOT_0_RFE_TYPE_0 && !SLOT_0_RFE_TYPE_8 && !SLOT_0_RFE_TYPE_10 && !SLOT_0_RFE_TYPE_13 && !SLOT_0_RFE_TYPE_14)) || ((SLOT_0_8822CE) && (!SLOT_0_RFE_TYPE_0 && !SLOT_0_RFE_TYPE_8 && !SLOT_0_RFE_TYPE_10 && !SLOT_0_RFE_TYPE_13 && !SLOT_0_RFE_TYPE_14)) || ((SLOT_0_8812FE) && (!SLOT_0_RFE_TYPE_0 && !SLOT_0_RFE_TYPE_2 && !SLOT_0_RFE_TYPE_8 && !SLOT_0_RFE_TYPE_10 && !SLOT_0_RFE_TYPE_13 && !SLOT_0_RFE_TYPE_14)) \
+	|| (SLOT_0_8814BE && (!SLOT_0_RFE_TYPE_2 ) && (!SLOT_0_RFE_TYPE_7 ) && (!SLOT_0_RFE_TYPE_8 )))
+	default n
+
+config SLOT_0_TX_BEAMFORMING
+	bool "PCIe slot 0 Enable Tx Beamforming"
+	depends on USE_PCIE_SLOT_0  && (SLOT_0_8192EE ||  SLOT_0_8192FE || SLOT_0_8812 ||SLOT_0_8814AE || SLOT_0_8194AE || SLOT_0_8822BE || SLOT_0_8822CE || SLOT_0_8812FE || SLOT_0_8814BE)
+	default y
+
+config SLOT_0_8814_2T2R_SUPPORT
+        bool "Realtek 8814 2T2R mode"
+        depends on USE_PCIE_SLOT_0  && (SLOT_0_8814AE)
+        default n
+
+config SLOT_0_8194_2T2R_SUPPORT
+        bool "Realtek 8194 2T2R mode"
+        depends on USE_PCIE_SLOT_0  && (SLOT_0_8194AE)
+        default n
+config SLOT_0_ANT_SWITCH
+	bool "PCIe slot 0 Enable Antenna Diversity"
+	depends on USE_PCIE_SLOT_0  && (SLOT_0_8812 || (SLOT_0_8192EE || SLOT_0_88E) && !( SLOT_0_92C || SLOT_0_92D))
+
+config SLOT_0_ENABLE_EFUSE
+	bool "eFUSE Support for Slot 0 "
+	depends on USE_PCIE_SLOT_0
+	select ENABLE_EFUSE
+	default n
+
+##########################################################################
+# Select WiFi device on PCIe slot 1
+##########################################################################
+
+config USE_PCIE_SLOT_1
+	bool "[8192CD]Use PCIe slot 1 WiFi device"
+	depends on RTL8192CD
+	default y
+choice
+	prompt "PCIe Slot 1 device"
+	depends on USE_PCIE_SLOT_1
+	default SLOT_1_8192FE
+config SLOT_1_8723B
+	bool "Realtek 8723B wireless support"	
+
+config SLOT_1_8812
+	bool "Realtek 8812 wireless support"
+	select RTL_5G_SLOT_1
+
+config SLOT_1_8192EE
+        bool "Realtek 8192EE wireless support "
+        select RTL_ODM_WLAN_DRIVER
+
+config SLOT_1_8812AR_VN
+	bool "Realtek 8812AR-VN wireless support"
+	select RTL_5G_SLOT_1
+
+config SLOT_1_8814AE
+        bool "Realtek 8814AE wireless support "
+		select RTL_ODM_WLAN_DRIVER		
+		select RTL_5G_SLOT_1
+config SLOT_1_8194AE
+        bool "Realtek 8194AE wireless support "
+		select RTL_ODM_WLAN_DRIVER	
+config SLOT_1_8822BE
+        bool "Realtek 8822BE wireless support "
+		select RTL_ODM_WLAN_DRIVER
+		select RTL_5G_SLOT_1		
+config SLOT_1_8821CE
+        bool "Realtek 8821CE wireless support "
+		select RTL_ODM_WLAN_DRIVER
+		select RTL_5G_SLOT_1			
+
+config SLOT_1_8192FE
+        bool "Realtek 8192FE wireless support "
+        select RTL_ODM_WLAN_DRIVER		
+		
+config SLOT_1_8822CE
+        bool "Realtek 8822CE wireless support "
+		select RTL_ODM_WLAN_DRIVER
+		select RTL_5G_SLOT_1
+		
+config SLOT_1_8812FE
+        bool "Realtek 8812FE wireless support "
+		select RTL_ODM_WLAN_DRIVER
+		select RTL_5G_SLOT_1
+		
+config SLOT_1_8814BE
+        bool "Realtek 8814BE wireless support "
+		select RTL_ODM_WLAN_DRIVER
+		select RTL_5G_SLOT_1			
+endchoice
+choice
+	prompt "RFE Type"
+	depends on USE_PCIE_SLOT_1 && \
+	(SLOT_1_8814AE || SLOT_1_8194AE || SLOT_1_8822BE || SLOT_1_8822CE || SLOT_1_8812FE || SLOT_1_8814BE || SLOT_1_8192FE)
+	default SLOT_1_RFE_TYPE_3
+
+	config SLOT_1_RFE_TYPE_0
+	depends on (SLOT_1_8822BE || SLOT_1_8822CE || SLOT_1_8812FE || SLOT_1_8192FE)
+	bool "Type 0: internal PA/LNA"
+
+if (SLOT_1_8822BE || SLOT_1_8822CE || SLOT_1_8814BE)
+	config SLOT_1_RFE_TYPE_1
+	depends on (SLOT_1_8822BE || SLOT_1_8822CE || SLOT_1_8814BE)
+	bool "Type 1: external PA/LNA HIGH(SKY85728/85735)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+endif	
+	
+if (SLOT_1_8812FE)	
+	config SLOT_1_RFE_TYPE_1
+	depends on (SLOT_1_8812FE)
+	bool "Type 1: external PA/LNA HIGH(SKY85746)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+	
+	config SLOT_1_RFE_TYPE_2
+	depends on (SLOT_1_8812FE)
+	bool "Type 2: internal PA/LNA (Triband)"
+	
+	config SLOT_1_RFE_TYPE_3
+	depends on (SLOT_1_8812FE)
+	bool "Type 3: external PA/LNA HIGH(SKY85743)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+	
+	config SLOT_1_RFE_TYPE_4
+	depends on (SLOT_1_8812FE )
+	bool "Type 4: external PA/LNA HIGH(KCT8535C)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+endif
+if (SLOT_1_8192FE)
+	config SLOT_1_RFE_TYPE_3
+	depends on (SLOT_1_8192FE)
+	bool "Type 3: internal PA/LNA"
+
+	config SLOT_1_RFE_TYPE_8
+	depends on (SLOT_1_8192FE)
+	bool "Type 8: external PA/LNA (RTL6691+BFP740+RTC6603)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+
+	config SLOT_1_RFE_TYPE_9
+	depends on (SLOT_1_8192FE)
+	bool "Type 9: iPA + iLNA + TRSW"
+
+	config SLOT_1_RFE_TYPE_12
+	depends on (SLOT_1_8192FE)
+	bool "Type 12: external PA/LNA (RWL2305-21)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+
+	config SLOT_1_RFE_TYPE_15
+	depends on (SLOT_1_8192FE)
+	bool "Type 15: internal PA/external LNA"
+	#select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+	config SLOT_1_RFE_TYPE_16
+	depends on (SLOT_1_8192FE)
+	bool "Type 16: external PA/LNA (RTC66204HT)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+	
+	config SLOT_1_RFE_TYPE_17
+	depends on (SLOT_1_8192FE)
+	bool "Type 17: RTC7646"
+
+        config SLOT_1_RFE_TYPE_18
+        depends on (SLOT_1_8192FE)
+        bool "Type 18: external PA/LNA"
+
+	config SLOT_1_RFE_TYPE_19
+	depends on (SLOT_1_8192FE)
+	bool "Type 19: Maxscend_MXD7220CT"
+	
+        config SLOT_1_RFE_TYPE_20
+        depends on (SLOT_1_8192FE)
+        bool "Type 20: internal PA/external LNA"
+
+        config SLOT_1_RFE_TYPE_21
+        depends on (SLOT_1_8192FE)
+        bool "Type 21: external PA/LNA"
+endif
+	config SLOT_1_RFE_TYPE_2
+	depends on (SLOT_1_8814AE || SLOT_1_8194AE)
+	bool "Type 2: external PA/LNA (2G SKY85300, 5G LX5586A)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+
+	config SLOT_1_RFE_TYPE_2
+	depends on (SLOT_1_8814BE)
+	bool "Type 2: internal PA/LNA(TSSI)"
+
+	config SLOT_1_RFE_TYPE_3
+	depends on (SLOT_1_8814AE || SLOT_1_8194AE)
+	bool "Type 3: external PA/LNA (2G SE2623L/SKY85201-11, 5G SKY85405/SKY85605-11)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+
+	config SLOT_1_RFE_TYPE_4
+	depends on (SLOT_1_8814AE || SLOT_1_8194AE)
+	bool "Type 4: external PA/LNA (2G SKY85303, 5G SKY85717)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+
+	#config SLOT_1_RFE_TYPE_4
+	#depends on (SLOT_1_8822BE || SLOT_1_8822CE || SLOT_1_8812FE)
+	#bool "Type 4: external PA/LNA TFBGA(SKY85742)"
+	#select SLOT_1_EXT_PA
+	#select SLOT_1_EXT_LNA
+	
+	config SLOT_1_RFE_TYPE_4
+	depends on (SLOT_1_8814BE)
+	bool "Type 4: external PA/LNA (SKY85735)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA	
+	
+	config SLOT_1_RFE_TYPE_5
+	depends on (SLOT_1_8814AE || SLOT_1_8194AE)
+	bool "Type 5: external PA/LNA (2G SE2623L/SKY85201-11, 5G SKY85405/SKY85605-11)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+
+	config SLOT_1_RFE_TYPE_5
+	depends on (SLOT_1_8814BE)
+	bool "Type 5: external PA/LNA (QPF4519)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+
+	config SLOT_1_RFE_TYPE_6
+	depends on (SLOT_1_8822BE || SLOT_1_8822CE)
+	bool "Type 6: external PA/LNA NORMAL 2-LAYER(SKY85742)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+
+	config SLOT_1_RFE_TYPE_7
+	depends on (SLOT_1_8814AE || SLOT_1_8194AE)
+	bool "Type 7: internal"
+
+	config SLOT_1_RFE_TYPE_7
+	depends on (SLOT_1_8822BE || SLOT_1_8822CE)
+	bool "Type 7: external PA/LNA NORMAL 4-LAYER(SKY85742/85734/85712)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+
+	config SLOT_1_RFE_TYPE_7
+	depends on (SLOT_1_8814BE)
+	bool "Type 7: internal(TypeB Thermal Power Tracking)"	
+
+
+    config SLOT_1_RFE_TYPE_8
+    depends on (SLOT_1_8822BE || SLOT_1_8822CE)
+	bool "Type 8: internal PA/LNA TFBGA"
+	
+	config SLOT_1_RFE_TYPE_8
+	depends on (SLOT_1_8814AE || SLOT_1_8194AE)
+	bool "Type 8: external PA/LNA 2L (2G SKY85300, 5G LX5586A)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+
+	config SLOT_1_RFE_TYPE_8
+	depends on (SLOT_1_8814BE)
+	bool "Type 8: internal(TypeC Thermal Power Tracking)"	
+
+	config SLOT_1_RFE_TYPE_9
+	depends on (SLOT_1_8814AE || SLOT_1_8194AE)
+	bool "Type 9: internal 2L"
+
+	config SLOT_1_RFE_TYPE_9
+	depends on (SLOT_1_8822BE || SLOT_1_8822CE)
+	bool "Type 9: external LNA NORMAL 4-LAYER(SKY85608)"
+	select SLOT_1_EXT_LNA
+
+	config SLOT_1_RFE_TYPE_10
+	depends on (SLOT_1_8822BE || SLOT_1_8822CE)
+	bool "Type 10: internal PA/LNA with TRSW(GW2159 / SKY13351)"
+
+	config SLOT_1_RFE_TYPE_10
+	depends on (SLOT_1_8814AE || SLOT_1_8194AE)
+	bool "Type 10: external PA/LNA (2G SKY85303 , 5G SKY85746-11)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+	
+	config SLOT_1_RFE_TYPE_11
+	depends on (SLOT_1_8822BE || SLOT_1_8822CE)
+	bool "Type 11: external PA/LNA TFBGA(SKY85742)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+
+	config SLOT_1_RFE_TYPE_11
+	depends on (SLOT_1_8814AE || SLOT_1_8194AE)
+	bool "Type 11: external PA/LNA (2G RTC7625HE ,5G RTC5638H)"
+	select SLOT_1_EXT_PA
+	select SLOT_1_EXT_LNA
+
+	config SLOT_1_RFE_TYPE_13
+	depends on (SLOT_1_8822BE || SLOT_1_8822CE)
+	bool "Type 13: internal PA/LNA with TRSW 2L"
+
+	config SLOT_1_RFE_TYPE_14
+	depends on SLOT_1_8822BE
+	bool "Type 14: internal PA/LNA with TRSW"
+endchoice
+
+
+config SLOT_1_EXT_PA
+	bool "PCIe slot 1 Enable external PA"
+	depends on USE_PCIE_SLOT_1 && ((SLOT_1_92C || SLOT_1_88E || SLOT_1_8812 || SLOT_1_8812AR_VN || SLOT_1_8192EE) || ((SLOT_1_8814AE || SLOT_1_8194AE)&&(!SLOT_1_RFE_TYPE_7)&&(!SLOT_1_RFE_TYPE_9)) || (SLOT_1_8822BE && (!SLOT_1_RFE_TYPE_0 && !SLOT_1_RFE_TYPE_8 && !SLOT_1_RFE_TYPE_9 && !SLOT_1_RFE_TYPE_10 && !SLOT_1_RFE_TYPE_13 && !SLOT_1_RFE_TYPE_14)) || (SLOT_1_8822CE && (!SLOT_1_RFE_TYPE_0 && !SLOT_1_RFE_TYPE_8 && !SLOT_1_RFE_TYPE_9 && !SLOT_1_RFE_TYPE_10 && !SLOT_1_RFE_TYPE_13 && !SLOT_1_RFE_TYPE_14)) || (SLOT_1_8812FE && (!SLOT_1_RFE_TYPE_0 && !SLOT_1_RFE_TYPE_2 && !SLOT_1_RFE_TYPE_8 && !SLOT_1_RFE_TYPE_9 && !SLOT_1_RFE_TYPE_10 && !SLOT_1_RFE_TYPE_13 && !SLOT_1_RFE_TYPE_14))\
+	|| (SLOT_1_8814BE && (!SLOT_1_RFE_TYPE_2 ) && (!SLOT_1_RFE_TYPE_7 ) && (!SLOT_1_RFE_TYPE_8 )))
+	default n
+
+config SLOT_1_EXT_LNA
+	bool "PCIe slot 1 Enable external LNA"
+	depends on USE_PCIE_SLOT_1 && ((SLOT_1_92C || SLOT_1_88E || SLOT_1_8812 || SLOT_1_8812AR_VN || SLOT_1_8192EE) || ((SLOT_1_8814AE || SLOT_1_8194AE) && (!SLOT_1_RFE_TYPE_7) && (!SLOT_1_RFE_TYPE_9)) || ((SLOT_1_8822BE) && (!SLOT_1_RFE_TYPE_0 && !SLOT_1_RFE_TYPE_8 && !SLOT_1_RFE_TYPE_10 && !SLOT_1_RFE_TYPE_13 && !SLOT_1_RFE_TYPE_14)) || ((SLOT_1_8822CE) && (!SLOT_1_RFE_TYPE_0 && !SLOT_1_RFE_TYPE_8 && !SLOT_1_RFE_TYPE_10 && !SLOT_1_RFE_TYPE_13 && !SLOT_1_RFE_TYPE_14)) || ((SLOT_1_8812FE) && (!SLOT_1_RFE_TYPE_0 && !SLOT_1_RFE_TYPE_2 && !SLOT_1_RFE_TYPE_8 && !SLOT_1_RFE_TYPE_10 && !SLOT_1_RFE_TYPE_13 && !SLOT_1_RFE_TYPE_14))\
+	|| (SLOT_1_8814BE && (!SLOT_1_RFE_TYPE_2 ) && (!SLOT_1_RFE_TYPE_7 ) && (!SLOT_1_RFE_TYPE_8 )))	
+	default n
+
+config SLOT_1_TX_BEAMFORMING
+	bool "[8192CD]PCIe slot 1 Enable Tx Beamforming"
+	depends on USE_PCIE_SLOT_1  && (SLOT_1_8192EE || SLOT_1_8192FE || SLOT_1_8812 || SLOT_1_8814AE || SLOT_1_8194AE || SLOT_1_8822BE || SLOT_1_8822CE || SLOT_1_8812FE || SLOT_1_8814BE)
+	default y
+config SLOT_1_8814_2T2R_SUPPORT
+        bool "Realtek 8814 2T2R mode"
+        depends on USE_PCIE_SLOT_1  && (SLOT_1_8814AE)
+        default n
+
+config SLOT_1_8194_2T2R_SUPPORT
+        bool "Realtek 8194 2T2R mode"
+        depends on USE_PCIE_SLOT_1  && (SLOT_1_8194AE)
+        default n
+	
+config SLOT_1_ANT_SWITCH
+	bool "PCIe slot 1 Enable Antenna Diversity"
+	depends on (USE_PCIE_SLOT_1)  && (SLOT_1_8812 || (SLOT_1_8192EE || SLOT_1_88E) && !( SLOT_1_92C || SLOT_1_92D))
+	default n
+
+config SLOT_1_ENABLE_EFUSE
+	bool "[8192CD]eFUSE Support for Slot 1"
+	depends on USE_PCIE_SLOT_1
+	select ENABLE_EFUSE
+	default n
+
+
+
+
+##########################################################################
+# Select the USB interface
+##########################################################################
+
+
+##########################################################################
+# Select interface config
+##########################################################################
+
+###### WLAN_HAL relative configuration
+
+config WLAN_HAL
+	bool
+	default y if (WLAN_HAL_8192EE || WLAN_HAL_8881A || WLAN_HAL_8814AE || WLAN_HAL_8197F|| WLAN_HAL_8198F ||  WLAN_HAL_8822BE || WLAN_HAL_8821CE || WLAN_HAL_8192FE|| WLAN_HAL_8814BE ||  WLAN_HAL_8822CE ||  WLAN_HAL_8812FE || WLAN_HAL_8197G)
+
+config WLAN_HAL_88XX
+	bool
+	default y if (WLAN_HAL_8192EE || WLAN_HAL_8881A || WLAN_HAL_8814AE || WLAN_HAL_8197F|| WLAN_HAL_8198F || WLAN_HAL_8822BE || WLAN_HAL_8821CE || WLAN_HAL_8192FE|| WLAN_HAL_8814BE ||  WLAN_HAL_8822CE ||  WLAN_HAL_8812FE || WLAN_HAL_8197G)
+
+config WLAN_MACHAL_API
+	bool
+	default y if (WLAN_HAL_8822BE || WLAN_HAL_8821CE || WLAN_HAL_8814BE ||  WLAN_HAL_8822CE ||  WLAN_HAL_8812FE)
+
+config WLAN_MACHAL_API_V0
+	bool
+	default y if (WLAN_HAL_8822BE ||  WLAN_HAL_8822CE ||  WLAN_HAL_8812FE)
+
+config WLAN_MACHAL_API_V1
+	bool
+	default y if (WLAN_HAL_8814BE)
+	
+config WLAN_HAL_8192EE
+	bool
+	default y if (SLOT_0_8192EE || SLOT_1_8192EE)
+
+config WLAN_HAL_8814AE
+	bool
+	default y if (SLOT_0_8814AE || SLOT_1_8814AE || SLOT_0_8194AE || SLOT_1_8194AE)
+	
+config WLAN_HAL_8822BE
+	bool
+	default y if (SLOT_0_8822BE || SLOT_1_8822BE)
+
+config WLAN_HAL_8814BE
+	bool
+	default y if (SLOT_0_8814BE || SLOT_1_8814BE)
+	
+config WLAN_HAL_8821CE
+	bool
+	default y if (SLOT_0_8821CE || SLOT_1_8821CE)	
+	
+config WLAN_HAL_8192FE
+	bool
+	default y if (SLOT_0_8192FE || SLOT_1_8192FE) 
+	
+config WLAN_HAL_8822CE
+	bool
+	default y if (SLOT_0_8822CE || SLOT_1_8822CE)
+
+config WLAN_HAL_8812FE
+	bool
+	default y if (SLOT_0_8812FE || SLOT_1_8812FE)
+	
+###### End------WLAN_HAL relative configuration
+
+config RTL_92C_SUPPORT
+	bool
+	default y if (SLOT_0_92C || SLOT_1_92C)
+
+config RTL_92D_SUPPORT
+	bool
+	default y if (SLOT_0_92D || SLOT_1_92D)
+
+config RTL_88E_SUPPORT
+	bool
+        select RTL_ODM_WLAN_DRIVER
+	default y if (SLOT_0_88E || SLOT_1_88E)
+
+config RTL_8723B_SUPPORT
+	bool
+       select RTL_ODM_WLAN_DRIVER
+	default y if (SLOT_0_8723B || SLOT_1_8723B)
+
+
+config RTL_8812_SUPPORT
+	bool
+	select RTL_ODM_WLAN_DRIVER
+#	select CONFIG_RTL_DUAL_92C_8812E
+	default y if (SLOT_0_8812 || SLOT_1_8812 || SLOT_0_8812AR_VN || SLOT_1_8812AR_VN  )
+
+config RTL_8812AR_VN_SUPPORT
+	bool
+	default y if ( SLOT_0_8812AR_VN || SLOT_1_8812AR_VN ||SLOT_0_8723B || SLOT_1_8723B)
+#
+# General options
+#
+choice
+	prompt "8812 external PA type"
+	depends on ((SLOT_0_8812 && SLOT_0_EXT_PA) || (SLOT_1_8812 && SLOT_1_EXT_PA) || (SLOT_0_8812AR_VN && SLOT_0_EXT_PA) || (SLOT_1_8812AR_VN && SLOT_1_EXT_PA))
+	default PA_SKYWORKS_5022
+	
+	config PA_SKYWORKS_5022
+	bool "Skyworks-5022"
+
+	config PA_RFMD_4501
+	bool "RFDM-4501 / Skywork-85703"
+
+	config PA_SKYWORKS_5023
+	bool "Skyworks-5023"
+
+	config PA_SKYWORKS_85712_HP
+	bool "Skyworks-85712 High Poewr"
+endchoice
+
+choice
+	prompt "92E external LNA type"
+	depends on ((SLOT_0_8192EE && SLOT_0_EXT_LNA) || (SLOT_1_8192EE && SLOT_1_EXT_LNA) || (USB_EXT_LNA)) 
+	default LNA_TYPE_0
+	
+	config LNA_TYPE_0
+	bool "LNA type 0, 22dBm"
+
+	config LNA_TYPE_1
+	bool "LNA type 1, 18dBm"
+
+	config LNA_TYPE_2
+	bool "LNA type 2, 16dBm"
+
+	config LNA_TYPE_3
+	bool "LNA type 3, 14dBm"
+
+	config LNA_TYPE_DSLPON_SKY85201_11_2L
+	bool "LNA(SKY85201-11) for 2-Layer board of xDSL/PON SoC "
+
+	config LNA_TYPE_DSLPON_SKY85201_11_4L
+	bool "LNA(SKY85201-11) for 4-Layer board of xDSL/PON SoC "
+
+	config LNA_FROM_EFUSE
+	depends on ENABLE_EFUSE
+	bool "LNA type from eFuse"
+endchoice
+
+config PA_RTC5634
+	bool "[8192CD]Support 8812 Internal PA (RTC5634) and PAPE on"
+	depends on ((USE_PCIE_SLOT_0 && SLOT_0_8812 && !SLOT_0_EXT_PA) || (USE_PCIE_SLOT_1 && SLOT_1_8812 && !SLOT_1_EXT_PA))
+	default n
+	
+config RTL_AC2G_256QAM
+	bool "[8192CD]Support 256QAM (11AC mode) for Band 2.4G"
+	depends on (RTL_8812_SUPPORT && !RTL_8812AR_VN_SUPPORT) || RTL_8881A_SELECTIVE
+	default n
+
+config RTL_8812_1T1R_SUPPORT
+	bool "[8192CD]Realtek 8812 1T1R mode"
+	depends on (RTL_8812_SUPPORT || RTL_8723B_SUPPORT)
+	default n
+
+
+config RTL_DUAL_BAND_SELECTIVE
+	bool "[8192CD]Realtek Dual Band 2G/5G selective support "
+	depends on (RTL_8812_SUPPORT || WLAN_HAL_8822BE)
+	default n	
+
+config RTL_HOSTAPD_SUPPORT
+	bool "Realtek hostapd support"
+	depends on RTL8192CD
+	default n
+
+config SHARE_XCAP_SUPPORT
+	bool "[8192CD]Share XCAP support"
+	depends on ((WLAN_HAL_8197F||WLAN_HAL_8197G) && (WLAN_HAL_8822BE || WLAN_HAL_8814AE || WLAN_HAL_8822CE || WLAN_HAL_8812FE))
+	default n	
+
+if WLAN_HAL_8197F
+config RF_DPK_SETTING_SUPPORT
+	bool "DPK support"
+	depends on (WLAN_HAL_8197F && (SOC_RFE_TYPE_0 || SOC_RFE_TYPE_2 || SOC_RFE_TYPE_3))
+	default n
+endif
+
+if WLAN_HAL_8197G
+config RF_DPK_SETTING_SUPPORT
+	bool "DPK support"
+	depends on (WLAN_HAL_8197G && (SOC_RFE_TYPE_0))
+	default n
+endif
+
+if WLAN_HAL_8192FE
+config RF_DPK_SETTING_SUPPORT
+	bool "[8192CD]DPK support"
+	depends on (WLAN_HAL_8192FE)
+	default n
+endif
+
+config RF_KFREE_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD]KFree support"
+	depends on (WLAN_HAL_8197F || WLAN_HAL_8198F  || WLAN_HAL_8822BE)
+	default n
+
+config RTL_TAROKO_OFFLOAD
+	depends on RTL8192CD
+	bool "[8192CD]RTK PE(Taroko) offload support"
+	depends on (WLAN_HAL_8814BE)
+	default n	
+	
+config RTL_OFFLOAD_DRIVER
+	depends on RTL8192CD
+	bool "[8192CD]RTK offload support"
+	depends on (WLAN_HAL_8814BE)
+	default y
+	
+
+config RTL_DFS_SUPPORT
+	bool "[8192CD]DFS Support"
+        depends on RTL8192CD && (RTL_92D_SUPPORT || RTL_8812_SUPPORT || WLAN_HAL_8881A || WLAN_HAL_8814AE || WLAN_HAL_8822BE || WLAN_HAL_8814BE || WLAN_HAL_8822CE || WLAN_HAL_8812FE)
+        default y
+
+
+config RTL8190_PRIV_SKB
+        bool "[8192CD]Private skb buffer management"
+        depends on RTL8192CD && !RTL_TRIBAND_SUPPORT
+        default n
+
+config RTL_VAP_SUPPORT
+        bool "[8192CD]Virtual AP Support"
+        depends on RTL8192CD
+        default y
+
+config RTL_CLIENT_MODE_SUPPORT
+        bool "[8192CD]Client Mode Support"
+        depends on RTL8192CD
+        default y
+
+config RTL_REPEATER_MODE_SUPPORT
+	bool "[8192CD]Repeater Mode support"
+	depends on RTL8192CD && RTL_CLIENT_MODE_SUPPORT
+	default y
+
+config RTL_MULTI_REPEATER_MODE_SUPPORT
+	bool "[8192CD]multiple Repeater Mode support"
+	depends on RTL_REPEATER_MODE_SUPPORT
+	default n
+		
+#not support multi-repeater also can use multi-clone,
+#but now only 92E support per-entery set differenct CAM search,bo depend on 92E
+config RTL_MULTI_CLONE_SUPPORT
+	bool "multiple clone support"
+	depends on RTL_CLIENT_MODE_SUPPORT && (WLAN_HAL_8192EE || WLAN_HAL_8192FE || WLAN_HAL_8814AE || WLAN_HAL_8197F || WLAN_HAL_8822BE || WLAN_HAL_8822CE || WLAN_HAL_8812FE || WLAN_HAL_8197G)
+	default n
+
+config VXD_DIFF_MAC
+	bool "[8192CD]vxd interface's MAC different with root"
+	depends on RTL_MULTI_CLONE_SUPPORT
+	default n
+	
+config VXD_DIFF_MAC_DRV
+	bool "[8192CD]Generate vxd's MAC by drviver"
+	depends on RTL_MULTI_CLONE_SUPPORT
+	default n
+	
+config RTL_802_1X_CLIENT_SUPPORT
+	bool "[8192CD]Client Mode 802.1x Support"
+	depends on RTL8192CD && RTL_CLIENT_MODE_SUPPORT
+	default n
+
+config RTL_SUPPORT_MULTI_PROFILE
+	bool "[8192CD]Multiple AP profile Support"
+	depends on RTL8192CD && RTL_CLIENT_MODE_SUPPORT
+	default y
+config RTL_SUPPORT_CFG80211
+	bool "[8192CD]Enable cfg80211"
+	depends on RTL8192CD
+	default y
+
+#config SUPPORT_CLIENT_MIXED_SECURITY
+#	bool "Client mix security Support"
+#	depends on RTL8192CD && RTL_CLIENT_MODE_SUPPORT
+#	default n
+
+config RTL_WDS_SUPPORT
+        bool "[8192CD]WDS Support"
+        depends on RTL8192CD
+        default n
+
+config RTL_WLAN_DIAGNOSTIC
+        bool "[8192CD]Realtek wlan driver diagnostic"
+        depends on RTL8192CD
+        default n
+
+config RTL_WAPI_SUPPORT
+	bool "[8192CD]WAPI Support"
+	depends on RTL8192CD 
+	default n
+
+config  RTL_WAPI_LOCAL_AS_SUPPORT
+        bool "[8192CD]support local AS"
+        depends on RTL8192CD && RTL_WAPI_SUPPORT 
+        default n
+
+config RTL_COMAPI_CFGFILE
+        bool "[8192CD]Config File support"
+        depends on RTL8192CD 
+        default n
+
+config RTL_COMAPI_WLTOOLS
+        bool "[8192CD]Wireless Tools v29 support"
+        depends on RTL8192CD   #&& !RTL_8812_SUPPORT
+        select WEXT_PRIV
+        default n
+
+#config WIRELESS_LAN_MODULE
+#	bool
+#	default y if RTL8192CD=m
+
+config MP_PSD_SUPPORT
+    bool "[8192CD]MP quick PSD support"
+    depends on RTL8192CD && !RTL_88E_SUPPORT
+    default n
+
+config RTL_P2P_SUPPORT
+	bool "[8192CD]Realtek P2P support "
+	depends on RTL8192CD || RTL8192E
+	default n
+
+config RTL_WPS2_SUPPORT
+	bool "[8192CD]Realtek wps2.0 support "
+	depends on RTL8192CD
+	default y
+
+config WIFI_SIMPLE_CONFIG
+	bool
+	depends on RTL_WPS2_SUPPORT
+	default y
+
+config PHY_EAT_40MHZ
+	bool "[8192CD]HOST Clock Source, Select is 40MHz, otherwise 25MHz"
+	depends on RTL8192CD && !AUTO_PCIE_PHY_SCAN
+	default n
+
+config PHY_WLAN_EAT_40MHZ
+	bool "Device Clock Source, Select is 40MHz, otherwise 25MHz (for 92E so far)"
+        depends on RTL8192CD && !AUTO_PCIE_PHY_SCAN && WLAN_HAL_8192EE
+        default y if (PHY_EAT_40MHZ)
+
+config TXPWR_LMT
+	bool "[8192CD]Band Edge Limit support"
+	depends on RTL_92C_SUPPORT || RTL_92D_SUPPORT || RTL_8812_SUPPORT || RTL_88E_SUPPORT|| WLAN_HAL || WLAN_HAL_88XX
+	default y
+
+config RTL_TPT_THREAD
+	bool "[8192CD]Use kernel thread to process TX power tracking"
+	depends on RTL_ODM_WLAN_DRIVER
+	default n
+
+config RTL_TDMA_ATM_SUPPORT
+	bool "[8192CD]RTL TDMA ATM Support"
+	depends on RTL8192CD
+	default n
+
+config RTL_MESH_SUPPORT
+	bool "[8192CD]RTL Mesh Support"
+	depends on RTL8192CD
+	default n
+
+config RTK_WPS_MESH_SUPPORT
+	bool "[8192CD]RTK WPS Mesh Support"
+	depends on RTL_MESH_SUPPORT
+	default n
+
+config RTL_MESH_SINGLE_IFACE
+	bool
+	#"RTL Mesh Single Interface"
+	depends on RTL_MESH_SUPPORT
+	default y
+
+#config RTL_MESH_AUTOPORTAL_SUPPORT
+#	bool "[8192CD]Support Auto-Poral"
+#	depends on RTL8192CD && !RTL_88E_SUPPORT && RTL_MESH_SUPPORT
+#	default n
+#	help
+#	  This feature is enable Automation of enabling Portal
+
+config RTL_MESH_CROSSBAND
+	bool "[8192CD]Support Cross-Band Access"
+	depends on RTL8192CD && RTL_MESH_SUPPORT && ((USE_PCIE_SLOT_0 && USE_PCIE_SLOT_1) || (RTL_8881A && USE_PCIE_SLOT_0) || RTL_92D_DMDP) && !RTL8672
+	default n
+	help
+	  This feature is to make 2.4GHz WiFi clients connect to 5GHz Mesh,
+          and 5GHz WiFI clients connect to 2.4GHZ Mesh. It is implemented
+          through GUEST_ZONE in bridge layer.
+
+config RTL_MESH_METRIC_REFINE
+	bool "[8192CD]Auto Cross-Band Mesh Metric Refine"
+	depends on RTL8192CD && RTL_MESH_SUPPORT
+	default n
+	help
+	  This feature is a refinement on the metric calculation for dynamically
+	  choosing the best path between mesh points across 5GHz and 2.4GHz interfaces.
+
+config RTL_A4_STA_SUPPORT
+	bool "[8192CD]RTL A4_STA Support"
+	depends on RTL8192CD
+	default n
+	
+config RTL_WLAN_DOS_FILTER
+	bool "[8192CD]Enable WLAN DoS Filter"
+	depends on RTL8192CD && !RTL_88E_SUPPORT && !RTL_8812_SUPPORT
+	default n
+
+config RTL_HS2_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD]Realtek HS2.0 support "
+	default n
+config PACP_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD]Monitor mode support"
+	default n
+
+config RTL_TDLS_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD]TDLS Support"
+	default n
+
+config RTL_STA_CONTROL_SUPPORT
+	depends on RTL8192CD && ((USE_PCIE_SLOT_0 && USE_PCIE_SLOT_1) || (SOC_WIFI && USE_PCIE_SLOT_0)|| RTL_92D_DMDP) 
+	bool "[8192CD]Sta Control Support" 
+	default n
+
+config RTL_CROSSBAND_REPEATER_SUPPORT
+	depends on RTL8192CD && RTL_REPEATER_MODE_SUPPORT && ((USE_PCIE_SLOT_0 && USE_PCIE_SLOT_1) || (SOC_WIFI && USE_PCIE_SLOT_0)|| RTL_92D_DMDP)
+	bool "[8192CD]Crossband Repeater Support"
+	default n
+	
+config RTK_SMART_ROAMING
+	bool "[8192CD]RTK Smart Roaming Support"
+	depends on RTL8192CD
+	default n
+
+config RTK_MULTI_AP
+	bool "[8192CD]Multi-AP Support"
+	select RTL_A4_STA_SUPPORT
+	select HAPD_DOT11V_SUPPORT
+	select HAPD_DOT11K_SUPPORT
+	depends on RTL8192CD && !RTL_WDS_SUPPORT && POSIX_MQUEUE && INOTIFY_USER && BRIDGE_EBT_T_FILTER && !RTL_MESH_SUPPORT
+	default n
+
+choice
+	prompt "Multi AP Profile"
+	depends on RTK_MULTI_AP
+
+config RTK_MULTI_AP_R1
+	bool "[8192CD]Profile 1"
+
+config RTK_MULTI_AP_R2
+	bool "[8192CD]Profile 2"
+	#select RTL_HS2_SUPPORT
+	#select RTL_MBO_SUPPORT
+
+config RTK_MULTI_AP_R3
+	bool "[8192CD]Profile 3"
+
+endchoice
+
+config RTK_MULTI_AP_LOGO
+    bool "Multi AP Logo Mode"
+	depends on RTK_MULTI_AP
+	default n
+
+config RTK_MULTI_AP_R1_DFS
+	bool "[8192CD]Multi-AP R1 DFS Channel Sync Support"
+	depends on RTK_MULTI_AP_R1
+	default n
+
+config RTK_WLAN_MANAGER
+	bool "[8192CD]RTK Wlan Manager Support"
+	depends on RTL8192CD
+	default n
+
+config RTK_BAND_STEERING
+	bool "[8192CD]RTK Band Steering Support"
+	select RTK_WLAN_MANAGER
+	depends on RTL8192CD
+	default n
+
+config RTK_COMMON_NETLINK
+	bool "[8192CD]Common Netlink Support"
+	default n
+	select RTK_MULTI_AP
+	select RTK_WLAN_MANAGER
+
+
+config RECORD_CLIENT_HOST
+	depends on RTL8192CD
+	bool "[8192CD]Record client host support"
+	default n
+
+config CURRENT_RATE_ACCOUNTING
+	depends on RTL8192CD
+	bool "[8192CD]RTK Current Rate Accounting"
+	default n
+
+config AP_NEIGHBOR_INFO
+	depends on RTL8192CD
+	bool "[8192CD]RTL AP Neighbor Info Support"
+	default n
+
+config TARGETSSID_WEIGHT_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD]RTK TargetSSID Weight Support"
+	default n
+	
+config RTK_SSID_PRIORITY
+	depends on RTL8192CD
+	bool "[8192CD]RTK SSID Priority Support"
+	default n
+		
+config RTL_SIMPLE_CONFIG
+	depends on RTL8192CD
+	bool "[8192CD]Realtek Simple Config Support"
+	default n
+
+config RTL_SIMPLE_CONFIG_USE_WPS_BUTTON
+	depends on RTL8192CD
+	bool "[8192CD]Realtek Simple Config use the same HW PBC with WPS"
+	depends on RTL_SIMPLE_CONFIG && RTL_WPS2_SUPPORT 
+	default n
+
+config RTL_80211D_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD]IEEE802.11d [country code]"
+	default n
+config HAPD_OWE_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD]Hostapd base OWE Support" 
+	default n
+config HAPD_DOT11K_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD]Hostapd base 802.11k Support" 
+	default n
+config RTL_DOT11K_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD]IEEE 802.11k Support" 
+	default n
+
+config HAPD_DOT11V_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD]Hostapd base 802.11V Support(BSS Transition)"
+	default n
+
+config RTL_11V_SUPPORT
+	depends on RTL8192CD
+#	depends on RTL_DOT11K_SUPPORT
+	bool "[8192CD] IEEE 802.11V Support(BSS Transition)"
+    	default n
+	
+config RTL_11W_SUPPORT
+	depends on RTL8192CD
+    bool "[8192CD]IEEE 802.11W Support"
+    default n
+
+config RTL_11W_CLI_SUPPORT
+	depends on RTL8192CD
+	depends on RTL_11W_SUPPORT
+	bool "[8192CD]IEEE 802.11W Client Mode Support"
+    	default n
+
+config RTL_11R_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD]IEEE 802.11R Support"
+	default n
+		
+config RTL_MBO_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD]Multiband Operation Support"
+	default n
+
+config RTL_WPA3_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD]driver base WPA3 SAE Support"
+	select RTL_11W_SUPPORT
+	select RTL_11W_CLI_SUPPORT
+	default n
+config	BT_COEXIST_92EE
+	depends on RTL8192CD
+	bool "[8192CD]Enable BT Coexist"
+	depends on SLOT_0_8192EE || SLOT_1_8192EE
+	default n
+	
+config	ZIGBEE_COEXIST
+	depends on RTL8192CD
+	bool "[8192CD]Enable Zigbee Coexist"
+	depends on SLOT_0_8192EE || SLOT_1_8192EE
+	default n
+	
+config RTL_ATM_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD]Realtek Airtime Fairness Support"
+	default n
+	
+config RTK_WLAN_EVENT_INDICATE 
+	depends on RTL8192CD
+	bool "[8192CD]Wlan event indicate support"
+	default n
+
+config RTL_PMKCACHE_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD]802.1x PMK Cache support"
+	default n	
+
+config STA_ROAMING_CHECK
+	depends on RTL8192CD
+    select RTK_WLAN_EVENT_INDICATE
+    bool "[8192CD]STA Roaming Check"
+    default n
+		
+config WLAN_VDEV_SUPPORT
+	depends on RTL8192CD
+    bool "[8192CD] Wlan virtual device support"
+    depends on RTL_ISP_MULTI_WAN_SUPPORT
+    default n
+		
+config RTL_HW_ENC_GROUP_CIPHER
+	depends on RTL8192CD
+	bool "[8192CD] Hardware Encryption/Decryption Support Group Key"
+	default n
+
+config WIFI_BUFFER_LIMITED
+	depends on RTL8192CD
+	bool "[8192CD] Wifi Buffer Size Limit mode"
+	default n
+
+config SBWC
+	depends on RTL8192CD
+	bool "[8192CD] SBWC support"
+	default n
+
+config RG_WLAN_HWNAT_ACCELERATION
+	depends on RTL8192CD
+	bool "[8192CD] wlan hwnat acceleration"	
+	default y
+
+config WIFI_DE_SUPPORT
+	bool "[8192CD] Data Element driver support"
+
+config HAPD_DPP_SUPPORT
+	depends on RTL8192CD
+	bool "[8192CD] HostAP DPP Protocol Support"
+	default y
+
+##########################################################################
+# Shared Wi-Fi LED in DUAL BAND
+##########################################################################
+config WIFI_LED_SHARED
+	depends on RTL8192CD && USE_PCIE_SLOT_0 && USE_PCIE_SLOT_1
+	bool "[8192CD]Shared Wi-Fi LED in DUAL BAND" 
+	default n
+
+choice
+	prompt "Use which WiFi LED"
+	depends on WIFI_LED_SHARED
+	default WIFI_LED_SHARED_USING_2G
+
+config WIFI_LED_SHARED_USING_2G
+	bool "[8192CD]Shared Wi-Fi LED in DUAL BAND using 2.4G"
+
+config WIFI_LED_SHARED_USING_5G
+	bool "[8192CD]Shared Wi-Fi LED in DUAL BAND using 5G"
+
+endchoice
+
+
+##########################################################################
+# Select WiFi Band on Wlan0
+##########################################################################
+
+#
+# Hidden options
+#
+config WIRELESS_LAN_MODULE
+	bool
+	default y if RTL8192CD=m
+
+config RTL_5G_SLOT_0
+	bool
+
+config RTL_5G_SLOT_1
+	bool
+
+config RTL_ODM_WLAN_DRIVER
+	bool
+
+config RTL_WLAN_HAL_NOT_EXIST
+	bool
+	depends on (RTL_92C_SUPPORT || RTL_92D_SUPPORT || RTL_88E_SUPPORT || RTL_8812_SUPPORT ||RTL_8723B_SUPPORT)	
+	default y 
+
+config SOC_WIFI
+	bool
+
+config RTL_819X
+	bool	
+
+config SOC_EXT_PA
+	bool
+	
+config SOC_EXT_LNA
+	bool
+
+config ENABLE_EFUSE
+	bool
+
+config RTL_DISABLE_WLAN_MIPS16
+	bool
+    default y
+	depends on RTL8192CD && !(RTL_8196E && (WLAN_HAL_8192EE || WLAN_HAL_8192FE)) && !(RTL8672)
+
