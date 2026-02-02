@@ -1,0 +1,26 @@
+--2016-10-05 11:49:29--  ftp://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-6.1p1.tar.gz
+           => '-'
+Resolving ftp.openbsd.org (ftp.openbsd.org)... 129.128.5.191
+Connecting to ftp.openbsd.org (ftp.openbsd.org)|129.128.5.191|:21... failed: Connection timed out.
+Retrying.
+
+--2016-10-05 11:49:50--  ftp://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-6.1p1.tar.gz
+  (try: 2) => '-'
+Connecting to ftp.openbsd.org (ftp.openbsd.org)|129.128.5.191|:21... failed: Connection timed out.
+Retrying.
+
+--2016-10-05 11:50:12--  ftp://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-6.1p1.tar.gz
+  (try: 3) => '-'
+Connecting to ftp.openbsd.org (ftp.openbsd.org)|129.128.5.191|:21... failed: Connection timed out.
+Retrying.
+
+--2016-10-05 11:50:35--  ftp://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-6.1p1.tar.gz
+  (try: 4) => '-'
+Connecting to ftp.openbsd.org (ftp.openbsd.org)|129.128.5.191|:21... failed: Connection timed out.
+Retrying.
+
+--2016-10-05 11:50:59--  ftp://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-6.1p1.tar.gz
+  (try: 5) => '-'
+Connecting to ftp.openbsd.org (ftp.openbsd.org)|129.128.5.191|:21... failed: Connection timed out.
+Giving up.
+
