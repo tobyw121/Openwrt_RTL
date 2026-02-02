@@ -1,0 +1,18 @@
+diff --git a/packages/opensource/iplatform-extern-libs/src/ifaddrs/ifaddrs.c b/packages/opensource/iplatform-extern-libs/src/ifaddrs/ifaddrs.c
+index 9e20c1008..4abc34be0 100755
+--- a/ifaddrs/ifaddrs.c
++++ b/ifaddrs/ifaddrs.c
+@@ -54,6 +54,13 @@
+ 
+ #define __set_errno(x) {errno=x;}
+ 
++# define TEMP_FAILURE_RETRY(expression) \
++	(__extension__                                                              \
++		({ long int __result;                                                     \
++			do __result = (long int) (expression);                                 \
++			while (__result == -1L && errno == EINTR);                             \
++		__result; }))
++
+ #if __ASSUME_NETLINK_SUPPORT
+ #ifdef __UCLIBC_SUPPORT_AI_ADDRCONFIG__
+ /* struct to hold the data for one ifaddrs entry, so we can allocate
