@@ -1,0 +1,11 @@
+--- a/main.c
++++ b/main.c
+@@ -16,7 +16,7 @@
+ };
+ 
+ static int verbose = 0;
+-static const char *config_file = DEFAULT_CONFIG;
++static char *config_file = DEFAULT_CONFIG;
+ static struct blob_buf conf;
+ 
+ char **messages = NULL;
