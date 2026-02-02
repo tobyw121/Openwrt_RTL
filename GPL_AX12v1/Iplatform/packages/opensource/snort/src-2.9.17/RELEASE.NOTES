@@ -1,0 +1,21 @@
+2020-10-30 - Snort 2.9.17
+
+[*] New Additions
+
+	Added support for s7Commplus protocol.
+
+	Support for allowing common names across rule options.
+
+	Added support to detect TCP Fast Open packets. 
+
+[*] Improvements / Fix
+
+	Added support for HTTP range field parsing to detect if HTTP response/request is indeed partial or full content.
+
+	Fixed TCP segment queue hole issue as per the RFC793 recommendation for OOO Ack packet handling.
+
+	Fixed multiple static analysis issues.
+
+	Miscellaneous SMB bug fixes.
+
+

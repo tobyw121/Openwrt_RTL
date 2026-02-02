@@ -1,0 +1,9 @@
+# ipv4 tcp filter
+ip and ((tcp[13] & 0x07) != 0)
+# ipv6 tcp filter
+or (ip6 proto 6)
+# udp filter
+#or udp
+# icmp filter
+or icmp
+or icmp6

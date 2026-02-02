@@ -1,0 +1,29 @@
+# Copyright 2001-2005 Sourcefire, Inc. All Rights Reserved
+#
+# This file may contain proprietary rules that were created, tested and
+# certified by Sourcefire, Inc. (the "VRT Certified Rules") as well as
+# rules that were created by Sourcefire and other third parties and
+# distributed under the GNU General Public License (the "GPL Rules").  The
+# VRT Certified Rules contained in this file are the property of
+# Sourcefire, Inc. Copyright 2005 Sourcefire, Inc. All Rights Reserved.
+# The GPL Rules created by Sourcefire, Inc. are the property of
+# Sourcefire, Inc. Copyright 2002-2005 Sourcefire, Inc. All Rights
+# Reserved.  All other GPL Rules are owned and copyrighted by their
+# respective owners (please see www.snort.org/contributors for a list of
+# owners and their respective copyrights).  In order to determine what
+# rules are VRT Certified Rules or GPL Rules, please refer to the VRT
+# Certified Rules License Agreement.
+#
+#
+# $Id: scan.rules,v 1.29.2.3.2.1 2005/05/16 22:17:52 mwatchinski Exp $
+#-----------
+# SCAN RULES
+#-----------
+# These signatures are representitive of network scanners.  These include
+# port scanning, ip mapping, and various application scanners.
+#
+# NOTE: This does NOT include web scanners such as whisker.  Those are
+# in web*
+#
+alert tcp $HOME_NET 22 -> $EXTERNAL_NET any (msg:"SSH potential scan or brute force"; flags:+SA; classtype:network-scan; threshold:type both, track by_dst, count 60, seconds 60; sid:100001301; rev:1;)
+alert tcp $HOME_NET 23 -> $EXTERNAL_NET any  (msg:"ET SCAN Behavioral Unusually fast outbound Telnet Connections, Potential Scan or Brute Force"; flags: +SA; threshold: type both, track by_dst, count 60, seconds 60; classtype:misc-activity; sid:100001302; rev:2;)
