@@ -1,0 +1,26 @@
+var struct__ss2f__info__dl__pri__ =
+[
+    [ "agg_en", "struct__ss2f__info__dl__pri__.html#a22cd363ca05247ea6fb339536f7cd090", null ],
+    [ "bmc", "struct__ss2f__info__dl__pri__.html#af9c38756e30b4be09225aa95b0a194b9", null ],
+    [ "bsr_ac_type", "struct__ss2f__info__dl__pri__.html#a1d8411aa65327637868f11dd7e04c2be", null ],
+    [ "bsr_len", "struct__ss2f__info__dl__pri__.html#ae16d978acd89dabde1f78ce9ea50eb17", null ],
+    [ "macid", "struct__ss2f__info__dl__pri__.html#a5cb69cdc875beaf22926a19039631f99", null ],
+    [ "msb_dl_quota", "struct__ss2f__info__dl__pri__.html#a81320c358b4a5b8c9cd81b44c4a4cc0f", null ],
+    [ "msb_ul_quota", "struct__ss2f__info__dl__pri__.html#a76801bc8b56440c8c085076bd532fb53", null ],
+    [ "mu_2nd_tx_cnt", "struct__ss2f__info__dl__pri__.html#ac8aa43cd596cabfc4e90b9b1be8d43be", null ],
+    [ "mu_tx_cnt", "struct__ss2f__info__dl__pri__.html#a97d623e2d595a39a6a242256ea838cc5", null ],
+    [ "null_wd", "struct__ss2f__info__dl__pri__.html#a41e47d1621282a3f671b087e6b3814b7", null ],
+    [ "rsvd0", "struct__ss2f__info__dl__pri__.html#a77279037f5287ae93f3bf441dffb4fca", null ],
+    [ "rsvd1", "struct__ss2f__info__dl__pri__.html#ae75c54b3b61eaecc49f23138c6ccde49", null ],
+    [ "rsvd2", "struct__ss2f__info__dl__pri__.html#a6e9dd6aa3ad35224146c216093c22b89", null ],
+    [ "ru_tx_cnt", "struct__ss2f__info__dl__pri__.html#ab3213cfebe82cb83aeb3430bfe9231c6", null ],
+    [ "su_tx_cnt", "struct__ss2f__info__dl__pri__.html#ae8ad466dce890ac1c4c1b5bc10383410", null ],
+    [ "tx_len", "struct__ss2f__info__dl__pri__.html#a4199022736e478403780f6a7595f1359", null ],
+    [ "txpktsize_256", "struct__ss2f__info__dl__pri__.html#a4548a4c22df654d54503a4d61381c914", null ],
+    [ "userate", "struct__ss2f__info__dl__pri__.html#a926db4c606066e0de2a216c74d5ecd7a", null ],
+    [ "wdinfo_en", "struct__ss2f__info__dl__pri__.html#a7f3d751977fd7de2b067c060db3bfe21", null ],
+    [ "wmm_be_vld", "struct__ss2f__info__dl__pri__.html#af9d01b0f7585ed9b01103d8e2edc7e8d", null ],
+    [ "wmm_bk_vld", "struct__ss2f__info__dl__pri__.html#abe247a021bd5ad55fdee1cdb10645dd2", null ],
+    [ "wmm_vi_vld", "struct__ss2f__info__dl__pri__.html#a6d5a91232015b522debcdf1a789df567", null ],
+    [ "wmm_vo_vld", "struct__ss2f__info__dl__pri__.html#acd910768212da76085041df51ca9bf3d", null ]
+];
