@@ -1,0 +1,87 @@
+#!/bin/sh /etc/rc.common
+# Copyright (c) 2014 The Linux Foundation. All rights reserved.
+# Copyright (C) 2010-2014 OpenWrt.org
+
+START=99
+STOP=10
+
+
+
+igmp_add_fw_rules() {
+	local r1 r2 r3
+	
+	r1=$(fw list 4 f zone_wan|grep "\-p igmp")
+	[ -z "$r1" ] && fw add 4 f zone_wan ACCEPT ^ { -p igmp }
+	
+	r2=$(fw list 4 f zone_wan|grep "\-d 224.0.0.0/4")
+	[ -z "$r2" ] && fw add 4 f zone_wan ACCEPT ^ { -p udp -d 224.0.0.0/4 }
+	
+	r3=$(fw list 4 f zone_wan_forward|grep "\-d 224.0.0.0/4")
+	[ -z "$r3" ] && fw add 4 f zone_wan_forward zone_lan_ACCEPT ^ { -p udp -d 224.0.0.0/4 }
+}
+
+igmp_del_fw_rules() {
+	fw del 4 f zone_wan ACCEPT { -p igmp }
+	fw del 4 f zone_wan ACCEPT { -p udp -d 224.0.0.0/4 }
+	fw del 4 f zone_wan_forward zone_lan_ACCEPT { -p udp -d 224.0.0.0/4 }
+}
+
+
+
+start() {
+
+	local sysmode
+	config_load sysmode
+	config_get sysmode sysmode mode "router"
+	local country=`getfirm SPECIAL_ID`
+	if [ "$sysmode" = "ap" ]; then
+		return 0
+	fi
+
+	local udproxy_enable
+	local udp_proxy
+	local wan_if
+	local improxy_enable
+	local upstream
+	config_load iptv
+	
+	config_load network
+	config_get upstream wan ifname "eth0"
+	config_get wantype	wan wan_type
+	config_get wanproto wan proto
+	config_get udp_proxy "iptv" udp_proxy
+	config_get improxy_enable "iptv" igmp_enable
+	config_get udproxy_enable "iptv" udp_proxy_enable 
+	#config_get wan_if "iptv" wan
+	#wan_if=$(uci get protocol.wan.ifname)
+
+	if [ "$udproxy_enable" = "on" ]; then	
+		ip link show "$upstream" | grep inet > /dev/null
+		local ret=$?
+		if [ "$wantype" = "pppoe" -a "$wanproto" = "none" -a "$ret" != "0" ] ; then
+			local macaddr=$(ip link show "$upstream" | grep ether | cut -d' ' -f6)
+			local byte5=$(echo "$macaddr" | cut -d':' -f5)
+			local byte6=$(echo "$macaddr" | cut -d':' -f6)
+			ifconfig "$upstream" $(printf "169.254.%d.%d" "0x$byte5" "0x$byte6")
+			route del -net 169.254.0.0 netmask 255.255.0.0
+		fi
+		service_start /usr/sbin/udpxy -p $udp_proxy -B 1Mb -a br-lan  -R -1 -c 10 -m $upstream
+		igmp_add_fw_rules
+	elif [ "$improxy_enable" != "on" ]; then
+		igmp_del_fw_rules
+	fi
+
+	return 0
+}
+
+stop() {
+	local sysmode
+	config_load sysmode
+	config_get sysmode sysmode mode "router"
+	local country=`getfirm SPECIAL_ID`
+	if [ "$sysmode" = "ap" ]; then
+		return 0
+	fi	
+	service_stop /usr/sbin/udpxy
+	return 0
+}

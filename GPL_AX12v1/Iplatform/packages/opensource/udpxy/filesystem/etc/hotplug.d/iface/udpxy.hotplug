@@ -1,0 +1,9 @@
+#!/bin/sh
+# Copyright (c) 2014 The Linux Foundation. All rights reserved.
+
+. /lib/functions.sh
+
+/etc/init.d/udpxy enabled && [ "$ACTION" = "ifup" ] && {
+	/etc/init.d/udpxy restart
+}
+
