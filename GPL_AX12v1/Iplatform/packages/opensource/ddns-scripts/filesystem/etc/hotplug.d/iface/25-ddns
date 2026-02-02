@@ -1,0 +1,25 @@
+#!/bin/sh
+
+. /usr/lib/ddns/dynamic_dns_functions.sh
+
+[ "$INTERFACE" == "lan" -o "$INTERFACE" == "vpn" ] && exit 0
+
+if [ "$ACTION" = "ifup" ]; then
+	start_daemon_for_all_ddns_sections "$INTERFACE"
+fi
+
+if [ "$ACTION" = "ifdown" ]; then
+	config_clear
+	SECTIONS=""
+	add_section_cb()
+	{
+		SECTIONS="$SECTIONS $1"
+	}
+	config_load ddns
+	config_foreach add_section_cb service
+	for section in $SECTIONS
+	do
+		ddns stop "$section"
+	done
+	config_clear
+fi
