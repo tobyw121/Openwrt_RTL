@@ -1,0 +1,164 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2015 OpenWrt.org
+START=50
+STOP=10
+PROG_SNORT=/usr/bin/snort
+config_file=/etc/snort/snort.conf
+mali_conf=/etc/mali.conf
+interface=br-lan
+tp_security_config=/etc/config/tp_security
+
+snort_status=stop
+ddos_enable=false
+pene_enable=false
+maliurl_enable=false
+old_ddos_enable=false
+old_pene_enable=false
+row_mali=0
+
+start()
+{
+	if [ ! -f "${tp_security_config}" ];then
+		touch ${tp_security_config}
+		uci set tp_security.data=global
+		uci set tp_security.data.next_query_time=0
+		uci set tp_security.data.iot_sec_enable=false
+		uci set tp_security.data.intrusion_sec_enable=false
+		uci commit tp_security
+		saveconfig a
+	fi
+}
+
+stop()
+{
+	service_stop ${PROG_SNORT}
+	echo p > /proc/block/block_rule
+	echo d > /proc/block/block_rule
+	uci set tp_security.data.intrusion_sec_enable=false
+	uci set tp_security.data.iot_sec_enable=false
+
+	row_mali=`grep -n "web_protection" ${mali_conf} | head -1 | cut -d ":" -f 1`
+	maliurl_stop
+}
+
+maliurl_stop()
+{
+	local maliurl_alive=`grep "web_protection: 1" ${mali_conf} | wc -l`
+	if [ "${maliurl_alive}" != "0" ]; then
+		sed -i "${row_mali} s/^web_protection: 1/web_protection: 0/" ${mali_conf}
+		sleep 5
+		echo m > /proc/block/block_rule
+	fi
+}
+
+snort_stop()
+{
+	service_stop ${PROG_SNORT}
+	if [ "${pene_enable}" == "false" ]; then
+		echo p > /proc/block/block_rule
+	fi
+	if [ "${ddos_enable}" == "false" ]; then
+		echo d > /proc/block/block_rule
+	fi
+}
+
+get_security_status()
+{
+	old_ddos_enable=`uci -q get tp_security.data.iot_sec_enable`
+	old_pene_enable=`uci -q get tp_security.data.intrusion_sec_enable`
+
+	ddos_enable=`uci -q get parental_control_v2.settings.iot_sec_enable`
+	pene_enable=`uci -q get parental_control_v2.settings.intrusion_sec_enable`
+	maliurl_enable=`uci -q get parental_control_v2.settings.web_sec_enable`
+}
+
+restart()
+{
+	row_mali=`grep -n "web_protection" ${mali_conf} | head -1 | cut -d ":" -f 1`
+
+	local avira_state=`uci -q get avira.info.state`
+	if [ "${avira_state}" != "paid" ]; then
+		stop
+		return
+	fi
+
+	local secure_split_support=$(uci get profile.@avira[0].secure_split_support -c "/etc/profile.d" -q)
+	local row_pene=`grep -n "penetration.rules" ${config_file} | head -1 | cut -d ":" -f 1`
+	local row_ps=`grep -n "sfportscan:" ${config_file} | head -1 | cut -d ":" -f 1`
+	local row_ddos=`grep -n "ddos.rules" ${config_file} | head -1 | cut -d ":" -f 1`
+
+	if [ "${secure_split_support}" == "yes" ]; then
+		# get status
+		get_security_status
+
+		# --------------------------snort---------------------------
+		# modify snort.conf
+		if [ "${ddos_enable}" == "true" ]; then
+			sed -i "${row_ddos} s/^# include/include/" ${config_file}
+			uci set tp_security.data.iot_sec_enable=true
+		else
+			sed -i "${row_ddos} s/^include/# include/" ${config_file}
+			uci set tp_security.data.iot_sec_enable=false
+		fi
+
+		if [ "${pene_enable}" == "true" ]; then
+			sed -i "${row_pene} s/^# include/include/" ${config_file}
+			sed -i "${row_ps} s/^# preprocessor/preprocessor/" ${config_file}
+			uci set tp_security.data.intrusion_sec_enable=true
+		else
+			sed -i "${row_pene} s/^include/# include/" ${config_file}
+			sed -i "${row_ps} s/^preprocessor/# preprocessor/" ${config_file}
+			uci set tp_security.data.intrusion_sec_enable=false
+		fi
+
+		# check snort status
+		if [ "${ddos_enable}" == "false" ] && [ "${pene_enable}" == "false" ]; then
+			snort_status=stop
+		elif [ "${old_ddos_enable}" == "false" ] && [ "${old_pene_enable}" == "false" ]; then
+			snort_status=start
+		elif [ "${ddos_enable}" == "${old_ddos_enable}" ] && [ "${pene_enable}" == "${old_pene_enable}" ]; then
+			snort_status=check
+		else
+			snort_status=restart
+		fi
+
+		# stop or start snort
+		if [ "${snort_status}" == "stop" ]; then
+			snort_stop
+		elif [ "${snort_status}" == "start" ]; then
+			local snort_alive=`ps | grep "snort" | grep -v "grep"| wc -l`
+			if [ "${snort_alive}" != "0" ]; then
+				snort_stop
+			fi
+			service_start ${PROG_SNORT} -i $interface -c $config_file --daq-dir /usr/lib/daq/ -A none -N -q --daq-var buffer_size=1048576 -F /etc/snort/rules/bpf_filter.rules &
+		elif [ "${snort_status}" == "check" ]; then
+			local snort_alive=`ps | grep "snort" | grep -v "grep"| wc -l`
+			if [ "${snort_alive}" == "0" ]; then
+				service_start ${PROG_SNORT} -i $interface -c $config_file --daq-dir /usr/lib/daq/ -A none -N -q --daq-var buffer_size=1048576 -F /etc/snort/rules/bpf_filter.rules &
+			fi
+		elif [ "${snort_status}" == "restart" ]; then
+			snort_stop
+			service_start ${PROG_SNORT} -i $interface -c $config_file --daq-dir /usr/lib/daq/ -A none -N -q --daq-var buffer_size=1048576 -F /etc/snort/rules/bpf_filter.rules &
+		fi
+
+		# --------------------------maliurl---------------------------
+		if [ "${maliurl_enable}" == "true" ]; then
+			sed -i "${row_mali} s/^web_protection: 0/web_protection: 1/" ${mali_conf}
+		else
+			maliurl_stop
+		fi
+	elif [ "${secure_split_support}" == "no" ]; then
+		local sec_enable=`uci -q get parental_control_v2.settings.sec_enable`
+
+		if [ "${sec_enable}" == "true" ]; then
+			sed -i "${row_pene} s/^# include/include/" ${config_file}
+			sed -i "${row_ps} s/^# preprocessor/preprocessor/" ${config_file}
+			sed -i "${row_ddos} s/^# include/include/" ${config_file}
+			sed -i "${row_mali} s/^web_protection: 0/web_protection: 1/" ${mali_conf}
+			service_stop ${PROG_SNORT}
+			service_start ${PROG_SNORT} -i $interface -c $config_file --daq-dir /usr/lib/daq/ -A none -N -q --daq-var buffer_size=1048576 -F /etc/snort/rules/bpf_filter.rules &
+		else
+			stop
+		fi
+	fi
+}
