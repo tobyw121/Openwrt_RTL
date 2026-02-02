@@ -1,0 +1,11 @@
+--- openssl-1.0.2a/Makefile.org	2016-12-30 01:05:40.581063450 +0800
++++ Makefile.org	2016-12-30 01:10:03.858153526 +0800
+@@ -348,7 +348,7 @@
+ 		if [ "$$i" = "ssl" -a -n "$(LIBKRB5)" ]; then \
+ 			libs="$(LIBKRB5) $$libs"; \
+ 		fi; \
+-		$(CLEARENV) && $(MAKE) -f Makefile.shared -e $(BUILDENV) \
++		$(CLEARENV) && $(MAKE) -f $(HERE)/Makefile.shared -e $(BUILDENV) \
+ 			LIBNAME=$$i LIBVERSION=$(SHLIB_MAJOR).$(SHLIB_MINOR) \
+ 			LIBCOMPATVERSIONS=";$(SHLIB_VERSION_HISTORY)" \
+ 			LIBDEPS="$$libs $(EX_LIBS)" \
