@@ -1,0 +1,22 @@
+--- a/Makefile	2011-08-24 11:46:28.000000000 +0000
++++ b/Makefile	2016-10-26 12:39:07.565464378 +0000
+@@ -217,7 +217,7 @@
+ # If you want zic's -s option used when installing, uncomment the next line
+ # ZFLAGS=	-s
+ 
+-zic=		./zic
++zic=		zic
+ ZIC=		$(zic) $(ZFLAGS)
+ 
+ # The name of a Posix-compliant `awk' on your system.
+@@ -284,8 +284,8 @@
+ ALL:		all date
+ 
+ install:	all $(DATA) $(REDO) $(TZLIB) $(MANS) $(TABDATA)
+-		$(ZIC) -y $(YEARISTYPE) \
+-			-d $(TZDIR) -l $(LOCALTIME) -p $(POSIXRULES)
++		#$(ZIC) -y $(YEARISTYPE) \
++		#	-d $(TZDIR) -l $(LOCALTIME) -p $(POSIXRULES)
+ 		-rm -f $(TZDIR)/iso3166.tab $(TZDIR)/zone.tab
+ 		cp iso3166.tab zone.tab $(TZDIR)/.
+ 		-mkdir $(TOPDIR) $(ETCDIR)

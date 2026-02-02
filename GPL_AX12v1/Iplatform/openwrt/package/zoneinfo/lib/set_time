@@ -1,0 +1,443 @@
+#!/usr/bin/lua
+local uci   = require "luci.model.uci"
+local fs    = require "luci.fs"
+local dbg   = require "luci.tools.debug"
+local sys   = require "luci.sys"
+local uci_r = uci.cursor()
+
+local WEEK_TBL = {['1st']=1, ['2nd']=2, ['3rd']=3, ['4th']=4, ['5th']=5}
+local DAY_TBL  = {Mon=1, Tues=2, Wed=3, Thur=4, Fri=5, Sat=6, Sun=0}
+local MON_TBL  = {Jan=1, Feb=2, Mar=3, Apr=4, May=5, Jun=6, Jul=7, Aug=8, Sep=9, Oct=10, Nov=11, Dec=12}
+local zoneinfoTable = {
+    { 'GMT-12:00', 'Etc/GMT+12'},
+    { 'GMT-11:00', 'Etc/GMT+11'},
+    { 'GMT-10:00', 'US/Hawaii'},
+    { 'GMT-09:00', 'US/Alaska'},
+    { 'GMT-08:00', 'US/Pacific'},
+    { 'GMT-07:00', 'US/Mountain'},
+    { 'GMT-06:00', 'US/Central'},
+    { 'GMT-05:00', 'US/Eastern'},
+    { 'GMT-04:00', 'America/Caracas'},
+    { 'GMT-04:00', 'Canada/Atlantic'},
+    { 'GMT-03:30', 'Canada/Newfoundland'},
+    { 'GMT-03:00', 'America/Buenos_Aires'},
+    { 'GMT-02:00', 'Etc/GMT+2'},
+    { 'GMT-01:00', 'Atlantic/Azores'},
+    { 'GMT-00:00', 'Europe/Dublin'},
+    { 'GMT+01:00', 'Europe/Berlin'},
+    { 'GMT+02:00', 'Europe/Athens'},
+    { 'GMT+03:00', 'Europe/Moscow'},
+    { 'GMT+03:30', 'Asia/Tehran'},
+    { 'GMT+04:00', 'Asia/Muscat'},
+    { 'GMT+04:30', 'Asia/Kabul'},
+    { 'GMT+05:00', 'Asia/Karachi'},
+    { 'GMT+05:30', 'Asia/Kolkata'},
+    { 'GMT+05:45', 'Asia/Kathmandu'},
+    { 'GMT+06:00', 'Asia/Dhaka'},
+    { 'GMT+06:30', 'Asia/Rangoon'},
+    { 'GMT+07:00', 'Asia/Bangkok'},
+    { 'GMT+08:00', 'Asia/Shanghai'},
+    { 'GMT+09:00', 'Asia/Tokyo'},
+    { 'GMT+09:30', 'Australia/Darwin'},
+    { 'GMT+10:00', 'Australia/Brisbane'},
+    { 'GMT+11:00', 'Asia/Magadan'},
+    { 'GMT+12:00', 'Pacific/Fiji'},
+    { 'GMT+13:00', 'Pacific/Tongatapu'},
+}
+
+local zoneinfoTable_New = {
+	{ "0",    '0',   'Etc/GMT+12' },
+	{ "60",   '1',   'Etc/GMT+11' },
+	{ "120",  '2',   'Etc/GMT+10' },
+	{ "120",  '3',   'US/Aleutian' },
+	{ "120",  '4',   'US/Hawaii' },
+	{ "150",  '5',   'Pacific/Marquesas' },
+	{ "180",  '6',   'Etc/GMT+9' },
+	{ "180",  '7',   'US/Alaska' },
+	{ "240",  '8',   'Etc/GMT+8' },
+	{ "240",  '9',   'US/Pacific', 'Canada/Pacific' },
+	{ "300",  '10',  'Etc/GMT+7' },
+	{ "300",  '11',  'US/Arizona' },
+	{ "300",  '12',  'America/Chihuahua', 'America/La_Paz', 'America/Mazatlan' },
+	{ "300",  '13',  'US/Mountain', 'Canada/Mountain' },
+	{ "360",  '14',  'Etc/GMT+6' },
+	{ "360",  '15',  'US/Central', 'Canada/Central' },
+	{ "360",  '16',  'Pacific/Easter' },
+	{ "360",  '17',  'America/Mexico_City', 'America/Monterrey' },
+	{ "360",  '18',  'Canada/Saskatchewan' },
+	{ "420",  '19',  'Etc/GMT+5' },
+	{ "420",  '20',  'America/Bogota', 'America/Lima', 'America/Rio_Branco' },
+	{ "420",  '21',  'US/Eastern', 'Canada/Eastern' },
+	{ "420",  '22',  'America/Port-au-Prince' },		-- Haiti: ios return America/Port-au-Prince
+	{ "420",  '23',  'America/Havana' },
+	{ "420",  '24',  'US/East-Indiana' },
+	{ "480",  '25',  'Etc/GMT+4' },
+	{ "480",  '26',  'America/Caracas' },
+	{ "480",  '27',  'America/Asuncion' },
+	{ "480",  '28',  'Canada/Atlantic' },
+	{ "480",  '29',  'America/Cuiaba' },
+	{ "480",  '30',  'America/La_Paz', 'America/Manaus', 'America/Argentina/San_Juan' },
+	{ "480",  '31',  'America/Santiago' },
+	{ "480",  '32',  'America/Grand_Turk' },		-- Turks and Caicos: ios return America/Grand_Turk
+	{ "510",  '33',  'Canada/Newfoundland' },
+	{ "540",  '34',  'Etc/GMT+3' },
+	{ "540",  '35',  'America/Araguaina' },
+	{ "540",  '36',  'America/Sao_Paulo' },		-- Brasilia: ios return America/Sao_Paulo
+	{ "540",  '37',  'America/Cayenne', 'America/Fortaleza' },
+	{ "540",  '38',  'America/Buenos_Aires' },
+	{ "540",  '39',  'America/Godthab' },
+	{ "540",  '40',  'America/Montevideo' },
+	--    { "540",  '38',  'America/Punta_Arenas' },		-- Punta Arenas: ios return America/Punta_Arenas but not in zone tbl
+	{ "540",  '41',  'America/Miquelon' },
+	{ "540",  '42',  'America/El_Salvador' },
+	{ "600",  '43',  'Etc/GMT+2' },
+	{ "660",  '44',  'Etc/GMT+1' },
+	{ "660",  '45',  'Atlantic/Azores' },
+	{ "660",  '46',  'Atlantic/Cape_Verde' },
+	{ "720",  '47',  'Etc/GMT+0' },
+	{ "720",  '48',  'Africa/Casablanca' },
+	{ "720",  '49',  'Europe/Dublin', 'Europe/Lisbon', 'Europe/London' },
+	{ "720",  '50',  'Africa/Monrovia', 'Atlantic/Reykjavik' },
+	{ "780",  '51',  'Etc/GMT-1' },
+	{ "780",  '52',  'Europe/Amsterdam', 'Europe/Berlin', 'Europe/Rome', 'Europe/Stockholm', 'Europe/Vienna' },
+	{ "780",  '53',  'Europe/Belgrade', 'Europe/Bratislava', 'Europe/Budapest', 'Europe/Ljubljana', 'Europe/Prague' },
+	{ "780",  '54',  'Europe/Brussels', 'Europe/Copenhagen', 'Europe/Madrid', 'Europe/Paris' },
+	{ "780",  '55',  'Europe/Sarajevo', 'Europe/Skopje', 'Europe/Warsaw', 'Europe/Zagreb' },
+	{ "780",  '56',  'Africa/Windhoek' },
+	{ "840",  '57',  'Etc/GMT-2' },
+	{ "840",  '58',  'Asia/Amman' },
+	{ "840",  '59',  'Europe/Athens', 'Europe/Bucharest' },
+	{ "840",  '60',  'Asia/Beirut' },
+	{ "840",  '61',  'Africa/Cairo' },
+	{ "840",  '62',  'Europe/Chisinau' },
+	{ "840",  '63',  'Asia/Damascus' },
+	{ "840",  '64',  'Asia/Gaza', 'Asia/Hebron' },
+	{ "840",  '65',  'Africa/Harare' },
+	{ "840",  '66',  'Europe/Helsinki', 'Europe/Riga', 'Europe/Sofia', 'Europe/Tallinn', 'Europe/Vilnius' },
+	{ "840",  '67',  'Asia/Jerusalem' },
+	{ "840",  '68',  'Europe/Kaliningrad' },
+	{ "840",  '69',  'Africa/Tripoli' },
+	{ "900",  '70',  'Etc/GMT-3' },
+	{ "900",  '71',  'Asia/Baghdad' },
+	{ "900",  '72',  'Europe/Istanbul' },
+	{ "900",  '73',  'Asia/Kuwait', 'Asia/Riyadh' },
+	{ "900",  '74',  'Europe/Minsk' },
+	{ "900",  '75',  'Europe/Moscow', 'Europe/Volgograd' },
+	{ "900",  '76',  'Africa/Nairobi' },
+	{ "930",  '77',  'Asia/Tehran' },
+	{ "960",  '78',  'Etc/GMT-4' },
+	{ "960",  '79',  'Asia/Muscat' },
+	{ "960",  '80',  'Europe/Astrakhan', 'Europe/Ulyanovsk' },
+	{ "960",  '81',  'Asia/Baku' },
+	{ "960",  '82',  'Europe/Samara' },
+	{ "960",  '83',  'Indian/Mauritius' },
+	--    { "960",  '79', '(UTC+04:00) Saratov' },		-- Saratov: ios return Europe/Saratov but not in zone tbl
+	{ "960",  '84',  'Asia/Tbilisi' },
+	{ "960",  '85',  'Asia/Yerevan' },
+	{ "990",  '86',  'Asia/Kabul' },
+	{ "1020", '87',  'Etc/GMT-5' },
+	{ "1020", '88',  'Asia/Ashgabat', 'Asia/Tashkent' },
+	{ "1020", '89',  'Asia/Yekaterinburg' },
+	{ "1020", '90',  'Asia/Karachi' },		-- Islamabad: ios return Asia/Karachi
+	{ "1050", '91',  'Asia/Kolkata' },		-- Chennai/Mumbai/New Delhi: ios return kolkata
+	{ "1050", '92',  'Asia/Colombo' },		--NOT FOUND ZONE
+	{ "1065", '93',  'Asia/Kathmandu' },
+	{ "1080", '94',  'Etc/GMT-6'},
+	{ "1080", '95',  'Asia/Almaty' },		-- Astana: ios return Asia/Almaty
+	{ "1080", '96',  'Asia/Dhaka' },
+	{ "1080", '97',  'Asia/Omsk' },
+	{ "1110", '98',  'Asia/Rangoon' },
+	{ "1140", '99',  'Etc/GMT-7' },
+	{ "1140", '100', 'Asia/Bangkok', 'Asia/Saigon', 'Asia/Jakarta' },		-- Hanoi: ios return Asia/Saigon
+	{ "1140", '101', 'Asia/Barnaul' },
+	{ "1140", '102', 'Asia/Hovd' },
+	{ "1140", '103', 'Asia/Krasnoyarsk' },
+	{ "1140", '104', 'Asia/Novosibirsk' },
+	{ "1140", '105', 'Asia/Tomsk' },
+	{ "1200", '106', 'Etc/GMT-8' },
+	{ "1200", '107', 'Asia/Chongqing', 'Asia/Hong_Kong', 'Hongkong', 'Asia/Urumqi', 'Asia/Shanghai' },
+	{ "1200", '108', 'Asia/Kuala_Lumpur', 'Asia/Irkutsk' },
+	{ "1200", '109', 'Asia/Singapore' },
+	{ "1200", '110', 'Australia/Perth' },
+	{ "1200", '111', 'Asia/Taipei' },
+	{ "1200", '112', 'Asia/Ulaanbaatar' },
+	{ "1230", '113', 'Asia/Pyongyang' },
+	{ "1245", '114', 'Australia/Eucla' },
+	{ "1260", '115', 'Etc/GMT-9' },
+	{ "1260", '116', 'Asia/Chita' },
+	{ "1260", '117', 'Asia/Tokyo' },		-- Osaka: ios return Asia/Tokyo
+	{ "1260", '118', 'Asia/Seoul' },
+	{ "1260", '119', 'Asia/Yakutsk' },
+	{ "1290", '120', 'Australia/Adelaide' },
+	{ "1290", '121', 'Australia/Darwin' },
+	{ "1320", '122', 'Etc/GMT-10' },
+	{ "1320", '123', 'Australia/Brisbane' },
+	{ "1320", '124', 'Australia/Canberra', 'Australia/Melbourne', 'Australia/Sydney' },
+	{ "1320", '125', 'Pacific/Guam', 'Pacific/Port_Moresby' },
+	{ "1320", '126', 'Australia/Hobart' },
+	{ "1320", '127', 'Asia/Vladivostok' },
+	{ "1350", '128', 'Australia/Lord_Howe' },
+	{ "1380", '129', 'Etc/GMT-11' },
+	{ "1380", '130', 'Pacific/Bougainville' },
+	{ "1380", '131', 'Asia/Magadan' },
+	{ "1380", '132', 'Pacific/Norfolk' },
+	{ "1380", '133', 'Asia/Sakhalin' },
+	{ "1380", '134', 'Pacific/Guadalcanal', 'Pacific/Noumea' },		-- Solomon Is.: ios return Guadalcanal; New Caledonia: Noumea
+	{ "1440", '135', 'Etc/GMT-12' },
+	{ "1440", '136', 'Asia/Anadyr', 'Asia/Kamchatka' },		-- Petropavlovsk-Kamchatsky: ios return Asia/Kamchatka
+	{ "1440", '137', 'Pacific/Auckland' },		-- Wellington: ios return Auckland
+	{ "1440", '138', 'Pacific/Fiji' },
+	{ "1485", '139', 'Pacific/Chatham' },
+	{ "1500", '140', 'Etc/GMT-13' },
+	{ "1500", '141', 'Pacific/Tongatapu' },		--Nuku'alofa: ios return Tongatapu
+	{ "1500", '142', 'Pacific/Samoa' },
+	{ "1560", '143', 'Pacific/Kiritimati' },
+}
+
+local function hours12_to_24(data)
+	if not data then
+		return nil
+	end
+	local unit = string.sub(data,-2)
+	local result = string.sub(data,1,string.len(data)-2)
+	result = tonumber(result)
+	if unit == "pm" then
+		return result + 12
+	end
+	return result
+end
+
+local function set_kernel_timezone()
+	local start_month = uci_r:get("system", "dst", "start_month")
+	local start_day = uci_r:get("system", "dst", "start_day")
+	local start_hour = uci_r:get("system", "dst", "start_hour")
+	local end_month = uci_r:get("system", "dst", "end_month")
+	local end_day = uci_r:get("system", "dst", "end_day")
+	local end_hour = uci_r:get("system", "dst", "end_hour")
+	local dst_save = uci_r:get("systime", "zoneinfo", "dst_save") or "1:00"
+	local dstdata = {}
+	
+	-- conversion time parameter, month and day
+	dstdata.start_month = MON_TBL[start_month]
+	dstdata.start_day = DAY_TBL[start_day]
+	dstdata.end_month = MON_TBL[end_month]
+	dstdata.end_day = DAY_TBL[end_day]
+
+	-- deal with time offset:
+	--[[
+	(1) minute+1 stands for one minute after the start/end of daylight saving time
+	(2) when daylight saving time starts, the clock goes one hour ahead
+	(3) when daylight saving time is over, the clock is set back one hour
+	]]--
+	local dst_save_h, dst_save_m = dst_save:match("(%d+):(%d+)")
+	dst_save_h = tonumber(dst_save_h)
+	dst_save_m = tonumber(dst_save_m)
+	
+	dstdata.start_minute = tonumber(dst_save_m) + 1
+	dstdata.start_hour = hours12_to_24(start_hour) + tonumber(dst_save_h)
+	dstdata.end_minute = tonumber(dst_save_m) + 1
+	dstdata.end_hour = hours12_to_24(end_hour) - 1
+
+	-- add crontab item
+	local cmd = "/usr/sbin/set_ktimezone_cron "
+	..dstdata.start_minute.." "..dstdata.start_hour.." "..dstdata.start_month.." "..dstdata.start_day.." "
+	..dstdata.end_minute.." "..dstdata.end_hour.." "..dstdata.end_month.." "..dstdata.end_day
+
+	--dbg.print("[set_kernel_timezone] cmd:" .. cmd)
+	os.execute(cmd)
+end
+
+local function parse_timezone_new(zone)
+	local index
+	-- 	Default tz_save: 720-->GMT+0
+	local ret = 720
+
+	if not zone then
+		return ret
+	end
+
+	for k, v in ipairs(zoneinfoTable_New) do
+		for index=3, #v, 1 do
+			if v[index] == zone then
+				ret = v[1]
+				return ret
+			end
+		end
+	end
+
+	return ret
+end
+
+local function jetlag_to_timezone(time)
+	local h, hour, minute, time_save
+	h = (time/60)-12
+	minute = time%60
+
+	if minute == 0 then
+		hour = h
+		time_save = hour .. ":00"
+	else
+		if h >= 0 then
+			hour = math.floor(h)
+		else
+			hour = math.ceil(h)
+			minute = 60-time%60
+		end
+		time_save = hour .. ":" .. minute
+	end
+	return time_save
+end
+
+local function ts_parse_hours(hour)
+    local h, s = hour:match("(%d+)(%S+)")
+
+    if tonumber(h) > 12 or s ~= "am" and s ~= "pm" then
+        return false
+    end
+
+	if tonumber(h) == 12 and s== "pm" then
+		return "12"
+	elseif tonumber(h) == 12 and s== "am" then
+		return "0"
+    elseif s == "pm" then
+        local h = h + 12
+        if h > 24 then h = 0 end
+        return tostring(h)
+    else
+        return h
+    end
+end
+
+--- Load time settings
+-- @param N/A
+-- @return data return settings
+function ts_load_all_settings()
+	local libc_type = uci_r:get_profile("global", "libc_type") or "glibc"
+
+	-- get dst_rule settings
+	local dst_enable = uci_r:get("system", "dst", "dst_enable")
+	local dst_rule = uci_r:get("systime", "zoneinfo", "dst_rule")
+	local zone_rule = uci_r:get("systime", "zoneinfo", "zone_rule")
+	local zoneinfo, zoneinfo_gmt, tz_save
+	local h, hour, minute, gmtoff, timezone, zoneId_ori
+
+	-- match older config
+	local zoneId
+	local updated = uci_r:get("systime", "zoneinfo", "updated") or "1"
+	if updated == "0" then
+		local zoneId_ori = uci_r:get("system", "system", "timezone")
+		if zoneId_ori then
+			for k, v in ipairs(zoneinfoTable) do
+				if v[1] == zoneId_ori then
+					zoneId=v[2]
+					break
+				end
+			end
+		end
+		if zoneId then
+			uci_r:set("systime", "zoneinfo", "zoneId", zoneId)
+		else
+			-- If not zoneId, use default config.
+			zoneId = uci_r:get("systime", "zoneinfo", "zoneId")
+		end
+		uci_r:set("systime", "zoneinfo", "updated", 1)
+		uci_r:commit("systime")
+	else
+		zoneId = uci_r:get("systime", "zoneinfo", "zoneId") 
+	end
+
+	zoneinfo = zoneId or zoneId_ori or "Etc/GMT+0"
+
+	local start_month = uci_r:get("system", "dst", "start_month")
+	local start_week = uci_r:get("system", "dst", "start_week")
+	local start_day = uci_r:get("system", "dst", "start_day")
+	local start_hour = uci_r:get("system", "dst", "start_hour")
+	local end_month = uci_r:get("system", "dst", "end_month")
+	local end_week = uci_r:get("system", "dst", "end_week")
+	local end_day = uci_r:get("system", "dst", "end_day")
+	local end_hour = uci_r:get("system", "dst", "end_hour")
+
+	local dst_save = uci_r:get("systime", "zoneinfo", "dst_save") or "1:00"
+
+	-- C5400X/C4000 use glibc
+	if libc_type == "uclibc" or libc_type == "musl" then
+		local dst_save_h, dst_save_m = dst_save:match("(%d+):(%d+)")
+		local dst_save_t = dst_save_h*60 + dst_save_m
+		dst_save_t = tonumber(parse_timezone_new(zoneinfo)) + dst_save_t
+		dbg.printf(dst_save_h .. " and " .. dst_save_m .. " and " .. dst_save_t)
+		dst_save = jetlag_to_timezone(dst_save_t)
+		dst_save = dst_save:find("-") and dst_save:gsub("-", "+") or "-" .. dst_save
+	end
+
+	tz_save = tonumber(parse_timezone_new(zoneinfo))
+	gmtoff = jetlag_to_timezone(tz_save)
+
+	local shour = ts_parse_hours(start_hour)
+	local ehour = ts_parse_hours(end_hour)
+	if not shour or not ehour then
+		return false, "start or end hour is invalid"
+	end
+
+	local dst_start = "M" .. MON_TBL[start_month] ..".".. WEEK_TBL[start_week] ..".".. DAY_TBL[start_day] .."/".. shour
+	local dst_end   = "M" .. MON_TBL[end_month] ..".".. WEEK_TBL[end_week] ..".".. DAY_TBL[end_day] .."/".. ehour
+
+	-- if dst start time is equal to end time, then return error
+	if dst_start == dst_end then
+		return false, "start time cannot be the same as end time"
+	end
+
+	-- C5400X/C4000 use glibc
+	if libc_type == "uclibc" or libc_type == "musl" then
+		local tz = gmtoff:find("-") and gmtoff:gsub("-", "+") or "-" .. gmtoff
+		dbg.printf("gmtoff: " .. gmtoff .. " and tz: " .. tz)
+		tz = "GMT" .. tz
+		if dst_enable == "on" then
+			tz  = tz .. "DST" .. dst_save .. "," .. dst_start .. "," .. dst_end
+		end
+
+		dbg.printf(tz)
+		fs.writefile("/etc/TZ", tz .. "\n") --dst work for uclibc
+	else
+		local start_on = ""
+		local end_on = ""
+		if WEEK_TBL[start_week] == 5 then
+			start_on = "last"..start_day
+		else
+			start_on = start_day.."<="..tostring(WEEK_TBL[start_week]*7)
+		end
+		if WEEK_TBL[end_week] == 5 then
+			end_on = "last"..end_day
+		else
+			end_on = end_day.."<="..tostring(WEEK_TBL[end_week]*7)
+		end
+
+		if dst_enable == "off" then
+			dst_save = 0
+		end
+
+		local file = io.open("/tmp/dst", "w")
+		local rule = "# Rule  NAME  FROM  TO    TYPE  IN   ON       AT    SAVE  LETTER/S\n"..
+						"  Rule  MYDST 1970  max   -     "..start_month.." "..start_on.." "..shour.." "..dst_save.."   -\n"..
+						"  Rule  MYDST 1970  max   -     "..end_month .. " "..end_on .. " "..ehour.." 0      -\n\n"..
+						"# Zone  NAME        GMTOFF RULES/SAVE  FORMAT UNTIL\n"..
+						"  Zone "..zoneinfo.." "..gmtoff.."     -        GMT       1970\n"..
+								"              "..gmtoff.."     MYDST    GMT/DST     \n\n"..
+						"  Link "..zoneinfo.." mydst\n"
+		file:write(string.format(rule))
+		file:close()
+		-- sleep 0.5 is invalid
+		local cmd = string.format("/usr/bin/zic -d /tmp/ /tmp/dst;sleep 1;cp /tmp/mydst /etc/localtime") -- dst work for glibc
+		--dbg('cmd is ',cmd)
+		sys.exec(cmd)
+		--sys.fork_exec(string.format("rm -f /tmp/mydst /tmp/%s",zoneinfo))
+	end
+	
+	sys.fork_exec("date -k ")
+
+	-- set kernel timezone for parental control
+	set_kernel_timezone()
+	
+	return true
+end
+
+ts_load_all_settings()

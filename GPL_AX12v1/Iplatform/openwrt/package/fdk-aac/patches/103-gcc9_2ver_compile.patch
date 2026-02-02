@@ -1,0 +1,76 @@
+--- a/libAACenc/src/aacEnc_rom.cpp
++++ b/libAACenc/src/aacEnc_rom.cpp
+@@ -657,11 +657,11 @@
+ */
+ const FIXP_DBL FDKaacEnc_tnsEncCoeff3[8]=
+ {
+-  0x81f1d201, 0x91261481, 0xadb92301, 0xd438af00, 0x00000000, 0x37898080, 0x64130dff, 0x7cca6fff
++  (FIXP_DBL)0x81f1d201, (FIXP_DBL)0x91261481, (FIXP_DBL)0xadb92301, (FIXP_DBL)0xd438af00, 0x00000000, 0x37898080, 0x64130dff, 0x7cca6fff
+ };
+ const FIXP_DBL FDKaacEnc_tnsCoeff3Borders[8]={
+-  0x80000001 /*-4*/,  0x87b826df /*-3*/,  0x9df24154 /*-2*/,  0xbfffffe5 /*-1*/,
+-  0xe9c5e578 /* 0*/,  0x1c7b90f0 /* 1*/,  0x4fce83a9 /* 2*/,  0x7352f2c3 /* 3*/
++  (FIXP_DBL)0x80000001 /*-4*/,  (FIXP_DBL)0x87b826df /*-3*/,  (FIXP_DBL)0x9df24154 /*-2*/,  (FIXP_DBL)0xbfffffe5 /*-1*/,
++  (FIXP_DBL)0xe9c5e578 /* 0*/,  (FIXP_DBL)0x1c7b90f0 /* 1*/,  (FIXP_DBL)0x4fce83a9 /* 2*/,  (FIXP_DBL)0x7352f2c3 /* 3*/
+ };
+ 
+ /*
+@@ -669,14 +669,14 @@
+ */
+ const FIXP_DBL FDKaacEnc_tnsEncCoeff4[16]=
+ {
+-  0x808bc881, 0x84e2e581, 0x8d6b4a01, 0x99da9201, 0xa9c45701, 0xbc9dde81, 0xd1c2d500, 0xe87ae540,
++  (FIXP_DBL)0x808bc881, (FIXP_DBL)0x84e2e581, (FIXP_DBL)0x8d6b4a01, (FIXP_DBL)0x99da9201, (FIXP_DBL)0xa9c45701, (FIXP_DBL)0xbc9dde81, (FIXP_DBL)0xd1c2d500, (FIXP_DBL)0xe87ae540,
+   0x00000000, 0x1a9cd9c0, 0x340ff240, 0x4b3c8bff, 0x5f1f5e7f, 0x6ed9eb7f, 0x79bc387f, 0x7f4c7e7f
+ };
+ const FIXP_DBL FDKaacEnc_tnsCoeff4Borders[16]=
+ {
+-  0x80000001 /*-8*/,  0x822deff0 /*-7*/,  0x88a4bfe6 /*-6*/,  0x932c159d /*-5*/,
+-  0xa16827c2 /*-4*/,  0xb2dcde27 /*-3*/,  0xc6f20b91 /*-2*/,  0xdcf89c64 /*-1*/,
+-  0xf4308ce1 /* 0*/,  0x0d613054 /* 1*/,  0x278dde80 /* 2*/,  0x4000001b /* 3*/,
++  (FIXP_DBL)0x80000001 /*-8*/,  (FIXP_DBL)0x822deff0 /*-7*/,  (FIXP_DBL)0x88a4bfe6 /*-6*/,  (FIXP_DBL)0x932c159d /*-5*/,
++  (FIXP_DBL)0xa16827c2 /*-4*/,  (FIXP_DBL)0xb2dcde27 /*-3*/,  (FIXP_DBL)0xc6f20b91 /*-2*/,  (FIXP_DBL)0xdcf89c64 /*-1*/,
++  (FIXP_DBL)0xf4308ce1 /* 0*/,  0x0d613054 /* 1*/,  0x278dde80 /* 2*/,  0x4000001b /* 3*/,
+   0x55a6127b /* 4*/,  0x678dde8f /* 5*/,  0x74ef0ed7 /* 6*/,  0x7d33f0da /* 7*/
+ };
+ const FIXP_DBL FDKaacEnc_mTab_4_3Elc[512]={
+--- a/libFDK/src/fixpoint_math.cpp
++++ b/libFDK/src/fixpoint_math.cpp
+@@ -280,7 +280,7 @@
+ 
+     LNK_SECTION_CONSTDATA_L1
+     static const FIXP_DBL ldIntCoeff[] = {
+-      0x80000001, 0x00000000, 0x02000000, 0x032b8034, 0x04000000, 0x04a4d3c2, 0x052b8034, 0x059d5da0,
++      (FIXP_DBL)0x80000001, 0x00000000, 0x02000000, 0x032b8034, 0x04000000, 0x04a4d3c2, 0x052b8034, 0x059d5da0,
+       0x06000000, 0x06570069, 0x06a4d3c2, 0x06eb3a9f, 0x072b8034, 0x0766a009, 0x079d5da0, 0x07d053f7,
+       0x08000000, 0x082cc7ee, 0x08570069, 0x087ef05b, 0x08a4d3c2, 0x08c8ddd4, 0x08eb3a9f, 0x090c1050,
+       0x092b8034, 0x0949a785, 0x0966a009, 0x0982809d, 0x099d5da0, 0x09b74949, 0x09d053f7, 0x09e88c6b,
+--- a/libSBRenc/src/ps_encode.cpp
++++ b/libSBRenc/src/ps_encode.cpp
+@@ -149,21 +149,21 @@
+ 
+ 
+ static const FIXP_DBL iidQuant_fx[15] = {
+-  0xce000000, 0xdc000000, 0xe4000000, 0xec000000, 0xf2000000, 0xf8000000, 0xfc000000, 0x00000000,
++  (FIXP_DBL)0xce000000, (FIXP_DBL)0xdc000000, (FIXP_DBL)0xe4000000, (FIXP_DBL)0xec000000, (FIXP_DBL)0xf2000000, (FIXP_DBL)0xf8000000, (FIXP_DBL)0xfc000000, 0x00000000,
+   0x04000000, 0x08000000, 0x0e000000, 0x14000000, 0x1c000000, 0x24000000, 0x32000000
+ };
+ 
+ static const FIXP_DBL iidQuantFine_fx[31] = {
+-  0x9c000001, 0xa6000001, 0xb0000001, 0xba000001, 0xc4000000, 0xce000000, 0xd4000000, 0xda000000,
+-  0xe0000000, 0xe6000000, 0xec000000, 0xf0000000, 0xf4000000, 0xf8000000, 0xfc000000, 0x00000000,
+-  0x04000000, 0x08000000, 0x0c000000, 0x10000000, 0x14000000, 0x1a000000, 0x20000000, 0x26000000,
++  (FIXP_DBL)0x9c000001, (FIXP_DBL)0xa6000001, (FIXP_DBL)0xb0000001, (FIXP_DBL)0xba000001, (FIXP_DBL)0xc4000000, (FIXP_DBL)0xce000000, (FIXP_DBL)0xd4000000, (FIXP_DBL)0xda000000,
++  (FIXP_DBL)0xe0000000, (FIXP_DBL)0xe6000000, (FIXP_DBL)0xec000000, (FIXP_DBL)0xf0000000, (FIXP_DBL)0xf4000000, (FIXP_DBL)0xf8000000, (FIXP_DBL)0xfc000000, 0x00000000,
++  0x04000000, 0x08000000, (FIXP_DBL)0x0c000000, 0x10000000, 0x14000000, 0x1a000000, 0x20000000, 0x26000000,
+   0x2c000000, 0x32000000, 0x3c000000, 0x45ffffff, 0x4fffffff, 0x59ffffff, 0x63ffffff
+ };
+ 
+ 
+ 
+ static const FIXP_DBL iccQuant[8] = {
+-  0x7fffffff, 0x77ef9d7f, 0x6babc97f, 0x4ceaf27f, 0x2f0ed3c0, 0x00000000, 0xb49ba601, 0x80000000
++  0x7fffffff, 0x77ef9d7f, 0x6babc97f, 0x4ceaf27f, 0x2f0ed3c0, 0x00000000, (FIXP_DBL)0xb49ba601, (FIXP_DBL)0x80000000
+ };
+ 
+ static FDK_PSENC_ERROR InitPSData(
