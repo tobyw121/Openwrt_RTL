@@ -1,0 +1,89 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006-2011 OpenWrt.org
+
+START=50
+
+SERVICE_DAEMONIZE=1
+SERVICE_WRITE_PID=1
+SERVICE_PID_FILE=/var/run/snmpd.pid
+
+#snmpd_log() {
+#	logx -p $$ $SNMPD_PID "$@"
+#}
+
+restart() {
+	stop
+	start
+}
+
+start() {
+	[ -x /usr/sbin/snmpd ] || return 1
+	config_load "snmp"
+	local snmp_enable remote_enable syscontact sysname syslocation 
+	local getcommunity getsource setcommunity setsource
+
+	config_get snmp_enable snmpd enable
+	config_get remote_enable snmpd remote_enable	
+
+	[ "$snmp_enable" == "on" ] || return 1
+	config_get syscontact snmpd syscontact
+	config_get sysname snmpd sysname
+	config_get syslocation snmpd syslocation
+	config_get getcommunity snmpd getcommunity
+	config_get getsource snmpd getsource
+	config_get setcommunity snmpd setcommunity
+	config_get setsource snmpd setsource
+
+	if [ "$getsource" == "0.0.0.0" ]; then
+		getsource="default"
+	fi
+
+	if [ "$setsource" == "0.0.0.0" ]; then
+		setsource="default"
+	fi
+
+	local tmpconf="/var/etc/snmpd.conf"
+	[ -n "$getcommunity" ] && {
+		echo "com2sec	local		127.0.0.1	$getcommunity" >>$tmpconf
+		echo "com2sec	publicro	$getsource	$getcommunity" >>$tmpconf
+		echo "com2sec	publicrw	$setsource	$setcommunity" >>$tmpconf
+	}
+
+	local tmpstr="
+group	localrw		v1	local
+group	localrw		v2c	local
+group	localrw		usm	local
+group	public		v1	publicro
+group	public		v2c	publicro
+group	public		usm	publicro
+group	private		v1	publicrw
+group	private		v2c	publicrw
+group	private		usm	publicrw
+	
+view	all	included	.1
+
+access	localrw	\"\"		any		noauth		exact	all	all	all
+access	public	\"\"		any		noauth		exact	all	none	none
+access	private	\"\"		any		noauth		exact	all	all	all
+	"
+	echo -e "$tmpstr" >>$tmpconf
+
+	[ -n "$syscontact" ] && \
+		echo "sysContact $syscontact" >>$tmpconf
+	[ -n "$sysname" ] && \
+		echo "sysName $sysname" >> $tmpconf
+	[ -n "$syslocation" ] && \
+		echo "syslocation $syslocation" >> $tmpconf
+
+	service_start /usr/sbin/snmpd -L -c /var/etc/snmpd.conf -C
+
+	fw snmp_open
+}
+
+stop() {
+	ps |grep snmpd|grep -v grep | awk '{print $1}' > /var/run/snmpd.pid
+	service_stop /usr/sbin/snmpd
+	rm -f /var/etc/snmpd.conf
+
+	fw snmp_close
+}
