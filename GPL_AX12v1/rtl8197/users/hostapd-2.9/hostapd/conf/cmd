@@ -1,0 +1,1 @@
+iwpriv wlan0 phl_test $1
