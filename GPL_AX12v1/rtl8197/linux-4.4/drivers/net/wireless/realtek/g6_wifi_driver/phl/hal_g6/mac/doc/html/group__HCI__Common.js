@@ -1,0 +1,26 @@
+var group__HCI__Common =
+[
+    [ "dbi_r32_pcie", "group__HCI__Common.html#ga279d47c1ea9f71c445c2241941fd871c", null ],
+    [ "dbi_r8_pcie", "group__HCI__Common.html#ga9cce011310f21a4b2ee81abda3fdc0a6", null ],
+    [ "dbi_w32_pcie", "group__HCI__Common.html#gace4e321fab79526c16c0176155fc8d9e", null ],
+    [ "dbi_w8_pcie", "group__HCI__Common.html#gadedd11ecbcb4a9e9dcc77eaeddc2dbb6", null ],
+    [ "mdio_r16_pcie", "group__HCI__Common.html#gafea6513ba401444166faf3fbcd9a36f9", null ],
+    [ "mdio_w16_pcie", "group__HCI__Common.html#gabc5d2b77e634eb9fed1d4e74c336c462", null ],
+    [ "reg_read16_pcie", "group__HCI__Common.html#gabb3d79fd0dc3cd0c43eee6eb17155e94", null ],
+    [ "reg_read16_sdio", "group__HCI__Common.html#gaa2fd40424046c5aa779b3cd59fabf4d4", null ],
+    [ "reg_read16_usb", "group__HCI__Common.html#ga781f3c8417f191214338e6f19cea1dad", null ],
+    [ "reg_read32_pcie", "group__HCI__Common.html#ga994a5591747897c33d6425f8f42c213d", null ],
+    [ "reg_read32_sdio", "group__HCI__Common.html#gadcd658fb2d7347c2c66b1569e2674603", null ],
+    [ "reg_read32_usb", "group__HCI__Common.html#ga32c69b5ad393c0dfbfc0183e4ce029a9", null ],
+    [ "reg_read8_pcie", "group__HCI__Common.html#ga0e040549fb002abff6e7dfc88aeff801", null ],
+    [ "reg_read8_sdio", "group__HCI__Common.html#gac3fb4377e1bb3d6235231e9c8877a54d", null ],
+    [ "reg_write16_pcie", "group__HCI__Common.html#gad1219f1a63e826ccd5ba22f4294214a3", null ],
+    [ "reg_write16_sdio", "group__HCI__Common.html#ga2af3d2b6c554d93b58c4435d9804dfdd", null ],
+    [ "reg_write16_usb", "group__HCI__Common.html#ga931d98e280a8317436f1c7c7780ffd8c", null ],
+    [ "reg_write32_pcie", "group__HCI__Common.html#ga2878a5005184e392a0365ec2eec1f537", null ],
+    [ "reg_write32_sdio", "group__HCI__Common.html#ga857634067b8a74edd282d8190c61906c", null ],
+    [ "reg_write32_usb", "group__HCI__Common.html#ga91c42494ab88c55fe029d37238ee4d74", null ],
+    [ "reg_write8_pcie", "group__HCI__Common.html#ga89ae0f2ebee9d2af0edad3291a0936aa", null ],
+    [ "reg_write8_sdio", "group__HCI__Common.html#ga79102d647cf25311e5ff5ddcd8bd24bc", null ],
+    [ "reg_write8_usb", "group__HCI__Common.html#ga68f6389698a84fab4ce0ebfd7979c5e0", null ]
+];
