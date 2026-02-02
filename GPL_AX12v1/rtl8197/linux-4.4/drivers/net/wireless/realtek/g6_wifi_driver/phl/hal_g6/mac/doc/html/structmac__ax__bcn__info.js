@@ -1,0 +1,25 @@
+var structmac__ax__bcn__info =
+[
+    [ "antsel_a", "structmac__ax__bcn__info.html#a9b3ab6c7f4db85c41c405f3de4214ca7", null ],
+    [ "antsel_b", "structmac__ax__bcn__info.html#a21d09b9395f06c368e955b7c04f149d5", null ],
+    [ "antsel_c", "structmac__ax__bcn__info.html#a609a476086a4e17a1f0533eab9d346b7", null ],
+    [ "antsel_d", "structmac__ax__bcn__info.html#a5f90061dacb6fe99b683690276ec65e4", null ],
+    [ "band", "structmac__ax__bcn__info.html#adcb2a033a8aee7a6784ea081bdf8a3f4", null ],
+    [ "grp_ie_ofst", "structmac__ax__bcn__info.html#a56c64995b74a29559e97a84cf5ef4d5d", null ],
+    [ "macid", "structmac__ax__bcn__info.html#ad42d2874096b0e6cf77584c0455f1eaf", null ],
+    [ "mbssid", "structmac__ax__bcn__info.html#a876503bd938c0a343fbe2be7970690a1", null ],
+    [ "ntx_path_en", "structmac__ax__bcn__info.html#a3ce8876f45b19d06831618b96950119d", null ],
+    [ "path_map_a", "structmac__ax__bcn__info.html#aedea0ce1ca70d188c1027cd579f6e335", null ],
+    [ "path_map_b", "structmac__ax__bcn__info.html#aa03de53e525a89db691a828ab6124663", null ],
+    [ "path_map_c", "structmac__ax__bcn__info.html#aefcaa04f6a8b177d0a3f467ee0586144", null ],
+    [ "path_map_d", "structmac__ax__bcn__info.html#aab061b7962bbec766b1016a333df4a9a", null ],
+    [ "pld_buf", "structmac__ax__bcn__info.html#a2f8c6094e6b1989c540cd535e1a89750", null ],
+    [ "pld_len", "structmac__ax__bcn__info.html#ac1acf06f7cfe410324b89dd55ca8dcff", null ],
+    [ "port", "structmac__ax__bcn__info.html#a3e9b339c7acf0af8d1a970fd8bb5f9cb", null ],
+    [ "rate_sel", "structmac__ax__bcn__info.html#a578b6395fa34c5b812d9a2c68e415673", null ],
+    [ "ssn_mode", "structmac__ax__bcn__info.html#a20675366ec7cabf2165496c6436d8142", null ],
+    [ "ssn_sel", "structmac__ax__bcn__info.html#a08c856498d363df8741453abf65ad323", null ],
+    [ "sw_tsf", "structmac__ax__bcn__info.html#a250ed3886b08e1afb4d78970442ace1c", null ],
+    [ "txinfo_ctrl_en", "structmac__ax__bcn__info.html#a4575f376d87047856c14e3d00cb137a5", null ],
+    [ "txpwr", "structmac__ax__bcn__info.html#a6fca307cc9bab002715e98c3b2de1c82", null ]
+];
