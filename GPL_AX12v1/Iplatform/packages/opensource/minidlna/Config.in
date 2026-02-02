@@ -1,0 +1,5 @@
+config PACKAGE_MINIDLNA_GUEST_NETWORK_LIMIT
+    	bool "limit guest network access"
+    	default n
+    	help 
+        	Feature: minidlna limit guest network access
