@@ -1,6 +1,0 @@
-#ifndef __HAL8814B_FIRMWARE_CORE_H__
-#define __HAL8814B_FIRMWARE_CORE_H__
-
-
-
-#endif

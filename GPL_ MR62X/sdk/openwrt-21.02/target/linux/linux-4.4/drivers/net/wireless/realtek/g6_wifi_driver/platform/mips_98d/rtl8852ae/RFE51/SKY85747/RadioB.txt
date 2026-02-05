@@ -1,8 +1,0 @@
-//SKY85747
-
-//debug port, tune gain (table)
-0xdf 0x00200 	
-	
-//BUF Gain
-0x6f 0x45A7C
-0xffff 0xffff 			

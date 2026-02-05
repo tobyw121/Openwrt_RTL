@@ -1,8 +1,0 @@
-//VC5333
-
-//debug port, tune gain (table)
-0xdf 0x00400 	
-	
-//BUF Gain
-0x6e 0x45A7C 
-0xffff 0xffff			

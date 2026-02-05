@@ -1,6 +1,0 @@
-config RTL8832BR
-	tristate "Realtek 8832BR PCIE WiFi"
-	depends on PCIE || PCI
-	---help---
-	  Help message of RTL8832BR
-

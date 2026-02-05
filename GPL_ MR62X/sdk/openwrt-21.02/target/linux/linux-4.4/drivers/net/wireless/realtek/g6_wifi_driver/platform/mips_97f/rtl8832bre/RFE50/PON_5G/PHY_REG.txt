@@ -1,5 +1,0 @@
-//PON_5G_PWRTAB_00 
-
-
-
-0xffff 0xffff

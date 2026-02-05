@@ -1,3 +1,0 @@
-[submodule "fw_ax"]
-	path = fw_ax
-	url = ssh://cn3wd1.rtkbf.com:29418/11AX_WlanCPU_FW_Pub

@@ -1,5 +1,0 @@
-config THER_CTRL
-	tristate "Realtek thermal control support"
-	default n
-	---help---
-	Realtek thermal control support.

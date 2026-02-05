@@ -1,5 +1,0 @@
-//RTC66506K
-
-
-
-0xffff 0xffff

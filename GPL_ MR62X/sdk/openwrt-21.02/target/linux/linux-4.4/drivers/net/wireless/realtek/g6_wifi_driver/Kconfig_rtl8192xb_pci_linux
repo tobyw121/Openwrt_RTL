@@ -1,6 +1,0 @@
-config RTL8192XB
-	tristate "Realtek 8192XB PCIE WiFi"
-	depends on PCIE || PCI
-	---help---
-	  Help message of RTL8192XB
-

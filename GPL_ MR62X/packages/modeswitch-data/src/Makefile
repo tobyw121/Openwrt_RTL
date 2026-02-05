@@ -1,2 +1,0 @@
-all:
-	echo dummy Makefile

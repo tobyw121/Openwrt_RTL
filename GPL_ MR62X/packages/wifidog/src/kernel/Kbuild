@@ -1,3 +1,0 @@
-MODULE_NAME = br_wifidog
-ccflags-y += -g
-obj-m += $(MODULE_NAME).o

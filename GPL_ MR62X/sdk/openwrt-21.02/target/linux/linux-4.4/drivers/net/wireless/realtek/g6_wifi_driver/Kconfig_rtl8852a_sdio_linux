@@ -1,4 +1,0 @@
-config RTL8852AS
-	tristate "Realtek 8852A SDIO WiFi"
-	---help---
-	  Help message of RTL8852AS

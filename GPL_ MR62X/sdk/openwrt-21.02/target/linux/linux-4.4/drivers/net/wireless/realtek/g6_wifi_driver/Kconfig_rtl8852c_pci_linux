@@ -1,6 +1,0 @@
-config RTL8852CE
-	tristate "Realtek 8852C PCIE WiFi"
-	depends on PCIE || PCI
-	---help---
-	  Help message of RTL8852CE
-
