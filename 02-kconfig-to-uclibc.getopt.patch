@@ -1,0 +1,65 @@
+diff --git a/extra/config/conf.c b/extra/config/conf.c
+index d19944f..2067ea3 100644
+--- a/extra/config/conf.c
++++ b/extra/config/conf.c
+--- /scratch/src/linux/scripts/kconfig/conf.c	2013-08-02 13:40:56.908213256 +0200
++++ conf.c	2013-11-05 13:55:19.166825394 +0100
+@@ -446,6 +446,8 @@ static void check_conf(struct menu *menu
+ 		check_conf(child);
+ }
+ 
++#if 00 // || !defined __UCLIBC__ || \
++	(defined UCLIBC_HAS_GETOPT_LONG || defined UCLIBC_HAS_GNU_GETOPT)
+ static struct option long_opts[] = {
+ 	{"oldaskconfig",    no_argument,       NULL, oldaskconfig},
+ 	{"oldconfig",       no_argument,       NULL, oldconfig},
+@@ -487,6 +490,28 @@ static void conf_usage(const char *progn
+ 	printf("  --alldefconfig          New config with all symbols set to default\n");
+ 	printf("  --randconfig            New config with random answer to all options\n");
+ }
++#else
++static void conf_usage(const char *progname)
++{
++
++	printf("Usage: %s [option] <kconfig-file>\n", progname);
++	printf("[option] is _one_ of the following:\n");
++	printf("  -a, --oldaskconfig          Start a new configuration using a line-oriented program\n");
++	printf("  -s, --silentoldconfig       Same as oldconfig, but quietly, additionally update deps\n");
++	printf("  -o, --oldconfig             Update a configuration using a provided .config as base\n");
++	printf("  -n, --allnoconfig           New config where all options are answered with no\n");
++	printf("  -y, --allyesconfig          New config where all options are answered with yes\n");
++	printf("  -m, --allmodconfig          New config where all options are answered with mod\n");
++	printf("  -A, --alldefconfig          New config with all symbols set to default\n");
++	printf("  -r, --randconfig            New config with random answer to all options\n");
++	printf("  -D, --defconfig <file>      New config with default defined in <file>\n");
++	printf("  -S, --savedefconfig <file>  Save the minimal current configuration to <file>\n");
++	printf("  -l, --listnewconfig         List new options\n");
++	printf("  -d, --olddefconfig          Same as silentoldconfig but sets new symbols to their default value\n");
++	printf("  --oldnoconfig           An alias of olddefconfig\n");
++
++}
++#endif
+ 
+ int main(int ac, char **av)
+ {
+@@ -501,7 +526,19 @@ int main(int ac, char **av)
+ 
+ 	tty_stdio = isatty(0) && isatty(1) && isatty(2);
+ 
+-	while ((opt = getopt_long(ac, av, "", long_opts, NULL)) != -1) {
++#if 00// !defined __UCLIBC__ || \
++	(defined UCLIBC_HAS_GETOPT_LONG || defined UCLIBC_HAS_GNU_GETOPT)
++	while ((opt = getopt_long(ac, av, "", long_opts, NULL)) != -1)
++#else
++	char *gch = "asonymArDSld";
++	while ((opt = getopt(ac, av, "asonymArD:S:ldh")) != -1)
++#endif
++	{
++		char *x = memchr(gch, opt, strlen(gch));
++		if (x == NULL)
++			opt = '?';
++		else
++			opt = x - gch;
+ 		input_mode = (enum input_mode)opt;
+ 		switch (opt) {
+ 		case silentoldconfig:
