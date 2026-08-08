@@ -1,0 +1,1 @@
+cmd_/tmp/include/xen/.install := perl scripts/headers_install.pl /opt/cadpc4/tonywu/repo/rlxlinux-2.6.32/linux-2.6.32/include/xen /tmp/include/xen mips evtchn.h; perl scripts/headers_install.pl /opt/cadpc4/tonywu/repo/rlxlinux-2.6.32/linux-2.6.32/include/xen /tmp/include/xen mips ; touch /tmp/include/xen/.install
