@@ -1,0 +1,1 @@
+cmd_/tmp/include/linux/hdlc/.install := perl scripts/headers_install.pl /opt/cadpc4/tonywu/repo/rlxlinux-2.6.32/linux-2.6.32/include/linux/hdlc /tmp/include/linux/hdlc mips ioctl.h; perl scripts/headers_install.pl /opt/cadpc4/tonywu/repo/rlxlinux-2.6.32/linux-2.6.32/include/linux/hdlc /tmp/include/linux/hdlc mips ; touch /tmp/include/linux/hdlc/.install
