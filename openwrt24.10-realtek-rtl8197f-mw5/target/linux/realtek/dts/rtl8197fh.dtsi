@@ -1,0 +1,29 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+/*
+ * RTL8197FH uses the same bring-up register map as RTL8197F in this tree.
+ * Board DTS files for RTL8197FH should include this wrapper so Linux can match
+ * the more specific FH compatibles while retaining RTL8197F fallbacks.
+ */
+
+#include "rtl8197f.dtsi"
+
+/ {
+	compatible = "realtek,rtl8197fh-soc", "realtek,rtl8197f-soc";
+};
+
+&gpio0 {
+	compatible = "realtek,rtl8197fh-gpio", "realtek,rtl8197f-gpio";
+};
+
+&ethernet0 {
+	compatible = "realtek,rtl8197fh-rtknet", "realtek,rtl8197f-rtknet",
+		     "realtek,rtl865x-cpuif";
+};
+
+&spi0 {
+	compatible = "realtek,rtl8197fh-spi-sheipa", "realtek,rtl8197f-spi-sheipa";
+};
+
+&spirom0 {
+	compatible = "realtek,rtl8197fh-spirom", "realtek,rtl8197f-spirom";
+};

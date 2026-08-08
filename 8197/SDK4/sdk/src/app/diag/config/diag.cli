@@ -1,0 +1,101 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 25417 $
+// $Date: 2011-11-23 14:20:00 +0800 (Wed, 23 Nov 2011) $
+//
+// Purpose : Define diag shell commands for port.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) diag commands.
+//
+
+#ifdef CMD_DIAG_GET_LOOPBACK_MAC_LOCAL_PORT_ALL_STATE
+//diag configuration
+//get configuration
+//loopback configuration
+//MAC configuration
+//local loopback
+//port list
+//all port
+//state configuration
+diag get loopback mac local ( <PORT_LIST:port> | all ) state 
+#endif
+
+#ifdef CMD_DIAG_SET_LOOPBACK_MAC_LOCAL_PORT_ALL_STATE_DISABLE_ENABLE
+//diag configuration
+//set configuration
+//loopback configuration
+//MAC configuration
+//local loopback
+//port list
+//all port
+//state configuration
+//disable function
+//enable function
+diag set loopback mac local ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_DIAG_GET_LOOPBACK_MAC_REMOTE_PORT_ALL_STATE
+//diag configuration
+//get configuration
+//loopback configuration
+//MAC configuration
+//remote loopback
+//port list
+//all port
+//state configuration
+diag get loopback mac remote ( <PORT_LIST:port> | all ) state 
+#endif
+
+#ifdef CMD_DIAG_SET_LOOPBACK_MAC_REMOTE_PORT_ALL_STATE_DISABLE_ENABLE
+//diag configuration
+//set configuration
+//loopback configuration
+//MAC configuration
+//remote loopback
+//port list
+//all port
+//state configuration
+//disable function
+//enable function
+diag set loopback mac remote ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_DIAG_SET_RTCT_PORT_ALL_START
+//diag configuration
+//set configuration
+//RTCT configuration
+//port list
+//all ports
+//start test
+diag set rtct ( <PORT_LIST:port> | all ) start
+#endif
+
+#ifdef CMD_DIAG_GET_RTCT_PORT_ALL
+//diag configuration
+//get configuration
+//RTCT configuration
+//port list
+//all ports
+diag get rtct ( <PORT_LIST:port> | all )
+#endif
+
+//customer configuration
+//dump registers or tables in console
+//whole tables
+//table index, which used for table token
+diag dump table <UINT:index>
+
+//customer configuration
+//dump registers or tables in console
+//whole registers
+diag dump register

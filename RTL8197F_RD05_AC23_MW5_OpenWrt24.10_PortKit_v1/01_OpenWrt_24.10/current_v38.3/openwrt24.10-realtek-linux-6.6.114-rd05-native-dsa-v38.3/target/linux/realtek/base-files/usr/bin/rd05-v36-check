@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "rd05-v36-check is superseded by the SDK-expanded v38 check" >&2
+exec /usr/bin/rd05-v38-check "$@"

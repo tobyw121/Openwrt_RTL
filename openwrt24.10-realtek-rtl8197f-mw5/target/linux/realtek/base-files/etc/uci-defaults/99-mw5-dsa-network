@@ -1,0 +1,78 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Tenda Nova MW5 RTL8197F + RTL8367/RTL8363 DSA network defaults.
+#
+# The preinit DSA port is opened for failsafe and then closed before netifd.
+# Write the final topology explicitly so netifd always reopens the physical
+# LAN port as a member of br-lan and exposes WAN as a routed DSA user port.
+
+. /lib/functions.sh
+. /lib/functions/system.sh
+
+case "$(board_name 2>/dev/null) $(cat /tmp/sysinfo/board_name 2>/dev/null) $(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)" in
+	*tenda,nova-mw5*|*nova-mw5*) ;;
+	*) exit 0 ;;
+esac
+
+lan_mac="$(mtd_get_mac_ascii factory HW_NIC0_ADDR 2>/dev/null)"
+wan_mac=""
+[ -n "$lan_mac" ] && wan_mac="$(macaddr_add "$lan_mac" 7)"
+
+# Remove anonymous device sections emitted by an older/generated topology.
+# Named sections below make the single LAN bridge port deterministic.
+while uci -q delete network.@device[0]; do :; done
+
+uci -q batch <<'UCI'
+delete network.br_lan
+delete network.lan
+delete network.wan_dev
+delete network.wan
+delete network.wan6
+
+set network.br_lan='device'
+set network.br_lan.name='br-lan'
+set network.br_lan.type='bridge'
+set network.br_lan.stp='0'
+set network.br_lan.igmp_snooping='0'
+add_list network.br_lan.ports='lan'
+
+set network.lan='interface'
+set network.lan.device='br-lan'
+set network.lan.proto='static'
+set network.lan.ipaddr='192.168.1.1'
+set network.lan.netmask='255.255.255.0'
+set network.lan.ip6assign='60'
+
+set network.wan_dev='device'
+set network.wan_dev.name='wan'
+set network.wan_dev.ipv6='1'
+
+set network.wan='interface'
+set network.wan.device='wan'
+set network.wan.proto='dhcp'
+
+set network.wan6='interface'
+set network.wan6.device='@wan'
+set network.wan6.proto='dhcpv6'
+UCI
+
+if [ -n "$lan_mac" ]; then
+	uci -q set network.br_lan.macaddr="$lan_mac"
+	uci -q set network.lan.macaddr="$lan_mac"
+fi
+if [ -n "$wan_mac" ]; then
+	uci -q set network.wan_dev.macaddr="$wan_mac"
+	uci -q set network.wan.macaddr="$wan_mac"
+fi
+uci -q commit network
+
+# Ensure the router answers DHCP on the reconstructed LAN interface.
+uci -q set dhcp.lan='dhcp'
+uci -q set dhcp.lan.interface='lan'
+uci -q set dhcp.lan.start='100'
+uci -q set dhcp.lan.limit='150'
+uci -q set dhcp.lan.leasetime='12h'
+uci -q delete dhcp.lan.ignore
+uci -q commit dhcp
+
+exit 0

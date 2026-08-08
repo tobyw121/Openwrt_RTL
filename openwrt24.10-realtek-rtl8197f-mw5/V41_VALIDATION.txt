@@ -1,0 +1,65 @@
+RTL8197F RD05 / MW5 / AC23 v41.0 validation
+Date: 2026-07-30
+
+CLEAN BASE
+- Supplied archive: openwrt-24.10.0.zip
+- SHA-256: c278a88be6dbe9946c2b9211a74a5851c1bb46c1de2bfc39b2c0c3bf11602ee1
+- New tree created from a fresh extraction, not overlaid onto an old build tree.
+
+KERNEL
+- Pinned version: Linux 6.6.114
+- Local validation archive SHA-256: ca4175a03ce2943ae192d77ad91e37ee292f1f1bb7b2954b062b0ef7eb0cb97c
+- make target/linux/prepare -j1 V=s: PASS
+- Generic and Realtek patch stacks applied without rejects.
+- Corrected DSA patches 325, 327 and 328 applied successfully.
+- Corrected RTL8197F MTD splitter source was included.
+
+CLEAN HOST/BASE PRESERVATION
+- package/libs/mbedtls: byte-identical to supplied clean source
+- package/network/services/dropbear: byte-identical to supplied clean source
+- package/network/services/odhcpd: byte-identical to supplied clean source
+- toolchain/: byte-identical to supplied clean source
+- tools/: original content preserved; only tools/rd05-pc-netdiag.py added
+- mbedTLS tree hash: 732aa8b5aa10b83ef6b094d0231fbde805ec4beea22d1f1d8fb15196c6590d49
+- Dropbear tree hash: 5a2521fcf07302e406733484e511905016f273aee4d183736232173f145979f1
+- odhcpd tree hash: c5aa3ed0356bbe1765419314f7018d30c3a43431a8c29ac592376f0d2d23ef13
+- toolchain tree hash: 46b591136db32df3e269fdbf0fce4e19723fc27b0ba8c032ebd4afc02ce330cc
+- No build_dir, staging_dir, tmp, feeds checkout, package/feeds, bin output or root .config shipped.
+
+STATIC VALIDATION
+- CHECK_SOURCE_TREE_V41.sh: PASS
+- Duplicate patch-content scan: PASS
+- Realtek unified-diff hunk count validation: PASS
+- Shell syntax validation: PASS
+- Python AST syntax validation: PASS
+- No .rej/.orig files: PASS
+- No __pycache__/.pyc files: PASS
+
+CONFIGURATION VALIDATION
+- rtl8197f_rd05_defconfig: PASS
+  CONFIG_TARGET_PROFILE="DEVICE_xiaomi_r4_rd05"
+- rtl8197f_mw5_defconfig: PASS
+  CONFIG_TARGET_PROFILE="DEVICE_tenda_nova_mw5"
+- rtl8197f_ac23_defconfig: PASS
+  CONFIG_TARGET_PROFILE="DEVICE_tenda_ac23"
+- rtl8197f_all_devices_defconfig: PASS
+  RD05 + MW5 + AC23 selected with CONFIG_TARGET_PER_DEVICE_ROOTFS=y
+
+SOURCE INVENTORY
+- Files: 12594
+- Directories: 2124
+- Relative to supplied source (manifest excludes itself):
+Added files: 2639
+Changed files: 232
+Removed files: 12
+
+IMPORTANT LIMITS
+- No complete make world was performed in the packaging environment.
+- The packaging environment lacked native GNU awk and ncurses development files;
+  validation-only shims were used solely to exercise OpenWrt target scanning.
+  No shim or generated host file is included in the delivered tree.
+- Previous user build logs proved rtl8192cd.ko and its MW5 IPK could be produced
+  with the 6.6.114 port, but WLAN runtime has not been validated.
+- RD05 Ethernet hardware runtime remains unresolved from the prior test.
+- AC23 flash mapping, switch port map/RGMII timing and WLAN remain hardware-unvalidated.
+- Full-SPI images are opt-in and require a verified device-specific template.

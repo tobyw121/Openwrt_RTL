@@ -1,0 +1,64 @@
+RTL8197F / Tenda Nova MW5 v43.11 validation
+============================================
+
+Revision:
+  driver: 1.4.11-sdk-mw5-fcs-uncached-v43.11
+  DSA tagger log revision: v43.11
+  firewall: standard OpenWrt firewall4 policy retained
+
+Source changes validated:
+  - MW5 DTS contains realtek,sdk-crc-lengths
+  - MW5 runtime branch forces sdk_crc_lengths=true
+  - CPUICR.EXCLUDE_CRC is therefore left clear for MW5
+  - TX descriptor length uses skb length + 4-byte FCS in SDK CRC mode
+  - RX descriptor length strips 4-byte FCS before skb delivery
+  - MW5 six-DWORD descriptors are accessed via CKSEG1ADDR DMA alias
+  - TXRINGCR ring-enable nibble is programmed for ring0 only
+  - MW5 tail-aware TX path omits descriptor EOR/WRAP
+  - MW5 CPUTPDCR0 reclamation does not rewrite completed descriptors
+  - MW5 xmit reuse does not reject a CDP-reclaimed slot on stale OWN
+  - RX 0x0400+source-port DSA decode retained
+  - TX 0x9202/0x9208 protocol-9 path retained
+  - mw5-netdiag remains built into base-files and collects v43.11 bad/submit/completion traces
+  - standard firewall migration/defaults remain present
+
+Static tests:
+  CHECK_MW5_V43.11.sh:             77 PASS / 0 FAIL
+  CHECK_MW5_WANLAN_V43.sh:         57 PASS / 0 FAIL
+  CHECK_MW5_DIAG_BUILTIN_V43.4.sh: 43 PASS / 0 FAIL
+  CHECK_SOURCE_TREE_V42.sh:         PASS
+  mw5-netdiag sh -n:                PASS
+  mw5-diag init sh -n:              PASS
+  firewall migration sh -n:         PASS
+  profile helper sh -n:             PASS
+
+Checkpatch on the v43.10 -> v43.11 source delta:
+  rtl8197f_rtknet.c: 0 errors / 0 warnings / 0 checks
+  tag_rtl4_9.c:      0 errors / 0 warnings / 0 checks
+  Raw-diff commit metadata checks COMMIT_MESSAGE and MISSING_SIGN_OFF were ignored;
+  no source-code diagnostics were ignored.
+
+Hardware evidence motivating v43.11:
+  - v43.10 direct LAN: RX +37, TX +0, ping FAIL, oversize_drop=90
+  - v43.10 LAN TX DMA: submit=82, complete=34, no ring_full/busy_desc/timeout
+  - v43.10 direct WAN: RX +17, TX +0, ping FAIL, oversize_drop=171
+  - v43.10 WAN cumulative TX DMA: submit=115, complete=47
+  - CPUTPDCR0 could stop advancing while additional descriptors were submitted
+  - descriptor DMA addresses still matched expected addresses
+
+OEM New_swNic comparison used for the source correction:
+  - 24-byte/six-DWORD descriptor size confirmed
+  - CPUICR EXCLUDE_CRC clear in the normal SDK start path
+  - RX reports desc->rx_len - 4
+  - TX descriptor ph_len/m_len include hardware FCS (+4 for normal frames)
+  - descriptor access uses cache invalidation or UNCACHE_MASK/KSEG1 handling
+  - single-ring path programs DMA_CR1 and DMA_CR4 ring0 tail-aware mode
+  - USE_SWITCH_TX_CDP txDone frees skb bookkeeping without clearing descriptors
+
+Not performed in this environment:
+  - full OpenWrt MIPS cross-build
+  - boot/flash on physical Tenda Nova MW5
+  - hardware ping/DHCP validation
+
+Those must be confirmed by the user after building/flashing v43.11 and running:
+  mw5-netdiag

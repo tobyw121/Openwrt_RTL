@@ -1,0 +1,56 @@
+Tenda Nova MW5 v43.12 built-in wired diagnostics
+================================================
+
+One-command automatic test:
+
+  mw5-netdiag
+
+The automatic test first waits for OpenWrt netifd/LAN to be fully ready. Start
+with the Ethernet cable in the physical LAN jack. The script tests normal LAN
+through br-lan and its DHCP/peer path, then direct LAN. When prompted, move the
+same cable to the physical WAN jack for direct WAN. After the original network
+is restored, the script also checks routed WAN DHCP while the cable remains in
+WAN.
+
+No additional router or PC commands are required. A PC left on DHCP/automatic
+can be discovered and pinged automatically. For the final routed-WAN DHCP
+check, connect WAN to an upstream DHCP router if you want a real lease test;
+with a direct PC connection, NO-LEASE is expected and is simply recorded.
+
+Firewall policy:
+
+  Standard OpenWrt firewall4 configuration is retained.
+  LAN and WAN use the normal OpenWrt zones and forwarding policy.
+  The diagnostic script does not flush nftables or disable firewall4.
+
+Manual/read-only modes remain available:
+
+  mw5-netdiag help
+  mw5-netdiag state
+  mw5-netdiag full
+  mw5-netdiag direct auto
+  mw5-netdiag direct lan
+  mw5-netdiag direct wan
+  mw5-netdiag restore
+
+v43.12 hardware focus:
+
+  * switch->CPU RX accepts the observed 0x8899/0x0400+source-port layout
+    (0x0401 was captured from physical LAN port 1).
+  * CPU->switch TX uses protocol 0x9 plus destination mask only:
+    LAN port 1 = 0x9002, WAN port 3 = 0x9008 (no speculative bit 9).
+  * RX completion follows OEM USE_SWITCH_RX_CDP and TX reclamation follows
+    OEM USE_SWITCH_TX_CDP; CPURPDCR0/CPUTPDCR0 remain authoritative.
+  * The MW5 now uses the OEM CRC/FCS length convention: EXCLUDE_CRC is clear,
+    RX length has FCS stripped before Linux, and TX descriptor length includes
+    the hardware-generated four-byte FCS.
+  * Six-dword/24-byte RX/TX descriptors are accessed through the matching
+    uncached KSEG1 CPU alias, mirroring the OEM UNCACHE_MASK path.
+  * Only TX ring 0 is enabled; ring 1 is no longer left enabled without its
+    own CPUTPDCR/length configuration. TX EOR is omitted in tail-aware mode.
+  * bounded RX bad-descriptor payload snapshots and TX completion traces are
+    collected by the one-command test.
+
+Driver state is readable from /proc/rd05-rtknet.
+All reports are written below /tmp/mw5-diag.
+The last automatic summary is /tmp/mw5-diag/autotest-summary-latest.txt.

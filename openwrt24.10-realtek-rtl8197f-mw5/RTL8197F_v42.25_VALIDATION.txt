@@ -1,0 +1,10 @@
+RTL8197F v42.25 source validation
+PASS - MW5 OEM header/staging address remains 0x80a00000
+PASS - MW5 loader link/relocation address is 0x80d00000
+PASS - kernel load address remains 0x80100000
+PASS - build-time LZMA uncompressed-size overlap gate is installed
+PASS - safety gate accepts a 0x900d5b-byte kernel at the new address
+PASS - safety gate rejects the same kernel at the old 0x80a00000 address
+PASS - normal cache size reload restored after correcting the real overlap
+NOT RUN - complete world build from v42.25 tree
+NOT RUN - physical v42.25 boot

@@ -1,0 +1,16 @@
+Dateien je Kategorie
+====================
+board-bsp: 30
+board-config/rootfs: 195
+board-datei: 52
+bootloader: 3
+bootloader-config: 18
+bootloader-switch-init: 324
+build-doku/make: 2
+kernel-netzwerk: 7
+kernel-switch-treiber: 419
+runtime-skript: 17
+sonstiges: 1
+wlan-backports/kalibrierung: 86
+
+Gesamt: 1154 Dateien

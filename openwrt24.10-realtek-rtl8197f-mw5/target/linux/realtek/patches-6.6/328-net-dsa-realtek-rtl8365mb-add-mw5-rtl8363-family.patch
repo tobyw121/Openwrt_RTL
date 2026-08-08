@@ -1,0 +1,284 @@
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -718,6 +718,83 @@
+ 			{ 7, 1, PHY_INTF(RGMII) },
+ 		},
+ 	},
++	/* rtl83xx switch API v1.3.9 probes 0x0801/0x6511 as
++	 * RTL8363SC-VB when revision bits 7:4 are 0x8, otherwise RTL8364B.
++	 * Both packages expose the bonded copper PHYs at physical ports 1 and
++	 * 3 and the first CPU extension interface at physical port 6.
++	 */
++	{
++		.name = "RTL8363SC-VB / RTL8363NB class (0x0801)",
++		.chip_id = 0x0801,
++		.chip_ver = 0x0080,
++		.chip_ver_mask = 0x00f0,
++		.num_ports = 8,
++		.extints = {
++			{ 6, 1, PHY_INTF(RGMII) },
++			{ 7, 2, PHY_INTF(MII) | PHY_INTF(TMII) |
++				PHY_INTF(RMII) | PHY_INTF(RGMII) },
++		},
++		/* No exact RTL8363NB cold-start table exists in the collected SDKs.
++		 * Applying the unrelated RTL8365MB-VC table can program invalid
++		 * analog/PHY values, so v42 deliberately uses only the recovered
++		 * 8363/8364 sparse sequence and MW5 OEM post-init below.
++		 */
++		.jam_table = NULL,
++		.jam_size = 0,
++	},
++	{
++		.name = "RTL8364B / RTL8363NB class (0x0801)",
++		.chip_id = 0x0801,
++		.chip_ver_any = true,
++		.num_ports = 8,
++		.extints = {
++			{ 6, 1, PHY_INTF(RGMII) },
++			{ 7, 2, PHY_INTF(MII) | PHY_INTF(TMII) |
++				PHY_INTF(RMII) | PHY_INTF(RGMII) },
++		},
++		/* No exact RTL8363NB cold-start table exists in the collected SDKs.
++		 * Applying the unrelated RTL8365MB-VC table can program invalid
++		 * analog/PHY values, so v42 deliberately uses only the recovered
++		 * 8363/8364 sparse sequence and MW5 OEM post-init below.
++		 */
++		.jam_table = NULL,
++		.jam_size = 0,
++	},
++	{
++		.name = "RTL8363SC-VB / RTL8363NB class (0x6511)",
++		.chip_id = 0x6511,
++		.chip_ver = 0x0080,
++		.chip_ver_mask = 0x00f0,
++		.num_ports = 8,
++		.extints = {
++			{ 6, 1, PHY_INTF(RGMII) },
++			{ 7, 2, PHY_INTF(RGMII) },
++		},
++		/* No exact RTL8363NB cold-start table exists in the collected SDKs.
++		 * Applying the unrelated RTL8365MB-VC table can program invalid
++		 * analog/PHY values, so v42 deliberately uses only the recovered
++		 * 8363/8364 sparse sequence and MW5 OEM post-init below.
++		 */
++		.jam_table = NULL,
++		.jam_size = 0,
++	},
++	{
++		.name = "RTL8364B / RTL8363NB class (0x6511)",
++		.chip_id = 0x6511,
++		.chip_ver_any = true,
++		.num_ports = 8,
++		.extints = {
++			{ 6, 1, PHY_INTF(RGMII) },
++			{ 7, 2, PHY_INTF(RGMII) },
++		},
++		/* No exact RTL8363NB cold-start table exists in the collected SDKs.
++		 * Applying the unrelated RTL8365MB-VC table can program invalid
++		 * analog/PHY values, so v42 deliberately uses only the recovered
++		 * 8363/8364 sparse sequence and MW5 OEM post-init below.
++		 */
++		.jam_table = NULL,
++		.jam_size = 0,
++	},
+ };
+ 
+ enum rtl8365mb_stp_state {
+@@ -803,6 +880,8 @@
+ 	struct realtek_priv *priv;
+ 	int irq;
+ 	const struct rtl8365mb_chip_info *chip_info;
++	u32 detected_chip_id;
++	u32 detected_chip_ver;
+ 	struct rtl8365mb_cpu cpu;
+ 	struct mutex mib_lock;
+ 	struct rtl8365mb_port ports[RTL8365MB_MAX_NUM_PORTS];
+@@ -2231,6 +2310,166 @@
+ 	return rtl8365mb_cpu_config(priv);
+ }
+ 
++static bool rtl8365mb_is_sdk_8367c_common(struct rtl8365mb *mb)
++{
++	switch (mb->detected_chip_id) {
++	case 0x0276:
++	case 0x0597:
++	case 0x6367:
++		return true;
++	default:
++		return false;
++	}
++}
++
++static bool rtl8365mb_is_sdk_836x_sparse(struct rtl8365mb *mb)
++{
++	return mb->detected_chip_id == 0x0801 ||
++	       mb->detected_chip_id == 0x6511;
++}
++
++static int rtl8365mb_sdk_8367c_common_init(struct realtek_priv *priv)
++{
++	struct rtl8365mb *mb = priv->chip_data;
++	static const struct rtl8365mb_jam_tbl_entry tail[] = {
++		{ 0x13eb, 0x15bb },
++		{ 0x1303, 0x06d6 },
++		{ 0x1304, 0x0700 },
++		{ 0x13e2, 0x003f },
++		{ 0x13f9, 0x0090 },
++		{ 0x121e, 0x03ca },
++		{ 0x1233, 0x0352 },
++		{ 0x1237, 0x00a0 },
++		{ 0x123a, 0x0030 },
++		{ 0x1239, 0x0084 },
++		{ 0x0301, 0x1000 },
++		{ 0x1349, 0x001f },
++	};
++	u16 data;
++	int port;
++	int ret;
++	unsigned int i;
++
++	/* Exact _rtk_switch_init_8367c() UTP loop. */
++	for (port = 0; port <= 4; port++) {
++		ret = regmap_update_bits(priv->map, 0x0018 + 0x20 * port,
++					 0x0f00, 0x0f00);
++		if (ret)
++			return ret;
++
++		ret = rtl8365mb_phy_ocp_read(priv, port, 0xa428, &data);
++		if (ret)
++			return ret;
++		data &= ~0x0200;
++		ret = rtl8365mb_phy_ocp_write(priv, port, 0xa428, data);
++		if (ret)
++			return ret;
++
++		if ((mb->detected_chip_ver & 0x00f0) == 0x00a0) {
++			ret = rtl8365mb_phy_ocp_read(priv, port, 0xa5d0, &data);
++			if (ret)
++				return ret;
++			data |= 0x0006;
++			ret = rtl8365mb_phy_ocp_write(priv, port, 0xa5d0,
++						      data);
++			if (ret)
++				return ret;
++		}
++	}
++
++	for (i = 0; i < ARRAY_SIZE(tail); i++) {
++		ret = regmap_write(priv->map, tail[i].reg, tail[i].val);
++		if (ret)
++			return ret;
++	}
++
++	ret = regmap_update_bits(priv->map, 0x18e0, BIT(0), 0);
++	if (ret)
++		return ret;
++	ret = regmap_update_bits(priv->map, 0x122b, BIT(14), BIT(14));
++	if (ret)
++		return ret;
++
++	return regmap_update_bits(priv->map, 0x1305, 0xc000, 0xc000);
++}
++
++static int rtl8365mb_sdk_836x_sparse_init(struct realtek_priv *priv)
++{
++	int ret;
++
++	/* Exact _rtk_switch_init_8364b/_8363sc_vb sequence. */
++	ret = rtl8365mb_phy_ocp_write(priv, 1, 0xa5d0, 0x0006);
++	if (ret)
++		return ret;
++	ret = rtl8365mb_phy_ocp_write(priv, 3, 0xa5d0, 0x0006);
++	if (ret)
++		return ret;
++	ret = regmap_update_bits(priv->map, 0x0038, 0x0300, 0x0300);
++	if (ret)
++		return ret;
++
++	return regmap_update_bits(priv->map, 0x0078, 0x0300, 0x0300);
++}
++
++static int rtl8365mb_mw5_board_init(struct realtek_priv *priv)
++{
++	static const struct rtl8365mb_jam_tbl_entry mw5[] = {
++		{ 0x1b03, 0x0936 },
++		{ 0x121f, 0x01d0 },
++		{ 0x1220, 0x01ac },
++		{ 0x1221, 0x019e },
++		{ 0x1222, 0x017a },
++		{ 0x1223, 0x01d0 },
++		{ 0x1224, 0x01ac },
++		{ 0x1225, 0x019e },
++		{ 0x1226, 0x017a },
++		{ 0x13c3, 0x0000 },
++		{ 0x13c4, 0x0000 },
++		{ 0x1d53, 0x0001 },
++		{ 0x1d55, 0x000f },
++		{ 0x1d54, 0x05fa },
++		{ 0x1d52, 0x2473 },
++		{ 0x1d5a, 0x0001 },
++		{ 0x1d5c, 0x000f },
++		{ 0x1d5b, 0x05fa },
++		{ 0x1d59, 0x2473 },
++	};
++	int ret;
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(mw5); i++) {
++		ret = regmap_write(priv->map, mw5[i].reg, mw5[i].val);
++		if (ret)
++			return ret;
++	}
++
++	dev_info(priv->dev,
++		 "applied Tenda MW5 OEM threshold/SSC register sequence\n");
++	return 0;
++}
++
++static int rtl8365mb_sdk_post_jam_init(struct realtek_priv *priv)
++{
++	struct rtl8365mb *mb = priv->chip_data;
++	int ret = 0;
++
++	if (rtl8365mb_is_sdk_8367c_common(mb))
++		ret = rtl8365mb_sdk_8367c_common_init(priv);
++	else if (rtl8365mb_is_sdk_836x_sparse(mb)) {
++		dev_warn(priv->dev,
++			 "RTL8363NB class: exact cold-start jam table unavailable; applying SDK sparse sequence only\n");
++		ret = rtl8365mb_sdk_836x_sparse_init(priv);
++	}
++	if (ret)
++		return ret;
++
++	if (of_property_read_bool(priv->dev->of_node,
++				  "realtek,rtl8197f-mw5-oem-init"))
++		return rtl8365mb_mw5_board_init(priv);
++
++	return 0;
++}
++
+ static int rtl8365mb_switch_init(struct realtek_priv *priv)
+ {
+ 	struct rtl8365mb *mb = priv->chip_data;
+@@ -2265,6 +2504,12 @@
+ 			return ret;
+ 	}
+ 
++	ret = rtl8365mb_sdk_post_jam_init(priv);
++	if (ret) {
++		dev_err(priv->dev, "SDK-family post-init failed: %d\n", ret);
++		return ret;
++	}
++
+ 	return 0;
+ }
+ 
+@@ -3338,6 +3583,8 @@
+ 	dev_info(priv->dev,
+ 		 "RD05 bootstage v38.2: RTL8367 id=0x%04x ver=0x%04x\n",
+ 		 chip_id, chip_ver);
++	mb->detected_chip_id = chip_id;
++	mb->detected_chip_ver = chip_ver;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(rtl8365mb_chip_infos); i++) {
+ 		const struct rtl8365mb_chip_info *ci = &rtl8365mb_chip_infos[i];

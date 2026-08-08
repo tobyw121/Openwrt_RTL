@@ -1,0 +1,39 @@
+[RTL8214FC/18FB][Fiber]Configure PHY Tx disable signal
+Purpose:
+		Provide APIs for RTL8214FC/18FB Tx disable control signal Enable/Disable and
+related GPO pin value configuration.
+
+Modified Files: (svn r58995 andr62615, Mantis 0017910, SS-41)
+*     /sdk/include/dal/cypress/dal_cypress_port.h
+*     /sdk/include/dal/maple/dal_maple_port.h
+*     /sdk/include/dal/dal_mapper.h
+*     /sdk/include/hal/common/miim.h
+*     /sdk/include/hal/phy/phy_8218b.h
+*     /sdk/include/hal/phy/phydef.h
+*     /sdk/include/rtk/port.h
+*     /sdk/src/dal/cypress/dal_cypress_mapper.c
+*     /sdk/src/dal/cypress/dal_cypress_port.c
+*     /sdk/src/dal/cypress/dal_maple_mapper.c
+*     /sdk/src/dal/cypress/dal_maple_port.c
+*     /sdk/src/hal/common/miim.c
+*     /sdk/src/hal/phy/phy_8201.c
+*     /sdk/src/hal/phy/phy_8208.c
+*     /sdk/src/hal/phy/phy_8212f.c
+*     /sdk/src/hal/phy/phy_8214f.c
+*     /sdk/src/hal/phy/phy_8214fb.c
+*     /sdk/src/hal/phy/phy_8218.c
+*     /sdk/src/hal/phy/phy_8218b.c
+*     /sdk/src/hal/phy/phy_8328.c
+*     /sdk/src/hal/phy/phy_8380.c
+*     /sdk/src/hal/phy/phy_8390.c
+*     /sdk/src/rtk/port.c
+*     /sdk/system/linux/rtdrv/rtdrv_netfilter.c
+*     /sdk/system/linux/rtdrv/rtdrv_netfilter.h
+*     /sdk/system/linux/rtk/module.c
+*     /sdk/system/linux/rtk/rtusr/src/rtusr_port.c
+
+Notice:
+	This patch will replace patch-002.
+
+Release Files:
+	rtk-ms-sdk-src-2.1.4.53590-patch010.tar.gz

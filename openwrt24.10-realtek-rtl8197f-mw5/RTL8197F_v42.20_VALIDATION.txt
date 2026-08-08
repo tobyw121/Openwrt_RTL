@@ -1,0 +1,37 @@
+RTL8197F v42.20 validation
+==========================
+
+PASS - MW5 DTS firmware partition is named "firmware"
+PASS - MW5 DTS firmware partition has no compatible property that suppresses OpenWrt mtdsplit
+PASS - AC23 DTS firmware partition has no compatible property that suppresses OpenWrt mtdsplit
+PASS - CONFIG_MTD_SPLIT_FIRMWARE=y
+PASS - CONFIG_MTD_SPLIT_RTL8197F_FW=y
+PASS - RTL8197F cr6c/cs6c parser source present
+PASS - parser computes rootfs at 0x10 + big-endian IMG_HEADER_T.length
+PASS - parser validates SquashFS magic before creating partitions
+PASS - source-tree checker regression for the DT/mtdsplit interaction
+PASS - direct v42.20 image old SDK-4.40 LZMA decoder
+PASS - direct v42.20 kernel checksum sum 0x0000
+PASS - direct v42.20 rootfs checksum sum 0x0000
+PASS - direct v42.20 full-flash preservation verifier
+PASS - direct v42.20 deterministic byte-identical rebuild
+PASS - protected 0x000000-0x030000 unchanged
+PASS - protected 0x5c0000-0x800000 unchanged
+
+Direct diagnostic split values
+------------------------------
+Full-flash rootfs offset:              0x2e2eea
+Firmware-relative rootfs offset:       0x2b2eea
+Firmware partition:                    0x030000 + 0x590000
+Dynamic kernel partition:              0x030000 + 0x2b2eea
+Dynamic rootfs partition:              0x2e2eea + 0x2dd116
+SquashFS magic at split:                hsqs
+Loader LZMA stream:                    2824176 bytes
+Fixed loader LZMA window:              2824743 bytes
+Reserve:                               567 bytes
+
+NOT RUN - complete OpenWrt world build from v42.20 tree
+NOT RUN - physical MW5 v42.20 rootfs mount
+NOT RUN - DSA forwarding and Ethernet traffic
+NOT RUN - RTL8197FS/RTL8822B RF operation
+NOT RUN - sysupgrade and persistent overlay

@@ -1,0 +1,40 @@
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -3807,11 +3807,21 @@
+ 	int i;
+ 
+ 	/* hardware unit is 0.5dBm, limited to 23.5dBm */
+-	power_level *= 2;
++
++	if (rt2x00_has_cap_external_lna_bg(rt2x00dev)){
++		// ANLIX: We dont have TSSI implemented yet.
++		// Just reduce the power when in lna by half
++		// Archer C5 EEPROM tssi reduce by "-12" 
++		// but it may alter with temperature compensation...
++		max_power = chan->max_power;
++	} else {
++		power_level *= 2;
++		max_power = chan->max_power * 2;
++	}
++
+ 	if (power_level > 0x2f)
+ 		power_level = 0x2f;
+ 
+-	max_power = chan->max_power * 2;
+ 	if (max_power > 0x2f)
+ 		max_power = 0x2f;
+ 
+@@ -4364,7 +4374,12 @@
+ 		 * RT6352 chip, we use 0x1c for now. This may have to be changed
+ 		 * once TSSI got implemented.
+ 		 */
+-		reg = (rf->channel <= 14 ? 0x1c : 0x24) + 2*rt2x00dev->lna_gain;
++		if (rt2x00_has_cap_external_lna_bg(rt2x00dev))
++			// ANLIX: Use the same value as vendor driver
++			// Reduce the power with external lna 
++			reg = (rf->channel <= 14 ? 0x04 : 0x24) + 2*rt2x00dev->lna_gain;
++		else
++			reg = (rf->channel <= 14 ? 0x1c : 0x24) + 2*rt2x00dev->lna_gain;
+ 		rt2800_bbp_write_with_rx_chain(rt2x00dev, 66, reg);
+ 
+ 		rt2800_iq_calibrate(rt2x00dev, rf->channel);

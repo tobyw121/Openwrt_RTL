@@ -1,0 +1,540 @@
+** DATE/WHOM/TYPE:
+- 2014/02/24, winfred_wang, add nand flash support.
+* DIGEST:
+- add nand flash support in rtl819xd.
+* TEST METHOD:
+* ROOT CAUSE:
+* MODIFIED FILES:
+M       btcode/piggy.S
+M       btcode/start.h
+M       btcode/start.S
+A       btcode/ld.nand_script
+M       btcode/Makefile
+M       change.txt
+M       boot/rtl8196x/swCore.c
+M       boot/include/asm/rtl8196x.h
+A       boot/include/rtk_nand.h
+M       boot/include/rtl_depend.h
+M       boot/monitor/monitor.c
+A       boot/flash/rtk_nand.c
+M       boot/init/utility.c
+M       boot/init/utility.h
+M       boot/init/eth_tftpd.c
+M       boot/init/ethInt_865x.c
+M       boot/Makefile
+M       config.in
+* DESCRIPTIONi:
+- add nand flash support in rtl819xd.
+ 
+------------------------------------------------------------------------------
+
+** DATE/WHOM/TYPE:
+- 2013/12/31, david, new feature
+* DIGEST:
+- Add tftp client support
+* TEST METHOD:
+* ROOT CAUSE:
+* MODIFIED FILES:
+* config.in
+  boot/Makefile
+  boot/init/main.c, main.h, eth_tftpd.c, utility.c  
+* DESCRIPTION:
+- Add a menuconfig to support TFTP client. When booting up, it will try
+  to get 'nfjrom' file from tftp server (192.168.1.97). If sucess, it will jump
+  to start address of nfjom directly. Otherwise, it will contine boot up normal 
+  image or accept 'ESC' to enter monitor mode. (mantis id: 0016915)
+
+------------------------------------------------------------------------------
+
+** DATE/WHOM/TYPE:
+- 2013/10/17, jason, finetune performance.
+* DIGEST:
+- Rollback to the original version.
+* TEST METHOD:
+* ROOT CAUSE:
+* MODIFIED FILES:
+  btcode/start.S 
+  boot/init/ver.h 
+  boot/init/main.c
+* DESCRIPTION:
+- Remove RTL819xD performance by Data prefetch and SDRAM DDRII parameters
+  (tRP and tCR).
+
+------------------------------------------------------------------------------
+
+ DATE/WHOM/TYPE:
+- 2013/10/06, jason, finetune performance.
+* DIGEST:
+- Finetune performance for SAMBA and Smartbit.
+* TEST METHOD:
+* ROOT CAUSE:
+* MODIFIED FILES:
+  btcode/start.S 
+  boot/init/ver.h 
+  boot/init/main.c
+* DESCRIPTION:
+- Finetune RTL819xD performance by Data prefetch and SDRAM DDRII parameters
+  (tRP and tCR).
+
+------------------------------------------------------------------------------
+
+* DATE/WHOM/TYPE:
+- 2013/08/20, winfred_wang, new feature.
+
+* DIGEST:
+- Add webpage check when dual image is open in toggle mode
+
+* TEST METHOD:
+
+* MODIFIED FILES:
+M       def-rtl8196d-config
+M       change.txt
+M       boot/init/utility.c
+M       boot/init/rtk.h
+M       boot/init/utility.h
+M       config.in
+
+* DESCRIPTION 
+- Add webpage check when dual image is open in toggle mode
+------------------------------------------------------------------------------
+* DATE/WHOM/TYPE:
+- 2013/06/25, sen_liu, fine tune.
+
+* DIGEST:
+- 9xd support Dual Bank image,sync from 96c_98 boot
+
+* TEST METHOD:
+
+* MODIFIED FILES:
+- boot/init/utility.c
+
+* DESCRIPTION [description about the change]:
+- only 98 has b8000068 Register
+- change DUMMY_REGISTER to  unused 0xb8003504
+- 0xb8003504 can be accessed on both 96c and 98
+- Note: if 0xb8003504 no longer supported, it should be a risk
+------------------------------------------------------------------------------
+* DATE/WHOM/TYPE:
+- 2013/06/09, winfred_wang, new feature
+* DIGEST:
+- add config upgrade support in bootcode
+* TEST METHOD:
+* ROOT CAUSE:
+* MODIFIED FILES:
+M       boot/init/eth_tftpd.c
+* DESCRIPTION:
+- add config upgrade support in bootcode
+------------------------------------------------------------------------------
+* DATE/WHOM/TYPE:
+- 2013/05/10, jason, new feature
+* DIGEST:
+- add RTL8196E MCM  support
+* TEST METHOD:
+  Build one image to test all kinds of the MCM package.
+* MODIFIED FILES:
+   btcode/start.S
+   boot/init/ver.h
+   config.in 
+* DESCRIPTION [description about the change]:
+   Added auto-identify the MCM package and auto set the SDRAM or DDR1
+   parameters.
+----------------------------------------------------------------------------
+* DATE/WHOM/TYPE:
+- 2012/02/16, rock, new feature
+* DIGEST:
+- add RTL89xxD support
+* TEST METHOD:
+* MODIFIED FILES:
+- def-rtl89xxd-config
+* DESCRIPTION [description about the change]:
+-----------------------------------------------------------------------------
+* DATE/WHOM/TYPE:
+- 2012/05/10, jasonwang, fine tune performance 
+
+* DIGEST:
+- Added reset button support and speed up the booting sequence.
+
+* ROOT CAUSE
+- N/A
+
+* TEST METHOD:
+
+* Description
+
+* MODIFIED FILES:
+- boot/init/utility.c
+- btcode/Makefile
+- boot/init/utility.h
+-----------------------------------------------------------------------------
+* DATE/WHOM/TYPE:
+- 2012/01/31, hf, new feature
+
+* DIGEST:
+- Add OSK Support
+
+* ROOT CAUSE
+- N/A
+
+* TEST METHOD:
+
+* Description
+
+* MODIFIED FILES:
+- boot/init/utility.c
+- boot/init/rtk.h
+- boot/init/utility.h
+- boot/init/eth_tftpd.c
+- config.in
+-----------------------------------------------------------------------------
+* DATE/WHOM/TYPE:
+ - 2011/12/21, joey, new feature
+ * DIGEST:
+ - add RTL8196E support.
+ * MODIFIED FILES:
+ - trunk/RLXLinux/bootcode_rtl8196d/def-rtl8196e-config
+ - trunk/RLXLinux/bootcode_rtl8196d/config.in
+ - trunk/RLXLinux/bootcode_rtl8196d/boot/Makefile
+ - trunk/RLXLinux/bootcode_rtl8196d/boot/include/rtl8196x/asicregs.h
+ - trunk/RLXLinux/bootcode_rtl8196d/boot/include/rtl8196x/swCore.h
+ - trunk/RLXLinux/bootcode_rtl8196d/boot/include/rtl8196x/vlanTable.h
+ - trunk/RLXLinux/bootcode_rtl8196d/boot/init/ethInt_865x.c
+ - trunk/RLXLinux/bootcode_rtl8196d/boot/init/main.c
+ - trunk/RLXLinux/bootcode_rtl8196d/boot/init/utility.c
+ - trunk/RLXLinux/bootcode_rtl8196d/boot/init/utility.h
+ - trunk/RLXLinux/bootcode_rtl8196d/boot/monitor/monitor.c
+ - trunk/RLXLinux/bootcode_rtl8196d/boot/rtl8196x/swCore.c
+ - trunk/RLXLinux/bootcode_rtl8196d/boot/rtl8196x/swNic_poll.c
+ - trunk/RLXLinux/bootcode_rtl8196d/boot/rtl8196x/vlanTable.c
+ - trunk/RLXLinux/bootcode_rtl8196d/btcode/Makefile
+ - trunk/RLXLinux/bootcode_rtl8196d/btcode/start.S	
+ * DESCRIPTION [description about the change]:
+-----------------------------------------------------------------------------
+ * DATE/WHOM/TYPE:
+ - 2011/12/2, joey, refine
+ * DIGEST:
+ - update SWR_LDO2 register (0xB800008C) SRarry_L = 0b11, OCPTUNE_L = 0b111
+ * TEST METHOD:
+ * MODIFIED FILES:
+ - trunk/RLXLinux/bootcode_rtl8196d/btcode/start.S
+ * DESCRIPTION [description about the change]:
+-----------------------------------------------------------------------------
+* DATE/WHOM/TYPE:
+ - 2011/10/19, joeylin, bug fixed.
+
+ * DIGEST:
+ - fix the piggy.bin issue.
+
+ * TEST METHOD:
+ - stay in boot code
+ - issue "loadaddr 80100000"
+ - tftp piggy.bin to DUT
+ - issue "j 80100000" and press ESC key to stay in boot code,
+   the Ethernet will not work in this mode.
+ 
+ * MODIFIED FILES:
+ - trunk/RLXLinux/bootcode_rtl8196d/boot/rtl8196x/swCore.c
+
+ * DESCRIPTION [description about the change]:
+ - in FullAndSemiReset() function, do not set "protect bit" in clk_manage
+   (0xb8000010) register.
+-----------------------------------------------------------------------------
+ * DATE/WHOM/TYPE:
+ - 2011/02/23, joey, refine and bug fixed.
+
+ * DIGEST:
+ - 1. Modified 8198 SDRAM/DDR2 parameter
+ - 2. fix reboot issue in customer's 8198 DDR2 board
+
+ * TEST METHOD:
+
+ * MODIFIED FILES:
+ - new version:4989
+ - trunk/RLXLinux/bootcode_rtl8196c_98/btcode/start.S
+
+ * DESCRIPTION [description about the change]:
+ - 1. for 8198 SDRAM board, set sdram clock = 156.25MHz.
+ 	for 8198 DDR2 board, set 0xb8001008 = 0x4913A4C0 in 64MB 181Mhz DDR2.
+- 2.  Enable MPMR CKE Power down mode and WatchDog reset.
+
+-----------------------------------------------------------------------------
+* DATE/WHOM/TYPE:
+ - 2011/01/7, rock, new feature
+ * DIGEST:
+ - Support voip
+ * MODIFIED FILES:
+ - new version:4583
+ * DESCRIPTION [description about the change]:
+------------------------------------------------------------------------------- 
+* DATE/WHOM/TYPE:
+ - 2010/12/29, jasonwang, new feature
+ * DIGEST:
+ - Added memory clock auto recognition and timing parameters.
+ * MODIFIED FILES:
+ - new version:4475
+ - trunk/RLXLinux/bootcode_rtl8196c_98/btcode/start.S
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/init/ver.h
+ * DESCRIPTION [description about the change]:
+---------------------------------------------------------------------------
+ * DATE/WHOM/TYPE:
+ - 2010/11/25, jiawenjian, refine
+ * DIGEST:
+ - DDR_cali_API
+ * MODIFIED FILES:
+ - new version:4066
+ - trunk/RLXLinux/bootcode_rtl8196c_98/config.in
+   trunk/RLXLinux/bootcode_rtl8196c_98/def-rtl8196c-config
+   trunk/RLXLinux/bootcode_rtl8196c_98/def-rtl8198-config
+ * DESCRIPTION [description about the change]:
+----------------------------------------------------------------------------- 
+* DATE/WHOM/TYPE:
+ - 2010/11/24, jasonwang, new feature
+ * DIGEST:
+ - Added rtl8198 rev. C support.
+ * MODIFIED FILES:
+ - new version:4036
+ - trunk/RLXLinux/bootcode_rtl8196c_98/boot/monitor/monitor.c
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/rtl8196x/swCore.c
+
+ * DESCRIPTION [description about the change]:
+-----------------------------------------------------------------------------
+Description:
+   Added 8198 nfbi support.
+Files modified:
+-  New Revision: 1477
+   trunk/RLXLinux/bootcode_rtl8196c_98/Makefile
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/Makefile
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/include/rtl8196x/asicregs.h
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/init/ethInt_865x.c
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/init/eth_tftpd.c
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/init/main.c
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/init/rtk.h
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/init/ver.h
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/monitor/monitor.c
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/rtl8196x/swCore.c
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/rtl8196x/swNic_poll.c
+   trunk/RLXLinux/bootcode_rtl8196c_98/btcode/LzmaDecode.c
+   trunk/RLXLinux/bootcode_rtl8196c_98/btcode/Makefile
+   trunk/RLXLinux/bootcode_rtl8196c_98/btcode/bootload.c
+   trunk/RLXLinux/bootcode_rtl8196c_98/btcode/start.S
+   trunk/RLXLinux/bootcode_rtl8196c_98/btcode/start.h
+   trunk/RLXLinux/bootcode_rtl8196c_98/config.in
+   trunk/RLXLinux/bootcode_rtl8196c_98/btcode/ld-nfbi.script  (add)
+   trunk/RLXLinux/bootcode_rtl8196c_98/def-rtl8198-nfbi-config(add)
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/rtl8197b.script  (delete)
+   trunk/RLXLinux/bootcode_rtl8196c_98/btcode/rtl8197b.script(delete)
+-----------------------------------------------------------------------------
+ * DATE/WHOM/TYPE:
+ - 2010/11/24, jiawenjian, bug fixed
+ * DIGEST:
+ - DDR_cali_API
+ * MODIFIED FILES:
+ - new version:4036
+ - trunk/RLXLinux/bootcode_rtl8196c_98/boot/Makefile
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/init/utility.c
+   trunk/RLXLinux/bootcode_rtl8196c_98/btcode/Makefile
+   trunk/RLXLinux/bootcode_rtl8196c_98/btcode/start.S
+   trunk/RLXLinux/bootcode_rtl8196c_98/config.in
+ * DESCRIPTION [description about the change]:
+-----------------------------------------------------------------------------
+ * DATE/WHOM/TYPE:
+ - 2010/11/04, jiawenjian, new feature
+ 
+ * DIGEST:
+ - support two spi flash
+    
+ * MODIFIED FILES:
+ - new version:3563
+trunk/RLXLinux/bootcode_rtl8196c_98/boot/init/eth_tftpd.c
+trunk/RLXLinux/bootcode_rtl8196c_98/boot/flash/spi_flash.c
+trunk/RLXLinux/bootcode_rtl8196c_98/boot/flash/spi_common.c
+trunk/RLXLinux/bootcode_rtl8196c_98/config.in
+ * DESCRIPTION [description about the change]:
+-----------------------------------------------------------------------------
+ * DATE/WHOM/TYPE:
+ - 2010/11/03, jiawenjian, refine
+
+ * DIGEST:
+ - new spi flash driver
+    
+ * MODIFIED FILES:
+ - new version:3550
+trunk/RLXLinux/bootcode_rtl8196c_98/boot/include/spi_common.h
+trunk/RLXLinux/bootcode_rtl8196c_98/boot/include/linux/signal.h
+trunk/RLXLinux/bootcode_rtl8196c_98/boot/flash/spi_flash.c
+trunk/RLXLinux/bootcode_rtl8196c_98/boot/flash/spi_common.c
+ * DESCRIPTION [description about the change]:
+-----------------------------------------------------------------------------
+ * DATE/WHOM/TYPE:
+ - 2010/09/07, jiawenjian, bug fixed
+
+ * DIGEST:
+ - sync phy parameters for rx error in short ethernet cable
+
+ * MODIFIED FILES:
+ - bootcode_rtl8196c_98/boot/rtl8196x/swCore.c  - revision: 2894
+
+ * DESCRIPTION [description about the change]:
+-----------------------------------------------------------------------------
+ * DATE/WHOM/TYPE:
+ - 2010/08/30, jiawenjian, bug fixed
+
+ * DIGEST:
+ - fix bug of code hang when booting
+
+ * MODIFIED FILES:
+ - bootcode_rtl8196c_98/boot/rtl8196x/swCore.c  - revision: 2843
+ - bootcode_rtl8196c_98/boot/init/utility.c  - revision:2842
+
+ * DESCRIPTION [description about the change]:
+-----------------------------------------------------------------------------
+ * DATE/WHOM/TYPE:
+ - 2010/06/07, Jason, bug fixed.
+
+ * DIGEST:
+ - Modified  spi flash CS(chip select) error for Single IO flah type.
+
+ * TEST METHOD:
+ - Update the bootcode to the target with the spi flash and test read/write functions. 
+   Check spi CS(chip select) to keep on high level voltage.
+
+ * MODIFIED FILES:
+ - rtl865x/bootcode_rtl8196c_98/oot/init/ver.h - revision: 1.7
+ - rtl865x/bootcode_rtl8196c_98/boot/flash/spi_flash.c - revision: 1.8
+
+ * DESCRIPTION [description about the change]:
+ - Modified  spi flash CS(chip select) error for Single IO flah type.
+   The error causes CS pull low after probing spi flash because the source code prepare to support Qual/Dual IO spi flash.
+   The chip select is pulled low by P/IO mode.
+-----------------------------------------------------------------------------
+ * DATE/WHOM/TYPE:
+ - 2010/03/29, Jason, feature fine-tune
+ 
+ * DIGEST:
+ - Added auto hardware identification for router mode or pocket ap.
+ 
+ * TEST METHOD:
+ - use diffenent hardware to test router or pocket AP mode.
+   Use the different hardware including pocket AP or router to test auto identification.
+ 
+ * MODIFIED FILES:
+ - rtl865x/bootcode_rtl8196c_98/btcode/start.S - revision: 1583
+ - rtl865x/bootcode_rtl8196c_98/config.in - revision: 1597
+ 
+ * DESCRIPTION [description about the change]:
+ - Added auto hardware identification  router or pocket AP mode using hardware strap register(0xb800008).
+-----------------------------------------------------------------------------
+ * DATE/WHOM/TYPE:
+ - 2010/03/29, Jason, feature fine-tune
+ 
+ * DIGEST:
+ - Added auto identification for AP mode or Router mode.
+ 
+ * TEST METHOD:
+ - use diffenent hardware strap pin target to test AP mode and Router mode. Use tftp test OK by download linux.bin or root.bin
+ 
+ * MODIFIED FILES:
+ - rtl865x/bootcode_rtl8196c_98/boot/rtl8196x/swNic_poll.c - revision: 1582
+ - rtl865x/bootcode_rtl8196c_98/boot/include/rtl8196x/asicregs.h - revision: 1582 
+ * DESCRIPTION [description about the change]:
+ - Added auto identification for AP mode or Router mode.
+   Idenfity the bit 20 of the hardware strap register(0xb800008) to decide the AP mode then port list.
+##### Mar-4-2010 #####
+Description:
+   Sync 2.4 bootcode to support 8196C formal chip: 
+   modify for 8196C formal chip bootcode can not upload image(*.bin).
+Files modified:
+-  New Revision: 1439
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/init/main.c
+
+
+##### Mar-2-2010 #####
+Description:
+   Sync 2.4 bootcode to support 8196C formal chip.
+Files modified:
+-  New Revision: 1422
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/include/asm/rtl8196.h
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/include/asm/rtl8196x.h
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/init/main.c
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/monitor/monitor.c
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/rtl8196x/swCore.c
+   trunk/RLXLinux/bootcode_rtl8196c_98/boot/rtl8196x/swNic_poll.c
+   trunk/RLXLinux/bootcode_rtl8196c_98/btcode/start.S
+   trunk/RLXLinux/bootcode_rtl8196c_98/config.in
+
+###### Jun-29-2009 ####
+Description:
+1. Added UART port to GPIO pint support.
+
+###### Jun-08-2009 ####
+Description:
+1. Modified SDRAM clock to 148.5MHz for SPI flash.
+
+#### May-08-2009 ####
+Description:
+1. Modified SDRAM option and add DDR support in rtl8196.
+
+##### Apr-07-2009 ####
+Description:
+1. fix reset led can not function in rtl8196b
+2. modify led config for POST function in rtk platform
+
+##### Apr-06-2009 ####
+Description:
+1. Added Giga boad default config for flash 4M and DDR SDRAM 32M.
+2. Removed the trivial source code and reduced the code size.
+##### Apr-03-2009 ####
+Description:
+1. Modified TFTP checksum error at first time.
+##### Mar-30-2009 #####
+Description:
+1. Add command to config image signature for KLD package
+
+##### Mar-26-2009 #####
+Description:
+1. Add "CONFIG_BOOT_DEBUG_ENABLE" to reduce boot code size
+2. Add "CONFIG_POST_ENABLE" for KLD package
+
+##### Mar-08-2009 #####
+Description:
+1. According to support RSDK 1.3.6a, modified some spi flash coding style.
+Files modified:
+ -bootcode/boot/spi_flash.c
+
+##### Feb-17-2009 #####
+Description:
+1. According to the suggestion from designer of memory controller, 
+   modify the sequence of memory settings to be as follows:
+    1) set Tx and Rx delay
+    2) set DTR
+    3) set DCR
+Files modified:
+    - bootcode\btcode\start.S   (1)
+
+Release version 1.4a, Dec-28-2008
+1. Added SPI flsah support.
+2. Disable unused IP PLL including pcie1, iis and pcm.
+Release version 1.4, Dec-28-2008
+1. Fix the issue that config.bin has low data error after tftp finish.
+2. Fix the reset button doesn't work.
+3. Fix the checksum exception occur when upgrade whole flash image.
+
+Release version 1.4, Nov-28-2008
+1. Add Http server.
+2. Add Dhcp server
+
+Release version 1.3 April-28-2008
+1.Support RTL8652 auto configure
+2.Add LZMA compressing method.
+3.Fix TFTP stability issue.
+4.Added make menuconfig funcions.
+5.Support Linux 2.6 and 2.4 auto booting.
+
+Release version 1.2, Dec-26-2007
+1. Modify the filename comparision for auto-boot
+2. Fix TFTP stability issue
+
+Release version 1.1, Aug-21-2007
+1. Set GPIO port F bit3 to GPIO mode in default
+
+Release version 1.0, Aug-06-2007
+1. First release,  support 8651c+8190 demo board

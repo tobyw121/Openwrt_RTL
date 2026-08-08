@@ -1,0 +1,485 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 34343 $
+// $Date: 2012-11-14 18:17:19 +0800 (Wed, 14 Nov 2012) $
+//
+// Purpose : Define diag shell commands for switch
+//
+// Feature : The file includes the following module and sub-modules
+//           1) switch commands.
+//
+
+#ifdef CMD_SWITCH_DUMP_DELAY
+//switch configuration
+//dump configuration
+//delay configuration
+switch dump delay
+#endif
+
+#ifdef CMD_SWITCH_GET_CHKSUM_ERR_TYPE_L2_L3_L4_PORT_PORTS_ALL_ACTION
+//switch configuration
+//get configuration
+//checksum error type
+//layer 2 checksum error
+//layer 3 checksum error
+//layer 4 checksum error
+//port configuration
+//port list
+//all ports
+//action configuration
+switch get chksum-err-type ( l2 | l3 | l4 ) port ( <PORT_LIST:ports> | all ) action
+#endif
+
+#ifdef CMD_SWITCH_GET_CRC_RECAL_PORT_PORTS_ALL_STATE
+//switch configuration
+//get configuration
+//CRC recalculation
+//port configuration
+//port list
+//all ports
+//state configuration
+switch get crc-recal port ( <PORT_LIST:ports> | all ) state
+#endif
+
+#ifdef CMD_SWITCH_GET_CRC_RECAL_PORT_PORTS_ALL_TYPE
+//switch configuration
+//get configuration
+//CRC recalculation
+//port configuration
+//port list
+//all ports
+//type configuration
+switch get crc-recal port ( <PORT_LIST:ports> | all ) type
+#endif
+
+#ifdef CMD_SWITCH_GET_DELAY_INTRALINK0_RX_INTRALINK0_TX_INTRALINK1_RX_INTRALINK1_TX_STATE
+//switch configuration
+//get configuration
+//delay configuration
+//intralink 0 receive side
+//intralink 0 transmit side
+//intralink 1 receive side
+//intralink 1 transmit side
+//state information
+switch get delay ( intralink0_rx | intralink0_tx | intralink1_rx | intralink1_tx ) state
+#endif
+
+#ifdef CMD_SWITCH_GET_IPV4_ADDRESS
+//switch configuration
+//get configuration
+//system IPv4 address configuration
+switch get ipv4-address
+#endif
+
+#ifdef CMD_SWITCH_GET_IPV6_ADDRESS
+//switch configuration
+//get configuration
+//system IPv6 address configuration
+switch get ipv6-address
+#endif
+
+#ifdef CMD_SWITCH_GET_MAC_ADDRESS
+//switch configuration
+//get configuration
+//system MAC address configuration
+switch get mac-address
+#endif
+
+#ifdef CMD_SWITCH_GET_CPU_MAX_PKT_LEN_RX_DIR_TX_DIR_LENGTH
+//switch configuration
+//get configuration
+//CPU port maximum packet length
+//Rx direction
+//Tx direction
+//length configuration
+switch get cpu-max-pkt-len ( rx-dir | tx-dir ) length
+#endif
+
+#ifdef CMD_SWITCH_GET_MAX_PKT_LEN_LENGTH
+//switch configuration
+//get configuration
+//max packet length
+//length configuration
+switch get max-pkt-len length
+#endif
+
+#ifdef CMD_SWITCH_GET_MAX_PKT_LEN_FE_GE_LENGTH
+//switch configuration
+//get configuration
+//max packet length
+//fast ethernet speed
+//giga speed
+//length configuration
+switch get max-pkt-len ( fe | ge ) length
+#endif
+
+#ifdef CMD_SWITCH_GET_MAX_PKT_LEN_PORT_PORTS_ALL_LENGTH
+//switch configuration
+//get configuration
+//max packet length
+//port configuration
+//port list
+//all ports
+//length configuration
+switch get max-pkt-len port ( <PORT_LIST:ports> | all ) length
+#endif
+
+#ifdef CMD_SWITCH_GET_MAX_PKT_LEN_TAG_LENGTH_STATE
+//switch configuration
+//get configuration
+//max packet length
+//tag counting state configuration
+switch get max-pkt-len tag-length-state
+#endif
+
+#ifdef CMD_SWITCH_GET_MGMT_VLAN_ID_INNER_OUTER
+//switch configuration
+//get configuration
+//management VLAN id
+//inner VLAN
+//outer VLAN
+switch get mgmt-vlan-id ( inner | outer )
+#endif
+
+#ifdef CMD_SWITCH_GET_PROBE_INFORMATION
+//switch configuration
+//get configuration
+//probe information
+switch get probe-information
+#endif
+
+#ifdef CMD_SWITCH_GET_SDK_VERSION
+//switch configuration
+//get configuration
+//sdk version
+switch get sdk-version
+#endif
+
+#ifdef CMD_SWITCH_GET_SNAP_MODE_PORT_PORTS_ALL
+//switch configuration
+//get configuration
+//snap mode
+//port configuration
+//port list
+//all ports
+switch get snap-mode port ( <PORT_LIST:ports> | all )
+#endif
+
+#ifdef CMD_SWITCH_GET_WATCHDOG_MODE
+//switch configuration
+//get configuration
+//watchdog configuration
+//mode configuration
+switch get watchdog mode
+#endif
+
+#ifdef CMD_SWITCH_GET_WATCHDOG_SCALE_BITS
+//switch configuration
+//get configuration
+//watchdog configuration
+//overflow scale bits configuration
+switch get watchdog scale-bits
+#endif
+
+#ifdef CMD_SWITCH_GET_WATCHDOG_STATE
+//switch configuration
+//get configuration
+//watchdog configuration
+//state configuration
+switch get watchdog state
+#endif
+
+#ifdef CMD_SWITCH_GET_PPPOE_PASSTHROUGH_STATE
+//switch configuration
+//get configuration
+//pppoe-passthrough configuration
+//state configuration
+//disable function
+//enable function
+switch get pppoe-passthrough state
+#endif
+
+#ifdef CMD_SWITCH_SET_CHKSUM_ERR_TYPE_L2_L3_L4_PORT_PORTS_ALL_ACTION_DROP_FORWARD
+//switch configuration
+//set configuration
+//checksum error type
+//layer 2 checksum error
+//layer 3 checksum error
+//layer 4 checksum error
+//port configuration
+//port list
+//all ports
+//action configuration
+//drop action
+//forward action
+switch set chksum-err-type ( l2 | l3 | l4 ) port ( <PORT_LIST:ports> | all ) action ( drop | forward )
+#endif
+
+#ifdef CMD_SWITCH_SET_CRC_RECAL_PORT_PORTS_ALL_STATE_DISABLE_ENABLE
+//switch configuration
+//set configuration
+//CRC recalculation
+//port configuration
+//port list
+//all ports
+//state configuration
+//disable function
+//enable function
+switch set crc-recal port ( <PORT_LIST:ports> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_SWITCH_SET_CRC_RECAL_PORT_PORTS_ALL_TYPE_DISABLE_ENABLE_MOD_ENABLE
+//switch configuration
+//set configuration
+//CRC recalculation
+//port configuration
+//port list
+//all ports
+//type configuration
+//disable function
+//enable function
+//mod-enable function
+switch set crc-recal port ( <PORT_LIST:ports> | all ) type ( disable | enable | mod-enable )
+#endif
+
+#ifdef CMD_SWITCH_SET_DELAY_INTRALINK0_RX_INTRALINK0_TX_INTRALINK1_RX_INTRALINK1_TX_STATE_DISABLE_ENABLE
+//switch configuration
+//set configuration
+//delay configuration
+//intralink 0 receive side
+//intralink 0 transmit side
+//intralink 1 receive side
+//intralink 1 transmit side
+//state configuration
+//disable function
+//enable function
+switch set delay ( intralink0_rx | intralink0_tx | intralink1_rx | intralink1_tx ) state ( disable | enable )
+#endif
+
+#ifdef CMD_SWITCH_SET_IPV4_ADDRESS_IP
+//switch configuration
+//set configuration
+//system IPv4 address configuration
+//IPv4 address
+switch set ipv4-address <IPV4ADDR:ip>
+#endif
+
+#ifdef CMD_SWITCH_SET_IPV6_ADDRESS_IP
+//switch configuration
+//set configuration
+//system IPv6 address configuration
+//IPv6 address
+switch set ipv6-address <IPV6ADDR:ip>
+#endif
+
+#ifdef CMD_SWITCH_SET_MAC_ADDRESS_MAC
+//switch configuration
+//set configuration
+//system MAC address configuration
+//MAC address
+switch set mac-address <MACADDR:mac>
+#endif
+
+#ifdef CMD_SWITCH_SET_CPU_MAX_PKT_LEN_BOTH_DIR_RX_DIR_TX_DIR_LENGTH_LEN
+//switch configuration
+//set configuration
+//CPU port maximum packet length
+//Both directions
+//Rx direction
+//Tx direction
+//length configuration
+//length in bytes
+switch set cpu-max-pkt-len ( both-dir | rx-dir | tx-dir ) length <UINT:len>
+#endif
+
+#ifdef CMD_SWITCH_SET_MAX_PKT_LEN_LENGTH_LEN
+//switch configuration
+//set configuration
+//max packet length
+//length configuration
+//packet length
+switch set max-pkt-len length <UINT:len>
+#endif
+
+#ifdef CMD_SWITCH_SET_MAX_PKT_LEN_FE_GE_LENGTH_LEN
+//switch configuration
+//set configuration
+//max packet length
+//fast ethernet speed
+//giga speed
+//length configuration
+//packet length
+switch set max-pkt-len ( fe | ge ) length <UINT:len>
+#endif
+
+#ifdef CMD_SWITCH_SET_MAX_PKT_LEN_PORT_PORTS_ALL_LENGTH_LEN
+//switch configuration
+//set configuration
+//max packet length
+//port configuration
+//port list
+//all ports
+//length configuration
+//packet length
+switch set max-pkt-len port ( <PORT_LIST:ports> | all ) length <UINT:len>
+#endif
+
+#ifdef CMD_SWITCH_SET_MAX_PKT_LEN_TAG_LENGTH_STATE_EXCLUDE_INCLUDE
+//switch configuration
+//set configuration
+//max packet length
+//tag counting state configuration
+//exclude tag length
+//include tag length
+switch set max-pkt-len tag-length-state ( exclude | include )
+#endif
+
+#ifdef CMD_SWITCH_SET_MGMT_VLAN_ID_INNER_OUTER_VID
+//switch configuration
+//set configuration
+//management VLAN id
+//inner VLAN
+//outer VLAN
+//VLAN id
+switch set mgmt-vlan-id ( inner | outer ) <UINT:vid>
+#endif
+
+#ifdef CMD_SWITCH_SET_SNAP_MODE_PORT_PORTS_ALL_SNAP03000000_SNAP03XXXXXX
+//switch configuration
+//set configuration
+//snap mode
+//port configuration
+//port list
+//all ports
+//snap03000000 mode
+//snap03xxxxxx mode
+switch set snap-mode port ( <PORT_LIST:ports> | all ) ( snap03000000 | snap03xxxxxx )
+#endif
+
+#ifdef CMD_SWITCH_SET_WATCHDOG_MODE_ISR_NORMAL
+//switch configuration
+//set configuration
+//watchdog configuration
+//mode configuration
+//interrupt mode
+//normal mode
+switch set watchdog mode ( isr | normal )
+#endif
+
+#ifdef CMD_SWITCH_SET_WATCHDOG_SCALE_BITS_25_26_27_28
+//switch configuration
+//set configuration
+//watchdog configuration
+//overflow scale bits configuration
+//25-bits
+//26-bits
+//27-bits
+//28-bits
+switch set watchdog scale-bits ( 25 | 26 | 27 | 28 )
+#endif
+
+#ifdef CMD_SWITCH_SET_WATCHDOG_STATE_DISABLE_ENABLE
+//switch configuration
+//set configuration
+//watchdog configuration
+//state configuration
+//disable function
+//enable function
+switch set watchdog state ( disable | enable )
+#endif
+
+#ifdef CMD_SWITCH_GET_PKT2CPU_FORMAT
+//switch configuration
+//get configuration
+//packet to cpu configuration
+//format configuration
+//with modified format
+//with original format
+switch get pkt2cpu format
+#endif
+
+#ifdef CMD_SWITCH_SET_PKT2CPU_FORMAT_MODIFIED_ORIGINAL
+//switch configuration
+//set configuration
+//packet to cpu configuration
+//format configuration
+//with modified format
+//with original format
+switch set pkt2cpu format ( modified | original )
+#endif
+
+#ifdef CMD_SWITCH_GET_PKT2CPU_FORWARD_TRAP_FORMAT
+//switch configuration
+//get configuration
+//packet to cpu configuration
+//forward to CPU
+//trap to CPU
+//format configuration
+switch get pkt2cpu ( forward | trap ) format
+#endif
+
+#ifdef CMD_SWITCH_SET_PKT2CPU_FORWARD_TRAP_FORMAT_MODIFIED_ORIGINAL
+//switch configuration
+//set configuration
+//packet to cpu configuration
+//forward to CPU
+//trap to CPU
+//format configuration
+//with modified format
+//with original format
+switch set pkt2cpu ( forward | trap ) format ( modified | original )
+#endif
+
+#ifdef CMD_SWITCH_SET_PPPOE_PASSTHROUGH_STATE_DISABLE_ENABLE
+//switch configuration
+//set configuration
+//pppoe-passthrough configuration
+//state configuration
+//disable function
+//enable function
+switch set pppoe-passthrough state ( disable | enable )
+#endif
+
+#ifdef CMD_SWITCH_GET_CPU_PACKET_TRUNCATION_STATE
+//switch configuration
+//set configuration
+//CPU packet truncation configuration
+//state configuration
+switch get cpu-packet-truncate state
+#endif
+
+#ifdef CMD_SWITCH_SET_CPU_PACKET_TRUNCATION_STATE_DISABLE_ENABLE
+//switch configuration
+//set configuration
+//CPU packet truncation configuration
+//state configuration
+//disable function
+//enable function
+switch set cpu-packet-truncate state ( disable | enable )
+#endif
+
+#ifdef CMD_SWITCH_GET_CPU_PACKET_TRUNCATION_LEN
+//switch configuration
+//get configuration
+//CPU packet truncation configuration
+//packet length configuration
+switch get cpu-packet-truncate len
+#endif
+
+#ifdef CMD_SWITCH_SET_CPU_PACKET_TRUNCATION_LEN_LEN
+//switch configuration
+//set configuration
+//CPU packet truncation configuration
+//packet length configuration
+//length
+switch set cpu-packet-truncate len <UINT:len>
+#endif

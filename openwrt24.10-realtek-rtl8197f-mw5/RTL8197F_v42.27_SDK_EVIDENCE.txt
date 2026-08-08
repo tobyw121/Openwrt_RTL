@@ -1,0 +1,35 @@
+MW5 v42.27 OEM / SDK evidence
+============================
+
+External switch endpoint
+------------------------
+SDK file:
+  drivers/net/rtl819x/rtl8367r/rtk_api.h
+
+  #define RTK_EXT_1_MAC 6
+
+SDK file:
+  drivers/net/rtl819x/rtl8367r/rtk_api.c
+
+  rtk_port_macForceLinkExt_set(EXT_PORT_1, MODE_EXT_RGMII, ...)
+  rtk_cpu_enable_set(ENABLE)
+  rtk_cpu_tagPort_set(RTK_EXT_1_MAC, CPU_INSERT_TO_NONE)
+
+Therefore MW5 chip ID 0x6367 keeps DSA CPU port 6 / EXT_PORT_1.
+
+OEM CPU trap behavior
+---------------------
+SDK function:
+  rtl865x_enableRtl8367ToCpuAcl()
+
+It creates an ingress ACL on active ports 0x1f with FILTER_ENACT_TRAP_CPU.
+The OEM VLAN enable path also sets SWTCR0 unknown-VID-to-CPU.
+
+SoC internal path
+-----------------
+The external switch is not directly attached to the Linux CPU-DMA engine. Its
+CPU MAC terminates at RTL8197FS physical P0/RGMII, after which the internal
+rtl865x/SWCORE domain performs PVID, VLAN, netif, L2 and CPU classification.
+The v42.26 hardware log showed external user-port traffic but eth0 RX=0 while
+this internal seed was disabled. v42.27 enables the already reconstructed
+GPL-SDK table path for MW5 and substitutes the actual runtime device MAC.

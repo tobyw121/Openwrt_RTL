@@ -1,0 +1,96 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenWrt RTL8197F bringup <noreply@example.invalid>
+Date: Fri, 31 Jul 2026 00:00:00 +0000
+Subject: [PATCH] mips: rtl8197f: stop watchdog and mark the earliest kernel entry
+
+The RTL8197F OEM boot code leaves WDTCNR active before entering the raw
+kernel image.  Stopping it in prom_init() is too late: generic MIPS entry
+setup and the BSS clear run first and can exceed the remaining watchdog
+window.  The MW5 then resets after the LZMA loader prints "Starting kernel".
+
+Use the RTL8197F SDK stop sequence: set WDT_CLEAR (bit 23), then write the exact disable magic 0xa5000000 at kernel_entry, before
+CPU setup and BSS clearing.  Emit a byte marker using the vendor UART byte
+aliases at the earliest entry (K) and after stack setup (S).  prom_init emits
+P separately.  These markers distinguish entry/setup, start_kernel and
+platform-prom failures while the normal console is not available.
+
+The UART marker is bounded and never blocks boot if the UART is unavailable.
+Plain RTL8197F/FS uses THR +0x24; FH/VG uses the standard +0x00 register.
+
+---
+ arch/mips/kernel/head.S | 55 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
+
+--- a/arch/mips/kernel/head.S
++++ b/arch/mips/kernel/head.S
+@@ -82,8 +82,60 @@ FEXPORT(__kernel_entry)
+ 
+ 	__REF
+ 
++#ifdef CONFIG_RTL8197F
++	/*
++	 * The OEM loader enters Linux with the RTL8197F watchdog active.
++	 * This must run before kernel_entry_setup and the BSS clear; prom_init()
++	 * is reached too late to prevent a reset on the MW5.
++	 */
++	.macro	rtl8197f_early_mark char
++	li	t0, 0xb800311c
++	lw	t1, 0(t0)
++	li	t2, 0x00800000
++	or	t1, t1, t2
++	sw	t1, 0(t0)
++	sync
++	li	t1, 0xa5000000
++	sw	t1, 0(t0)
++	sync
++
++	/* Wait, with a finite timeout, for UART0 THR empty. */
++	li	t0, 0xb8147014
++	li	t1, 1000000
++.Lrtl8197f_uart_wait\@:
++	lbu	t2, 0(t0)
++	andi	t2, t2, 0x20
++	bnez	t2, .Lrtl8197f_uart_ready\@
++	 nop
++	addiu	t1, t1, -1
++	bnez	t1, .Lrtl8197f_uart_wait\@
++	 nop
++	b	.Lrtl8197f_uart_done\@
++	 nop
++
++.Lrtl8197f_uart_ready\@:
++	/* RTL8197F/FS uses the +0x24 byte alias; FH/VG uses +0x00. */
++	li	t0, 0xb8000000
++	lw	t2, 0(t0)
++	li	t0, 0xfffff000
++	and	t2, t2, t0
++	li	t0, 0x8197f000
++	bne	t2, t0, .Lrtl8197f_uart_write\@
++	 li	t0, 0xb8147000
++	addiu	t0, t0, 0x24
++.Lrtl8197f_uart_write\@:
++	li	t2, \char
++	sb	t2, 0(t0)
++.Lrtl8197f_uart_done\@:
++	.endm
++#endif
++
+ NESTED(kernel_entry, 16, sp)			# kernel entry point
+ 
++#ifdef CONFIG_RTL8197F
++	rtl8197f_early_mark 0x4b			# 'K': raw kernel entry
++#endif
++
+ 	kernel_entry_setup			# cpu specific setup
+ 
+ 	setup_c0_status_pri
+@@ -138,6 +195,9 @@ dtb_found:
+ 	set_saved_sp	sp, t0, t1
+ 	PTR_SUBU	sp, 4 * SZREG		# init stack pointer
+ 
++#ifdef CONFIG_RTL8197F
++	rtl8197f_early_mark 0x53			# 'S': stack ready
++#endif
+ #ifdef CONFIG_RELOCATABLE
+ 	/* Copy kernel and apply the relocations */
+ 	jal	relocate_kernel

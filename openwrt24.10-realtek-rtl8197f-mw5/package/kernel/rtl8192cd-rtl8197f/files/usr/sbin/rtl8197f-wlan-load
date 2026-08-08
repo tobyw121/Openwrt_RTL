@@ -1,0 +1,41 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Controlled first-load helper for the staged rtl8192cd port.
+set -u
+mode=integrated
+[ "${1:-}" = "--dual" ] && mode=dual
+[ "${1:-}" = "--probe" ] && mode=probe
+board="$(cat /tmp/sysinfo/board_name 2>/dev/null || true)"
+case "$board" in
+	tenda,nova-mw5) profile=mw5; bond=3 ;;
+	xiaomi,r4-rd05) profile=rd05; bond=1 ;;
+	tenda,ac23|tenda,lynx-rtl8197f) profile=ac23; bond=1 ;;
+	*) echo "Refusing WLAN load on unsupported board '$board'" >&2; exit 2 ;;
+esac
+
+echo "board=$board profile=$profile mode=$mode"
+echo 'PCI inventory:'
+cat /proc/bus/pci/devices 2>/dev/null || true
+command -v lspci >/dev/null 2>&1 && lspci -nn 2>/dev/null || true
+[ "$mode" = probe ] && exit 0
+
+if grep -q '^rtl8192cd ' /proc/modules 2>/dev/null; then
+	echo 'rtl8192cd already loaded'
+	exit 0
+fi
+external=0
+[ "$mode" = dual ] && external=1
+
+echo 'Loading experimental rtl8192cd; serial recovery is required.'
+modprobe rtl8192cd board_profile="$profile" bond_option="$bond" external_radio="$external" 2>/dev/null || \
+	insmod rtl8192cd board_profile="$profile" bond_option="$bond" external_radio="$external"
+rc=$?
+sleep 3
+for p in /sys/module/rtl8192cd/parameters/init_phase \
+	/sys/module/rtl8192cd/parameters/last_phase \
+	/sys/module/rtl8192cd/parameters/init_rc; do
+	[ -e "$p" ] && echo "$(basename "$p")=$(cat "$p")"
+done
+dmesg | grep -Ei 'rtl8197f-wlan|rtl8192cd|8197f|8822|8812f|8814b|phydm|halmac|firmware|efuse|iqk|lck|irq|dma' | tail -n 220 || true
+ip -brief link show 2>/dev/null || ip link show
+exit "$rc"

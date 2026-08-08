@@ -1,0 +1,46 @@
+RTL8197F v42.6 validation
+========================
+
+MW5 OEM bootloader reconstruction:
+- decompressed second-stage boot code from the matched SPI template
+- located the rootfs verification routine
+- confirmed rootfs length = BE32(rootfs + 0x08) + 0x282
+- confirmed stock marker 0x002f4d80 -> check length 0x002f5002
+
+Generated-rootfs tests:
+- synthetic SquashFS-4 image marker generation: PASS
+- normal bytes_used field retained at superblock +0x28: PASS
+- marker written big-endian at superblock +0x08: PASS
+- 4 KiB trailer alignment: PASS
+- final big-endian 16-bit additive sum: PASS
+- invalid timestamp-style marker rejection: PASS
+
+Supplied MW5 image repair:
+- full image size 0x800000: PASS
+- cr6c header and load/burn addresses: PASS
+- kernel payload checksum: 0x0000 PASS
+- rootfs offset: 0x2e3122 PASS
+- new marker: 0x0025cd80 PASS
+- bootloader check length: 0x25d002 PASS
+- rootfs checksum word: 0xa472
+- rootfs checksum sum: 0x0000 PASS
+- protected regions byte-identical: PASS
+
+Hardware boot is not claimed until verified through UART on the physical MW5.
+
+Static checker output
+---------------------
+PASS: WLAN variants, preprocessor symbols, RTL8812F block and local SHA-256 linkage
+PASS: MW5 stock template accepted only as template; shifted OpenWrt payload rejected
+PASS: MW5 rootfs boot-length marker generation, rejection and stock-template rule
+PASS: patch contents and hunk counts
+PASS: rtl8192cd local SHA-256/PRF symbols and known-answer vectors
+tenda-ac23-spi.bin: OK
+tenda-nova-mw5-spi.bin: OK
+xiaomi-r4-rd05-spi.bin: OK
+rd05: template OK size=0x1000000 sha256=805469c49ecd6860a444f92ef19bcf4834ee912261b4a0205074d6095c516608 kernel_len=0xc0ed4a
+mw5: template OK size=0x800000 sha256=b4b1b2caca98e20096a80519b9c8ff22399d051bc77f6aef4f29b6ef76a31428 kernel_len=0x1f8002
+ac23: template OK size=0x800000 sha256=300c7216dbfa1d7d930a8db896ec755edb0c41bd3c1b3ab90e4befcd045aebf5 kernel_len=0x23a002
+RTL8197F board profile validation OK: 3 boards
+PASS: v42 private templates, headers, checksums and board profiles
+PASS: v42 source tree static checks

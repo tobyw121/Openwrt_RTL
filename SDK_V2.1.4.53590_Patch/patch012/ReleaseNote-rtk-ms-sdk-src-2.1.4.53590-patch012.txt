@@ -1,0 +1,31 @@
+[RTL839xM][OAM] Add ETH-DM RX timestampe get API.
+Enhancement:
+	(1) Add rtk_oam_cfmEthDmRxTimestamp_get() to get RXTimeStamp by index.
+	(2) Add "oam get cfm eth-dm rx-timestamp index <UINT:index>" diag shell command.
+How to turn on this feature:
+    The ETH_DM and PTP functions share the same entity of clock, so PTP reference-time-related
+    commands could be used to control ETH_DM time clock.
+
+Modified Files: (svn r64321 r64350 and r64912, SS-59)
+*     /sdk/include/dal/cypress/dal_cypress_oam.h
+*     /sdk/include/dal/dal_mapper.h
+*     /sdk/include/hal/chipdef/chip.h
+*     /sdk/include/hal/common/halctrl.h
+*     /sdk/include/rtk/default.h
+*     /sdk/include/rtk/oam.h
+*     /sdk/src/app/diag_v2/config/oam.cli
+*     /sdk/src/app/diag_v2/include/flag/cmd_flag_rtl8390.h
+*     /sdk/src/app/diag_v2/src/diag_oam.c
+*     /sdk/src/dal/cypress/dal_cypress_mapper.c
+*     /sdk/src/dal/cypress/dal_cypress_oam.c
+*     /sdk/src/dal/esw/dal_esw_mapper.c
+*     /sdk/src/dal/maple/dal_maple_mapper.c
+*     /sdk/src/hal/chipdef/chip.c
+*     /sdk/src/rtk/oam.c
+*     /sdk/system/linux/rtdrv/rtdrv_netfilter.c
+*     /sdk/system/linux/rtdrv/rtdrv_netfilter.h
+*     /sdk/system/linux/rtk/module.c
+*     /sdk/system/linux/rtk/rtusr/src/rtusr_oam.c
+
+Release Files:
+	rtk-ms-sdk-src-2.1.4.53590-patch012.tar.gz

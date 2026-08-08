@@ -1,0 +1,114 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenAI <noreply@openai.com>
+Date: Sat, 1 Aug 2026 00:00:00 +0000
+Subject: [PATCH] net: dsa: realtek: add RTL4 protocol-9 support for MW5
+
+The RTL8197F + RTL8367R/C SDK used by Tenda Nova MW5 selects the
+four-byte Realtek CPU tag (EtherType 0x8899, protocol nibble 0x9), while
+the generic RTL8365MB driver currently exposes only the eight-byte
+protocol-4 taggers. Add a distinct DSA protocol and select it only for
+boards carrying the realtek,cpu-tag-4bytes-proto9 property. The Kconfig
+selection deliberately targets the Linux 6.6 subdriver/imply layout used by
+OpenWrt 24.10.
+
+Signed-off-by: OpenAI <noreply@openai.com>
+---
+ include/net/dsa.h                    |  2 ++
+ net/dsa/Kconfig                      |  8 ++++++++
+ net/dsa/Makefile                     |  1 +
+ drivers/net/dsa/realtek/Kconfig      |  1 +
+ drivers/net/dsa/realtek/rtl8365mb.c  | 15 +++++++++++++++
+ 5 files changed, 27 insertions(+)
+
+--- a/include/net/dsa.h
++++ b/include/net/dsa.h
+@@ -57,6 +57,7 @@
+ #define DSA_TAG_PROTO_RTL8_4T_VALUE		25
+ #define DSA_TAG_PROTO_RZN1_A5PSW_VALUE		26
+ #define DSA_TAG_PROTO_LAN937X_VALUE		27
++#define DSA_TAG_PROTO_RTL4_9_VALUE		28
+ 
+ enum dsa_tag_protocol {
+ 	DSA_TAG_PROTO_NONE		= DSA_TAG_PROTO_NONE_VALUE,
+@@ -89,6 +90,7 @@ enum dsa_tag_protocol {
+ 	DSA_TAG_PROTO_RTL8_4T		= DSA_TAG_PROTO_RTL8_4T_VALUE,
+ 	DSA_TAG_PROTO_RZN1_A5PSW	= DSA_TAG_PROTO_RZN1_A5PSW_VALUE,
+ 	DSA_TAG_PROTO_LAN937X		= DSA_TAG_PROTO_LAN937X_VALUE,
++	DSA_TAG_PROTO_RTL4_9		= DSA_TAG_PROTO_RTL4_9_VALUE,
+ };
+ 
+ struct dsa_switch;
+--- a/net/dsa/Kconfig
++++ b/net/dsa/Kconfig
+@@ -130,6 +130,14 @@ config NET_DSA_TAG_RTL4_A
+ 	  Realtek switches with 4 byte protocol A tags, such as found in
+ 	  the Realtek RTL8366RB.
+ 
++config NET_DSA_TAG_RTL4_9
++	tristate "Tag driver for Realtek 4 byte protocol 9 tags"
++	help
++	  Say Y or M if you want to enable support for the four-byte
++	  protocol-9 CPU tag used by RTL8197F systems with RTL8367R/C-family
++	  external switches, including the Tenda Nova MW5. Do not use it with
++	  the incompatible eight-byte protocol-4 CPU-tag configuration.
++
+ config NET_DSA_TAG_RTL8_4
+ 	tristate "Tag driver for Realtek 8 byte protocol 4 tags"
+ 	help
+--- a/net/dsa/Makefile
++++ b/net/dsa/Makefile
+@@ -24,5 +24,6 @@ obj-$(CONFIG_NET_DSA_TAG_OCELOT_8021Q) += tag_ocelot_8021q.o
+ obj-$(CONFIG_NET_DSA_TAG_QCA) += tag_qca.o
+ obj-$(CONFIG_NET_DSA_TAG_RTL4_A) += tag_rtl4_a.o
++obj-$(CONFIG_NET_DSA_TAG_RTL4_9) += tag_rtl4_9.o
+ obj-$(CONFIG_NET_DSA_TAG_RTL8_4) += tag_rtl8_4.o
+ obj-$(CONFIG_NET_DSA_TAG_RZN1_A5PSW) += tag_rzn1_a5psw.o
+ obj-$(CONFIG_NET_DSA_TAG_SJA1105) += tag_sja1105.o
+--- a/drivers/net/dsa/realtek/Kconfig
++++ b/drivers/net/dsa/realtek/Kconfig
+@@ -37,6 +37,7 @@ config NET_DSA_REALTEK_RTL8365MB
+ 	tristate "Realtek RTL8365MB switch subdriver"
+ 	imply NET_DSA_REALTEK_SMI
+ 	imply NET_DSA_REALTEK_MDIO
++	select NET_DSA_TAG_RTL4_9
+ 	select NET_DSA_TAG_RTL8_4
+ 	help
+ 	  Select to enable support for Realtek RTL8365MB-VC and RTL8367S.
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -816,6 +816,10 @@ rtl8365mb_get_tag_protocol(struct dsa_switch *ds, int port,
+ 	mb = priv->chip_data;
+ 	cpu = &mb->cpu;
+ 
++	if (of_property_read_bool(priv->dev->of_node,
++				  "realtek,cpu-tag-4bytes-proto9"))
++		return DSA_TAG_PROTO_RTL4_9;
++
+ 	if (cpu->position == RTL8365MB_CPU_POS_BEFORE_CRC)
+ 		return DSA_TAG_PROTO_RTL8_4T;
+ 
+@@ -1761,6 +1765,11 @@ static int rtl8365mb_change_tag_protocol(struct dsa_switch *ds,
+ 	mb = priv->chip_data;
+ 	cpu = &mb->cpu;
+ 	switch (proto) {
++	case DSA_TAG_PROTO_RTL4_9:
++		cpu->format = RTL8365MB_CPU_FORMAT_4BYTES;
++		cpu->position = RTL8365MB_CPU_POS_AFTER_SA;
++		break;
++
+ 	case DSA_TAG_PROTO_RTL8_4:
+ 		cpu->format = RTL8365MB_CPU_FORMAT_8BYTES;
+ 		cpu->position = RTL8365MB_CPU_POS_AFTER_SA;
+@@ -3362,6 +3371,12 @@ static int rtl8365mb_detect(struct realtek_priv *priv)
+ 	mb->cpu.position = RTL8365MB_CPU_POS_AFTER_SA;
+ 	mb->cpu.rx_length = RTL8365MB_CPU_RXLEN_64BYTES;
+ 	mb->cpu.format = RTL8365MB_CPU_FORMAT_8BYTES;
++	if (of_property_read_bool(priv->dev->of_node,
++				  "realtek,cpu-tag-4bytes-proto9")) {
++		mb->cpu.format = RTL8365MB_CPU_FORMAT_4BYTES;
++		dev_info(priv->dev,
++			 "MW5 SDK CPU tag: 4-byte protocol 0x9 after source MAC\n");
++	}
+ 
+ 	return 0;
+ }

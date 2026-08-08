@@ -1,0 +1,35 @@
+#
+# Copyright (C) 2009 Realtek Semiconductor Corp. 
+#
+# Makefile for SDK Linux Rtdrv Kernel Module
+#
+
+EXTRA_CFLAGS += -Wall -Werror -Wuninitialized -Wstrict-prototypes
+EXTRA_CFLAGS += -I$(SDK_INCLUDE) -I$(SYS_INCLUDE) -I$(DRV_INCLUDE)
+
+EXTRA_CFLAGS += -I$(MODELDIR) -I$(MODELDIR)/common -I$(MODELDIR)/behavior_src/8390 -I$(MODELDIR)/testcase/8390
+
+ifneq ($(CONFIG_SDK_DRIVER_TEST),)
+EXTRA_CFLAGS += -I$(UT_INCLUDE)
+endif
+
+ifeq ($(CONFIG_SDK_DRIVER_RTDRV),m)
+EXTRA_CFLAGS += -mlong-calls -fno-pic -mno-abicalls
+EXTRA_CFLAGS += -D__RTDRV_MODULE__
+endif
+
+TARGET = rtdrv
+
+obj-$(CONFIG_SDK_DRIVER_RTDRV) += $(TARGET).o
+$(TARGET)-objs := rtdrv_netfilter.o
+
+ifeq ($(CONFIG_SDK_APP_DIAG_EXT),y)
+    ifeq ($(CONFIG_SDK_RTL8390),y)
+        $(TARGET)-objs += ext/rtdrv_netfilter_ext_8390.o
+    else
+        ifeq ($(CONFIG_SDK_RTL8380),y)
+            $(TARGET)-objs += ext/rtdrv_netfilter_ext_8380.o
+        endif
+    endif
+endif
+

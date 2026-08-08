@@ -1,0 +1,9 @@
+status	path	type	mode	sha256_or_target	size
+added	RD05_NATIVE_DSA_V38_3.md	file	0644	ce30fdc6fc04f8e1a69960125bc7359f1a922ba942416f5d6417379a09cc0903	2397
+changed	README.md	file	0644	a5382b50de7b296c12655da9f4935c9901971fccd4f2a31dc54bd9421d148252	2821
+changed	package/network/config/rtl8367d-compat/Makefile	file	0644	e894a612a0de18aa5f88f883e8ca94526c7d15aabc73be1a0aec7633f52f1a55	2104
+changed	package/network/config/rtl8367d-compat/files/rd05-rgmii-calibrate	file	0755	f026a3e29801e4ac9a822ca56193ef04f846c316c1b48fc1f54558651102bf8a	13432
+changed	scripts/validate-realtek-driver-port.sh	file	0755	23c87d65f2a118e33ce1ae19236e884e515643f66b1e5c3d359e3757e4f96ecb	24413
+changed	target/linux/realtek/base-files/etc/rd05-v38-notes	file	0644	ef07deba522eb07f2dfff5b949bbb5c19991a82bd808b588710d3ffbd30c9ab0	1535
+changed	target/linux/realtek/base-files/usr/bin/rd05-netdiag	file	0755	901267a29bc237593bbfb0ef4fd7937ea80afaaee3c20fde87b2d15794d50164	103184
+changed	target/linux/realtek/base-files/usr/bin/rd05-v38-check	file	0755	e9830e31cf6422af3a9f264a26e705387a4c208f53c5cfa106b3493042578873	9250

@@ -1,0 +1,44 @@
+dimension	value	entries
+inventory	all regular files and symlinks	976
+port_status	build-support-retained	44
+port_status	generic-kernel-replacement	5
+port_status	generic-kernel-replacement-needs-hardware-validation	2
+port_status	legacy-bsp-replaced	85
+port_status	legacy-chip-gap-retained	168
+port_status	legacy-control-api-retained	161
+port_status	legacy-kernel-glue-replaced	45
+port_status	legacy-kernel-module-replaced	52
+port_status	legacy-phy-gap-retained	6
+port_status	legacy-support-library-retained	13
+port_status	native-integrated	12
+port_status	native-integrated-needs-hardware-validation	51
+port_status	native-semantic-replacement	58
+port_status	reference-only	273
+port_status	source-retained-review-required	1
+component	GPIO	6
+component	Linux 2.6 BSP copy	85
+component	MMIO/I/O abstraction	4
+component	OS abstraction	15
+component	PHY support	1
+component	RTK management API	59
+component	RTL8201 PHY	2
+component	RTL8208/RTL8212 multiport PHY	6
+component	RTL8231 multifunction expander	5
+component	RTL8328 switch/NIC/BSP	98
+component	RTL8389 switch/NIC/BSP	70
+component	RTL83xx switch PHY/SerDes	22
+component	SDK common support	13
+component	SMI/MDIO management bus	4
+component	UART	5
+component	data abstraction layer	102
+component	diagnostic/example/test	196
+component	hardware abstraction/register tables	39
+component	interrupt controller	2
+component	legacy Linux glue	45
+component	legacy SDK kernel ABI	52
+component	legacy build system	44
+component	reference/support material	77
+component	switch CPU-port NIC	10
+component	switch LED engine	3
+component	switch core	6
+component	watchdog	5

@@ -1,0 +1,156 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 27178 $
+// $Date: 2012-03-12 18:57:24 +0800 (Mon, 12 Mar 2012) $
+//
+// Purpose : Define diag shell commands for debug.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) debug commands.
+//
+
+
+#ifdef CMD_DEBUG_DUMP_HSA
+//debug configuration
+//dump configuration
+//header stamp after information
+debug dump hsa
+#endif
+
+#ifdef CMD_DEBUG_DUMP_HSB
+//debug configuration
+//dump configuration
+//header stamp before information
+debug dump hsb
+#endif
+
+#ifdef CMD_DEBUG_DUMP_HSM
+//debug configuration
+//dump configuration
+//header stamp middle information
+debug dump hsm
+#endif
+
+#ifdef CMD_DEBUG_DUMP_HSM_INDEX
+//debug configuration
+//dump configuration
+//header stamp middle information
+//HSM index, <0-2>
+debug dump hsm <UINT:index>
+#endif
+
+#ifdef CMD_DEBUG_DUMP_PMI
+//debug configuration
+//dump configuration
+//packet modification information
+debug dump pmi
+#endif
+
+#ifdef CMD_DEBUG_DUMP_PPI_INDEX
+//debug configuration
+//dump configuration
+//packet process information
+//PPI index, <0-6>
+debug dump ppi <UINT:index>
+#endif
+
+#ifdef CMD_DEBUG_GET_LOG
+//debug configuration
+//get configuration
+//log information
+debug get log
+#endif
+
+#ifdef CMD_DEBUG_SET_LOG_STATE_DISABLE_ENABLE
+//debug configuration
+//set configuration
+//log information
+//state configuration
+//disable function
+//enable function
+debug set log state ( disable | enable )
+#endif
+
+#ifdef CMD_DEBUG_SET_LOG_LEVEL_VALUE
+//debug configuration
+//set configuration
+//log information
+//level of log
+//level <0-8>
+debug set log level <UINT:value>
+#endif
+
+#ifdef CMD_DEBUG_SET_LOG_LEVEL_MASK_BITMASK
+//debug configuration
+//set configuration
+//log information
+//mask of log
+//bit mask
+debug set log level-mask <UINT:bitmask>
+#endif
+
+#ifdef CMD_DEBUG_SET_LOG_LEVEL_TYPE_LEVEL_LEVEL_MASK
+//debug configuration
+//set configuration
+//log information
+//configure type of level
+//configure by level
+//configure by level mask
+debug set log level-type ( level | level-mask )
+#endif
+
+#ifdef CMD_DEBUG_SET_LOG_FORMAT_NORMAL_DETAIL
+//debug configuration
+//set configuration
+//log information
+//log format
+//normal display
+//detail display
+debug set log format ( normal | detail )
+#endif
+
+#ifdef CMD_DEBUG_SET_LOG_MODULE_BITMASK
+//debug configuration
+//set configuration
+//log information
+//component module
+//module mask HEX
+debug set log module <UINT64:bitmask>
+#endif
+
+#ifdef CMD_DEBUG_SET_MEMORY_ADDRESS_VALUE
+//debug configuration
+//set configuration
+//memory configuration
+//register address
+//register value
+debug set memory <UINT:address> <UINT:value>
+#endif
+
+#ifdef CMD_DEBUG_GET_MEMORY_ADDRESS_WORDS
+//debug configuration
+//get configuration
+//memory register
+//register address
+//number of words
+debug get memory <UINT:address> { <UINT:words> }
+#endif
+
+#ifdef CMD_DEBUG_GET_TABLE_TABLE_IDX_ADDRESS
+//debug configuration
+//set configuration
+//table configuration
+//table index
+//entry address
+debug get table <UINT:table_idx> <UINT:address>
+#endif
+

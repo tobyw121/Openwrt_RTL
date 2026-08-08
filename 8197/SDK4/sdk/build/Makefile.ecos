@@ -1,0 +1,419 @@
+#
+# Copyright (C) 2009 Realtek Semiconductor Corp. 
+#
+# Makefile for SDK eCos Support
+#
+
+ECOS_SDK_ROOT_DIR := $(shell pwd)
+ECOS_SDK_SRC_DIR := $(ECOS_SDK_ROOT_DIR)/src
+ECOS_SDK_INC_DIR := $(ECOS_SDK_ROOT_DIR)/include
+ECOS_SDK_CFG_DIR := $(ECOS_SDK_ROOT_DIR)/config
+ECOS_SDK_SYS_DIR := $(ECOS_SDK_ROOT_DIR)/system
+ECOS_SYS_INC_DIR := $(ECOS_SDK_SYS_DIR)/ecos
+ECOS_DRV_INC_DIR := $(ECOS_SDK_SYS_DIR)/include
+ECOS_SDK_CONFIG := $(ECOS_SDK_CFG_DIR)/.config
+
+ifeq ("x$(INSTALL_DIR)","x")
+KERNEL_INSTALL_DIR := $(ECOS_SDK_SRC_DIR)/../../../build/kernel/install
+else
+KERNEL_INSTALL_DIR := $(INSTALL_DIR)
+endif
+
+-include $(KERNEL_INSTALL_DIR)/include/pkgconf/ecos.mak
+
+TARGET := rtk_target.elf
+
+ifeq ($(ECOS_SDK_CONFIG),$(wildcard $(ECOS_SDK_CONFIG)))
+include $(ECOS_SDK_CONFIG)
+all: $(TARGET)
+else
+all: config_error
+endif
+
+XCC           = $(ECOS_COMMAND_PREFIX)gcc
+XCXX          = $(XCC)
+XLD           = $(XCC)
+OBJDUMP       = $(ECOS_COMMAND_PREFIX)objdump
+OBJCOPY       = $(ECOS_COMMAND_PREFIX)objcopy
+STRIP         = $(ECOS_COMMAND_PREFIX)strip 
+AR            = $(ECOS_COMMAND_PREFIX)ar
+
+CFLAGS        = -I$(KERNEL_INSTALL_DIR)/include -I$(ECOS_SDK_INC_DIR) -I$(ECOS_SYS_INC_DIR) -I$(ECOS_DRV_INC_DIR)
+CFLAGS       += -I$(ECOS_SDK_INC_DIR)/app/diag -I$(ECOS_SDK_SRC_DIR)/app/lib -I$(DIAG_INC)
+CXXFLAGS      = $(CFLAGS)
+LDFLAGS       = -nostartfiles -L$(KERNEL_INSTALL_DIR)/lib -Ttarget.ld
+
+SYS_DIR := $(ECOS_SDK_SYS_DIR)/ecos
+SYS_OBJ := \
+	$(SYS_DIR)/dev_config.o 
+
+BSP_DIR := $(ECOS_SDK_SYS_DIR)/bsp
+BSP_OBJ := \
+#	$(BSP_DIR)/watchdog.o
+
+DRV_DIR := $(ECOS_SDK_SYS_DIR)/drv
+DRV_SWCORE_DIR := $(DRV_DIR)/swcore
+DRV_SMI_DIR := $(DRV_DIR)/smi
+DRV_NIC_DIR := $(DRV_DIR)/nic
+DRV_OBJ := \
+	$(DRV_SWCORE_DIR)/chip.o \
+	$(DRV_SWCORE_DIR)/sys.o
+ifeq ($(CONFIG_SDK_BSP_SMI),y)
+DRV_OBJ += \
+	$(DRV_DIR)/smi/smi.o \
+	$(DRV_DIR)/gpio/gpio.o
+#	$(DRV_SMI_DIR)/smi.o 
+endif
+
+NIC_DIR := $(DRV_DIR)/nic
+NIC_OBJ := \
+	$(NIC_DIR)/nic.o \
+	$(NIC_DIR)/probe.o \
+	$(NIC_DIR)/diag.o
+ifneq ($(CONFIG_SDK_DRIVER_NIC_R8389),)
+NIC_OBJ += \
+	$(NIC_DIR)/r8389.o
+endif
+ifneq ($(CONFIG_SDK_DRIVER_NIC_R8328),)
+NIC_OBJ += \
+	$(NIC_DIR)/r8328.o
+endif
+
+SYS_COMMON_DIR := $(ECOS_SDK_SYS_DIR)/common
+SYS_COMMON_DBG_DIR := $(SYS_COMMON_DIR)/debug
+SYS_COMMON_RTCORE_DIR := $(SYS_COMMON_DIR)/rtcore
+SYS_COMMON_OBJ := \
+	$(SYS_COMMON_DBG_DIR)/rt_log.o \
+	$(SYS_COMMON_DBG_DIR)/mem.o \
+	$(SYS_COMMON_RTCORE_DIR)/init.o
+
+COMMON_DIR := $(ECOS_SDK_SRC_DIR)/common
+COMMON_UTIL_DIR := $(COMMON_DIR)/util
+COMMON_OBJ := \
+	$(COMMON_DIR)/rt_error.o \
+	$(COMMON_UTIL_DIR)/rt_bitop.o \
+	$(COMMON_UTIL_DIR)/rt_util.o
+
+OSAL_ECOS_DIR := $(ECOS_SDK_SYS_DIR)/osal/ecos
+OSAL_OS_DIR := $(OSAL_ECOS_DIR)
+OSAL_OBJ := \
+	$(OSAL_OS_DIR)/cache.o \
+	$(OSAL_OS_DIR)/isr.o \
+	$(OSAL_OS_DIR)/lib.o \
+	$(OSAL_OS_DIR)/memory.o \
+	$(OSAL_OS_DIR)/sem.o \
+	$(OSAL_OS_DIR)/time.o \
+	$(OSAL_OS_DIR)/thread.o 
+
+IOAL_DIR := $(ECOS_SDK_SYS_DIR)/ioal
+IOAL_OBJ := \
+	$(IOAL_DIR)/ioal_init.o \
+	$(IOAL_DIR)/mem32.o 
+	
+HAL_DIR := $(ECOS_SDK_SRC_DIR)/hal
+HAL_CHIPDEF_DIR := $(HAL_DIR)/chipdef
+HAL_COMMON_DIR := $(HAL_DIR)/common
+HAL_MAC_DIR := $(HAL_DIR)/mac
+HAL_PHY_DIR := $(HAL_DIR)/phy
+HAL_OBJ := \
+	$(HAL_CHIPDEF_DIR)/chip.o \
+	$(HAL_CHIPDEF_DIR)/driver.o \
+	$(HAL_COMMON_DIR)/halctrl.o \
+	$(HAL_COMMON_DIR)/miim.o \
+	$(HAL_MAC_DIR)/mac_probe.o \
+	$(HAL_MAC_DIR)/drv.o \
+	$(HAL_MAC_DIR)/mem.o \
+	$(HAL_MAC_DIR)/reg.o \
+	$(HAL_PHY_DIR)/phy_probe.o \
+	$(HAL_PHY_DIR)/identify.o \
+	$(HAL_PHY_DIR)/phy_common.o
+ifeq ($(CONFIG_SDK_RTL8201),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8201.o
+endif
+ifeq ($(CONFIG_SDK_RTL8208),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8208.o
+endif
+ifeq ($(CONFIG_SDK_RTL8212F),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8212f.o
+endif
+ifeq ($(CONFIG_SDK_RTL8214),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8214f.o
+else ifeq ($(CONFIG_SDK_RTL8214F),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8214f.o
+endif
+ifeq ($(CONFIG_SDK_RTL8218),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8218.o
+endif
+ifeq ($(CONFIG_SDK_RTL8389),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8389.o \
+	$(HAL_CHIPDEF_DIR)/ssw/rtk_ssw_reg_list.o \
+	$(HAL_CHIPDEF_DIR)/ssw/rtk_ssw_regField_list.o \
+	$(HAL_CHIPDEF_DIR)/ssw/rtk_ssw_table_list.o \
+	$(HAL_CHIPDEF_DIR)/ssw/rtk_ssw_tableField_list.o \
+	$(HAL_CHIPDEF_DIR)/ssw/chip_rtl8389.o
+endif
+ifeq ($(CONFIG_SDK_RTL8328),y)
+HAL_OBJ += \
+	$(HAL_MAC_DIR)/mac_debug.o \
+	$(HAL_CHIPDEF_DIR)/esw/rtk_esw_reg_list.o \
+	$(HAL_CHIPDEF_DIR)/esw/rtk_esw_regField_list.o \
+	$(HAL_CHIPDEF_DIR)/esw/rtk_esw_table_list.o \
+	$(HAL_CHIPDEF_DIR)/esw/rtk_esw_tableField_list.o \
+	$(HAL_CHIPDEF_DIR)/esw/chip_rtl8328.o
+endif
+
+DAL_DIR := $(ECOS_SDK_SRC_DIR)/dal
+DAL_SSW_DIR := $(DAL_DIR)/ssw
+DAL_ESW_DIR := $(DAL_DIR)/esw
+DAL_OBJ := \
+	$(DAL_DIR)/dal_common.o \
+	$(DAL_DIR)/dal_mgmt.o \
+	$(DAL_DIR)/dal_linkMon.o
+ifeq ($(CONFIG_SDK_RTL8389),y)
+DAL_OBJ += \
+	$(DAL_SSW_DIR)/dal_ssw_mapper.o \
+	$(DAL_SSW_DIR)/dal_ssw_dot1x.o \
+	$(DAL_SSW_DIR)/dal_ssw_flowctrl.o \
+	$(DAL_SSW_DIR)/dal_ssw_l2.o \
+	$(DAL_SSW_DIR)/dal_ssw_mirror.o \
+	$(DAL_SSW_DIR)/dal_ssw_port.o \
+	$(DAL_SSW_DIR)/dal_ssw_qos.o \
+	$(DAL_SSW_DIR)/dal_ssw_rate.o \
+	$(DAL_SSW_DIR)/dal_ssw_stat.o \
+	$(DAL_SSW_DIR)/dal_ssw_stp.o \
+	$(DAL_SSW_DIR)/dal_ssw_switch.o \
+	$(DAL_SSW_DIR)/dal_ssw_trap.o \
+	$(DAL_SSW_DIR)/dal_ssw_trunk.o \
+	$(DAL_SSW_DIR)/dal_ssw_vlan.o \
+	$(DAL_SSW_DIR)/dal_ssw_svlan.o \
+	$(DAL_SSW_DIR)/dal_ssw_filter.o \
+	$(DAL_SSW_DIR)/dal_ssw_led.o \
+	$(DAL_SSW_DIR)/dal_ssw_eee.o
+endif
+ifeq ($(CONFIG_SDK_RTL8328),y)
+DAL_OBJ += \
+	$(DAL_ESW_DIR)/dal_esw_mapper.o \
+	$(DAL_ESW_DIR)/dal_esw_dot1x.o \
+	$(DAL_ESW_DIR)/dal_esw_eee.o \
+	$(DAL_ESW_DIR)/dal_esw_flowctrl.o \
+	$(DAL_ESW_DIR)/dal_esw_l2.o \
+	$(DAL_ESW_DIR)/dal_esw_l3.o \
+	$(DAL_ESW_DIR)/dal_esw_mirror.o \
+	$(DAL_ESW_DIR)/dal_esw_oam.o \
+	$(DAL_ESW_DIR)/dal_esw_pie.o \
+	$(DAL_ESW_DIR)/dal_esw_port.o \
+	$(DAL_ESW_DIR)/dal_esw_qos.o \
+	$(DAL_ESW_DIR)/dal_esw_rate.o \
+	$(DAL_ESW_DIR)/dal_esw_sec.o \
+	$(DAL_ESW_DIR)/dal_esw_stat.o \
+	$(DAL_ESW_DIR)/dal_esw_stp.o \
+	$(DAL_ESW_DIR)/dal_esw_switch.o \
+	$(DAL_ESW_DIR)/dal_esw_trap.o \
+	$(DAL_ESW_DIR)/dal_esw_trunk.o \
+	$(DAL_ESW_DIR)/dal_esw_vlan.o
+endif
+
+RTK_DIR := $(ECOS_SDK_SRC_DIR)/rtk
+RTK_OBJ := \
+	$(RTK_DIR)/init.o \
+	$(RTK_DIR)/dot1x.o \
+	$(RTK_DIR)/eee.o \
+	$(RTK_DIR)/filter.o \
+	$(RTK_DIR)/flowctrl.o \
+	$(RTK_DIR)/l2.o \
+	$(RTK_DIR)/l3.o \
+	$(RTK_DIR)/mirror.o \
+	$(RTK_DIR)/oam.o \
+	$(RTK_DIR)/port.o \
+	$(RTK_DIR)/pie.o \
+	$(RTK_DIR)/qos.o \
+	$(RTK_DIR)/rate.o \
+	$(RTK_DIR)/sec.o \
+	$(RTK_DIR)/stat.o \
+	$(RTK_DIR)/stp.o \
+	$(RTK_DIR)/svlan.o \
+	$(RTK_DIR)/switch.o \
+	$(RTK_DIR)/trap.o \
+	$(RTK_DIR)/vlan.o \
+	$(RTK_DIR)/trunk.o \
+	$(RTK_DIR)/led.o
+
+ifeq ($(CONFIG_SDK_DRIVER_TEST),y)
+UT_DIR := $(ECOS_SDK_ROOT_DIR)/unittest
+CFLAGS += -I$(UT_DIR)
+COMMONUTIL_DIR := $(UT_DIR)/common
+SDKTEST_DIR := $(UT_DIR)/sdk
+HALTEST_DIR := $(UT_DIR)/hal
+DALTEST_DIR := $(UT_DIR)/dal
+NICTEST_DIR := $(UT_DIR)/nic
+OSALTEST_DIR := $(UT_DIR)/osal
+
+UT_OBJ := \
+	$(SDKTEST_DIR)/sdk_test.o \
+	$(COMMONUTIL_DIR)/unittest_util.o \
+	$(OSALTEST_DIR)/osal_test_memory_cache.o \
+	$(OSALTEST_DIR)/osal_test_isr.o \
+	$(OSALTEST_DIR)/osal_test_time.o \
+	$(OSALTEST_DIR)/osal_test_thread.o \
+	$(OSALTEST_DIR)/osal_test_mutex.o \
+	$(OSALTEST_DIR)/osal_test_sem.o \
+	$(HALTEST_DIR)/hal_api_test_case.o \
+	$(HALTEST_DIR)/hal_database_test_case.o \
+	$(HALTEST_DIR)/hal_mechanism_test_case.o \
+	$(DALTEST_DIR)/dal_vlan_test_case.o \
+	$(DALTEST_DIR)/dal_qos_test_case.o \
+	$(DALTEST_DIR)/dal_flowctrl_test_case.o \
+	$(DALTEST_DIR)/dal_l2_test_case.o \
+	$(DALTEST_DIR)/dal_dot1x_test_case.o \
+	$(DALTEST_DIR)/dal_filter_test_case.o \
+	$(DALTEST_DIR)/dal_rate_test_case.o \
+	$(DALTEST_DIR)/dal_trunk_test_case.o \
+	$(DALTEST_DIR)/dal_switch_test_case.o \
+	$(DALTEST_DIR)/dal_stp_test_case.o \
+	$(DALTEST_DIR)/dal_svlan_test_case.o \
+	$(DALTEST_DIR)/dal_trap_test_case.o \
+	$(DALTEST_DIR)/dal_port_test_case.o \
+	$(DALTEST_DIR)/dal_pie_test_case.o \
+	$(DALTEST_DIR)/dal_oam_test_case.o \
+	$(DALTEST_DIR)/dal_eee_test_case.o \
+	$(DALTEST_DIR)/dal_l3_test_case.o \
+	$(DALTEST_DIR)/dal_sec_test_case.o \
+	$(DALTEST_DIR)/dal_stp_test_case.o  \
+	$(NICTEST_DIR)/nic_test_case.o
+endif
+
+MAIN_DIR := $(SYS_DIR)
+MAIN_OBJ := \
+	$(MAIN_DIR)/usrAppStart.o
+
+ifeq ($(CONFIG_SDK_APP_DIAG),y)
+DIAG_ROOT_DIR := $(ECOS_SDK_SRC_DIR)/app/diag
+DIAG_DIR := $(DIAG_ROOT_DIR)/src
+DIAG_INC = $(ECOS_SDK_ROOT_DIR)/src/app/diag/include
+DIAG_OBJ := \
+	$(DIAG_DIR)/parser/cparser.o \
+	$(DIAG_DIR)/parser/cparser_fsm.o \
+	$(DIAG_DIR)/parser/cparser_io_unix.o \
+	$(DIAG_DIR)/parser/cparser_line.o \
+	$(DIAG_DIR)/parser/cparser_token.o \
+	$(DIAG_DIR)/parser/cparser_token_tbl.o \
+	$(DIAG_DIR)/parser/cparser_tree.o \
+	$(DIAG_DIR)/diag_util.o \
+	$(DIAG_DIR)/diag_main.o \
+	$(DIAG_DIR)/diag_cmd.o \
+    $(DIAG_DIR)/diag_dot1x.o \
+    $(DIAG_DIR)/diag_om.o \
+    $(DIAG_DIR)/diag_eee.o \
+    $(DIAG_DIR)/diag_reg.o \
+    $(DIAG_DIR)/diag_trap.o \
+    $(DIAG_DIR)/diag_oam.o \
+    $(DIAG_DIR)/diag_port.o \
+    $(DIAG_DIR)/diag_stp.o \
+    $(DIAG_DIR)/diag_l2.o \
+    $(DIAG_DIR)/diag_l3.o \
+    $(DIAG_DIR)/diag_qos.o \
+    $(DIAG_DIR)/diag_trunk.o \
+    $(DIAG_DIR)/diag_rate.o \
+    $(DIAG_DIR)/diag_switch.o \
+    $(DIAG_DIR)/diag_counter.o \
+    $(DIAG_DIR)/diag_sec.o \
+    $(DIAG_DIR)/diag_mirror.o \
+    $(DIAG_DIR)/diag_vlan.o \
+    $(DIAG_DIR)/diag_flowctrl.o \
+    $(DIAG_DIR)/diag_pie.o \
+    $(DIAG_DIR)/diag_svlan.o \
+    $(DIAG_DIR)/diag_filter.o
+ifneq ($(CONFIG_SDK_DRIVER_NIC),)
+DIAG_OBJ += \
+    $(DIAG_DIR)/diag_nic.o
+endif
+ifneq ($(CONFIG_SDK_DEBUG),)
+DIAG_OBJ += \
+    $(DIAG_DIR)/diag_debug.o
+endif
+ifneq ($(CONFIG_RRCP_MASTER),)
+DIAG_OBJ += \
+    $(DIAG_DIR)/diag_rrcpmaster.o
+endif
+ifneq ($(CONFIG_SDK_DRIVER_TEST),)
+DIAG_OBJ += \
+    $(DIAG_DIR)/diag_sdk.o
+endif
+endif
+
+DRV_OBJ := $(SYS_OBJ) $(BSP_OBJ) $(DRV_OBJ) $(SYS_COMMON_OBJ) $(COMMON_OBJ) $(NIC_OBJ) $(OSAL_OBJ) $(IOAL_OBJ) $(HAL_OBJ) $(DAL_OBJ) $(SDKTEST_OBJ) $(RTK_OBJ)
+APP_OBJ := $(MAIN_OBJ)
+ifeq ($(CONFIG_SDK_DRIVER_TEST),y)
+DRV_OBJ += $(UT_OBJ)
+endif
+ifeq ($(CONFIG_SDK_APP_DIAG),y)
+APP_OBJ += $(DIAG_OBJ)
+endif
+ALL_OBJ := $(DRV_OBJ) $(APP_OBJ)
+
+ifdef APP_LIBDIR
+else
+APP_LIBDIR := .
+endif
+
+TARGET_LIB := $(APP_LIBDIR)/libsdk.a
+
+.PHONY: all clean install
+
+$(TARGET): $(TARGET_LIB) $(APP_OBJ)
+	$(XLD) $(LDFLAGS) $(ECOS_GLOBAL_LDFLAGS) -o $(TARGET) $(APP_OBJ) $(TARGET_LIB) $(APP_LIB)
+	$(OBJCOPY) -O binary $@ $(basename $(TARGET)).bin
+	$(OBJCOPY) -O srec $@ $(basename $(TARGET)).srec
+	$(OBJDUMP) -DSlx $@ > $(basename $(TARGET)).code
+#	$(STRIP) $@
+	make -f $(ECOS_SDK_SRC_DIR)/../build/Makefile.ecos install
+
+$(TARGET_LIB): $(DRV_OBJ)
+	$(AR) rcs $@ $(DRV_OBJ)
+
+ifdef IMAGE_DIR
+install: $(TARGET)
+	-mkdir -p $(IMAGE_DIR)/sdk
+	mv $(basename $(TARGET)).* $(IMAGE_DIR)/sdk
+else
+install: $(TARGET)
+
+endif
+
+distclean: clean
+	-$(MAKE) -C $(ECOS_SDK_CFG_DIR) clean	
+
+clean:
+	-rm -f $(ALL_OBJ)
+	-rm -f $(TARGET) $(TARGET_LIB)
+	-rm -f $(IMAGE_DIR)/sdk/*
+	-$(MAKE) -C $(APP_LIB_READLINE_DIR) $@
+
+%.o: %.c
+	$(XCC) -c -o $*.o $(CFLAGS) $(EXTRA_CFLAGS) $(ECOS_GLOBAL_CFLAGS) $<
+
+%.o: %.cxx
+	$(XCXX) -c -o $*.o $(CXXFLAGS) $(ECOS_GLOBAL_CFLAGS) $<
+
+%.o: %.C
+	$(XCXX) -c -o $*.o $(CXXFLAGS) $(ECOS_GLOBAL_CFLAGS) $<
+
+%.o: %.cc
+	$(XCXX) -c -o $*.o $(CXXFLAGS) $(ECOS_GLOBAL_CFLAGS) $<
+
+config_error:
+	@echo "*************************************************"
+	@echo "You have not run make menuconfig."
+	@echo "The build sequence for this source tree is:"
+	@echo "1. 'make menuconfig'"
+	@echo "2. 'make'"
+	@echo "*************************************************"
+	@exit 1
+

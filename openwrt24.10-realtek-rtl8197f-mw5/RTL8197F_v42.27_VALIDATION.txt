@@ -1,0 +1,32 @@
+RTL8197F v42.27 validation
+==========================
+
+Scope
+-----
+Source-tree update based on v42.26. No prebuilt full-flash is claimed because a
+complete OpenWrt MIPS world build is required to compile the driver and DTB.
+
+Static checks
+-------------
+- MW5 DTS contains realtek,legacy-rd05-sdk-pipeline.
+- MW5 still uses CPU port 6, LAN port 1, WAN port 3.
+- MW5 still uses six-dword / 24-byte descriptors.
+- MW5 board setup forces legacy_rd05_pipeline=true.
+- pipeline and L2 seed functions accept both RD05 and MW5 P0 boards.
+- netif and CPU L2 entries use priv->ndev->dev_addr.
+- delayed reseed runs whenever the P0 pipeline is enabled.
+- runtime summary token: p0 cpu-pipeline v42.27.
+- board profile version: 42.27-development.
+
+Not yet proven
+--------------
+- Physical MW5 eth0 RX after table seed.
+- DHCP lease, DNS, LAN ping and WAN DHCP.
+- Whether an additional external RTL8363 ingress ACL trap is necessary.
+- Persistent overlay functionality.
+
+Safety
+------
+The source tree contains private MW5 full-flash templates with unit-specific MAC,
+factory and RF calibration data. It must not be used for another device or
+published unchanged.

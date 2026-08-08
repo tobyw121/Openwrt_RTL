@@ -1,0 +1,639 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 30032 $
+// $Date: 2012-06-18 19:54:51 +0800 (Mon, 18 Jun 2012) $
+//
+// Purpose : Define diag shell commands for port.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) port commands.
+//
+
+#ifdef CMD_PORT_DUMP_CPU_PORT
+//port configuration
+//dump configuration
+//CPU port id
+port dump cpu-port
+#endif
+
+#ifdef CMD_PORT_DUMP_ISOLATION_PORT_ALL
+//port configuration
+//dump configuration
+//traffic isolation configuration
+//port list
+//all ports
+port dump isolation ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_PORT_DUMP_PORT_ALL
+//port configuration
+//dump configuration
+//port list
+//all ports
+port dump ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_PORT_DUMP_RLDP_PORT_ALL
+//port configuration
+//dump configurration
+//RLDP configuration
+//port list
+//all ports
+port dump rldp ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_PORT_DUMP_UDLD_PORT_ALL
+//port configuration
+//dump configuration
+//UDLD configuration
+//port list
+//all ports
+port dump udld { ( <PORT_LIST:port> | all ) }
+#endif
+
+#ifdef CMD_PORT_DUMP_ISOLATION_VLAN_BASED
+//port configuration
+//dump configuration
+//traffic isolation configuration
+//VLAN based configuration
+port dump isolation vlan-based
+#endif
+
+#ifdef CMD_PORT_GET_AUTO_NEGO_PORT_ALL_ABILITY
+//port configuration
+//get configuration
+//auto negotiation configuration
+//port list
+//all port
+//ability
+port get auto-nego ( <PORT_LIST:port> | all ) ability 
+#endif
+
+#ifdef CMD_PORT_GET_AUTO_NEGO_PORT_ALL_STATE
+//port configuration
+//get configuration
+//auto negotiation configuration
+//port list
+//all port
+//state
+port get auto-nego ( <PORT_LIST:port> | all ) state 
+#endif
+
+#ifdef CMD_PORT_GET_BACK_PRESSURE_PORT_ALL_STATE
+//port configuration
+//get configuration
+//back pressure configuration
+//port list
+//all port
+//state configuration
+port get back-pressure ( <PORT_LIST:port> | all ) state 
+#endif
+
+#ifdef CMD_PORT_GET_COMBO_MODE_PORT_ALL
+//port configuration
+//get configuration
+//combo mode configuration
+//port list
+//all port
+port get combo-mode ( <PORT_LIST:port> | all ) 
+#endif
+
+#ifdef CMD_PORT_GET_COMBO_FIBER_MODE_PORT_ALL
+//port configuration
+//get configuration
+//combo fiber mode configuration
+//port list
+//all port
+port get combo-fiber-mode ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_PORT_GET_GREEN_PORT_ALL_STATE
+//port configuration
+//get configuration
+//green configuration
+//port list
+//all port
+//state configuration
+port get green ( <PORT_LIST:port> | all ) state 
+#endif
+
+#ifdef CMD_PORT_GET_ISOLATION_SRC_PORT
+//port configuration
+//get configuration
+//traffic isolation configuration
+//sourece port list
+port get isolation <PORT_LIST:src_port> 
+#endif
+
+#ifdef CMD_PORT_GET_ISOLATION_VLAN_BASED_VID
+//port configuration
+//get configuration
+//traffic isolation configuration
+//VLAN based configuration
+//VLAN ID
+port get isolation vlan-based <UINT:vid> 
+#endif
+
+#ifdef CMD_PORT_GET_ISOLATION_VLAN_BASED_VLAN_SOURCE
+//port configuration
+//get configuration
+//traffic isolation configuration
+//VLAN based configuration
+//VLAN tag source configuration
+port get isolation vlan-based vlan-source 
+#endif
+
+#ifdef CMD_PORT_GET_FORCE_PORT_ALL
+//port configuration
+//get configuration
+//force mode configuration
+//port list
+//all port
+port get force ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_PORT_GET_LINK_DOWN_POWER_SAVING_PORT_ALL_STATE
+//port configuration
+//get configuration
+//link down power saving configuration
+//port list
+//all port
+//state configuration
+port get link-down-power-saving ( <PORT_LIST:port> | all ) state 
+#endif
+
+#ifdef CMD_PORT_GET_PHY_REG_PORT_ALL_PAGE_REGISTER_NUMBER
+//port configuration
+//get configuration
+//phy register configuration
+//port list
+//all port
+//page value
+//register address
+//register numbers
+port get phy-reg ( <PORT_LIST:port> | all ) <UINT:page> <UINT:register> { <UINT:number> }
+#endif
+
+#ifdef CMD_PORT_GET_PHY_EXT_REG_PORT_ALL_MAINPAGE_EXTPAGE_PARKPAGE_REGISTER_NUMBER
+//port configuration
+//get configuration
+//phy register configuration with extension/park page config
+//port list include CPU port
+//all port
+//main page
+//extension page
+//parking page
+//register address
+//register numbers
+port get phy-ext-reg ( <PORT_LIST:port> | all ) <UINT:mainPage> <UINT:extPage> <UINT:parkPage> <UINT:register> { <UINT:number> }
+#endif
+
+#ifdef CMD_PORT_GET_PHY_MMD_REG_PORT_ALL_MMD_ADDR_MMD_REG_NUMBER
+//port configuration
+//get configuration
+//phy mmd register configuration
+//port list include CPU port
+//all port
+//mmd device address
+//mmd register address
+//mmd register numbers
+port get phy-mmd-reg ( <PORT_LIST:port> | all ) <UINT:mmd_addr> <UINT:mmd_reg> { <UINT:number> }
+#endif
+
+#ifdef CMD_PORT_GET_PHY_REG_PORT_ALL_PAGE
+//port configuration
+//get configuration
+//phy register configuration
+//port list
+//all port
+//page value
+port get phy-reg ( <PORT_LIST:port> | all ) <UINT:page>
+#endif
+
+#ifdef CMD_PORT_GET_PHY_REG_PORT_ALL
+//port configuration
+//get configuration
+//phy register configuration
+//port list
+//all port
+port get phy-reg ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_PORT_GET_PORT_ALL_STATE
+//port configuration
+//get configuration
+//port list
+//all port
+//state configuration
+port get ( <PORT_LIST:port> | all ) state
+#endif
+
+#ifdef CMD_PORT_SET_AUTO_NEGO_PORT_ALL_ABILITY_10H_10F_100H_100F_1000F_FLOW_CONTROL_ASY_FLOW_CONTROL
+//port configuration
+//set configuration
+//auto negotiation configuration
+//port list
+//all port
+//ability
+//10M half
+//10M full
+//100M half
+//100M full
+//1000M full
+//flow control
+//asynchronism flow control
+port set auto-nego ( <PORT_LIST:port> | all ) ability { 10h } { 10f } { 100h } { 100f } { 1000f } { flow-control } { asy-flow-control }
+#endif
+
+#ifdef CMD_PORT_SET_AUTO_NEGO_PORT_ALL_STATE_DISABLE_ENABLE
+//port configuration
+//set configuration
+//auto negotiation configuration
+//port list
+//all port
+//state configuration
+//disable function
+//enable function
+port set auto-nego ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_PORT_SET_BACK_PRESSURE_PORT_ALL_STATE_DISABLE_ENABLE
+//port configuration
+//set configuration
+//back pressure configuration
+//port list
+//all port
+//state configuration
+//disable function
+//enable function
+port set back-pressure ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_PORT_SET_COMBO_MODE_PORT_ALL_COPPER_FORCE_FIBER_FORCE_AUTO_PREFERRED_COPPER_AUTO_PREFERRED_FIBER_AUTO_PREFERRED_FIBER_BY_GPIO
+//port configuration
+//set configuration
+//combo mode configuration
+//port list
+//all port
+//copper force mode
+//fiber force mode
+//auto preferred copper media mode
+//auto preferred fiber media mode
+//auto preferred fiber media mode by software mechanism depend on GPIO
+port set combo-mode ( <PORT_LIST:port> | all ) ( copper-force | fiber-force | auto-preferred-copper | auto-preferred-fiber | auto-preferred-fiber-by-gpio )
+#endif
+
+#ifdef CMD_PORT_SET_COMBO_FIBER_MODE_PORT_ALL_FIBER_1000_FIBER_100_FIBER_AUTO
+//port configuration
+//set configuration
+//combo fiber mode configuration
+//port list
+//all port
+//fiber 1000Base-X
+//fiber 100Base-FX
+//fiber 1000Base-X and 100Base-FX auto
+port set combo-fiber-mode ( <PORT_LIST:port> | all ) ( fiber-1000 | fiber-100 | fiber-auto )
+#endif
+
+#ifdef CMD_PORT_SET_FORCE_PORT_ALL_ABILITY_10H_10F_100H_100F_1000F_FLOW_CONTROL_STATE_DISABLE_ENABLE
+//port configuration
+//set configuration
+//force mode configuration
+//port list
+//all port
+//ability
+//10M half
+//10M full
+//100M half
+//100M full
+//1000M full
+//flow control
+//state configuration
+//disable function
+//enable function
+port set force ( <PORT_LIST:port> | all ) ability ( 10h | 10f | 100h | 100f | 1000f ) flow-control state ( disable | enable )
+#endif
+
+#ifdef CMD_PORT_SET_GREEN_PORT_ALL_STATE_DISABLE_ENABLE
+//port configuration
+//set configuration
+//green configuration
+//port list
+//all port
+//state configuration
+//disable function
+//enable function
+port set green ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_PORT_SET_ISOLATION_SRC_PORT_PORT_ALL
+//port configuration
+//set configuration
+//traffic isolation configuration
+//sourece port list
+//target port list
+//all port
+port set isolation <PORT_LIST:src_port> ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_PORT_SET_LINK_DOWN_POWER_SAVING_PORT_ALL_STATE_DISABLE_ENABLE
+//port configuration
+//set configuration
+//link down power saving configuration
+//port list
+//all port
+//state configuration
+//disable function
+//enable function
+port set link-down-power-saving ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_PORT_SET_ISOLATION_VLAN_BASED_VID_TRUST_PORT_NONE
+//port configuration
+//set configuration
+//traffic isolation configuration
+//VLAN based configuration
+//VLAN ID
+//trust port list, other ports are forbidden ports
+//trust port list is none, the entry will be deleted
+port set isolation vlan-based <UINT:vid> ( <PORT_LIST:trust_port> | none )
+#endif
+
+#ifdef CMD_PORT_SET_ISOLATION_VLAN_BASED_VID_STATE_DISABLE_ENABLE
+//port configuration
+//set configuration
+//traffic isolation configuration
+//VLAN based configuration
+//VLAN ID
+//state configuration
+//disable function
+//enable function
+port set isolation vlan-based <UINT:vid> state ( disable | enable )
+#endif
+
+#ifdef CMD_PORT_SET_ISOLATION_VLAN_BASED_VLAN_SOURCE_INNER_OUTER_FORWARDING
+//port configuration
+//set configuration
+//traffic isolation configuration
+//VLAN based configuration
+//VLAN tag source configuration
+//inner VID
+//outer VID
+//forwarding VID
+port set isolation vlan-based vlan-source ( inner | outer | forwarding )
+#endif
+
+#ifdef CMD_PORT_SET_PHY_REG_PORT_ALL_PAGE_REGISTER_DATA
+//port configuration
+//set configuration
+//phy register configuration
+//port list
+//all port
+//page address
+//register address
+//data value
+port set phy-reg ( <PORT_LIST:port> | all ) <UINT:page> <UINT:register> <UINT:data>
+#endif
+
+#ifdef CMD_PORT_SET_PHY_BCAST_REG_BROADCAST_ID
+//port configuration
+//set configuration
+//phy broadcast register configuration
+//broadcast ID
+port set phy-bcast-reg <UINT:broadcast_id>
+#endif
+
+#ifdef CMD_PORT_SET_PHY_REG_BROADCAST_PAGE_REGISTER_DATA
+//port configuration
+//set configuration
+//phy register configuration
+//phy register broadcast configuration
+//page address
+//register address
+//data value
+port set phy-reg broadcast <UINT:page> <UINT:register> <UINT:data>
+#endif
+
+#ifdef CMD_PORT_SET_PHY_EXT_REG_PORT_ALL_MAINPAGE_EXTPAGE_PARKPAGE_REGISTER_DATA
+//port configuration
+//set configuration
+//phy register configuration with extension/park page config
+//port list include CPU port
+//main page
+//extension page
+//parking page
+//register address
+//data value
+port set phy-ext-reg ( <PORT_LIST:port> | all ) <UINT:mainPage> <UINT:extPage> <UINT:parkPage> <UINT:register> <UINT:data>
+#endif
+
+#ifdef CMD_PORT_SET_PHY_MMD_REG_PORT_ALL_MMD_ADDR_MMD_REG_DATA
+//port configuration
+//set configuration
+//phy mmd register configuration
+//port list include CPU port
+//all port
+//mmd device address
+//mmd register address
+//data value
+port set phy-mmd-reg ( <PORT_LIST:port> | all ) <UINT:mmd_addr> <UINT:mmd_reg> <UINT:data>
+#endif
+
+#ifdef CMD_PORT_SET_RX_TX_PORT_ALL_STATE_DISABLE_ENABLE
+//port configuration
+//set configuration
+//rx configuration
+//tx configuration
+//port list
+//all port
+//state configuration
+//disable function
+//enable function
+port set ( rx | tx ) ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_PORT_SET_PORT_ALL_STATE_DISABLE_ENABLE
+//port configuration
+//set configuration
+//port list
+//all port
+//state configuration
+//disable function
+//enable function
+port set ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_PORT_SET_RLDP_AUTO_BLOCK_PORT_ALL_STATE_DISABLE_ENABLE
+//port configuration
+//set configuration
+//RLDP configuration
+//auto block self loop port
+//port list
+//all port
+//state configuration
+//disable function
+//enable function
+port set rldp auto-block ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_PORT_SET_RLDP_PORT_ALL_STATE_DISABLE_ENABLE
+//port configuration
+//set configuration
+//RLDP configuration
+//port list
+//all port
+//state configuration
+//disable function
+//enable function
+port set rldp ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_PORT_SET_RLDP_HELLO_TIME_NORMAL_LOOP_AGING_TIME_SELF_LOOP_AGING_TIME_PORT_ALL_1S_2S_4S_8S
+//port configuration
+//set configuration
+//RLDP configuration
+//hello time configuration
+//normal loop aging time configuration
+//self loop aging time configuration
+//port list
+//all port
+//1 second
+//2 seconds
+//4 seconds
+//8 seconds
+port set rldp ( hello-time | normal-loop-aging-time | self-loop-aging-time ) ( <PORT_LIST:port> | all ) ( 1s | 2s | 4s | 8s )
+#endif
+
+#ifdef CMD_PORT_SET_UDLD_AUTO_DISABLE_PORT_LED_INDICATION_LINKUP_AUTO_TRIG_STATE_DISABLE_ENABLE
+//port configuration
+//set configuration
+//UDLD configuration
+//auto disable port
+//led indication configuration
+//linkup auto trigger
+//state configuration
+//disable function
+//enable function
+port set udld ( auto-disable-port | led-indication | linkup-auto-trig ) state ( disable | enable )
+#endif
+
+#ifdef CMD_PORT_SET_UDLD_ECHO_GENERATE_INTERVAL_2S_4S_8S_16S
+//port configuration
+//set configuration
+//UDLD configuration
+//echo generator interval configuration
+//2 seconds
+//4 seconds
+//8 seconds
+//16 seconds
+port set udld echo-generate-interval ( 2s | 4s | 8s | 16s )
+#endif
+
+#ifdef CMD_PORT_SET_UDLD_ECHO_REQUEST_RETRY_TIMES_1_2_4_8
+//port configuration
+//set configuration
+//UDLD configuration
+//echo request retry times
+//1 time only
+//2 times
+//4 times
+//8 times
+port set udld echo-request-retry-times ( 1 | 2 | 4 | 8 )
+#endif
+
+#ifdef CMD_PORT_SET_UDLD_ECHO_ACTION_FORWARD_SELFLOOP
+//port configuration
+//set configuration
+//UDLD configuration
+//echo packet received action
+//forward
+//self loopback
+port set udld echo-action ( forward | selfloop )
+#endif
+
+#ifdef CMD_PORT_SET_UDLD_LINK_STATUS_PORT_ALL_DISABLE_NORMAL
+//port configuration
+//set configuration
+//UDLD configuration
+//link status configuration
+//port list
+//all port
+//disable function
+//normal
+port set udld link-status ( <PORT_LIST:port> | all ) ( disable | normal )
+#endif
+
+#ifdef CMD_PORT_SET_UDLD_PORT_ALL_STATE_DISABLE_ENABLE
+//port configuration
+//set configuration
+//UDLD configuration
+//port list
+//all port
+//state configuration
+//disable function
+//enable function
+port set udld ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_PORT_SET_UDLD_PORT_ALL_TRIGGER
+//port configuration
+//set configuration
+//UDLD configuration
+//port list
+//all port
+//trigger
+port set udld ( <PORT_LIST:port> | all ) trigger 
+#endif
+
+#ifdef CMD_PORT_SET_CROSS_OVER_PORT_ALL_MODE_AUTO_MDI_MDIX
+//port configuration
+//set configuration
+//cross over configuration
+//port list
+//all ports
+//mode configuration
+//auto MDI/MDIX mode
+//force MDI mode
+//force MDIX mode
+port set cross-over ( <PORT_LIST:port> | all ) mode ( auto | mdi | mdix )
+#endif
+
+#ifdef CMD_PORT_GET_CROSS_OVER_PORT_ALL_MODE
+//port configuration
+//get configuration
+//cross over configuration
+//port list
+//all ports
+//mode configuration
+port get cross-over ( <PORT_LIST:port> | all ) mode
+#endif
+
+#ifdef CMD_PORT_SET_MASTER_SLAVE_PORT_ALL_AUTO_MASTER_SLAVE
+//port configuration
+//set configuration
+//master slave mode configuration
+//port list
+//all port
+//auto mode
+//master mode
+//slave mode
+port set master-slave ( <PORT_LIST:port> | all ) ( auto | master | slave )
+#endif
+
+#ifdef CMD_PORT_GET_MASTER_SLAVE_PORT_ALL
+//port configuration
+//get configuration
+//master slave mode configuration
+//port list
+//all port
+port get master-slave ( <PORT_LIST:port> | all )
+#endif

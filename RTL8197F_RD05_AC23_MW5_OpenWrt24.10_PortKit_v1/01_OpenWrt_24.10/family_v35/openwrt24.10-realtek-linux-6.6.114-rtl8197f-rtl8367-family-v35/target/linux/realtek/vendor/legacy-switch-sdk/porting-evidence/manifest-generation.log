@@ -1,0 +1,16 @@
+manifest entries: 976
+build-support-retained: 44
+generic-kernel-replacement: 5
+generic-kernel-replacement-needs-hardware-validation: 2
+legacy-bsp-replaced: 85
+legacy-chip-gap-retained: 168
+legacy-control-api-retained: 161
+legacy-kernel-glue-replaced: 45
+legacy-kernel-module-replaced: 52
+legacy-phy-gap-retained: 6
+legacy-support-library-retained: 13
+native-integrated: 12
+native-integrated-needs-hardware-validation: 51
+native-semantic-replacement: 58
+reference-only: 273
+source-retained-review-required: 1

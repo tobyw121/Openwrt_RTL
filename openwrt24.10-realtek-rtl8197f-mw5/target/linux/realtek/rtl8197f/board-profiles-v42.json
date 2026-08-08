@@ -1,0 +1,136 @@
+{
+  "schema": 1,
+  "version": "42.27-development",
+  "boards": {
+    "xiaomi,r4-rd05": {
+      "confidence": "high",
+      "soc": "RTL8197FH-VG",
+      "ram_bytes": 134217728,
+      "flash_bytes": 16777216,
+      "firmware_offset": 393216,
+      "switch": "RTL8367D",
+      "switch_chip_id": "0x6642",
+      "switch_revision": "0x0030",
+      "smi_mdc_gpio": 56,
+      "smi_mdio_gpio": 55,
+      "switch_reset_gpio": 58,
+      "cpu_port": 7,
+      "pcie_radio": "RTL8812FE",
+      "pcie_id": "10ec:f812",
+      "wlan_rfe": 0,
+      "evidence": [
+        "OEM Linux 4.4.176 boot log",
+        "OEM /proc/rtl865x and rtl_8367 dumps",
+        "RD05 full SPI dump",
+        "Realtek RTL8197F and RTL8367D SDK sources"
+      ]
+    },
+    "tenda,nova-mw5": {
+      "confidence": "medium-high",
+      "soc": "RTL8197FS",
+      "ram_bytes": 134217728,
+      "flash_bytes": 8388608,
+      "firmware_offset": 196608,
+      "firmware_size": 5832704,
+      "switch": "RTL8363NB-class",
+      "smi_mdc_gpio": 18,
+      "smi_mdio_gpio": 19,
+      "status_led_gpio": 33,
+      "reset_button_gpio": 54,
+      "lan_ports": [
+        1
+      ],
+      "wan_ports": [
+        3
+      ],
+      "cpu_port": 6,
+      "integrated_radio": "RTL8197FS integrated 2.4 GHz",
+      "integrated_radio_mmio": "0xb8640000",
+      "integrated_radio_irq": 6,
+      "wlan_rfe": 5,
+      "external_radio_candidates": [
+        "RTL8822B PCIe (OEM runtime/PID-confirmed)",
+        "RTL8812BRH (conflicting board inventory only)"
+      ],
+      "evidence": [
+        "OEM Linux 3.10.90 runtime and kallsyms dumps",
+        "OEM /proc/wlan0/mib_all: RTL8822B, 5 GHz, RFE6",
+        "OEM /proc/wlan1/mib_all: RTL8197FS, 2.4 GHz, RFE5",
+        "OEM PCI identity 10ec:b822 for external radio",
+        "OEM /etc_ro/gpio_conf",
+        "verified MW5 8 MiB SPI dump",
+        "extracted RTL8197F/RFE5 and RTL8822B firmware tables",
+        "Realtek RTL8197FS SDK sources"
+      ],
+      "unresolved": [
+        "Exact RTL8363NB cold-start jam table",
+        "External radio identity should still be read back on the target unit before RF transmission",
+        "Board-specific regulatory domain and calibration validity require live validation"
+      ],
+      "integrated_interface_oem": "wlan1",
+      "integrated_radio_rfe": 5,
+      "external_radio": "RTL8822B PCIe",
+      "external_pcie_id": "10ec:b822",
+      "external_interface_oem": "wlan0",
+      "external_radio_rfe": 6,
+      "external_radio_confidence": "high from OEM runtime and PCI evidence",
+      "flash_erase_size": 65536,
+      "squashfs_block_size": 1048576,
+      "image_profile": "flash-safe IPv4 router; dnsmasq/firewall4/WLAN retained; IPv6, HTTPS fetch, diagnostics and U-Boot tools omitted from the immutable rootfs",
+      "firmware_budget_policy": "strict 0x590000-byte OEM KernelFS window; CFM/CFM_BACKUP/LOG/ENV preserved",
+      "spi_automap_read_shift": 0,
+      "spi_automap_evidence": "Hardware log raw auto-map bytes match the private SPI image at exact offsets; shift=1 corrupts cr6c and hsqs by one byte",
+      "uart_rbr_thr_alias_offset": 36,
+      "uart_dll_offset": 0,
+      "soc_switch_endpoint": "RTL8197FS physical P0/RGMII",
+      "switch_cpu_endpoint": "RTL8363/RTL8367 external CPU port 6",
+      "soc_tx_port_mask": "0x1",
+      "soc_tx_dp_ext": 0,
+      "p0_rgmii_tx_delay": 0,
+      "p0_rgmii_rx_delay": 5,
+      "p0_cpu_tag_passthrough": true,
+      "uart_network_evidence": "Physical v42.22 boot reaches procd; RX read at standard offset produced NUL stream. Realtek RTL8197FS SDK maps RBR/THR to +0x24 and external RTL83xx to physical P0/RGMII.",
+      "loader_link_address": "0x80d00000",
+      "kernel_load_address": "0x80100000",
+      "loader_safety_margin_bytes": 3142309,
+      "loader_relocation_evidence": "The v42.24 world-build kernel was 0x900d5b bytes and ended at 0x80a00d5b, overlapping the old 0x80a00000 loader by 0xd5b bytes.",
+      "loader_staging_address": "0x80a00000",
+      "loader_relocation_distance_bytes": 3145728,
+      "cpu_dma_descriptor_dwords": 6,
+      "cpu_dma_descriptor_stride_bytes": 24,
+      "cpu_dma_descriptor_evidence": "RTL8197FS non-VG SDK defines CONFIG_RTL_TX/RX_CACHE_ALIGN only for RTL8197F_VG; hardware CPUICR1 readback keeps CF_TXDESC/CF_RXDESC zero while v42.25 32-byte software rings time out with TX OWN set and RX zero.",
+      "soc_internal_p0_cpu_pipeline": true,
+      "soc_internal_lan_vid": 9,
+      "soc_internal_host_port": 0,
+      "soc_internal_pipeline_policy": "OEM-derived rtl865x PVID/VLAN/netif/L2/unknown-to-CPU plus DHCPv4/DHCPv6/PPPoE ingress ACL seed; uses runtime eth0 MAC",
+      "soc_internal_pipeline_evidence": "v42.26 hardware: RTL8363 LAN/WAN counters rise and both links reach forwarding, while eth0 RX remains zero and legacy-pipeline is disabled; Realtek RTL8367R OEM path enables unknown-VID-to-CPU and rtl865x_enableRtl8367ToCpuAcl()."
+    },
+    "tenda,ac23": {
+      "confidence": "medium-low",
+      "soc": "RTL8197FH/VG",
+      "ram_bytes": 67108864,
+      "flash_bytes": 8388608,
+      "firmware_offset": 196608,
+      "firmware_size": 8060928,
+      "switch": "RTL8367RB/RTL8367RB-VC class",
+      "smi_mdc_gpio": 56,
+      "smi_mdio_gpio": 55,
+      "cpu_port_candidate": 6,
+      "external_radio": "RTL8814BR/RTL8814B class",
+      "evidence": [
+        "AC23/Lynx 8 MiB SPI dump",
+        "factory markers and cr6c header",
+        "board chip inventory",
+        "RTL8197F + RTL8367RB SDK reference designs",
+        "RTL8814B HAL/PHYDM sources"
+      ],
+      "unresolved": [
+        "RAM size requires UART confirmation",
+        "Copper port order and CPU-port wiring require live validation",
+        "LED/button/reset GPIOs are not proven",
+        "Stock firmware contains no plain SquashFS magic; OpenWrt combined layout remains hardware-test gated"
+      ],
+      "flash_erase_size": 65536
+    }
+  }
+}

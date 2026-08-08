@@ -1,0 +1,14 @@
+[RTL839x/5xM]Fiber Unidirection function.
+Feature:
+    Support Fiber unidirection function.
+
+Modified files
+*     sdk/src/hal/phy/phy_8390.c
+Release Files: (Mantis 0017869)
+	rtk-ms-sdk-src-2.1.4.53590-patch007.tar.gz
+==========================================================
+Modified files
+*     u-boot-2011.12/board/Realtek/switch/rtk/mac/rtl8390/rtl8390_init.c
+
+Release Files: (Mantis 0017869)
+rtk-ms-uboot-2011.12-src-svn53590-patch-007.tar.gz

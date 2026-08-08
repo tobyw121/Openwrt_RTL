@@ -1,0 +1,77 @@
+From: OpenAI <noreply@openai.com>
+Date: Fri, 24 Jul 2026 00:00:00 +0000
+Subject: [PATCH] irqchip/realtek: fix RTL8197F parent routing values
+
+The RTL8197F interrupt routing register does not number the first listed
+parent as route 1.  Its vendor BSP writes the actual MIPS CPU interrupt
+number into each IRR nibble: UART0 input 9 is routed with value 2 and
+SWCORE input 15 with value 4.
+
+The generic multi-output driver derives the route as output_index + 1.
+Since the RTL8197F device tree parent list starts at CPU IRQ2, this made
+each child route one CPU line below the chained parent.  The visible
+symptoms are a UART without an interrupt entry and an eth0 IRQ counter
+that remains at zero.
+
+Offset the logical output index by one for the RTL8197F-compatible
+controller.  Other Realtek SoCs retain the existing zero-based output
+numbering.
+
+Signed-off-by: OpenAI <noreply@openai.com>
+---
+ drivers/irqchip/irq-realtek-rtl.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
+
+--- a/drivers/irqchip/irq-realtek-rtl.c
++++ b/drivers/irqchip/irq-realtek-rtl.c
+@@ -266,7 +266,7 @@
+  * disconnected. Routing values {1..15} connect to output lines {0..14}.
+  */
+ static int __init setup_parent_interrupts(struct device_node *node, int *parents,
+-	unsigned int num_parents)
++	unsigned int num_parents, unsigned int output_offset)
+ {
+ 	struct realtek_ictl_output *outputs;
+ 	struct realtek_ictl_output *output;
+@@ -285,7 +285,7 @@
+ 			goto domain_err;
+ 
+ 		output->fwnode = of_node_to_fwnode(node);
+-		output->output_index = p;
++		output->output_index = p + output_offset;
+ 		output->domain = domain;
+ 
+ 		irq_set_chained_handler_and_data(parents[p], realtek_irq_dispatch, output);
+@@ -309,6 +309,7 @@
+ 	int parent_irqs[RTL_ICTL_NUM_OUTPUTS];
+ 	struct of_phandle_args oirq;
+ 	unsigned int num_parents;
++	unsigned int output_offset = 0;
+ 	unsigned int soc_irq;
+ 	unsigned int p;
+ 	int cpu;
+@@ -332,6 +333,14 @@
+ 	if (cpumask_empty(&realtek_ictl_cpu_configurable))
+ 		return -ENXIO;
+ 
++	/*
++	 * RTL8197F IRR values are the MIPS CPU interrupt numbers themselves.
++	 * Its parent list starts at CPU IRQ2, so parent array index 0 must
++	 * program routing value 2 rather than the generic value 1.
++	 */
++	if (of_device_is_compatible(node, "realtek,rtl8197f-intc"))
++		output_offset = 1;
++
+ 	num_parents = of_irq_count(node);
+ 	if (num_parents > RTL_ICTL_NUM_OUTPUTS) {
+ 		pr_err("too many parent interrupts\n");
+@@ -370,7 +379,8 @@
+ 			return -ENODEV;
+ 	}
+ 
+-	return setup_parent_interrupts(node, &parent_irqs[0], num_parents);
++	return setup_parent_interrupts(node, &parent_irqs[0], num_parents,
++				       output_offset);
+ }
+ 
+ IRQCHIP_DECLARE(realtek_rtl_intc, "realtek,rtl-intc", realtek_rtl_of_init);

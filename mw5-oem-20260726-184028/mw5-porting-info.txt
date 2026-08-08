@@ -1,0 +1,2074 @@
+
+===== kernel and SoC =====
++ date
+Sun Jul 26 18:40:28 UTC 2026
+[rc=0]
++ uname -a
+Linux NOVA-cc2d219e70c0 3.10.90 #4 Tue Sep 9 17:09:36 CST 2025 mips GNU/Linux
+[rc=0]
+--- /proc/version
+Linux version 3.10.90 (root@linux-aj0z) (gcc version 4.4.7 (Realtek MSDK-4.4.7 Build 2001) ) #4 Tue Sep 9 17:09:36 CST 2025
+--- /proc/cmdline
+ console=ttyS0,115200
+--- /proc/cpuinfo
+system type		: RTL8197F
+machine			: Unknown
+processor		: 0
+cpu model		: MIPS 24Kc V8.5
+BogoMIPS		: 666.41
+wait instruction	: yes
+microsecond timers	: yes
+tlb_entries		: 64
+extra interrupt vector	: yes
+hardware watchpoint	: yes, count: 4, address/irw mask: [0x0ffc, 0x0ffc, 0x0ffb, 0x0ffb]
+isa			: mips1 mips2 mips32r2
+ASEs implemented	: mips16
+shadow register sets	: 4
+kscratch registers	: 0
+core			: 1
+VCED exceptions		: not available
+VCEI exceptions		: not available
+
+--- /proc/meminfo
+MemTotal:         103968 kB
+MemFree:           62704 kB
+Buffers:            2352 kB
+Cached:            11024 kB
+SwapCached:            0 kB
+Active:            17104 kB
+Inactive:           7472 kB
+Active(anon):      11200 kB
+Inactive(anon):        0 kB
+Active(file):       5904 kB
+Inactive(file):     7472 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:             0 kB
+SwapFree:              0 kB
+Dirty:                 0 kB
+Writeback:             0 kB
+AnonPages:         11216 kB
+Mapped:             5120 kB
+Shmem:                 0 kB
+Slab:              11056 kB
+SReclaimable:       2784 kB
+SUnreclaim:         8272 kB
+KernelStack:         976 kB
+PageTables:         1536 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:       51984 kB
+Committed_AS:      29648 kB
+VmallocTotal:    1048144 kB
+VmallocUsed:        1136 kB
+VmallocChunk:    1045824 kB
+--- /proc/interrupts
+           CPU0       
+  2:       6790      MIPS  IRQ cascade
+  4:       5437      MIPS  eth0
+  5:      35023      MIPS  wlan0
+  6:      16799      MIPS  wlan1
+  7:      87415      MIPS  timer
+ 17:       6790      ICTL  serial
+ 24:          0      ICTL  gpio cascade1
+ 25:          0      ICTL  gpio cascade2
+ERR:       6772
+--- /proc/iomem
+10000000-11ffffff : spi-sheipa.0
+18143000-18143fff : spi-sheipa.0
+--- /proc/devices
+Character devices:
+  1 mem
+  2 pty
+  3 ttyp
+  4 ttyS
+  5 /dev/tty
+  5 /dev/console
+  5 /dev/ptmx
+ 10 misc
+ 90 mtd
+108 ppp
+128 ptm
+136 pts
+249 fence
+250 gsbmac
+251 tbq
+252 phy_check
+253 mfi_cp
+254 bsg
+
+Block devices:
+259 blkext
+  7 loop
+ 31 mtdblock
+--- /proc/modules
+ddos_ip_fence 14338 0 - Live 0xc023c000 (O)
+arp_fence 8022 0 - Live 0xc0220000 (O)
+common_netlink 1048 1 - Live 0xc01a8000 (O)
+kwdog 2101 0 - Live 0xc0178000 (O)
+nos 74813 0 - Live 0xc0150000 (O)
+mac_filter 6713 0 - Live 0xc0120000 (O)
+bm 23013 2 nos,mac_filter, Live 0xc0104000 (O)
+phy_check 4030 1 common_netlink, Live 0xc00e8000 (O)
+dhcp_options 2709 1 - Live 0xc00d0000 (O)
+--- /proc/tty/driver/serial
+serinfo:1.0 driver revision:
+0: uart:16550A mmio:0x18147000 irq:17 tx:77325 rx:17099 oe:7 RTS|CTS|DTR
+
+===== dmesg =====
++ dmesg
+dmesg: applet not found
+[rc=1]
+
+===== flash and partitions =====
+--- /proc/mtd
+dev:    size   erasesize  name
+mtd0: 00800000 00010000 "ALL"
+mtd1: 00020000 00010000 "Bootloader"
+mtd2: 00010000 00010000 "CFG"
+mtd3: 00590000 00010000 "KernelFS"
+mtd4: 00397fee 00010000 "RootFS"
+mtd5: 00010000 00010000 "CFM"
+mtd6: 00010000 00010000 "CFM_BACKUP"
+mtd7: 00210000 00010000 "LOG"
+mtd8: 00010000 00010000 "ENV"
+--- /proc/partitions
+major minor  #blocks  name
+
+  31        0       8192 mtdblock0
+  31        1        128 mtdblock1
+  31        2         64 mtdblock2
+  31        3       5696 mtdblock3
+  31        4       3679 mtdblock4
+  31        5         64 mtdblock5
+  31        6         64 mtdblock6
+  31        7       2112 mtdblock7
+  31        8         64 mtdblock8
+--- /proc/mounts
+rootfs / rootfs rw 0 0
+/dev/root / squashfs ro,relatime 0 0
+none /var ramfs rw,relatime 0 0
+proc /proc proc rw,relatime 0 0
+none /tmp ramfs rw,relatime 0 0
+mdev /dev ramfs rw,relatime 0 0
+none /sys sysfs rw,relatime 0 0
+mdev /dev ramfs rw,relatime 0 0
+devpts /dev/pts devpts rw,relatime,mode=600,ptmxmode=000 0 0
+none /var/etc/upan tmpfs rw,relatime,size=2M 0 0
+/dev/mtdblock7 /tmp/log/crash jffs2 rw,relatime 0 0
++ mount
+rootfs on / type rootfs (rw)
+/dev/root on / type squashfs (ro,relatime)
+none on /var type ramfs (rw,relatime)
+proc on /proc type proc (rw,relatime)
+none on /tmp type ramfs (rw,relatime)
+mdev on /dev type ramfs (rw,relatime)
+none on /sys type sysfs (rw,relatime)
+mdev on /dev type ramfs (rw,relatime)
+devpts on /dev/pts type devpts (rw,relatime,mode=600,ptmxmode=000)
+none on /var/etc/upan type tmpfs (rw,relatime,size=2M)
+/dev/mtdblock7 on /tmp/log/crash type jffs2 (rw,relatime)
+[rc=0]
++ df -k
+df: applet not found
+[rc=1]
+crw-rw----    1 root     root       90,   0 Jan  1  1970 /dev/mtd0
+crw-rw----    1 root     root       90,   1 Jan  1  1970 /dev/mtd0ro
+crw-rw----    1 root     root       90,   2 Jan  1  1970 /dev/mtd1
+crw-rw----    1 root     root       90,   3 Jan  1  1970 /dev/mtd1ro
+crw-rw----    1 root     root       90,   4 Jan  1  1970 /dev/mtd2
+crw-rw----    1 root     root       90,   5 Jan  1  1970 /dev/mtd2ro
+crw-rw----    1 root     root       90,   6 Jan  1  1970 /dev/mtd3
+crw-rw----    1 root     root       90,   7 Jan  1  1970 /dev/mtd3ro
+crw-rw----    1 root     root       90,   8 Jan  1  1970 /dev/mtd4
+crw-rw----    1 root     root       90,   9 Jan  1  1970 /dev/mtd4ro
+crw-rw----    1 root     root       90,  10 Jan  1  1970 /dev/mtd5
+crw-rw----    1 root     root       90,  11 Jan  1  1970 /dev/mtd5ro
+crw-rw----    1 root     root       90,  12 Jan  1  1970 /dev/mtd6
+crw-rw----    1 root     root       90,  13 Jan  1  1970 /dev/mtd6ro
+crw-rw----    1 root     root       90,  14 Jan  1  1970 /dev/mtd7
+crw-rw----    1 root     root       90,  15 Jan  1  1970 /dev/mtd7ro
+crw-rw----    1 root     root       90,  16 Jan  1  1970 /dev/mtd8
+crw-rw----    1 root     root       90,  17 Jan  1  1970 /dev/mtd8ro
+brw-rw----    1 root     root       31,   0 Jan  1  1970 /dev/mtdblock0
+brw-rw----    1 root     root       31,   0 Jan  1  1970 /dev/mtdblock0
+brw-rw----    1 root     root       31,   1 Jan  1  1970 /dev/mtdblock1
+brw-rw----    1 root     root       31,   1 Jan  1  1970 /dev/mtdblock1
+brw-rw----    1 root     root       31,   2 Jan  1  1970 /dev/mtdblock2
+brw-rw----    1 root     root       31,   2 Jan  1  1970 /dev/mtdblock2
+brw-rw----    1 root     root       31,   3 Jan  1  1970 /dev/mtdblock3
+brw-rw----    1 root     root       31,   3 Jan  1  1970 /dev/mtdblock3
+brw-rw----    1 root     root       31,   4 Jan  1  1970 /dev/mtdblock4
+brw-rw----    1 root     root       31,   4 Jan  1  1970 /dev/mtdblock4
+brw-rw----    1 root     root       31,   5 Jan  1  1970 /dev/mtdblock5
+brw-rw----    1 root     root       31,   5 Jan  1  1970 /dev/mtdblock5
+brw-rw----    1 root     root       31,   6 Jan  1  1970 /dev/mtdblock6
+brw-rw----    1 root     root       31,   6 Jan  1  1970 /dev/mtdblock6
+brw-rw----    1 root     root       31,   7 Jan  1  1970 /dev/mtdblock7
+brw-rw----    1 root     root       31,   7 Jan  1  1970 /dev/mtdblock7
+brw-rw----    1 root     root       31,   8 Jan  1  1970 /dev/mtdblock8
+brw-rw----    1 root     root       31,   8 Jan  1  1970 /dev/mtdblock8
+
+===== network topology =====
++ ifconfig -a
+br0       Link encap:Ethernet  HWaddr CC:2D:21:9E:70:C0  
+          inet addr:192.168.5.1  Bcast:192.168.5.255  Mask:255.255.255.0
+          UP BROADCAST NOTRAILERS RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:545 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:1395 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:51224 (50.0 KiB)  TX bytes:265855 (259.6 KiB)
+
+eth0      Link encap:Ethernet  HWaddr CC:2D:21:9E:70:C0  
+          UP BROADCAST RUNNING  MTU:1500  Metric:1
+          RX packets:2241 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:1966 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:62504 (61.0 KiB)  TX bytes:319587 (312.0 KiB)
+          Interrupt:4 
+
+eth1      Link encap:Ethernet  HWaddr CC:2D:21:9E:70:C7  
+          inet addr:192.168.178.91  Bcast:192.168.178.255  Mask:255.255.255.0
+          UP BROADCAST NOTRAILERS RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:2707 errors:0 dropped:6 overruns:0 frame:0
+          TX packets:624 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:221099 (215.9 KiB)  TX bytes:52443 (51.2 KiB)
+          Interrupt:4 
+
+gre0      Link encap:UNSPEC  HWaddr 00-00-00-00-FF-00-00-00-00-00-00-00-00-00-00-00  
+          NOARP  MTU:1476  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+gretap0   Link encap:Ethernet  HWaddr 00:00:00:00:00:00  
+          BROADCAST MULTICAST  MTU:1476  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:1968 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:1968 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:388300 (379.1 KiB)  TX bytes:388300 (379.1 KiB)
+
+peth0     Link encap:Ethernet  HWaddr 00:12:34:56:78:90  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+pwlan0    Link encap:Ethernet  HWaddr 00:E0:4C:81:96:96  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:18339 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:304 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:6563380 (6.2 MiB)  TX bytes:21016 (20.5 KiB)
+
+tunl0     Link encap:UNSPEC  HWaddr 00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00  
+          NOARP  MTU:0  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wlan-msh  Link encap:Ethernet  HWaddr CC:2D:21:9E:70:C4  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+          
+
+wlan0     Link encap:Ethernet  HWaddr CC:2D:21:9E:70:C4  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:18339 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:304 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:6563380 (6.2 MiB)  TX bytes:21016 (20.5 KiB)
+          Interrupt:5 
+
+wlan0-va0 Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wlan0-va1 Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wlan0-va2 Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wlan0-va3 Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wlan1     Link encap:Ethernet  HWaddr CC:2D:21:9E:70:C1  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:39 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:316 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:4506 (4.4 KiB)  TX bytes:23248 (22.7 KiB)
+          Interrupt:6 
+
+wlan1-va0 Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wlan1-va1 Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wlan1-va2 Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wlan1-va3 Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+[rc=0]
++ ip link show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT 
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br0 state UNKNOWN mode DEFAULT 
+    link/ether cc:2d:21:9e:70:c4 brd ff:ff:ff:ff:ff:ff
+3: wlan-msh: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br0 state UNKNOWN mode DEFAULT 
+    link/ether cc:2d:21:9e:70:c4 brd ff:ff:ff:ff:ff:ff
+4: wlan0-va0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+5: wlan0-va1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+6: wlan0-va2: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+7: wlan0-va3: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+8: wlan1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br0 state UNKNOWN mode DEFAULT 
+    link/ether cc:2d:21:9e:70:c1 brd ff:ff:ff:ff:ff:ff
+9: wlan1-va0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+10: wlan1-va1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+11: wlan1-va2: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+12: wlan1-va3: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+13: pwlan0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT 
+    link/ether 00:e0:4c:81:96:96 brd ff:ff:ff:ff:ff:ff
+14: tunl0: <NOARP> mtu 0 qdisc noop state DOWN mode DEFAULT 
+    link/ipip 0.0.0.0 brd 0.0.0.0
+15: gre0: <NOARP> mtu 1476 qdisc noop state DOWN mode DEFAULT 
+    link/gre 0.0.0.0 brd 0.0.0.0
+16: gretap0: <BROADCAST,MULTICAST> mtu 1476 qdisc noop state DOWN mode DEFAULT 
+    link/ether 00:00:00:00:00:00 brd ff:ff:ff:ff:ff:ff
+17: eth0: <BROADCAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br0 state UNKNOWN mode DEFAULT 
+    link/ether cc:2d:21:9e:70:c0 brd ff:ff:ff:ff:ff:ff
+18: eth1: <BROADCAST,MULTICAST,NOTRAILERS,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN mode DEFAULT 
+    link/ether cc:2d:21:9e:70:c7 brd ff:ff:ff:ff:ff:ff
+19: peth0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT 
+    link/ether 00:12:34:56:78:90 brd ff:ff:ff:ff:ff:ff
+20: br0: <BROADCAST,MULTICAST,NOTRAILERS,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT 
+    link/ether cc:2d:21:9e:70:c0 brd ff:ff:ff:ff:ff:ff
+[rc=0]
++ ip address show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN 
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br0 state UNKNOWN 
+    link/ether cc:2d:21:9e:70:c4 brd ff:ff:ff:ff:ff:ff
+3: wlan-msh: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br0 state UNKNOWN 
+    link/ether cc:2d:21:9e:70:c4 brd ff:ff:ff:ff:ff:ff
+4: wlan0-va0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+5: wlan0-va1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+6: wlan0-va2: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+7: wlan0-va3: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+8: wlan1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br0 state UNKNOWN 
+    link/ether cc:2d:21:9e:70:c1 brd ff:ff:ff:ff:ff:ff
+9: wlan1-va0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+10: wlan1-va1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+11: wlan1-va2: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+12: wlan1-va3: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN 
+    link/ether 00:e0:4c:81:86:86 brd ff:ff:ff:ff:ff:ff
+13: pwlan0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN 
+    link/ether 00:e0:4c:81:96:96 brd ff:ff:ff:ff:ff:ff
+14: tunl0: <NOARP> mtu 0 qdisc noop state DOWN 
+    link/ipip 0.0.0.0 brd 0.0.0.0
+15: gre0: <NOARP> mtu 1476 qdisc noop state DOWN 
+    link/gre 0.0.0.0 brd 0.0.0.0
+16: gretap0: <BROADCAST,MULTICAST> mtu 1476 qdisc noop state DOWN 
+    link/ether 00:00:00:00:00:00 brd ff:ff:ff:ff:ff:ff
+17: eth0: <BROADCAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br0 state UNKNOWN 
+    link/ether cc:2d:21:9e:70:c0 brd ff:ff:ff:ff:ff:ff
+18: eth1: <BROADCAST,MULTICAST,NOTRAILERS,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN 
+    link/ether cc:2d:21:9e:70:c7 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.178.91/24 brd 192.168.178.255 scope global eth1
+       valid_lft forever preferred_lft forever
+19: peth0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN 
+    link/ether 00:12:34:56:78:90 brd ff:ff:ff:ff:ff:ff
+20: br0: <BROADCAST,MULTICAST,NOTRAILERS,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP 
+    link/ether cc:2d:21:9e:70:c0 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.5.1/24 brd 192.168.5.255 scope global br0
+       valid_lft forever preferred_lft forever
+[rc=0]
++ ip route show
+default via 192.168.178.1 dev eth1 
+192.168.5.0/24 dev br0  scope link 
+192.168.178.0/24 dev eth1  proto kernel  scope link  src 192.168.178.91 
+[rc=0]
++ route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+0.0.0.0         192.168.178.1   0.0.0.0         UG    0      0        0 eth1
+192.168.5.0     0.0.0.0         255.255.255.0   U     0      0        0 br0
+192.168.178.0   0.0.0.0         255.255.255.0   U     0      0        0 eth1
+[rc=0]
++ arp -n
+? (192.168.5.2) at <incomplete>  on br0
+? (192.168.1.3) at 00:e0:4c:55:62:c0 [ether]  on br0
+? (192.168.178.1) at b0:f2:08:99:56:db [ether]  on eth1
+? (192.168.5.66) at 00:e0:4c:55:62:c0 [ether]  on br0
+[rc=0]
++ brctl show
+bridge name	bridge id		STP enabled	interfaces
+br0		8000.cc2d219e70c0	yes		eth0
+							wlan1
+							wlan-msh
+							wlan0
+[rc=0]
+--- /proc/net/dev
+Inter-|   Receive                                                |  Transmit
+ face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
+wlan1-va2:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+ peth0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+  gre0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+wlan0-va1:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+    lo:  388300    1968    0    0    0     0          0         0   388300    1968    0    0    0     0       0          0
+   br0:   51224     545    0    0    0     0          0         0   265855    1395    0    0    0     0       0          0
+ tunl0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+gretap0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+wlan1-va1:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+ wlan1:    4506      39    0    0    0     0          0         0    23248     316    0    0    0     0       0          0
+wlan0-va0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+pwlan0: 6563380   18339    0    0    0     0          0         0    21016     304    0    0    0     0       0          0
+  eth1:  221099    2707    0    6    0     0          0        80    52443     624    0    0    0     0       0          0
+wlan-msh:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+wlan1-va0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+ wlan0: 6563380   18339    0    0    0     0          0         0    21016     304    0    0    0     0       0          0
+  eth0:   62504    2241    0    0    0     0          0       918   319587    1966    0    0    0     0       0          0
+wlan0-va3:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+wlan1-va3:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+wlan0-va2:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+--- /proc/net/route
+Iface	Destination	Gateway 	Flags	RefCnt	Use	Metric	Mask		MTU	Window	IRTT                                                       
+eth1	00000000	01B2A8C0	0003	0	0	0	00000000	0	0	0                                                                               
+br0	0005A8C0	00000000	0001	0	0	0	00FFFFFF	0	0	0                                                                                
+eth1	00B2A8C0	00000000	0001	0	0	0	00FFFFFF	0	0	0                                                                               
+--- /proc/net/arp
+IP address       HW type     Flags       HW address            Mask     Device
+192.168.5.2      0x1         0x0         00:00:00:00:00:00     *        br0
+192.168.1.3      0x1         0x2         00:e0:4c:55:62:c0     *        br0
+192.168.178.1    0x1         0x2         b0:f2:08:99:56:db     *        eth1
+192.168.5.66     0x1         0x2         00:e0:4c:55:62:c0     *        br0
+--- /proc/net/vlan/config
+VLAN Dev name	 | VLAN ID
+Name-Type: VLAN_NAME_TYPE_RAW_PLUS_VID_NO_PAD
+--- /sys/class/net/br0
+address=cc:2d:21:9e:70:c0
+carrier=1
+duplex=cat: read error: Invalid argument
+ifindex=20
+iflink=20
+mtu=1500
+operstate=up
+speed=cat: read error: Invalid argument
+type=1
+uevent=DEVTYPE=bridge
+INTERFACE=br0
+IFINDEX=20
+--- /sys/class/net/eth0
+address=cc:2d:21:9e:70:c0
+carrier=1
+duplex=cat: read error: Invalid argument
+ifindex=17
+iflink=17
+mtu=1500
+operstate=unknown
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=eth0
+IFINDEX=17
+--- /sys/class/net/eth1
+address=cc:2d:21:9e:70:c7
+carrier=1
+duplex=cat: read error: Invalid argument
+ifindex=18
+iflink=18
+mtu=1500
+operstate=unknown
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=eth1
+IFINDEX=18
+--- /sys/class/net/gre0
+address=00:00:00:00
+carrier=cat: read error: Invalid argument
+duplex=cat: read error: Invalid argument
+ifindex=15
+iflink=15
+mtu=1476
+operstate=down
+speed=cat: read error: Invalid argument
+type=778
+uevent=INTERFACE=gre0
+IFINDEX=15
+--- /sys/class/net/gretap0
+address=00:00:00:00:00:00
+carrier=cat: read error: Invalid argument
+duplex=cat: read error: Invalid argument
+ifindex=16
+iflink=16
+mtu=1476
+operstate=down
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=gretap0
+IFINDEX=16
+--- /sys/class/net/lo
+address=00:00:00:00:00:00
+carrier=1
+duplex=cat: read error: Invalid argument
+ifindex=1
+iflink=1
+mtu=65536
+operstate=unknown
+speed=cat: read error: Invalid argument
+type=772
+uevent=INTERFACE=lo
+IFINDEX=1
+--- /sys/class/net/peth0
+address=00:12:34:56:78:90
+carrier=cat: read error: Invalid argument
+duplex=cat: read error: Invalid argument
+ifindex=19
+iflink=19
+mtu=1500
+operstate=down
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=peth0
+IFINDEX=19
+--- /sys/class/net/pwlan0
+address=00:e0:4c:81:96:96
+carrier=cat: read error: Invalid argument
+duplex=cat: read error: Invalid argument
+ifindex=13
+iflink=13
+mtu=1500
+operstate=down
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=pwlan0
+IFINDEX=13
+--- /sys/class/net/tunl0
+address=00:00:00:00
+carrier=cat: read error: Invalid argument
+duplex=cat: read error: Invalid argument
+ifindex=14
+iflink=14
+mtu=0
+operstate=down
+speed=cat: read error: Invalid argument
+type=768
+uevent=INTERFACE=tunl0
+IFINDEX=14
+--- /sys/class/net/wlan-msh
+address=cc:2d:21:9e:70:c4
+carrier=1
+duplex=cat: read error: Invalid argument
+ifindex=3
+iflink=3
+mtu=1500
+operstate=unknown
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=wlan-msh
+IFINDEX=3
+--- /sys/class/net/wlan0
+address=cc:2d:21:9e:70:c4
+carrier=1
+duplex=cat: read error: Invalid argument
+ifindex=2
+iflink=2
+mtu=1500
+operstate=unknown
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=wlan0
+IFINDEX=2
+--- /sys/class/net/wlan0-va0
+address=00:e0:4c:81:86:86
+carrier=cat: read error: Invalid argument
+duplex=cat: read error: Invalid argument
+ifindex=4
+iflink=4
+mtu=1500
+operstate=down
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=wlan0-va0
+IFINDEX=4
+--- /sys/class/net/wlan0-va1
+address=00:e0:4c:81:86:86
+carrier=cat: read error: Invalid argument
+duplex=cat: read error: Invalid argument
+ifindex=5
+iflink=5
+mtu=1500
+operstate=down
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=wlan0-va1
+IFINDEX=5
+--- /sys/class/net/wlan0-va2
+address=00:e0:4c:81:86:86
+carrier=cat: read error: Invalid argument
+duplex=cat: read error: Invalid argument
+ifindex=6
+iflink=6
+mtu=1500
+operstate=down
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=wlan0-va2
+IFINDEX=6
+--- /sys/class/net/wlan0-va3
+address=00:e0:4c:81:86:86
+carrier=cat: read error: Invalid argument
+duplex=cat: read error: Invalid argument
+ifindex=7
+iflink=7
+mtu=1500
+operstate=down
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=wlan0-va3
+IFINDEX=7
+--- /sys/class/net/wlan1
+address=cc:2d:21:9e:70:c1
+carrier=1
+duplex=cat: read error: Invalid argument
+ifindex=8
+iflink=8
+mtu=1500
+operstate=unknown
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=wlan1
+IFINDEX=8
+--- /sys/class/net/wlan1-va0
+address=00:e0:4c:81:86:86
+carrier=cat: read error: Invalid argument
+duplex=cat: read error: Invalid argument
+ifindex=9
+iflink=9
+mtu=1500
+operstate=down
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=wlan1-va0
+IFINDEX=9
+--- /sys/class/net/wlan1-va1
+address=00:e0:4c:81:86:86
+carrier=cat: read error: Invalid argument
+duplex=cat: read error: Invalid argument
+ifindex=10
+iflink=10
+mtu=1500
+operstate=down
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=wlan1-va1
+IFINDEX=10
+--- /sys/class/net/wlan1-va2
+address=00:e0:4c:81:86:86
+carrier=cat: read error: Invalid argument
+duplex=cat: read error: Invalid argument
+ifindex=11
+iflink=11
+mtu=1500
+operstate=down
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=wlan1-va2
+IFINDEX=11
+--- /sys/class/net/wlan1-va3
+address=00:e0:4c:81:86:86
+carrier=cat: read error: Invalid argument
+duplex=cat: read error: Invalid argument
+ifindex=12
+iflink=12
+mtu=1500
+operstate=down
+speed=cat: read error: Invalid argument
+type=1
+uevent=INTERFACE=wlan1-va3
+IFINDEX=12
+
+===== Ethernet and switch tools =====
+--- interface eth0
+--- interface eth1
+--- interface br0
+
+===== PCIe =====
+--- /proc/bus/pci/devices [absent/unreadable]
+
+===== platform devices =====
+total 0
+drwxr-xr-x   12 root     root             0 Jan  1  1970 .
+drwxr-xr-x    5 root     root             0 Jan  1  1970 ..
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 alarmtimer
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 rtl819x_8367r_i2c_pin.1
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 rtl819x_8367r_i2c_pin.2
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 rtl819x_8367r_reset_pin.0
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 rtl819x_btn.0
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 rtl819x_led.0
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 rtl819x_led.1
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 rtl819x_led.2
+drwxr-xr-x    3 root     root             0 Jan  1  1970 serial8250
+drwxr-xr-x    3 root     root             0 Jan  1  1970 spi-sheipa.0
+-rw-r--r--    1 root     root         16384 Jul 26 18:38 uevent
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.1
+total 0
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 .
+drwxr-xr-x   12 root     root             0 Jan  1  1970 ..
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 driver -> ../../../bus/platform/drivers/rtl819x_8367r_i2c_pin
+-r--r--r--    1 root     root         16384 Jul 26 18:38 modalias
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 subsystem -> ../../../bus/platform
+-rw-r--r--    1 root     root         16384 Jul 26 18:38 uevent
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.1/uevent
+DRIVER=rtl819x_8367r_i2c_pin
+MODALIAS=platform:rtl819x_8367r_i2c_pin
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.1/modalias
+platform:rtl819x_8367r_i2c_pin
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.1/resource [absent/unreadable]
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.2
+total 0
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 .
+drwxr-xr-x   12 root     root             0 Jan  1  1970 ..
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 driver -> ../../../bus/platform/drivers/rtl819x_8367r_i2c_pin
+-r--r--r--    1 root     root         16384 Jul 26 18:38 modalias
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 subsystem -> ../../../bus/platform
+-rw-r--r--    1 root     root         16384 Jul 26 18:38 uevent
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.2/uevent
+DRIVER=rtl819x_8367r_i2c_pin
+MODALIAS=platform:rtl819x_8367r_i2c_pin
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.2/modalias
+platform:rtl819x_8367r_i2c_pin
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.2/resource [absent/unreadable]
+--- /sys/devices/platform/rtl819x_8367r_reset_pin.0
+total 0
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 .
+drwxr-xr-x   12 root     root             0 Jan  1  1970 ..
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 driver -> ../../../bus/platform/drivers/rtl819x_8367r_reset_pin
+-r--r--r--    1 root     root         16384 Jul 26 18:38 modalias
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 subsystem -> ../../../bus/platform
+-rw-r--r--    1 root     root         16384 Jul 26 18:38 uevent
+--- /sys/devices/platform/rtl819x_8367r_reset_pin.0/uevent
+DRIVER=rtl819x_8367r_reset_pin
+MODALIAS=platform:rtl819x_8367r_reset_pin
+--- /sys/devices/platform/rtl819x_8367r_reset_pin.0/modalias
+platform:rtl819x_8367r_reset_pin
+--- /sys/devices/platform/rtl819x_8367r_reset_pin.0/resource [absent/unreadable]
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.1
+total 0
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 .
+drwxr-xr-x   12 root     root             0 Jan  1  1970 ..
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 driver -> ../../../bus/platform/drivers/rtl819x_8367r_i2c_pin
+-r--r--r--    1 root     root         16384 Jul 26 18:38 modalias
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 subsystem -> ../../../bus/platform
+-rw-r--r--    1 root     root         16384 Jul 26 18:38 uevent
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.1/uevent
+DRIVER=rtl819x_8367r_i2c_pin
+MODALIAS=platform:rtl819x_8367r_i2c_pin
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.1/modalias
+platform:rtl819x_8367r_i2c_pin
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.1/resource [absent/unreadable]
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.2
+total 0
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 .
+drwxr-xr-x   12 root     root             0 Jan  1  1970 ..
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 driver -> ../../../bus/platform/drivers/rtl819x_8367r_i2c_pin
+-r--r--r--    1 root     root         16384 Jul 26 18:38 modalias
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 subsystem -> ../../../bus/platform
+-rw-r--r--    1 root     root         16384 Jul 26 18:38 uevent
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.2/uevent
+DRIVER=rtl819x_8367r_i2c_pin
+MODALIAS=platform:rtl819x_8367r_i2c_pin
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.2/modalias
+platform:rtl819x_8367r_i2c_pin
+--- /sys/devices/platform/rtl819x_8367r_i2c_pin.2/resource [absent/unreadable]
+--- /sys/devices/platform/rtl819x_8367r_reset_pin.0
+total 0
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 .
+drwxr-xr-x   12 root     root             0 Jan  1  1970 ..
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 driver -> ../../../bus/platform/drivers/rtl819x_8367r_reset_pin
+-r--r--r--    1 root     root         16384 Jul 26 18:38 modalias
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 subsystem -> ../../../bus/platform
+-rw-r--r--    1 root     root         16384 Jul 26 18:38 uevent
+--- /sys/devices/platform/rtl819x_8367r_reset_pin.0/uevent
+DRIVER=rtl819x_8367r_reset_pin
+MODALIAS=platform:rtl819x_8367r_reset_pin
+--- /sys/devices/platform/rtl819x_8367r_reset_pin.0/modalias
+platform:rtl819x_8367r_reset_pin
+--- /sys/devices/platform/rtl819x_8367r_reset_pin.0/resource [absent/unreadable]
+total 0
+drwxr-xr-x    8 root     root             0 Jul 26 18:38 .
+drwxr-xr-x    4 root     root             0 Jul 26 18:38 ..
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 alarmtimer
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 dw-apb-uart
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 rtl819x_8367r_i2c_pin
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 rtl819x_8367r_reset_pin
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 serial8250
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 spi-sheipa
+
+===== GPIO LEDs buttons =====
+ls: /sys/class/leds: No such file or directory
+ls: /sys/class/input: No such file or directory
+/sys/class/gpio:
+total 0
+drwxr-xr-x    2 root     root             0 Jan  1  1970 .
+drwxr-xr-x   19 root     root             0 Jan  1  1970 ..
+--w-------    1 root     root         16384 Jan  1  1970 export
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 gpio18 -> ../../devices/virtual/gpio/gpio18
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 gpio19 -> ../../devices/virtual/gpio/gpio19
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 gpio58 -> ../../devices/virtual/gpio/gpio58
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 gpiochip0 -> ../../devices/virtual/gpio/gpiochip0
+--w-------    1 root     root         16384 Jan  1  1970 unexport
+--- /sys/kernel/debug/gpio [absent/unreadable]
+--- /proc/bus/input/devices [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.0
+total 0
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 .
+drwxr-xr-x   12 root     root             0 Jan  1  1970 ..
+-r--r--r--    1 root     root         16384 Jul 26 18:38 modalias
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 subsystem -> ../../../bus/platform
+-rw-r--r--    1 root     root         16384 Jul 26 18:38 uevent
+--- /sys/devices/platform/rtl819x_led.0/uevent
+MODALIAS=platform:rtl819x_led
+--- /sys/devices/platform/rtl819x_led.0/modalias
+platform:rtl819x_led
+--- /sys/devices/platform/rtl819x_led.0/brightness [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.0/max_brightness [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.0/trigger [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.0/active_low [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.0/name [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.0/phys [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.1
+total 0
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 .
+drwxr-xr-x   12 root     root             0 Jan  1  1970 ..
+-r--r--r--    1 root     root         16384 Jul 26 18:38 modalias
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 subsystem -> ../../../bus/platform
+-rw-r--r--    1 root     root         16384 Jul 26 18:38 uevent
+--- /sys/devices/platform/rtl819x_led.1/uevent
+MODALIAS=platform:rtl819x_led
+--- /sys/devices/platform/rtl819x_led.1/modalias
+platform:rtl819x_led
+--- /sys/devices/platform/rtl819x_led.1/brightness [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.1/max_brightness [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.1/trigger [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.1/active_low [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.1/name [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.1/phys [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.2
+total 0
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 .
+drwxr-xr-x   12 root     root             0 Jan  1  1970 ..
+-r--r--r--    1 root     root         16384 Jul 26 18:38 modalias
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 subsystem -> ../../../bus/platform
+-rw-r--r--    1 root     root         16384 Jul 26 18:38 uevent
+--- /sys/devices/platform/rtl819x_led.2/uevent
+MODALIAS=platform:rtl819x_led
+--- /sys/devices/platform/rtl819x_led.2/modalias
+platform:rtl819x_led
+--- /sys/devices/platform/rtl819x_led.2/brightness [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.2/max_brightness [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.2/trigger [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.2/active_low [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.2/name [absent/unreadable]
+--- /sys/devices/platform/rtl819x_led.2/phys [absent/unreadable]
+--- /sys/devices/platform/rtl819x_btn.0
+total 0
+drwxr-xr-x    2 root     root             0 Jul 26 18:38 .
+drwxr-xr-x   12 root     root             0 Jan  1  1970 ..
+-r--r--r--    1 root     root         16384 Jul 26 18:38 modalias
+lrwxrwxrwx    1 root     root             0 Jul 26 18:38 subsystem -> ../../../bus/platform
+-rw-r--r--    1 root     root         16384 Jul 26 18:38 uevent
+--- /sys/devices/platform/rtl819x_btn.0/uevent
+MODALIAS=platform:rtl819x_btn
+--- /sys/devices/platform/rtl819x_btn.0/modalias
+platform:rtl819x_btn
+--- /sys/devices/platform/rtl819x_btn.0/brightness [absent/unreadable]
+--- /sys/devices/platform/rtl819x_btn.0/max_brightness [absent/unreadable]
+--- /sys/devices/platform/rtl819x_btn.0/trigger [absent/unreadable]
+--- /sys/devices/platform/rtl819x_btn.0/active_low [absent/unreadable]
+--- /sys/devices/platform/rtl819x_btn.0/name [absent/unreadable]
+--- /sys/devices/platform/rtl819x_btn.0/phys [absent/unreadable]
+
+===== UART watchdog USB =====
+ls: /sys/class/watchdog: No such file or directory
+ls: /sys/bus/usb/devices: No such file or directory
+/sys/class/tty:
+total 0
+drwxr-xr-x    2 root     root             0 Jan  1  1970 .
+drwxr-xr-x   19 root     root             0 Jan  1  1970 ..
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 console -> ../../devices/virtual/tty/console
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptmx -> ../../devices/virtual/tty/ptmx
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptya0 -> ../../devices/virtual/tty/ptya0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptya1 -> ../../devices/virtual/tty/ptya1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptya2 -> ../../devices/virtual/tty/ptya2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptya3 -> ../../devices/virtual/tty/ptya3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptya4 -> ../../devices/virtual/tty/ptya4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptya5 -> ../../devices/virtual/tty/ptya5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptya6 -> ../../devices/virtual/tty/ptya6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptya7 -> ../../devices/virtual/tty/ptya7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptya8 -> ../../devices/virtual/tty/ptya8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptya9 -> ../../devices/virtual/tty/ptya9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyaa -> ../../devices/virtual/tty/ptyaa
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyab -> ../../devices/virtual/tty/ptyab
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyac -> ../../devices/virtual/tty/ptyac
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyad -> ../../devices/virtual/tty/ptyad
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyae -> ../../devices/virtual/tty/ptyae
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyaf -> ../../devices/virtual/tty/ptyaf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyb0 -> ../../devices/virtual/tty/ptyb0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyb1 -> ../../devices/virtual/tty/ptyb1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyb2 -> ../../devices/virtual/tty/ptyb2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyb3 -> ../../devices/virtual/tty/ptyb3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyb4 -> ../../devices/virtual/tty/ptyb4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyb5 -> ../../devices/virtual/tty/ptyb5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyb6 -> ../../devices/virtual/tty/ptyb6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyb7 -> ../../devices/virtual/tty/ptyb7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyb8 -> ../../devices/virtual/tty/ptyb8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyb9 -> ../../devices/virtual/tty/ptyb9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyba -> ../../devices/virtual/tty/ptyba
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptybb -> ../../devices/virtual/tty/ptybb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptybc -> ../../devices/virtual/tty/ptybc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptybd -> ../../devices/virtual/tty/ptybd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptybe -> ../../devices/virtual/tty/ptybe
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptybf -> ../../devices/virtual/tty/ptybf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyc0 -> ../../devices/virtual/tty/ptyc0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyc1 -> ../../devices/virtual/tty/ptyc1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyc2 -> ../../devices/virtual/tty/ptyc2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyc3 -> ../../devices/virtual/tty/ptyc3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyc4 -> ../../devices/virtual/tty/ptyc4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyc5 -> ../../devices/virtual/tty/ptyc5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyc6 -> ../../devices/virtual/tty/ptyc6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyc7 -> ../../devices/virtual/tty/ptyc7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyc8 -> ../../devices/virtual/tty/ptyc8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyc9 -> ../../devices/virtual/tty/ptyc9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyca -> ../../devices/virtual/tty/ptyca
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptycb -> ../../devices/virtual/tty/ptycb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptycc -> ../../devices/virtual/tty/ptycc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptycd -> ../../devices/virtual/tty/ptycd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyce -> ../../devices/virtual/tty/ptyce
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptycf -> ../../devices/virtual/tty/ptycf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyd0 -> ../../devices/virtual/tty/ptyd0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyd1 -> ../../devices/virtual/tty/ptyd1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyd2 -> ../../devices/virtual/tty/ptyd2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyd3 -> ../../devices/virtual/tty/ptyd3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyd4 -> ../../devices/virtual/tty/ptyd4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyd5 -> ../../devices/virtual/tty/ptyd5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyd6 -> ../../devices/virtual/tty/ptyd6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyd7 -> ../../devices/virtual/tty/ptyd7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyd8 -> ../../devices/virtual/tty/ptyd8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyd9 -> ../../devices/virtual/tty/ptyd9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyda -> ../../devices/virtual/tty/ptyda
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptydb -> ../../devices/virtual/tty/ptydb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptydc -> ../../devices/virtual/tty/ptydc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptydd -> ../../devices/virtual/tty/ptydd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyde -> ../../devices/virtual/tty/ptyde
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptydf -> ../../devices/virtual/tty/ptydf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptye0 -> ../../devices/virtual/tty/ptye0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptye1 -> ../../devices/virtual/tty/ptye1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptye2 -> ../../devices/virtual/tty/ptye2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptye3 -> ../../devices/virtual/tty/ptye3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptye4 -> ../../devices/virtual/tty/ptye4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptye5 -> ../../devices/virtual/tty/ptye5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptye6 -> ../../devices/virtual/tty/ptye6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptye7 -> ../../devices/virtual/tty/ptye7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptye8 -> ../../devices/virtual/tty/ptye8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptye9 -> ../../devices/virtual/tty/ptye9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyea -> ../../devices/virtual/tty/ptyea
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyeb -> ../../devices/virtual/tty/ptyeb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyec -> ../../devices/virtual/tty/ptyec
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyed -> ../../devices/virtual/tty/ptyed
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyee -> ../../devices/virtual/tty/ptyee
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyef -> ../../devices/virtual/tty/ptyef
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyp0 -> ../../devices/virtual/tty/ptyp0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyp1 -> ../../devices/virtual/tty/ptyp1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyp2 -> ../../devices/virtual/tty/ptyp2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyp3 -> ../../devices/virtual/tty/ptyp3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyp4 -> ../../devices/virtual/tty/ptyp4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyp5 -> ../../devices/virtual/tty/ptyp5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyp6 -> ../../devices/virtual/tty/ptyp6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyp7 -> ../../devices/virtual/tty/ptyp7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyp8 -> ../../devices/virtual/tty/ptyp8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyp9 -> ../../devices/virtual/tty/ptyp9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptypa -> ../../devices/virtual/tty/ptypa
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptypb -> ../../devices/virtual/tty/ptypb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptypc -> ../../devices/virtual/tty/ptypc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptypd -> ../../devices/virtual/tty/ptypd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptype -> ../../devices/virtual/tty/ptype
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptypf -> ../../devices/virtual/tty/ptypf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyq0 -> ../../devices/virtual/tty/ptyq0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyq1 -> ../../devices/virtual/tty/ptyq1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyq2 -> ../../devices/virtual/tty/ptyq2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyq3 -> ../../devices/virtual/tty/ptyq3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyq4 -> ../../devices/virtual/tty/ptyq4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyq5 -> ../../devices/virtual/tty/ptyq5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyq6 -> ../../devices/virtual/tty/ptyq6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyq7 -> ../../devices/virtual/tty/ptyq7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyq8 -> ../../devices/virtual/tty/ptyq8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyq9 -> ../../devices/virtual/tty/ptyq9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyqa -> ../../devices/virtual/tty/ptyqa
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyqb -> ../../devices/virtual/tty/ptyqb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyqc -> ../../devices/virtual/tty/ptyqc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyqd -> ../../devices/virtual/tty/ptyqd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyqe -> ../../devices/virtual/tty/ptyqe
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyqf -> ../../devices/virtual/tty/ptyqf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyr0 -> ../../devices/virtual/tty/ptyr0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyr1 -> ../../devices/virtual/tty/ptyr1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyr2 -> ../../devices/virtual/tty/ptyr2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyr3 -> ../../devices/virtual/tty/ptyr3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyr4 -> ../../devices/virtual/tty/ptyr4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyr5 -> ../../devices/virtual/tty/ptyr5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyr6 -> ../../devices/virtual/tty/ptyr6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyr7 -> ../../devices/virtual/tty/ptyr7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyr8 -> ../../devices/virtual/tty/ptyr8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyr9 -> ../../devices/virtual/tty/ptyr9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyra -> ../../devices/virtual/tty/ptyra
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyrb -> ../../devices/virtual/tty/ptyrb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyrc -> ../../devices/virtual/tty/ptyrc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyrd -> ../../devices/virtual/tty/ptyrd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyre -> ../../devices/virtual/tty/ptyre
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyrf -> ../../devices/virtual/tty/ptyrf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptys0 -> ../../devices/virtual/tty/ptys0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptys1 -> ../../devices/virtual/tty/ptys1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptys2 -> ../../devices/virtual/tty/ptys2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptys3 -> ../../devices/virtual/tty/ptys3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptys4 -> ../../devices/virtual/tty/ptys4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptys5 -> ../../devices/virtual/tty/ptys5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptys6 -> ../../devices/virtual/tty/ptys6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptys7 -> ../../devices/virtual/tty/ptys7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptys8 -> ../../devices/virtual/tty/ptys8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptys9 -> ../../devices/virtual/tty/ptys9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptysa -> ../../devices/virtual/tty/ptysa
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptysb -> ../../devices/virtual/tty/ptysb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptysc -> ../../devices/virtual/tty/ptysc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptysd -> ../../devices/virtual/tty/ptysd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyse -> ../../devices/virtual/tty/ptyse
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptysf -> ../../devices/virtual/tty/ptysf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyt0 -> ../../devices/virtual/tty/ptyt0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyt1 -> ../../devices/virtual/tty/ptyt1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyt2 -> ../../devices/virtual/tty/ptyt2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyt3 -> ../../devices/virtual/tty/ptyt3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyt4 -> ../../devices/virtual/tty/ptyt4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyt5 -> ../../devices/virtual/tty/ptyt5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyt6 -> ../../devices/virtual/tty/ptyt6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyt7 -> ../../devices/virtual/tty/ptyt7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyt8 -> ../../devices/virtual/tty/ptyt8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyt9 -> ../../devices/virtual/tty/ptyt9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyta -> ../../devices/virtual/tty/ptyta
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptytb -> ../../devices/virtual/tty/ptytb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptytc -> ../../devices/virtual/tty/ptytc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptytd -> ../../devices/virtual/tty/ptytd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyte -> ../../devices/virtual/tty/ptyte
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptytf -> ../../devices/virtual/tty/ptytf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyu0 -> ../../devices/virtual/tty/ptyu0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyu1 -> ../../devices/virtual/tty/ptyu1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyu2 -> ../../devices/virtual/tty/ptyu2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyu3 -> ../../devices/virtual/tty/ptyu3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyu4 -> ../../devices/virtual/tty/ptyu4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyu5 -> ../../devices/virtual/tty/ptyu5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyu6 -> ../../devices/virtual/tty/ptyu6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyu7 -> ../../devices/virtual/tty/ptyu7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyu8 -> ../../devices/virtual/tty/ptyu8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyu9 -> ../../devices/virtual/tty/ptyu9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyua -> ../../devices/virtual/tty/ptyua
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyub -> ../../devices/virtual/tty/ptyub
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyuc -> ../../devices/virtual/tty/ptyuc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyud -> ../../devices/virtual/tty/ptyud
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyue -> ../../devices/virtual/tty/ptyue
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyuf -> ../../devices/virtual/tty/ptyuf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyv0 -> ../../devices/virtual/tty/ptyv0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyv1 -> ../../devices/virtual/tty/ptyv1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyv2 -> ../../devices/virtual/tty/ptyv2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyv3 -> ../../devices/virtual/tty/ptyv3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyv4 -> ../../devices/virtual/tty/ptyv4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyv5 -> ../../devices/virtual/tty/ptyv5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyv6 -> ../../devices/virtual/tty/ptyv6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyv7 -> ../../devices/virtual/tty/ptyv7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyv8 -> ../../devices/virtual/tty/ptyv8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyv9 -> ../../devices/virtual/tty/ptyv9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyva -> ../../devices/virtual/tty/ptyva
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyvb -> ../../devices/virtual/tty/ptyvb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyvc -> ../../devices/virtual/tty/ptyvc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyvd -> ../../devices/virtual/tty/ptyvd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyve -> ../../devices/virtual/tty/ptyve
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyvf -> ../../devices/virtual/tty/ptyvf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyw0 -> ../../devices/virtual/tty/ptyw0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyw1 -> ../../devices/virtual/tty/ptyw1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyw2 -> ../../devices/virtual/tty/ptyw2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyw3 -> ../../devices/virtual/tty/ptyw3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyw4 -> ../../devices/virtual/tty/ptyw4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyw5 -> ../../devices/virtual/tty/ptyw5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyw6 -> ../../devices/virtual/tty/ptyw6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyw7 -> ../../devices/virtual/tty/ptyw7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyw8 -> ../../devices/virtual/tty/ptyw8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyw9 -> ../../devices/virtual/tty/ptyw9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptywa -> ../../devices/virtual/tty/ptywa
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptywb -> ../../devices/virtual/tty/ptywb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptywc -> ../../devices/virtual/tty/ptywc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptywd -> ../../devices/virtual/tty/ptywd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptywe -> ../../devices/virtual/tty/ptywe
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptywf -> ../../devices/virtual/tty/ptywf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyx0 -> ../../devices/virtual/tty/ptyx0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyx1 -> ../../devices/virtual/tty/ptyx1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyx2 -> ../../devices/virtual/tty/ptyx2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyx3 -> ../../devices/virtual/tty/ptyx3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyx4 -> ../../devices/virtual/tty/ptyx4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyx5 -> ../../devices/virtual/tty/ptyx5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyx6 -> ../../devices/virtual/tty/ptyx6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyx7 -> ../../devices/virtual/tty/ptyx7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyx8 -> ../../devices/virtual/tty/ptyx8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyx9 -> ../../devices/virtual/tty/ptyx9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyxa -> ../../devices/virtual/tty/ptyxa
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyxb -> ../../devices/virtual/tty/ptyxb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyxc -> ../../devices/virtual/tty/ptyxc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyxd -> ../../devices/virtual/tty/ptyxd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyxe -> ../../devices/virtual/tty/ptyxe
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyxf -> ../../devices/virtual/tty/ptyxf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyy0 -> ../../devices/virtual/tty/ptyy0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyy1 -> ../../devices/virtual/tty/ptyy1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyy2 -> ../../devices/virtual/tty/ptyy2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyy3 -> ../../devices/virtual/tty/ptyy3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyy4 -> ../../devices/virtual/tty/ptyy4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyy5 -> ../../devices/virtual/tty/ptyy5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyy6 -> ../../devices/virtual/tty/ptyy6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyy7 -> ../../devices/virtual/tty/ptyy7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyy8 -> ../../devices/virtual/tty/ptyy8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyy9 -> ../../devices/virtual/tty/ptyy9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyya -> ../../devices/virtual/tty/ptyya
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyyb -> ../../devices/virtual/tty/ptyyb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyyc -> ../../devices/virtual/tty/ptyyc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyyd -> ../../devices/virtual/tty/ptyyd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyye -> ../../devices/virtual/tty/ptyye
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyyf -> ../../devices/virtual/tty/ptyyf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyz0 -> ../../devices/virtual/tty/ptyz0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyz1 -> ../../devices/virtual/tty/ptyz1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyz2 -> ../../devices/virtual/tty/ptyz2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyz3 -> ../../devices/virtual/tty/ptyz3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyz4 -> ../../devices/virtual/tty/ptyz4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyz5 -> ../../devices/virtual/tty/ptyz5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyz6 -> ../../devices/virtual/tty/ptyz6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyz7 -> ../../devices/virtual/tty/ptyz7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyz8 -> ../../devices/virtual/tty/ptyz8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyz9 -> ../../devices/virtual/tty/ptyz9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyza -> ../../devices/virtual/tty/ptyza
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyzb -> ../../devices/virtual/tty/ptyzb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyzc -> ../../devices/virtual/tty/ptyzc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyzd -> ../../devices/virtual/tty/ptyzd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyze -> ../../devices/virtual/tty/ptyze
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ptyzf -> ../../devices/virtual/tty/ptyzf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 tty -> ../../devices/virtual/tty/tty
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyS0 -> ../../devices/platform/serial8250/tty/ttyS0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttya0 -> ../../devices/virtual/tty/ttya0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttya1 -> ../../devices/virtual/tty/ttya1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttya2 -> ../../devices/virtual/tty/ttya2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttya3 -> ../../devices/virtual/tty/ttya3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttya4 -> ../../devices/virtual/tty/ttya4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttya5 -> ../../devices/virtual/tty/ttya5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttya6 -> ../../devices/virtual/tty/ttya6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttya7 -> ../../devices/virtual/tty/ttya7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttya8 -> ../../devices/virtual/tty/ttya8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttya9 -> ../../devices/virtual/tty/ttya9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyaa -> ../../devices/virtual/tty/ttyaa
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyab -> ../../devices/virtual/tty/ttyab
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyac -> ../../devices/virtual/tty/ttyac
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyad -> ../../devices/virtual/tty/ttyad
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyae -> ../../devices/virtual/tty/ttyae
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyaf -> ../../devices/virtual/tty/ttyaf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyb0 -> ../../devices/virtual/tty/ttyb0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyb1 -> ../../devices/virtual/tty/ttyb1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyb2 -> ../../devices/virtual/tty/ttyb2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyb3 -> ../../devices/virtual/tty/ttyb3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyb4 -> ../../devices/virtual/tty/ttyb4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyb5 -> ../../devices/virtual/tty/ttyb5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyb6 -> ../../devices/virtual/tty/ttyb6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyb7 -> ../../devices/virtual/tty/ttyb7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyb8 -> ../../devices/virtual/tty/ttyb8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyb9 -> ../../devices/virtual/tty/ttyb9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyba -> ../../devices/virtual/tty/ttyba
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttybb -> ../../devices/virtual/tty/ttybb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttybc -> ../../devices/virtual/tty/ttybc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttybd -> ../../devices/virtual/tty/ttybd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttybe -> ../../devices/virtual/tty/ttybe
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttybf -> ../../devices/virtual/tty/ttybf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyc0 -> ../../devices/virtual/tty/ttyc0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyc1 -> ../../devices/virtual/tty/ttyc1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyc2 -> ../../devices/virtual/tty/ttyc2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyc3 -> ../../devices/virtual/tty/ttyc3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyc4 -> ../../devices/virtual/tty/ttyc4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyc5 -> ../../devices/virtual/tty/ttyc5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyc6 -> ../../devices/virtual/tty/ttyc6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyc7 -> ../../devices/virtual/tty/ttyc7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyc8 -> ../../devices/virtual/tty/ttyc8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyc9 -> ../../devices/virtual/tty/ttyc9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyca -> ../../devices/virtual/tty/ttyca
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttycb -> ../../devices/virtual/tty/ttycb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttycc -> ../../devices/virtual/tty/ttycc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttycd -> ../../devices/virtual/tty/ttycd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyce -> ../../devices/virtual/tty/ttyce
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttycf -> ../../devices/virtual/tty/ttycf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyd0 -> ../../devices/virtual/tty/ttyd0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyd1 -> ../../devices/virtual/tty/ttyd1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyd2 -> ../../devices/virtual/tty/ttyd2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyd3 -> ../../devices/virtual/tty/ttyd3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyd4 -> ../../devices/virtual/tty/ttyd4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyd5 -> ../../devices/virtual/tty/ttyd5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyd6 -> ../../devices/virtual/tty/ttyd6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyd7 -> ../../devices/virtual/tty/ttyd7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyd8 -> ../../devices/virtual/tty/ttyd8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyd9 -> ../../devices/virtual/tty/ttyd9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyda -> ../../devices/virtual/tty/ttyda
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttydb -> ../../devices/virtual/tty/ttydb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttydc -> ../../devices/virtual/tty/ttydc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttydd -> ../../devices/virtual/tty/ttydd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyde -> ../../devices/virtual/tty/ttyde
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttydf -> ../../devices/virtual/tty/ttydf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttye0 -> ../../devices/virtual/tty/ttye0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttye1 -> ../../devices/virtual/tty/ttye1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttye2 -> ../../devices/virtual/tty/ttye2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttye3 -> ../../devices/virtual/tty/ttye3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttye4 -> ../../devices/virtual/tty/ttye4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttye5 -> ../../devices/virtual/tty/ttye5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttye6 -> ../../devices/virtual/tty/ttye6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttye7 -> ../../devices/virtual/tty/ttye7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttye8 -> ../../devices/virtual/tty/ttye8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttye9 -> ../../devices/virtual/tty/ttye9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyea -> ../../devices/virtual/tty/ttyea
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyeb -> ../../devices/virtual/tty/ttyeb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyec -> ../../devices/virtual/tty/ttyec
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyed -> ../../devices/virtual/tty/ttyed
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyee -> ../../devices/virtual/tty/ttyee
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyef -> ../../devices/virtual/tty/ttyef
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyp0 -> ../../devices/virtual/tty/ttyp0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyp1 -> ../../devices/virtual/tty/ttyp1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyp2 -> ../../devices/virtual/tty/ttyp2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyp3 -> ../../devices/virtual/tty/ttyp3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyp4 -> ../../devices/virtual/tty/ttyp4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyp5 -> ../../devices/virtual/tty/ttyp5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyp6 -> ../../devices/virtual/tty/ttyp6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyp7 -> ../../devices/virtual/tty/ttyp7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyp8 -> ../../devices/virtual/tty/ttyp8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyp9 -> ../../devices/virtual/tty/ttyp9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttypa -> ../../devices/virtual/tty/ttypa
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttypb -> ../../devices/virtual/tty/ttypb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttypc -> ../../devices/virtual/tty/ttypc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttypd -> ../../devices/virtual/tty/ttypd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttype -> ../../devices/virtual/tty/ttype
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttypf -> ../../devices/virtual/tty/ttypf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyq0 -> ../../devices/virtual/tty/ttyq0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyq1 -> ../../devices/virtual/tty/ttyq1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyq2 -> ../../devices/virtual/tty/ttyq2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyq3 -> ../../devices/virtual/tty/ttyq3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyq4 -> ../../devices/virtual/tty/ttyq4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyq5 -> ../../devices/virtual/tty/ttyq5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyq6 -> ../../devices/virtual/tty/ttyq6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyq7 -> ../../devices/virtual/tty/ttyq7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyq8 -> ../../devices/virtual/tty/ttyq8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyq9 -> ../../devices/virtual/tty/ttyq9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyqa -> ../../devices/virtual/tty/ttyqa
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyqb -> ../../devices/virtual/tty/ttyqb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyqc -> ../../devices/virtual/tty/ttyqc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyqd -> ../../devices/virtual/tty/ttyqd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyqe -> ../../devices/virtual/tty/ttyqe
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyqf -> ../../devices/virtual/tty/ttyqf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyr0 -> ../../devices/virtual/tty/ttyr0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyr1 -> ../../devices/virtual/tty/ttyr1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyr2 -> ../../devices/virtual/tty/ttyr2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyr3 -> ../../devices/virtual/tty/ttyr3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyr4 -> ../../devices/virtual/tty/ttyr4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyr5 -> ../../devices/virtual/tty/ttyr5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyr6 -> ../../devices/virtual/tty/ttyr6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyr7 -> ../../devices/virtual/tty/ttyr7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyr8 -> ../../devices/virtual/tty/ttyr8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyr9 -> ../../devices/virtual/tty/ttyr9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyra -> ../../devices/virtual/tty/ttyra
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyrb -> ../../devices/virtual/tty/ttyrb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyrc -> ../../devices/virtual/tty/ttyrc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyrd -> ../../devices/virtual/tty/ttyrd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyre -> ../../devices/virtual/tty/ttyre
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyrf -> ../../devices/virtual/tty/ttyrf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttys0 -> ../../devices/virtual/tty/ttys0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttys1 -> ../../devices/virtual/tty/ttys1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttys2 -> ../../devices/virtual/tty/ttys2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttys3 -> ../../devices/virtual/tty/ttys3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttys4 -> ../../devices/virtual/tty/ttys4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttys5 -> ../../devices/virtual/tty/ttys5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttys6 -> ../../devices/virtual/tty/ttys6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttys7 -> ../../devices/virtual/tty/ttys7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttys8 -> ../../devices/virtual/tty/ttys8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttys9 -> ../../devices/virtual/tty/ttys9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttysa -> ../../devices/virtual/tty/ttysa
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttysb -> ../../devices/virtual/tty/ttysb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttysc -> ../../devices/virtual/tty/ttysc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttysd -> ../../devices/virtual/tty/ttysd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyse -> ../../devices/virtual/tty/ttyse
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttysf -> ../../devices/virtual/tty/ttysf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyt0 -> ../../devices/virtual/tty/ttyt0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyt1 -> ../../devices/virtual/tty/ttyt1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyt2 -> ../../devices/virtual/tty/ttyt2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyt3 -> ../../devices/virtual/tty/ttyt3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyt4 -> ../../devices/virtual/tty/ttyt4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyt5 -> ../../devices/virtual/tty/ttyt5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyt6 -> ../../devices/virtual/tty/ttyt6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyt7 -> ../../devices/virtual/tty/ttyt7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyt8 -> ../../devices/virtual/tty/ttyt8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyt9 -> ../../devices/virtual/tty/ttyt9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyta -> ../../devices/virtual/tty/ttyta
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttytb -> ../../devices/virtual/tty/ttytb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttytc -> ../../devices/virtual/tty/ttytc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttytd -> ../../devices/virtual/tty/ttytd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyte -> ../../devices/virtual/tty/ttyte
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttytf -> ../../devices/virtual/tty/ttytf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyu0 -> ../../devices/virtual/tty/ttyu0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyu1 -> ../../devices/virtual/tty/ttyu1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyu2 -> ../../devices/virtual/tty/ttyu2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyu3 -> ../../devices/virtual/tty/ttyu3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyu4 -> ../../devices/virtual/tty/ttyu4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyu5 -> ../../devices/virtual/tty/ttyu5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyu6 -> ../../devices/virtual/tty/ttyu6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyu7 -> ../../devices/virtual/tty/ttyu7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyu8 -> ../../devices/virtual/tty/ttyu8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyu9 -> ../../devices/virtual/tty/ttyu9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyua -> ../../devices/virtual/tty/ttyua
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyub -> ../../devices/virtual/tty/ttyub
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyuc -> ../../devices/virtual/tty/ttyuc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyud -> ../../devices/virtual/tty/ttyud
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyue -> ../../devices/virtual/tty/ttyue
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyuf -> ../../devices/virtual/tty/ttyuf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyv0 -> ../../devices/virtual/tty/ttyv0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyv1 -> ../../devices/virtual/tty/ttyv1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyv2 -> ../../devices/virtual/tty/ttyv2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyv3 -> ../../devices/virtual/tty/ttyv3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyv4 -> ../../devices/virtual/tty/ttyv4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyv5 -> ../../devices/virtual/tty/ttyv5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyv6 -> ../../devices/virtual/tty/ttyv6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyv7 -> ../../devices/virtual/tty/ttyv7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyv8 -> ../../devices/virtual/tty/ttyv8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyv9 -> ../../devices/virtual/tty/ttyv9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyva -> ../../devices/virtual/tty/ttyva
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyvb -> ../../devices/virtual/tty/ttyvb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyvc -> ../../devices/virtual/tty/ttyvc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyvd -> ../../devices/virtual/tty/ttyvd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyve -> ../../devices/virtual/tty/ttyve
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyvf -> ../../devices/virtual/tty/ttyvf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyw0 -> ../../devices/virtual/tty/ttyw0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyw1 -> ../../devices/virtual/tty/ttyw1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyw2 -> ../../devices/virtual/tty/ttyw2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyw3 -> ../../devices/virtual/tty/ttyw3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyw4 -> ../../devices/virtual/tty/ttyw4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyw5 -> ../../devices/virtual/tty/ttyw5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyw6 -> ../../devices/virtual/tty/ttyw6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyw7 -> ../../devices/virtual/tty/ttyw7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyw8 -> ../../devices/virtual/tty/ttyw8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyw9 -> ../../devices/virtual/tty/ttyw9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttywa -> ../../devices/virtual/tty/ttywa
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttywb -> ../../devices/virtual/tty/ttywb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttywc -> ../../devices/virtual/tty/ttywc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttywd -> ../../devices/virtual/tty/ttywd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttywe -> ../../devices/virtual/tty/ttywe
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttywf -> ../../devices/virtual/tty/ttywf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyx0 -> ../../devices/virtual/tty/ttyx0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyx1 -> ../../devices/virtual/tty/ttyx1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyx2 -> ../../devices/virtual/tty/ttyx2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyx3 -> ../../devices/virtual/tty/ttyx3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyx4 -> ../../devices/virtual/tty/ttyx4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyx5 -> ../../devices/virtual/tty/ttyx5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyx6 -> ../../devices/virtual/tty/ttyx6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyx7 -> ../../devices/virtual/tty/ttyx7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyx8 -> ../../devices/virtual/tty/ttyx8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyx9 -> ../../devices/virtual/tty/ttyx9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyxa -> ../../devices/virtual/tty/ttyxa
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyxb -> ../../devices/virtual/tty/ttyxb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyxc -> ../../devices/virtual/tty/ttyxc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyxd -> ../../devices/virtual/tty/ttyxd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyxe -> ../../devices/virtual/tty/ttyxe
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyxf -> ../../devices/virtual/tty/ttyxf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyy0 -> ../../devices/virtual/tty/ttyy0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyy1 -> ../../devices/virtual/tty/ttyy1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyy2 -> ../../devices/virtual/tty/ttyy2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyy3 -> ../../devices/virtual/tty/ttyy3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyy4 -> ../../devices/virtual/tty/ttyy4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyy5 -> ../../devices/virtual/tty/ttyy5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyy6 -> ../../devices/virtual/tty/ttyy6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyy7 -> ../../devices/virtual/tty/ttyy7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyy8 -> ../../devices/virtual/tty/ttyy8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyy9 -> ../../devices/virtual/tty/ttyy9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyya -> ../../devices/virtual/tty/ttyya
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyyb -> ../../devices/virtual/tty/ttyyb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyyc -> ../../devices/virtual/tty/ttyyc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyyd -> ../../devices/virtual/tty/ttyyd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyye -> ../../devices/virtual/tty/ttyye
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyyf -> ../../devices/virtual/tty/ttyyf
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyz0 -> ../../devices/virtual/tty/ttyz0
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyz1 -> ../../devices/virtual/tty/ttyz1
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyz2 -> ../../devices/virtual/tty/ttyz2
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyz3 -> ../../devices/virtual/tty/ttyz3
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyz4 -> ../../devices/virtual/tty/ttyz4
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyz5 -> ../../devices/virtual/tty/ttyz5
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyz6 -> ../../devices/virtual/tty/ttyz6
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyz7 -> ../../devices/virtual/tty/ttyz7
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyz8 -> ../../devices/virtual/tty/ttyz8
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyz9 -> ../../devices/virtual/tty/ttyz9
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyza -> ../../devices/virtual/tty/ttyza
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyzb -> ../../devices/virtual/tty/ttyzb
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyzc -> ../../devices/virtual/tty/ttyzc
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyzd -> ../../devices/virtual/tty/ttyzd
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyze -> ../../devices/virtual/tty/ttyze
+lrwxrwxrwx    1 root     root             0 Jan  1  1970 ttyzf -> ../../devices/virtual/tty/ttyzf
+ls: /dev/watchdog*: No such file or directory
+crw-rw----    1 root     root        4,  64 Jul 26 18:40 /dev/ttyS0
+--- /proc/bus/usb/devices [absent/unreadable]
+
+===== WLAN =====
++ iwconfig
+Warning: Driver for device peth0 has been compiled with version 0
+of Wireless Extension, while this program is using version 22.
+Some things may be broken...
+
+gre0      no wireless extensions.
+
+lo        no wireless extensions.
+
+br0       no wireless extensions.
+
+tunl0     no wireless extensions.
+
+gretap0   no wireless extensions.
+
+wlan1-va  IEEE 802.11-DS  
+          
+peth0     0£Þ!  ESSID:off/any  Nickname:""
+          NWID:7FDEA330  Frequency:2.1453e+33GHz  Access Point: DE:7F:21:00:00:00  
+          Bit Rate=2.1453Gb/s   Tx-Power=2145297200 dBm   Sensitivity=2145297200/0  
+          Retry:on   RTS thr=2145297200 B   Fragment thr=2145297200 B   
+          Encryption key:0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000
+          Power Management0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000:on
+          
+wlan0-va  IEEE 802.11-DS  
+          
+wlan1-va  IEEE 802.11-DS  
+          
+wlan1     IEEE 802.11-DS  
+          
+wlan0-va  IEEE 802.11-DS  
+          
+pwlan0    IEEE 802.11-DS  
+          
+eth1      0£Þ!  ESSID:off/any  Nickname:""
+          NWID:7FDEA330  Frequency:2.1453e+33GHz  Access Point: DE:7F:21:00:00:00  
+          Bit Rate=2.1453Gb/s   Tx-Power=2145297200 dBm   Sensitivity=2145297200/0  
+          Retry:on   RTS thr=2145297200 B   Fragment thr=2145297200 B   
+          Encryption key:0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000
+          Power Management0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000:on
+          
+wlan-msh  IEEE 802.11-DS  
+          
+wlan1-va  IEEE 802.11-DS  
+          
+wlan0     IEEE 802.11-DS  
+          
+eth0      0£Þ!  ESSID:off/any  Nickname:""
+          NWID:7FDEA330  Frequency:2.1453e+33GHz  Access Point: DE:7F:21:00:00:00  
+          Bit Rate=2.1453Gb/s   Tx-Power=2145297200 dBm   Sensitivity=2145297200/0  
+          Retry:on   RTS thr=2145297200 B   Fragment thr=2145297200 B   
+          Encryption key:0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000
+          Power Management0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000-0000:on
+          
+wlan0-va  IEEE 802.11-DS  
+          
+wlan1-va  IEEE 802.11-DS  
+          
+wlan0-va  IEEE 802.11-DS  
+          
+[rc=0]
+--- wlan0
++ ifconfig wlan0
+wlan0     Link encap:Ethernet  HWaddr CC:2D:21:9E:70:C4  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:18389 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:304 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:6579531 (6.2 MiB)  TX bytes:21016 (20.5 KiB)
+          Interrupt:5 
+
+[rc=0]
++ iwconfig wlan0
+wlan0     IEEE 802.11-DS  
+          
+[rc=0]
++ iwpriv wlan0
+wlan0     Available private ioctl :
+          set_mib          (89F1) : set 450 char  & get   0      
+          get_mib          (89F2) : set  40 char  & get 128 byte 
+          write_reg        (8B78) : set 128 char  & get   0      
+          read_reg         (89F4) : set 128 char  & get 128 byte 
+          write_mem        (89F5) : set 128 char  & get   0      
+          read_mem         (89F6) : set 128 char  & get 128 byte 
+          write_bb         (89FA) : set 128 char  & get   0      
+          read_bb          (89FB) : set 128 char  & get 128 byte 
+          write_rf         (89FC) : set 128 char  & get   0      
+          read_rf          (89FD) : set 128 char  & get 128 byte 
+          dump_mib         (8B3C) : set  40 char  & get   0      
+          del_sta          (89F7) : set 128 char  & get   0      
+          write_eeprom     (89F8) : set 128 char  & get   0      
+          read_eeprom      (89F9) : set 128 char  & get 128 byte 
+          rf_pwr           (8B5B) : set  40 char  & get 128 char 
+          at_ss            (8B5C) : set   0       & get   0      
+          at_join          (8B5D) : set  40 char  & get   0      
+          mp_start         (8B61) : set   0       & get   0      
+          mp_stop          (8B62) : set   0       & get   0      
+          mp_rate          (8B63) : set  40 char  & get   0      
+          mp_channel       (8B64) : set  40 char  & get   0      
+          mp_txpower       (8B65) : set  40 char  & get   0      
+          mp_ctx           (8B66) : set 128 char  & get   0      
+          mp_arx           (8B67) : set  40 char  & get 128 char 
+          mp_bssid         (8B68) : set  40 char  & get   0      
+          mp_ant_tx        (8B69) : set  40 char  & get   0      
+          mp_ant_rx        (8B6A) : set  40 char  & get   0      
+          mp_bandwidth     (8B6B) : set  40 char  & get   0      
+          mp_phypara       (8B6C) : set  40 char  & get   0      
+          mp_query         (8B6D) : set  40 char  & get 128 char 
+          mp_pwrtrk        (8B6E) : set  40 char  & get   0      
+          mp_tssi          (8B6F) : set  40 char  & get 128 char 
+          mp_psd           (8BC9) : set  40 char  & get 128 char 
+          mp_ther          (8B77) : set  40 char  & get 128 char 
+          mp_rssi          (8BEF) : set  40 char  & get 128 char 
+          mp_reset_stats   (8B86) : set  40 char  & get 128 char 
+          mp_get_pwr       (8B87) : set  40 char  & get 128 char 
+          mp_help          (8BE6) : set   0       & get   0      
+          mp_pmac_ctx      (8BE0) : set 256 char  & get   0      
+          mp_iqc           (8BE1) : set   0       & get   0      
+          mp_lcc           (8BE2) : set   0       & get   0      
+          mp_que_rx        (8BE3) : set  40 char  & get 128 char 
+          mp_set_rx_gain   (8BEE) : set  40 char  & get   0      
+          mp_reset_rx      (8BE4) : set   0       & get   0      
+          reg_dump         (89F3) : set  40 char  & get 128 char 
+          copy_mib         (8B79) : set  40 char  & get   0      
+          showsc           (8BCD) : set  40 char  & get 128 byte 
+          strt             (89FE) : set  40 char  & get   0      
+          manual_metric    (8BCA) : set  40 char  & get 128 byte 
+          add_acl_table    (8B96) : set  40 char  & get 128 byte 
+          rm_acl_table     (8B97) : set  40 char  & get 128 byte 
+          get_acl_table    (8B98) : set  40 char  & get 128 byte 
+          clear_acl_table  (8B9E) : set  40 char  & get 128 byte 
+          clear_brsc       (8B91) : set  40 char  & get   0      
+          clear_onebrsc    (8B92) : set  40 char  & get   0      
+          radio_off        (8B8E) : set 128 char  & get   0      
+          mimo             (8B8F) : set 128 char  & get 128      
+          sigma_default    (8BCB) : set 128 char  & get 128      
+          sigma_dft_tb     (8BCC) : set 128 char  & get 128      
+          autoch           (8BC5) : set 128 char  & get   0      
+          get_atminfo      (8BF0) : set 128 char  & get   0      
+          set_if_atmtime   (8BF1) : set 128 char  & get   0      
+          get_if_atmtime   (8BF2) : set 128 char  & get   0      
+          set_sta_atmtime  (8BF3) : set 128 char  & get   0      
+          get_sta_atmtime  (8BF4) : set 128 char  & get   0      
+          offload          (8BC6) : set 128 char  & get   0      
+          apTest           (8BC8) : set 128 char  & get   0      
+          set_acl_mode     (8BFA) : set  40 int   & get 128 byte 
+          add_acl_table    (8B96) : set  40 char  & get 128 byte 
+          rm_acl_table     (8B97) : set  40 char  & get 128 byte 
+          get_acl_table    (8B98) : set  40 char  & get 128 byte 
+          clear_acl_table  (8B9E) : set  40 char  & get 128 byte 
+          reset_nop        (8BCE) : set 128 char  & get 128      
+          txpwr_apply      (8BCF) : set 128 char  & get 128      
+          setCIE           (8BED) : set 128 char  & get   0      
+          scanCIE          (8B33) : set 128 char  & get   0      
+          td_sync_ssid     (8BDA) : set 128 char  & get   0      
+          td_ssid_close    (8BDB) : set 128 char  & get   0      
+          td_ssid_hide     (8BDC) : set 128 char  & get   0      
+
+[rc=0]
++ iwlist wlan0 frequency
+wlan0     no frequency information.
+
+[rc=0]
+--- wlan1
++ ifconfig wlan1
+wlan1     Link encap:Ethernet  HWaddr CC:2D:21:9E:70:C1  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:39 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:316 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:4506 (4.4 KiB)  TX bytes:23248 (22.7 KiB)
+          Interrupt:6 
+
+[rc=0]
++ iwconfig wlan1
+wlan1     IEEE 802.11-DS  
+          
+[rc=0]
++ iwpriv wlan1
+wlan1     Available private ioctl :
+          set_mib          (89F1) : set 450 char  & get   0      
+          get_mib          (89F2) : set  40 char  & get 128 byte 
+          write_reg        (8B78) : set 128 char  & get   0      
+          read_reg         (89F4) : set 128 char  & get 128 byte 
+          write_mem        (89F5) : set 128 char  & get   0      
+          read_mem         (89F6) : set 128 char  & get 128 byte 
+          write_bb         (89FA) : set 128 char  & get   0      
+          read_bb          (89FB) : set 128 char  & get 128 byte 
+          write_rf         (89FC) : set 128 char  & get   0      
+          read_rf          (89FD) : set 128 char  & get 128 byte 
+          dump_mib         (8B3C) : set  40 char  & get   0      
+          del_sta          (89F7) : set 128 char  & get   0      
+          write_eeprom     (89F8) : set 128 char  & get   0      
+          read_eeprom      (89F9) : set 128 char  & get 128 byte 
+          rf_pwr           (8B5B) : set  40 char  & get 128 char 
+          at_ss            (8B5C) : set   0       & get   0      
+          at_join          (8B5D) : set  40 char  & get   0      
+          mp_start         (8B61) : set   0       & get   0      
+          mp_stop          (8B62) : set   0       & get   0      
+          mp_rate          (8B63) : set  40 char  & get   0      
+          mp_channel       (8B64) : set  40 char  & get   0      
+          mp_txpower       (8B65) : set  40 char  & get   0      
+          mp_ctx           (8B66) : set 128 char  & get   0      
+          mp_arx           (8B67) : set  40 char  & get 128 char 
+          mp_bssid         (8B68) : set  40 char  & get   0      
+          mp_ant_tx        (8B69) : set  40 char  & get   0      
+          mp_ant_rx        (8B6A) : set  40 char  & get   0      
+          mp_bandwidth     (8B6B) : set  40 char  & get   0      
+          mp_phypara       (8B6C) : set  40 char  & get   0      
+          mp_query         (8B6D) : set  40 char  & get 128 char 
+          mp_pwrtrk        (8B6E) : set  40 char  & get   0      
+          mp_tssi          (8B6F) : set  40 char  & get 128 char 
+          mp_psd           (8BC9) : set  40 char  & get 128 char 
+          mp_ther          (8B77) : set  40 char  & get 128 char 
+          mp_rssi          (8BEF) : set  40 char  & get 128 char 
+          mp_reset_stats   (8B86) : set  40 char  & get 128 char 
+          mp_get_pwr       (8B87) : set  40 char  & get 128 char 
+          mp_help          (8BE6) : set   0       & get   0      
+          mp_pmac_ctx      (8BE0) : set 256 char  & get   0      
+          mp_iqc           (8BE1) : set   0       & get   0      
+          mp_lcc           (8BE2) : set   0       & get   0      
+          mp_que_rx        (8BE3) : set  40 char  & get 128 char 
+          mp_set_rx_gain   (8BEE) : set  40 char  & get   0      
+          mp_reset_rx      (8BE4) : set   0       & get   0      
+          reg_dump         (89F3) : set  40 char  & get 128 char 
+          copy_mib         (8B79) : set  40 char  & get   0      
+          showsc           (8BCD) : set  40 char  & get 128 byte 
+          strt             (89FE) : set  40 char  & get   0      
+          manual_metric    (8BCA) : set  40 char  & get 128 byte 
+          add_acl_table    (8B96) : set  40 char  & get 128 byte 
+          rm_acl_table     (8B97) : set  40 char  & get 128 byte 
+          get_acl_table    (8B98) : set  40 char  & get 128 byte 
+          clear_acl_table  (8B9E) : set  40 char  & get 128 byte 
+          clear_brsc       (8B91) : set  40 char  & get   0      
+          clear_onebrsc    (8B92) : set  40 char  & get   0      
+          radio_off        (8B8E) : set 128 char  & get   0      
+          mimo             (8B8F) : set 128 char  & get 128      
+          sigma_default    (8BCB) : set 128 char  & get 128      
+          sigma_dft_tb     (8BCC) : set 128 char  & get 128      
+          autoch           (8BC5) : set 128 char  & get   0      
+          get_atminfo      (8BF0) : set 128 char  & get   0      
+          set_if_atmtime   (8BF1) : set 128 char  & get   0      
+          get_if_atmtime   (8BF2) : set 128 char  & get   0      
+          set_sta_atmtime  (8BF3) : set 128 char  & get   0      
+          get_sta_atmtime  (8BF4) : set 128 char  & get   0      
+          offload          (8BC6) : set 128 char  & get   0      
+          apTest           (8BC8) : set 128 char  & get   0      
+          set_acl_mode     (8BFA) : set  40 int   & get 128 byte 
+          add_acl_table    (8B96) : set  40 char  & get 128 byte 
+          rm_acl_table     (8B97) : set  40 char  & get 128 byte 
+          get_acl_table    (8B98) : set  40 char  & get 128 byte 
+          clear_acl_table  (8B9E) : set  40 char  & get 128 byte 
+          reset_nop        (8BCE) : set 128 char  & get 128      
+          txpwr_apply      (8BCF) : set 128 char  & get 128      
+          setCIE           (8BED) : set 128 char  & get   0      
+          scanCIE          (8B33) : set 128 char  & get   0      
+          td_sync_ssid     (8BDA) : set 128 char  & get   0      
+          td_ssid_close    (8BDB) : set 128 char  & get   0      
+          td_ssid_hide     (8BDC) : set 128 char  & get   0      
+
+[rc=0]
++ iwlist wlan1 frequency
+wlan1     no frequency information.
+
+[rc=0]
+--- wlan-msh
++ ifconfig wlan-msh
+wlan-msh  Link encap:Ethernet  HWaddr CC:2D:21:9E:70:C4  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+          
+
+[rc=0]
++ iwconfig wlan-msh
+wlan-msh  IEEE 802.11-DS  
+          
+[rc=0]
++ iwpriv wlan-msh
+wlan-msh  Available private ioctl :
+          set_mib          (89F1) : set 450 char  & get   0      
+          get_mib          (89F2) : set  40 char  & get 128 byte 
+          write_reg        (8B78) : set 128 char  & get   0      
+          read_reg         (89F4) : set 128 char  & get 128 byte 
+          write_mem        (89F5) : set 128 char  & get   0      
+          read_mem         (89F6) : set 128 char  & get 128 byte 
+          write_bb         (89FA) : set 128 char  & get   0      
+          read_bb          (89FB) : set 128 char  & get 128 byte 
+          write_rf         (89FC) : set 128 char  & get   0      
+          read_rf          (89FD) : set 128 char  & get 128 byte 
+          dump_mib         (8B3C) : set  40 char  & get   0      
+          del_sta          (89F7) : set 128 char  & get   0      
+          write_eeprom     (89F8) : set 128 char  & get   0      
+          read_eeprom      (89F9) : set 128 char  & get 128 byte 
+          rf_pwr           (8B5B) : set  40 char  & get 128 char 
+          at_ss            (8B5C) : set   0       & get   0      
+          at_join          (8B5D) : set  40 char  & get   0      
+          mp_start         (8B61) : set   0       & get   0      
+          mp_stop          (8B62) : set   0       & get   0      
+          mp_rate          (8B63) : set  40 char  & get   0      
+          mp_channel       (8B64) : set  40 char  & get   0      
+          mp_txpower       (8B65) : set  40 char  & get   0      
+          mp_ctx           (8B66) : set 128 char  & get   0      
+          mp_arx           (8B67) : set  40 char  & get 128 char 
+          mp_bssid         (8B68) : set  40 char  & get   0      
+          mp_ant_tx        (8B69) : set  40 char  & get   0      
+          mp_ant_rx        (8B6A) : set  40 char  & get   0      
+          mp_bandwidth     (8B6B) : set  40 char  & get   0      
+          mp_phypara       (8B6C) : set  40 char  & get   0      
+          mp_query         (8B6D) : set  40 char  & get 128 char 
+          mp_pwrtrk        (8B6E) : set  40 char  & get   0      
+          mp_tssi          (8B6F) : set  40 char  & get 128 char 
+          mp_psd           (8BC9) : set  40 char  & get 128 char 
+          mp_ther          (8B77) : set  40 char  & get 128 char 
+          mp_rssi          (8BEF) : set  40 char  & get 128 char 
+          mp_reset_stats   (8B86) : set  40 char  & get 128 char 
+          mp_get_pwr       (8B87) : set  40 char  & get 128 char 
+          mp_help          (8BE6) : set   0       & get   0      
+          mp_pmac_ctx      (8BE0) : set 256 char  & get   0      
+          mp_iqc           (8BE1) : set   0       & get   0      
+          mp_lcc           (8BE2) : set   0       & get   0      
+          mp_que_rx        (8BE3) : set  40 char  & get 128 char 
+          mp_set_rx_gain   (8BEE) : set  40 char  & get   0      
+          mp_reset_rx      (8BE4) : set   0       & get   0      
+          reg_dump         (89F3) : set  40 char  & get 128 char 
+          copy_mib         (8B79) : set  40 char  & get   0      
+          showsc           (8BCD) : set  40 char  & get 128 byte 
+          strt             (89FE) : set  40 char  & get   0      
+          manual_metric    (8BCA) : set  40 char  & get 128 byte 
+          add_acl_table    (8B96) : set  40 char  & get 128 byte 
+          rm_acl_table     (8B97) : set  40 char  & get 128 byte 
+          get_acl_table    (8B98) : set  40 char  & get 128 byte 
+          clear_acl_table  (8B9E) : set  40 char  & get 128 byte 
+          clear_brsc       (8B91) : set  40 char  & get   0      
+          clear_onebrsc    (8B92) : set  40 char  & get   0      
+          radio_off        (8B8E) : set 128 char  & get   0      
+          mimo             (8B8F) : set 128 char  & get 128      
+          sigma_default    (8BCB) : set 128 char  & get 128      
+          sigma_dft_tb     (8BCC) : set 128 char  & get 128      
+          autoch           (8BC5) : set 128 char  & get   0      
+          get_atminfo      (8BF0) : set 128 char  & get   0      
+          set_if_atmtime   (8BF1) : set 128 char  & get   0      
+          get_if_atmtime   (8BF2) : set 128 char  & get   0      
+          set_sta_atmtime  (8BF3) : set 128 char  & get   0      
+          get_sta_atmtime  (8BF4) : set 128 char  & get   0      
+          offload          (8BC6) : set 128 char  & get   0      
+          apTest           (8BC8) : set 128 char  & get   0      
+          set_acl_mode     (8BFA) : set  40 int   & get 128 byte 
+          add_acl_table    (8B96) : set  40 char  & get 128 byte 
+          rm_acl_table     (8B97) : set  40 char  & get 128 byte 
+          get_acl_table    (8B98) : set  40 char  & get 128 byte 
+          clear_acl_table  (8B9E) : set  40 char  & get 128 byte 
+          reset_nop        (8BCE) : set 128 char  & get 128      
+          txpwr_apply      (8BCF) : set 128 char  & get 128      
+          setCIE           (8BED) : set 128 char  & get   0      
+          scanCIE          (8B33) : set 128 char  & get   0      
+          td_sync_ssid     (8BDA) : set 128 char  & get   0      
+          td_ssid_close    (8BDB) : set 128 char  & get   0      
+          td_ssid_hide     (8BDC) : set 128 char  & get   0      
+
+[rc=0]
++ iwlist wlan-msh frequency
+wlan-msh  no frequency information.
+
+[rc=0]
+--- wlan0-va0
++ ifconfig wlan0-va0
+wlan0-va0 Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+[rc=0]
++ iwconfig wlan0-va0
+wlan0-va  IEEE 802.11-DS  
+          
+[rc=0]
++ iwpriv wlan0-va0
+wlan0-va  Available private ioctl :
+          set_mib          (89F1) : set 450 char  & get   0      
+          get_mib          (89F2) : set  40 char  & get 128 byte 
+          write_reg        (8B78) : set 128 char  & get   0      
+          read_reg         (89F4) : set 128 char  & get 128 byte 
+          write_mem        (89F5) : set 128 char  & get   0      
+          read_mem         (89F6) : set 128 char  & get 128 byte 
+          write_bb         (89FA) : set 128 char  & get   0      
+          read_bb          (89FB) : set 128 char  & get 128 byte 
+          write_rf         (89FC) : set 128 char  & get   0      
+          read_rf          (89FD) : set 128 char  & get 128 byte 
+          dump_mib         (8B3C) : set  40 char  & get   0      
+          del_sta          (89F7) : set 128 char  & get   0      
+          write_eeprom     (89F8) : set 128 char  & get   0      
+          read_eeprom      (89F9) : set 128 char  & get 128 byte 
+          rf_pwr           (8B5B) : set  40 char  & get 128 char 
+          at_ss            (8B5C) : set   0       & get   0      
+          at_join          (8B5D) : set  40 char  & get   0      
+          mp_start         (8B61) : set   0       & get   0      
+          mp_stop          (8B62) : set   0       & get   0      
+          mp_rate          (8B63) : set  40 char  & get   0      
+          mp_channel       (8B64) : set  40 char  & get   0      
+          mp_txpower       (8B65) : set  40 char  & get   0      
+          mp_ctx           (8B66) : set 128 char  & get   0      
+          mp_arx           (8B67) : set  40 char  & get 128 char 
+          mp_bssid         (8B68) : set  40 char  & get   0      
+          mp_ant_tx        (8B69) : set  40 char  & get   0      
+          mp_ant_rx        (8B6A) : set  40 char  & get   0      
+          mp_bandwidth     (8B6B) : set  40 char  & get   0      
+          mp_phypara       (8B6C) : set  40 char  & get   0      
+          mp_query         (8B6D) : set  40 char  & get 128 char 
+          mp_pwrtrk        (8B6E) : set  40 char  & get   0      
+          mp_tssi          (8B6F) : set  40 char  & get 128 char 
+          mp_psd           (8BC9) : set  40 char  & get 128 char 
+          mp_ther          (8B77) : set  40 char  & get 128 char 
+          mp_rssi          (8BEF) : set  40 char  & get 128 char 
+          mp_reset_stats   (8B86) : set  40 char  & get 128 char 
+          mp_get_pwr       (8B87) : set  40 char  & get 128 char 
+          mp_help          (8BE6) : set   0       & get   0      
+          mp_pmac_ctx      (8BE0) : set 256 char  & get   0      
+          mp_iqc           (8BE1) : set   0       & get   0      
+          mp_lcc           (8BE2) : set   0       & get   0      
+          mp_que_rx        (8BE3) : set  40 char  & get 128 char 
+          mp_set_rx_gain   (8BEE) : set  40 char  & get   0      
+          mp_reset_rx      (8BE4) : set   0       & get   0      
+          reg_dump         (89F3) : set  40 char  & get 128 char 
+          copy_mib         (8B79) : set  40 char  & get   0      
+          showsc           (8BCD) : set  40 char  & get 128 byte 
+          strt             (89FE) : set  40 char  & get   0      
+          manual_metric    (8BCA) : set  40 char  & get 128 byte 
+          add_acl_table    (8B96) : set  40 char  & get 128 byte 
+          rm_acl_table     (8B97) : set  40 char  & get 128 byte 
+          get_acl_table    (8B98) : set  40 char  & get 128 byte 
+          clear_acl_table  (8B9E) : set  40 char  & get 128 byte 
+          clear_brsc       (8B91) : set  40 char  & get   0      
+          clear_onebrsc    (8B92) : set  40 char  & get   0      
+          radio_off        (8B8E) : set 128 char  & get   0      
+          mimo             (8B8F) : set 128 char  & get 128      
+          sigma_default    (8BCB) : set 128 char  & get 128      
+          sigma_dft_tb     (8BCC) : set 128 char  & get 128      
+          autoch           (8BC5) : set 128 char  & get   0      
+          get_atminfo      (8BF0) : set 128 char  & get   0      
+          set_if_atmtime   (8BF1) : set 128 char  & get   0      
+          get_if_atmtime   (8BF2) : set 128 char  & get   0      
+          set_sta_atmtime  (8BF3) : set 128 char  & get   0      
+          get_sta_atmtime  (8BF4) : set 128 char  & get   0      
+          offload          (8BC6) : set 128 char  & get   0      
+          apTest           (8BC8) : set 128 char  & get   0      
+          set_acl_mode     (8BFA) : set  40 int   & get 128 byte 
+          add_acl_table    (8B96) : set  40 char  & get 128 byte 
+          rm_acl_table     (8B97) : set  40 char  & get 128 byte 
+          get_acl_table    (8B98) : set  40 char  & get 128 byte 
+          clear_acl_table  (8B9E) : set  40 char  & get 128 byte 
+          reset_nop        (8BCE) : set 128 char  & get 128      
+          txpwr_apply      (8BCF) : set 128 char  & get 128      
+          setCIE           (8BED) : set 128 char  & get   0      
+          scanCIE          (8B33) : set 128 char  & get   0      
+          td_sync_ssid     (8BDA) : set 128 char  & get   0      
+          td_ssid_close    (8BDB) : set 128 char  & get   0      
+          td_ssid_hide     (8BDC) : set 128 char  & get   0      
+
+[rc=0]
++ iwlist wlan0-va0 frequency
+wlan0-va  no frequency information.
+
+[rc=0]
+--- wlan1-va0
++ ifconfig wlan1-va0
+wlan1-va0 Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+[rc=0]
++ iwconfig wlan1-va0
+wlan1-va  IEEE 802.11-DS  
+          
+[rc=0]
++ iwpriv wlan1-va0
+wlan1-va  Available private ioctl :
+          set_mib          (89F1) : set 450 char  & get   0      
+          get_mib          (89F2) : set  40 char  & get 128 byte 
+          write_reg        (8B78) : set 128 char  & get   0      
+          read_reg         (89F4) : set 128 char  & get 128 byte 
+          write_mem        (89F5) : set 128 char  & get   0      
+          read_mem         (89F6) : set 128 char  & get 128 byte 
+          write_bb         (89FA) : set 128 char  & get   0      
+          read_bb          (89FB) : set 128 char  & get 128 byte 
+          write_rf         (89FC) : set 128 char  & get   0      
+          read_rf          (89FD) : set 128 char  & get 128 byte 
+          dump_mib         (8B3C) : set  40 char  & get   0      
+          del_sta          (89F7) : set 128 char  & get   0      
+          write_eeprom     (89F8) : set 128 char  & get   0      
+          read_eeprom      (89F9) : set 128 char  & get 128 byte 
+          rf_pwr           (8B5B) : set  40 char  & get 128 char 
+          at_ss            (8B5C) : set   0       & get   0      
+          at_join          (8B5D) : set  40 char  & get   0      
+          mp_start         (8B61) : set   0       & get   0      
+          mp_stop          (8B62) : set   0       & get   0      
+          mp_rate          (8B63) : set  40 char  & get   0      
+          mp_channel       (8B64) : set  40 char  & get   0      
+          mp_txpower       (8B65) : set  40 char  & get   0      
+          mp_ctx           (8B66) : set 128 char  & get   0      
+          mp_arx           (8B67) : set  40 char  & get 128 char 
+          mp_bssid         (8B68) : set  40 char  & get   0      
+          mp_ant_tx        (8B69) : set  40 char  & get   0      
+          mp_ant_rx        (8B6A) : set  40 char  & get   0      
+          mp_bandwidth     (8B6B) : set  40 char  & get   0      
+          mp_phypara       (8B6C) : set  40 char  & get   0      
+          mp_query         (8B6D) : set  40 char  & get 128 char 
+          mp_pwrtrk        (8B6E) : set  40 char  & get   0      
+          mp_tssi          (8B6F) : set  40 char  & get 128 char 
+          mp_psd           (8BC9) : set  40 char  & get 128 char 
+          mp_ther          (8B77) : set  40 char  & get 128 char 
+          mp_rssi          (8BEF) : set  40 char  & get 128 char 
+          mp_reset_stats   (8B86) : set  40 char  & get 128 char 
+          mp_get_pwr       (8B87) : set  40 char  & get 128 char 
+          mp_help          (8BE6) : set   0       & get   0      
+          mp_pmac_ctx      (8BE0) : set 256 char  & get   0      
+          mp_iqc           (8BE1) : set   0       & get   0      
+          mp_lcc           (8BE2) : set   0       & get   0      
+          mp_que_rx        (8BE3) : set  40 char  & get 128 char 
+          mp_set_rx_gain   (8BEE) : set  40 char  & get   0      
+          mp_reset_rx      (8BE4) : set   0       & get   0      
+          reg_dump         (89F3) : set  40 char  & get 128 char 
+          copy_mib         (8B79) : set  40 char  & get   0      
+          showsc           (8BCD) : set  40 char  & get 128 byte 
+          strt             (89FE) : set  40 char  & get   0      
+          manual_metric    (8BCA) : set  40 char  & get 128 byte 
+          add_acl_table    (8B96) : set  40 char  & get 128 byte 
+          rm_acl_table     (8B97) : set  40 char  & get 128 byte 
+          get_acl_table    (8B98) : set  40 char  & get 128 byte 
+          clear_acl_table  (8B9E) : set  40 char  & get 128 byte 
+          clear_brsc       (8B91) : set  40 char  & get   0      
+          clear_onebrsc    (8B92) : set  40 char  & get   0      
+          radio_off        (8B8E) : set 128 char  & get   0      
+          mimo             (8B8F) : set 128 char  & get 128      
+          sigma_default    (8BCB) : set 128 char  & get 128      
+          sigma_dft_tb     (8BCC) : set 128 char  & get 128      
+          autoch           (8BC5) : set 128 char  & get   0      
+          get_atminfo      (8BF0) : set 128 char  & get   0      
+          set_if_atmtime   (8BF1) : set 128 char  & get   0      
+          get_if_atmtime   (8BF2) : set 128 char  & get   0      
+          set_sta_atmtime  (8BF3) : set 128 char  & get   0      
+          get_sta_atmtime  (8BF4) : set 128 char  & get   0      
+          offload          (8BC6) : set 128 char  & get   0      
+          apTest           (8BC8) : set 128 char  & get   0      
+          set_acl_mode     (8BFA) : set  40 int   & get 128 byte 
+          add_acl_table    (8B96) : set  40 char  & get 128 byte 
+          rm_acl_table     (8B97) : set  40 char  & get 128 byte 
+          get_acl_table    (8B98) : set  40 char  & get 128 byte 
+          clear_acl_table  (8B9E) : set  40 char  & get 128 byte 
+          reset_nop        (8BCE) : set 128 char  & get 128      
+          txpwr_apply      (8BCF) : set 128 char  & get 128      
+          setCIE           (8BED) : set 128 char  & get   0      
+          scanCIE          (8B33) : set 128 char  & get   0      
+          td_sync_ssid     (8BDA) : set 128 char  & get   0      
+          td_ssid_close    (8BDB) : set 128 char  & get   0      
+          td_ssid_hide     (8BDC) : set 128 char  & get   0      
+
+[rc=0]
++ iwlist wlan1-va0 frequency
+wlan1-va  no frequency information.
+
+[rc=0]
+
+===== OEM files and modules =====
+
+===== executables =====
+
+===== relevant OEM references =====
+
+===== candidate proc and sys nodes =====
+--- /proc/hw_nat
+0 
+
+
+===== optional MTD backup =====
+Skipped. Run with BACKUP_MTD=1 to include read-only MTD images.
+
+===== collector result =====
+base=/tmp/mw5-oem-20260726-184028
+report=/tmp/mw5-oem-20260726-184028/mw5-porting-info.txt
+backup_mtd=0

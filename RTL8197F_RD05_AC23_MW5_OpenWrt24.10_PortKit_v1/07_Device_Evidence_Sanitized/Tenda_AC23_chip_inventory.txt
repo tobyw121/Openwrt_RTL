@@ -1,0 +1,7 @@
+Tenda AC23 /lynx 8000 :
+
+SOC1: 8197FH
+SOC2: 8637RB
+SOC3: 8814BR
+ 
+Flash:bh25q64

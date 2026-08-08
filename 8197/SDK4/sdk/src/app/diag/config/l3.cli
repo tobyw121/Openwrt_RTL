@@ -1,0 +1,180 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 27613 $
+// $Date: 2012-03-30 17:33:46 +0800 (Fri, 30 Mar 2012) $
+//
+// Purpose : Define diag shell commands for l3.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) l3 commands.
+//
+
+#ifdef CMD_L3_ADD_NEXT_HOP_INDEX_INNER_VID_OUTER_VID_DVID_DEST_PORT_ID_SWITCH_MAC_INDEX
+//l3 configuration
+//add configuration
+//next-hop entry
+//routing table index to retrieve host mac
+//replace inner-vid
+//replace outer-vid
+//new vid value, <0-4095>
+//destination port id
+//all
+l3 add next-hop <UINT:index> ( inner-vid | outer-vid ) <UINT:dvid> <UINT:dest_port_id> <UINT:switch_mac_index>
+#endif
+
+#ifdef CMD_L3_DEL_NEXT_HOP_INDEX
+//l3 configuration
+//delete configuration
+//next-hop entry
+//the index in L2 table to delete host mac
+l3 del next-hop <UINT:index>
+#endif
+
+#ifdef CMD_L3_DUMP
+//l3 configuration
+//dump configuration
+l3 dump
+#endif
+
+#ifdef CMD_L3_DUMP_NEXT_HOP
+//l3 configuration
+//dump configuration
+//next-hop entry
+l3 dump next-hop
+#endif
+
+#ifdef CMD_L3_DUMP_ROUTE_HOST_MAC
+//l3 configuration
+//dump configuration
+//routing configuration
+//Host MAC address
+l3 dump route host-mac
+#endif
+
+#ifdef CMD_L3_DUMP_ROUTE_SWITCH_MAC
+//l3 configuration
+//dump configuration
+//routing configuration
+//Switch MAC address
+l3 dump route switch-mac
+#endif
+
+#ifdef CMD_L3_GET_ROUTE_HOST_MAC_INDEX
+//l3 configuration
+//get configuration
+//routing configuration
+//Host MAC address
+//index configuration
+l3 get route host-mac <UINT:index>
+#endif
+
+#ifdef CMD_L3_GET_ROUTE_SWITCH_MAC_INDEX
+//l3 configuration
+//get configuration
+//routing configuration
+//Switch MAC address
+//index configuration
+l3 get route switch-mac <UINT:index>
+#endif
+
+#ifdef CMD_L3_SET_ROUTE_HOST_MAC_INDEX_MAC
+//l3 configuration
+//set configuration
+//routing configuration
+//Host MAC address
+//index configuration
+//MAC address
+l3 set route host-mac <UINT:index> <MACADDR:mac>
+#endif
+
+#ifdef CMD_L3_SET_ROUTE_SWITCH_MAC_INDEX_MAC
+//l3 configuration
+//set configuration
+//routing configuration
+//Switch MAC address
+//index configuration
+//MAC address
+l3 set route switch-mac <UINT:index> <MACADDR:mac>
+#endif
+
+#ifdef CMD_L3_SET_TTL_EXPIRE_IPMCAST_IPUCAST_DROP_PRECEDENCE_STATE_DISABLE_ENABLE
+//l3 configuration
+//set configuration
+//TTL value expire configuration
+//IP multicast configuration
+//IP unicast configuration
+//drop precedence configuration
+//state configuration
+//disable function
+//enable function
+l3 set ttl-expire ( ipmcast | ipucast ) drop-precedence state ( disable | enable )
+#endif
+
+#ifdef CMD_L3_SET_TTL_EXPIRE_IPMCAST_IPUCAST_DROP_PRECEDENCE_VALUE
+//l3 configuration
+//set configuration
+//TTL value expire configuration
+//IP multicast configuration
+//IP unicast configuration
+//drop precedence configuration
+//drop precedence value
+l3 set ttl-expire ( ipmcast | ipucast ) drop-precedence <UINT:value>
+#endif
+
+#ifdef CMD_L3_SET_TTL_EXPIRE_IPMCAST_IPUCAST_DROP_FORWARD_TRAP_TO_CPU
+//l3 configuration
+//set configuration
+//TTL value expire configuration
+//IP multicast configuration
+//IP unicast configuration
+//drop
+//forward
+//trap to CPU
+l3 set ttl-expire ( ipmcast | ipucast ) ( drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_L3_SET_TTL_EXPIRE_IPMCAST_IPUCAST_INSERT_CPUTAG_STATE_DISABLE_ENABLE
+//l3 configuration
+//set configuration
+//TTL value expire configuration
+//IP multicast configuration
+//IP unicast configuration
+//insert CPU tag
+//state configuration
+//disable function
+//enable function
+l3 set ttl-expire ( ipmcast | ipucast ) insert-cputag state ( disable | enable )
+#endif
+
+#ifdef CMD_L3_SET_TTL_EXPIRE_IPMCAST_IPUCAST_PRIORITY_STATE_DISABLE_ENABLE
+//l3 configuration
+//set configuration
+//TTL value expire configuration
+//IP multicast configuration
+//IP unicast configuration
+//priority configuration
+//state configuration
+//disable function
+//enable function
+l3 set ttl-expire ( ipmcast | ipucast ) priority state ( disable | enable )
+#endif
+
+#ifdef CMD_L3_SET_TTL_EXPIRE_IPMCAST_IPUCAST_PRIORITY_PRI
+//l3 configuration
+//set configuration
+//TTL value expire configuration
+//IP multicast configuration
+//IP unicast configuration
+//priority configuration
+//priority value
+l3 set ttl-expire ( ipmcast | ipucast ) priority <UINT:pri>
+#endif

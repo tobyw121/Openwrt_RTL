@@ -1,0 +1,252 @@
+#
+# Realtek software solution
+#
+
+menu "Realtek software solution"
+
+choice
+	prompt "System chip selection"
+
+config RTL8328
+	bool "RTL8328"
+	help
+	  Select the option to build RTL8328-based solution.
+
+config RTL8380
+	bool "RTL8380"
+	help
+	  Select the option to build RTL8380-based solution.
+
+config RTL8390
+	bool "RTL8390"
+	help
+	  Select the option to build RTL8390-based solution.
+endchoice
+
+choice
+	prompt "System software solution"
+
+config TURNKEY_SOLUTION
+	bool "Turnkey solution"
+	help
+	  Select the option to build the turnkey solution.
+
+config SDK_SOLUTION
+	bool "SDK solution"
+	help
+	  Select the option to build the SDK solution.
+endchoice
+
+comment 'System common settings'
+config SINGLE_FLASH_SIZE_GT4MB
+	bool "Single flash chip size is larger than 4MB"
+    default n
+	help
+	Select the option to set the flash per chip size.
+
+config PER_FLASH_BLOCK_SIZE
+	hex "Flash block size"
+	default "0x10000"
+	help
+	Select the option to set the flash block size.
+
+config FPGA_PLATFORM
+	bool "FPGA platform"
+	help
+	  Select the option to set the environment on FPGA platform.
+
+comment 'Turnkey common setting'
+	depends on TURNKEY_SOLUTION
+
+choice
+	prompt "Turnkey model selection"
+	depends on TURNKEY_SOLUTION
+	help
+	  Choose the turnkey model.
+
+config TURNKEY_REALTEK
+	bool "REALTEK"
+	help
+	  Realtek generic demo system.
+
+endchoice
+
+#comment 'Turnkey model specific setting'
+#	depends on TURNKEY_SOLUTION
+
+if TURNKEY_SOLUTION
+
+config SKI
+	tristate "Switch system kernel interface"
+	help
+	  Select the option to turn on System Kernel Interface.
+
+menu "Switch user interface applications"
+
+config WEBUI
+	bool "Web Management Interface"
+	help
+	Choose to turn on Web Management Interface.
+
+config CLI
+	bool "Command Line Interface"
+	help
+	Choose to turn on Command Line Interface.
+
+config SNMP
+	bool "SNMP Agent"
+	help
+	Choose to turn on SNMP Agent.
+
+endmenu #"Switch user interface applications"
+
+menu "Switch features"
+
+config ACL
+    bool "Access control list"
+    help
+    Choose to turn on UI for Access Control List.
+      
+config BANDWIDTH_UTILIZATION
+	bool "Bandwidth utilization"
+	default y
+	help
+	Display per port TX/RX bandwidth utilization in Web UI.
+
+config CABLE_DIAGNOSTIC
+	bool "Cable diagnostic"
+	help
+	Detect the cable length and connection state.
+
+config DEFENCE_ENGINE
+	bool "Defence engine"
+	default y
+	help
+	Throttle the egress bandwidth of CPU port.
+
+config EVENT_LOGGING
+    bool "Event logging"
+    help
+    Save spacific events in different log targets.
+
+config FIRMWARE_SIGNATURE_CHECK
+	bool "Firmware signature check"
+	default y
+	help
+	Select the option to check firmware signature.
+
+config FLOWTABLE
+    bool "Flow table"
+    help
+    Choose to turn on UI for Flow Table.
+
+config HTTP_UPGRADE
+	bool "HTTP upgrade"
+	help
+	Upgrade image and configuration restore/backup through HTTP.
+
+config PORT_ISOLATION
+	bool "Port isolation"
+	default y
+	help
+	Select the option to enable port isolation support.
+	
+config PORT_SECURITY
+	bool "Port security"
+	default y
+	help
+	Select the option to enable L2 limit entry support.
+
+config SMI_ACCESS
+	bool "SMI and GPIO driver"
+	default y
+	help
+	Select the option to enable SMI and GPIO driver support.
+
+config FIBER_HIGH_PRIORITY
+    bool "Fiber high priority"
+    depends on SMI_ACCESS
+    default y
+    help
+    Fiber would take over the link while transceiver is plugged.
+
+config GREEN_ETHERNET
+	bool "Green ethernet"
+	depends on SMI_ACCESS
+	default y
+	help
+	enable Green Ethernet feature.
+
+config POE
+    bool "Power over ethernet"
+    depends on SMI_ACCESS
+    help
+    Power Over Ethernet feature.
+
+config SNMPV3
+    bool "SNMPv3"
+    help
+    Choose to support SNMPv3.
+      	
+config TIME_SETTING
+	bool "Time setting"
+	default y
+	help
+	Select the option to enable Time Setting support.
+
+config VLAN_STACKING
+	bool "VLAN stacking"
+	default y
+	help
+	Select the option to enable Q-in-Q support.
+
+endmenu #"Switch features"
+
+menu "Switch layer-2 protocols"
+
+config L2GLUE_DRIVER
+	tristate "Switch layer-2 glue driver"
+	help
+	Switch layer-2 glue driver.
+
+config 8021X
+	tristate "802.1x"
+	depends on L2GLUE_DRIVER
+	help
+	IEEE 802.1X port-based Network Access Control.
+	
+config IGMP_SNOOPING
+	tristate "IGMP snooping"
+	depends on L2GLUE_DRIVER
+	help
+	IGMP Snooping Protocol.
+
+config IGMP_SNOOPING_QUERIER
+	tristate "IGMP querier"
+	depends on IGMP_SNOOPING
+	help
+	IGMP Querier Feature.
+
+config LACP
+	tristate "LACP"
+	depends on L2GLUE_DRIVER
+	help
+	IEEE 802.3ad Link Aggregation Control Protocol.
+
+config LLDP
+    tristate "LLDP"
+    depends on L2GLUE_DRIVER
+	help
+    IEEE 802.1AD Link Layer Discovery Protocol.
+
+config RSTP
+	tristate "STP/RSTP"
+	depends on L2GLUE_DRIVER
+	help
+	IEEE 802.1w Rapid Spanning Tree.
+
+endmenu #"Switch layer-2 protocols"
+
+endif
+
+endmenu #"Realtek software solution"

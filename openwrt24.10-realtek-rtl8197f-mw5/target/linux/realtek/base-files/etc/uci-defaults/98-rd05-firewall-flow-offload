@@ -1,0 +1,25 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Xiaomi R4/RD05 RTL8197F + RTL8367D firewall defaults.
+#
+# Mainstream replacement for Realtek FastPath/HWNAT:
+#   - software flow offload through OpenWrt/nftables is enabled;
+#   - hardware offload remains disabled by default because the rtl865x NAT/L4
+#     engine is not yet represented through Linux flowtable offload callbacks.
+# Users may experiment with rtl8367dctl flow-hw on only after a driver grows a
+# real flow_block/flow_offload implementation.
+
+case "$(board_name 2>/dev/null) $(cat /tmp/sysinfo/board_name 2>/dev/null) $(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)" in
+	*xiaomi,r4-rd05*|*r4-rd05*) ;;
+	*) exit 0 ;;
+esac
+
+uci -q get firewall.@defaults[0] >/dev/null || exit 0
+
+uci -q batch <<'UCI'
+set firewall.@defaults[0].flow_offloading='1'
+set firewall.@defaults[0].flow_offloading_hw='0'
+UCI
+
+uci -q commit firewall
+exit 0

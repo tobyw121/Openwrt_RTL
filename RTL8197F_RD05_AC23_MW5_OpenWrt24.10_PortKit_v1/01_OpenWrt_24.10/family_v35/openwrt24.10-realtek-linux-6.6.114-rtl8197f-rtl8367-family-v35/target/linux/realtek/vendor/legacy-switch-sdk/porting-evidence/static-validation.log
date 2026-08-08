@@ -1,0 +1,141 @@
+Realtek Linux 6.6.114 driver-port validation
+root: /mnt/data/openwrt_port_work/openwrt
+
+PASS  target kernel patch line is 6.6
+PASS  kernel release is exactly 6.6.114
+PASS  all five Realtek subtargets are enabled
+PASS  OpenWrt target remains Realtek
+PASS  selected build remains rtl8197f
+PASS  selected device remains Xiaomi RD05
+PASS  OpenWrt configuration selects Linux 6.6
+PASS  directory exists: target/linux/realtek/rtl8197f
+PASS  file exists: target/linux/realtek/rtl8197f/config-6.6
+PASS  directory exists: target/linux/realtek/rtl838x
+PASS  file exists: target/linux/realtek/rtl838x/config-6.6
+PASS  directory exists: target/linux/realtek/rtl839x
+PASS  file exists: target/linux/realtek/rtl839x/config-6.6
+PASS  directory exists: target/linux/realtek/rtl930x
+PASS  file exists: target/linux/realtek/rtl930x/config-6.6
+PASS  directory exists: target/linux/realtek/rtl931x
+PASS  file exists: target/linux/realtek/rtl931x/config-6.6
+PASS  active patch count is 37
+PASS  patch has unified-diff structure: 300-mips-add-rtl838x-platform.patch
+PASS  patch has unified-diff structure: 301-mips-add-rtl8197f-platform-kconfig.patch
+PASS  patch has unified-diff structure: 302-clocksource-add-otto-driver.patch
+PASS  patch has unified-diff structure: 303-mips-realtek-rtl8197f-force-little-endian.patch
+PASS  patch has unified-diff structure: 304-timer-otto-fix-stall-after-restart.patch
+PASS  patch has unified-diff structure: 305-gpio-add-rtl8197f-gpio-driver.patch
+PASS  patch has unified-diff structure: 306-spi-add-rtl8197f-sheipa-driver.patch
+PASS  patch has unified-diff structure: 307-mips-rtl8197f-force-r4k-timer-selection.patch
+PASS  patch has unified-diff structure: 308-mtd-add-rtl8197f-spirom-automap.patch
+PASS  patch has unified-diff structure: 309-net-ethernet-add-rtl8197f-ethdiag.patch
+PASS  patch has unified-diff structure: 310-add-i2c-rtl9300-support.patch
+PASS  patch has unified-diff structure: 311-add-i2c-mux-rtl9300-support.patch
+PASS  patch has unified-diff structure: 314-irqchip-irq-realtek-rtl-add-VPE-support.patch
+PASS  patch has unified-diff structure: 318-add-rtl83xx-clk-support.patch
+PASS  patch has unified-diff structure: 320-harden-fw_init_cmdline.patch
+PASS  patch has unified-diff structure: 322-net-ethernet-add-rtl8197f-rtknet-reference-guard.patch
+PASS  patch has unified-diff structure: 323-net-ethernet-add-rtl8197f-rtknet-native.patch
+PASS  patch has unified-diff structure: 324-net-ethernet-add-rd05-oem-switch-preinit.patch
+PASS  patch has unified-diff structure: 325-net-dsa-realtek-rtl8365mb-add-native-rtl8367d.patch
+PASS  patch has unified-diff structure: 326-rtl8197f-rtl8367d-mainstream-offload-notes.patch
+PASS  patch has unified-diff structure: 700-net-dsa-increase-dsa-max-ports-for-rtl838x.patch
+PASS  patch has unified-diff structure: 702-include-linux-add-phy-hsgmii-mode.patch
+PASS  patch has unified-diff structure: 704-include-linux-phy-increase-phy-address-number-for-rtl839x.patch
+PASS  patch has unified-diff structure: 706-include-linux-add-phy-ops-for-rtl838x.patch
+PASS  patch has unified-diff structure: 708-drivers-net-phy-eee-support-for-rtl838x.patch
+PASS  patch has unified-diff structure: 710-net-phy-sfp-re-probe-modules-on-DEV_UP-event.patch
+PASS  patch has unified-diff structure: 712-net-phy-add-an-MDIO-SMBus-library.patch
+PASS  patch has unified-diff structure: 714-net-phy-sfp-add-support-for-SMBus.patch
+PASS  patch has unified-diff structure: 716-net-ethernet-add-support-for-rtl838x-ethernet.patch
+PASS  patch has unified-diff structure: 718-net-dsa-add-support-for-rtl838x-switch.patch
+PASS  patch has unified-diff structure: 720-add-rtl-phy.patch
+PASS  patch has unified-diff structure: 722-net-dsa-add-rtl838x-support-for-tag-trailer.patch
+PASS  patch has unified-diff structure: 723-net-mdio-Add-Realtek-Otto-auxiliary-controller.patch
+PASS  patch has unified-diff structure: 800-gpio-regmap-Bypass-cache-for-shadowed-outputs.patch
+PASS  patch has unified-diff structure: 802-mfd-Add-RTL8231-core-device.patch
+PASS  patch has unified-diff structure: 803-pinctrl-Add-RTL8231-pin-control-and-GPIO-support.patch
+PASS  patch has unified-diff structure: 804-leds-Add-support-for-RTL8231-LED-scan-matrix.patch
+PASS  no disabled patch directory remains
+PASS  file exists: target/linux/realtek/files-6.6/arch/mips/rtl838x/prom.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/clk/realtek/clk-rtl83xx.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/clocksource/timer-rtl-otto.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/gpio/gpio-rtl8197f.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/i2c/busses/i2c-rtl9300.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/i2c/muxes/i2c-mux-rtl9300.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/mtd/maps/rtl8197f-spirom.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/dsa/rtl83xx/common.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/dsa/rtl83xx/rtl838x.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/dsa/rtl83xx/rtl839x.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/dsa/rtl83xx/rtl930x.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/dsa/rtl83xx/rtl931x.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/ethernet/rtl8197f_rtknet.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/ethernet/rtl8197f_rd05_oem_switch_preinit.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/ethernet/rtl838x_eth.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/phy/rtl83xx-phy.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/spi/spi-rtl8197f-sheipa.c
+PASS  rtl838x enables CONFIG_NET_RTL838X
+PASS  rtl838x enables CONFIG_NET_DSA_RTL83XX
+PASS  rtl838x enables CONFIG_REALTEK_SOC_PHY
+PASS  rtl838x enables CONFIG_MDIO_REALTEK_OTTO_AUX
+PASS  rtl838x enables CONFIG_MFD_RTL8231
+PASS  rtl838x enables CONFIG_PINCTRL_RTL8231
+PASS  rtl838x enables CONFIG_LEDS_RTL8231
+PASS  rtl838x enables CONFIG_GPIO_REALTEK_OTTO
+PASS  rtl838x enables CONFIG_REALTEK_OTTO_TIMER
+PASS  rtl838x enables CONFIG_REALTEK_OTTO_WDT
+PASS  rtl839x enables CONFIG_NET_RTL838X
+PASS  rtl839x enables CONFIG_NET_DSA_RTL83XX
+PASS  rtl839x enables CONFIG_REALTEK_SOC_PHY
+PASS  rtl839x enables CONFIG_MDIO_REALTEK_OTTO_AUX
+PASS  rtl839x enables CONFIG_MFD_RTL8231
+PASS  rtl839x enables CONFIG_PINCTRL_RTL8231
+PASS  rtl839x enables CONFIG_LEDS_RTL8231
+PASS  rtl839x enables CONFIG_GPIO_REALTEK_OTTO
+PASS  rtl839x enables CONFIG_REALTEK_OTTO_TIMER
+PASS  rtl839x enables CONFIG_REALTEK_OTTO_WDT
+PASS  rtl930x enables CONFIG_NET_RTL838X
+PASS  rtl930x enables CONFIG_NET_DSA_RTL83XX
+PASS  rtl930x enables CONFIG_REALTEK_SOC_PHY
+PASS  rtl930x enables CONFIG_I2C_RTL9300
+PASS  rtl930x enables CONFIG_I2C_MUX_RTL9300
+PASS  rtl930x enables CONFIG_GPIO_REALTEK_OTTO
+PASS  rtl930x enables CONFIG_REALTEK_OTTO_WDT
+PASS  rtl931x enables CONFIG_NET_RTL838X
+PASS  rtl931x enables CONFIG_NET_DSA_RTL83XX
+PASS  rtl931x enables CONFIG_REALTEK_SOC_PHY
+PASS  rtl931x enables CONFIG_I2C_RTL9300
+PASS  rtl931x enables CONFIG_I2C_MUX_RTL9300
+PASS  rtl931x enables CONFIG_GPIO_REALTEK_OTTO
+PASS  rtl931x enables CONFIG_REALTEK_OTTO_WDT
+PASS  rtl8197f enables CONFIG_RTL8197F
+PASS  rtl8197f enables CONFIG_GPIO_RTL8197F
+PASS  rtl8197f enables CONFIG_MTD_RTL8197F_SPIROM
+PASS  rtl8197f enables CONFIG_RTL8197F_RTKNET
+PASS  rtl8197f enables CONFIG_REALTEK_OTTO_TIMER
+PASS  rtl8197f enables CONFIG_REALTEK_OTTO_WDT
+PASS  rtl8197f enables CONFIG_SERIAL_8250
+PASS  RTL8231 LED nodes are present in 11 DTS/DTSI files
+PASS  directory exists: target/linux/realtek/vendor/legacy-switch-sdk/source
+PASS  file exists: target/linux/realtek/vendor/legacy-switch-sdk/PORT_MANIFEST.tsv
+PASS  file exists: target/linux/realtek/vendor/legacy-switch-sdk/PORT_SUMMARY.tsv
+PASS  file exists: target/linux/realtek/vendor/legacy-switch-sdk/SOURCE_SHA256SUMS
+PASS  file exists: target/linux/realtek/vendor/legacy-switch-sdk/INPUT_ARCHIVES.sha256
+PASS  file exists: target/linux/realtek/vendor/legacy-switch-sdk/README.md
+PASS  embedded SDK has all 962 regular files
+PASS  embedded SDK has all 14 symbolic links
+PASS  manifest covers all 976 SDK entries
+PASS  all embedded regular SDK files match SOURCE_SHA256SUMS
+PASS  port manifest is reproducible from current SDK source
+PASS  manifest explicitly records unsupported chip-specific gaps
+PASS  status document records RTL8328 limitation
+PASS  status document records RTL8389 limitation
+PASS  status document records RTL8208/RTL8212 limitation
+PASS  no merge-conflict markers in active port files
+PASS  no zero-byte C/header files in active kernel overlay
+WARN  RTL8328 native DSA/Ethernet datapath is not verified; legacy source is retained only
+WARN  RTL8389 native DSA/Ethernet datapath is not verified; legacy source is retained only
+WARN  RTL8208/RTL8212 SDK-specific PHY initialization is not verified
+WARN  full OpenWrt compile and on-device boot/DMA/switch tests are still required
+
+Summary: PASS=132 WARN=4 FAIL=0

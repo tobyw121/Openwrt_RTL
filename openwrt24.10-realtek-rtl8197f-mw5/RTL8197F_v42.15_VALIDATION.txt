@@ -1,0 +1,21 @@
+RTL8197F v42.15 validation
+
+Source checks:
+- loader head.S contains WDT read, WDT_CLEAR bit 23, writeback and exact 0xa5000000 disable
+- loader board.c uses the same SDK sequence
+- Linux kernel-entry patch uses the same SDK sequence before kernel_entry_setup
+- prom.c repeats the exact sequence
+- no RTL8197F early-boot source retains 0xa5f00000
+
+Direct MW5 diagnostic image:
+- SHA-256 6d6629e1bd29269b2ec5afa60a89156fc4053b0b55efce432f0239f812016d5b
+- LZMA SDK 4.40 decoder: OK
+- loader window reserve: 529 bytes
+- kernel checksum: 0x0000
+- rootfs checksum: 0x0000
+- protected flash ranges unchanged
+- deterministic rebuild: byte-identical
+
+Hardware status:
+- v42.14 reached ARCDEPK and proved init_IRQ completion.
+- v42.15 physical result is not yet known.

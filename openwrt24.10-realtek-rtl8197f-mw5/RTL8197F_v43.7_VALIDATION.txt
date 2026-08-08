@@ -1,0 +1,257 @@
+RTL8197F / Tenda Nova MW5 v43.7 validation
+Date: 2026-08-07
+
+Scope:
+- base: v43.6 source tree that the user successfully built and flashed
+- v43.7 changes only MW5 base-files diagnostics/firewall policy and validation documentation
+- no full MIPS cross-build was performed in this environment
+- no hardware runtime validation of v43.7 was performed in this environment
+
+=== CHECK_MW5_V43.7 ===
+PASS mw5-netdiag exists
+PASS mw5-netdiag executable
+PASS no argument defaults to autotest
+PASS autotest command documented
+PASS normal LAN bridge phase
+PASS LAN automatic phase
+PASS restored routed WAN DHCP phase
+PASS WAN automatic phase
+PASS autotest creates one original backup
+PASS autotest direct phases skip backup overwrite
+PASS explicit restore helper
+PASS autotest restores original backup
+PASS interrupt cleanup exists
+PASS interrupt/exit trap installed
+PASS router generates traffic itself
+PASS normal bridge counters captured
+PASS routed WAN lease is detected from interface address
+PASS automatic peer discovery uses DHCP leases
+PASS automatic peer discovery uses neighbours
+PASS RX delta captured
+PASS TX delta captured
+PASS driver proc state captured
+PASS firewall disable function
+PASS firewall config intentionally emptied
+PASS firewall service stopped
+PASS firewall service disabled
+PASS nftables ruleset flushed
+PASS restore deliberately does not restore firewall
+PASS firstboot firewall disable script exists
+PASS firstboot firewall disable script executable
+PASS firstboot is MW5 guarded
+PASS firstboot empties firewall config
+PASS firstboot disables firewall service
+PASS firstboot flushes nftables
+PASS boot service enforces no-firewall
+PASS profile advertises one-command test
+PASS help file documents no extra commands
+PASS direct lan/wan/auto retained
+PASS optional odhcpd guard retained
+PASS no non-POSIX uppercase expansion
+PASS mw5-netdiag POSIX shell syntax
+PASS firstboot firewall script shell syntax
+PASS boot init shell syntax
+PASS profile shell syntax
+RESULT pass=44 fail=0
+
+=== CHECK_MW5_V43.6 regression ===
+PASS driver version v43.6
+PASS custom MAC setter
+PASS MAC setter is registered
+PASS MAC change reseeds tables
+PASS seeded MAC is recorded
+PASS readable proc show exists
+PASS proc read uses seq_read
+PASS MW5 participates in raw RX trace
+PASS tagger reads encapsulated protocol
+PASS tagger explicitly preserves protocol
+PASS tagger RX trace marker
+PASS tagger TX trace marker
+PASS fixed-width port mask
+PASS port mask assigned once
+PASS FIELD_PREP uses port_mask
+PASS TX trace prints port_mask
+PASS no BIT directly passed to percent-x
+PASS direct auto supported
+PASS carrier-selected LAN
+PASS carrier-selected WAN
+PASS odhcpd is optional
+PASS diagnostic shell syntax
+RESULT pass=22 fail=0
+
+=== CHECK_MW5_DIAG_BUILTIN_V43.4 regression ===
+PASS: file exists: target/linux/realtek/base-files/usr/sbin/mw5-netdiag
+PASS: file exists: target/linux/realtek/base-files/usr/sbin/MW5_V43.3_DIRECT_LAN_DIAG_FIX.sh
+PASS: file exists: target/linux/realtek/base-files/usr/sbin/MW5_V43.2_RUNTIME_TX_NETWORK_TEST.sh
+PASS: file exists: target/linux/realtek/base-files/usr/bin/mw5-v39-check
+PASS: file exists: target/linux/realtek/base-files/etc/init.d/mw5-diag
+PASS: file exists: target/linux/realtek/base-files/etc/uci-defaults/97-mw5-diag-enable
+PASS: file exists: target/linux/realtek/base-files/etc/profile.d/98-mw5-diag-help.sh
+PASS: file exists: target/linux/realtek/base-files/etc/mw5-diag-help
+PASS: executable: target/linux/realtek/base-files/usr/sbin/mw5-netdiag
+PASS: executable: target/linux/realtek/base-files/usr/sbin/MW5_V43.3_DIRECT_LAN_DIAG_FIX.sh
+PASS: executable: target/linux/realtek/base-files/usr/sbin/MW5_V43.2_RUNTIME_TX_NETWORK_TEST.sh
+PASS: executable: target/linux/realtek/base-files/usr/bin/mw5-v39-check
+PASS: executable: target/linux/realtek/base-files/etc/init.d/mw5-diag
+PASS: executable: target/linux/realtek/base-files/etc/uci-defaults/97-mw5-diag-enable
+PASS: executable: target/linux/realtek/base-files/etc/profile.d/98-mw5-diag-help.sh
+PASS: shell syntax: target/linux/realtek/base-files/usr/sbin/mw5-netdiag
+PASS: shell syntax: target/linux/realtek/base-files/usr/sbin/MW5_V43.3_DIRECT_LAN_DIAG_FIX.sh
+PASS: shell syntax: target/linux/realtek/base-files/usr/sbin/MW5_V43.2_RUNTIME_TX_NETWORK_TEST.sh
+PASS: shell syntax: target/linux/realtek/base-files/usr/bin/mw5-v39-check
+PASS: shell syntax: target/linux/realtek/base-files/etc/init.d/mw5-diag
+PASS: shell syntax: target/linux/realtek/base-files/etc/uci-defaults/97-mw5-diag-enable
+PASS: shell syntax: target/linux/realtek/base-files/etc/profile.d/98-mw5-diag-help.sh
+PASS: primary tool documents state mode
+PASS: primary tool documents full mode
+PASS: primary tool includes traffic-window mode
+PASS: primary tool includes direct LAN topology test
+PASS: primary tool includes forced bridge test
+PASS: primary tool includes restore mode
+PASS: primary tool stores reports in /tmp/mw5-diag
+PASS: primary tool retains legacy TX test entry point
+PASS: modifying modes are board guarded
+PASS: modifying modes back up UCI configuration
+PASS: temporary topology changes preserve LAN MAC
+PASS: temporary topology changes preserve WAN MAC
+PASS: boot capture runs after normal network initialization
+PASS: boot capture is duplicate guarded
+PASS: boot capture writes a fixed result path
+PASS: first boot enables the diagnostic service
+PASS: first boot starts the diagnostic service immediately
+PASS: serial login advertises the built-in command
+PASS: v43.3 compatibility command delegates to maintained mw5-netdiag
+PASS: maintained direct test supports LAN, WAN and automatic carrier selection
+PASS: embedded v43.2 runtime script matches supplied script
+
+Result: 43 PASS, 0 FAIL
+
+=== CHECK_MW5_WANLAN_V43 regression ===
+PASS: file exists: target/linux/realtek/files-6.6/drivers/net/ethernet/rtl8197f_rtknet.c
+PASS: file exists: target/linux/realtek/dts/rtl8197f_tenda_nova-mw5.dts
+PASS: file exists: target/linux/realtek/base-files/etc/board.d/02_network
+PASS: file exists: target/linux/realtek/files-6.6/net/dsa/tag_rtl4_9.c
+PASS: file exists: target/linux/realtek/patches-6.6/329-net-dsa-realtek-add-rtl4-protocol9-for-mw5.patch
+PASS: driver version is MW5 WAN/LAN v43.6
+PASS: TX ring geometry helper is present
+PASS: DMA_CR1 is derived from ring count and descriptor stride
+PASS: TX ring 0 tail-aware mode is programmed
+PASS: MW5 non-VG path disables TX rings 2 and 3
+PASS: MW5 has an explicit driver branch
+PASS: MW5/New-Descriptor RX path is enabled
+PASS: MW5 native descriptor size is six DWORD
+PASS: MW5 and RD05 tag protocols remain separated
+PASS: MW5 keeps RTL8197F hardware RX CPU-tag parsing enabled
+PASS: MW5 hardware TX CPU-tag generation is conditionally disabled
+PASS: RD05 retains its existing hardware TX CPU-tag setting
+PASS: MW5 DTS requests four-byte protocol-9 tags
+PASS: MW5 LAN physical port 1 is present
+PASS: MW5 LAN label is present
+PASS: MW5 WAN physical port 3 is present
+PASS: MW5 WAN label is present
+PASS: MW5 CPU physical port 6 is present
+PASS: MW5 DTS selects six-DWORD descriptors
+PASS: new DSA tagger uses protocol 0x9
+PASS: new DSA tagger emits EtherType 0x8899
+PASS: TX tag stores the six-bit destination mask in a fixed-width type
+PASS: TX tag derives the destination port mask once
+PASS: TX tag uses the fixed-width destination port mask
+PASS: protocol-9 TX tag defines the disable-learning bit
+PASS: protocol-9 TX tag sets disable-learning on CPU-originated frames
+PASS: RX accepts a direct source-port encoding
+PASS: RX also accepts a one-hot source-port mask
+PASS: tagger registers the new DSA protocol
+PASS: tagger rate-limits unknown protocol diagnostics through its local counter
+PASS: tagger does not use the unavailable netdev_err_ratelimited helper
+PASS: tagger does not pass unsigned long BIT() directly to %x
+PASS: patch adds a unique protocol ID
+PASS: patch adds tagger Kconfig
+PASS: patch targets the Linux 6.6 Realtek subdriver Kconfig layout
+PASS: patch Kconfig context includes the Linux 6.6 SMI imply line
+PASS: patch Kconfig context includes the Linux 6.6 MDIO imply line
+PASS: patch no longer assumes the newer converted-driver Kconfig layout
+PASS: patch adds tagger Makefile entry
+PASS: RTL8365MB change_tag_protocol handles protocol 9
+PASS: RTL8365MB is switched to four-byte CPU tags
+PASS: RTL8365MB selection is limited by the MW5 DTS property
+PASS: MW5 board cases are present
+PASS: MW5 uses normal LAN/WAN DSA interfaces
+PASS: MW5 WAN MAC uses OEM base+7
+PASS: MW5 suppresses the global bridge MAC object
+PASS: 02_network shell syntax is valid
+PASS: MW5 topology block does not create a global switch bridge
+PASS: MW5 uci-defaults forces the physical LAN port into br-lan
+PASS: MW5 uci-defaults assigns the recovery LAN address
+PASS: MW5 uci-defaults keeps WAN as a routed DSA port
+PASS: MW5 uci-defaults enables LAN DHCP
+
+Result: 57 PASS, 0 FAIL
+
+=== CHECK_SOURCE_TREE_V42 regression ===
+PASS: WLAN variants, preprocessor symbols, RTL8812F block and local SHA-256 linkage
+PASS: MW5 stock template accepted only as template; shifted OpenWrt payload rejected
+PASS: MW5 rootfs boot-length marker generation, rejection and stock-template rule
+PASS: SquashFS bytes_used excludes the external Tenda checksum trailer
+PASS: patch contents and hunk counts
+PASS: rtl8192cd local SHA-256/PRF symbols and known-answer vectors
+tenda-ac23-spi.bin: OK
+tenda-nova-mw5-spi.bin: OK
+xiaomi-r4-rd05-spi.bin: OK
+rd05: template OK size=0x1000000 sha256=805469c49ecd6860a444f92ef19bcf4834ee912261b4a0205074d6095c516608 kernel_len=0xc0ed4a
+mw5: template OK size=0x800000 sha256=b4b1b2caca98e20096a80519b9c8ff22399d051bc77f6aef4f29b6ef76a31428 kernel_len=0x1f8002
+ac23: template OK size=0x800000 sha256=300c7216dbfa1d7d930a8db896ec755edb0c41bd3c1b3ab90e4befcd045aebf5 kernel_len=0x23a002
+RTL8197F board profile validation OK: 3 boards
+PASS: v42 private templates, headers, checksums and board profiles
+PASS: v42 source tree static checks
+PASS: exact RTL8197F watchdog stop, MW5 UART alias and K/S/P early diagnostics
+PASS: Tenda firmware nodes allow the RTL8197F mtdsplit parser to run
+PASS: MW5 SPI auto-map uses exact OEM coordinates (read_shift=0)
+PASS: MW5 stages at 0x80a00000, relocates to 0x80d00000, and rejects old overlap
+PASS: RTL8197FS byte UART has DLAB-safe RX/TX aliases
+PASS: MW5 uses SDK physical-P0/RGMII and non-VG six-dword CPU-DMA descriptors
+PASS: MW5 enables OEM-derived internal P0-to-CPU VLAN/L2/netif/ACL pipeline with runtime MAC
+PASS: OEM switch preinit uses safe kick-then-stop before and after MW5 reset delays
+
+=== BusyBox ash syntax ===
+PASS mw5-netdiag
+PASS 96-mw5-disable-firewall
+PASS mw5-diag init
+PASS profile hint
+
+=== isolated autotest control-flow harness ===
+STUB-firewall-off
+
+===== MW5 V43.7 AUTOMATIC WIRED TEST =====
+Only physical action required: start with the cable in LAN, then move it to WAN when prompted.
+No ping/ip/uci/firewall commands are required on the PC or router.
+Firewall4 is disabled and the nftables ruleset is flushed for the whole test image.
+
+===== AUTOTEST ORIGINAL STATE =====
+STUB-snapshot
+STUB-normal-lan-wait-15
+STUB-backup
+STUB-direct-lan-wait-15
+
+===== MOVE CABLE =====
+Move the same Ethernet cable from the physical LAN jack to the physical WAN jack now.
+The script continues automatically as soon as WAN carrier appears.
+STUB-direct-wan-wait-15
+
+===== AUTOTEST RESTORE ORIGINAL NETWORK =====
+STUB-restore-/tmp/mw5-autotest-flow/mock-backup
+STUB-firewall-off
+STUB-routed-wan-wait-15
+
+===== AUTOTEST FINAL STATE =====
+STUB-snapshot
+
+===== AUTOTEST SUMMARY =====
+normal-lan carrier=PASS lan_rx_delta=1 lan_tx_delta=1 br_rx_delta=1 br_tx_delta=1 peer=192.168.1.2 ping=PASS
+lan carrier=PASS rx_delta=1 tx_delta=1 peer=192.168.1.2 ping=PASS eth0_rx_drop_delta=0
+wan carrier=PASS rx_delta=1 tx_delta=1 peer=192.168.1.2 ping=PASS eth0_rx_drop_delta=0
+routed-wan carrier=PASS dhcp=PASS address=192.0.2.2 rx_delta=1 tx_delta=1 internet_ping=PASS
+firewall=DISABLED
+nftables=FLUSHED
+network_restore=/tmp/mw5-autotest-flow/mock-backup
+
+Result: PASS normal-LAN -> direct-LAN -> direct-WAN -> restore -> routed-WAN control flow

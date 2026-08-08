@@ -1,0 +1,32 @@
+RTL8197F v42.4 validation scope
+===============================
+
+Source base: v42.3 private fullflash tree
+Reason: first complete MW5 world build reached target/linux image creation.
+
+Observed v42.3 build measurements
+---------------------------------
+cr6c kernel/header region: 0x2b3110 bytes
+Realtek-checksummed rootfs: 0x345002 bytes
+combined raw image:         0x5f8112 bytes
+fallback padded image:      0x600000 bytes
+OEM MW5 KernelFS limit:     0x590000 bytes
+padded overrun:             0x070000 bytes (448 KiB)
+
+v42.4 static/offline checks
+---------------------------
+- exact 64 KiB erase alignment selected for MW5 and AC23
+- strict image budget checker rejects 0x5f8112 and reports 0x70000 overrun
+- strict image budget checker accepts a 0x588001 image and predicts 0x590000
+- MW5 OEM firmware partition remains 0x030000..0x5c0000
+- CFM, CFM_BACKUP, LOG and ENV preservation logic unchanged
+- MW5 defconfig selects 1024 KiB SquashFS blocks
+- flash-safe package exclusions present while dnsmasq/firewall4/WLAN remain
+- existing WLAN variant, SHA-256/PRF, patch and fullflash checks retained
+
+Hardware/build limitation
+-------------------------
+The final compressed rootfs size depends on the user's OpenWrt toolchain and
+package revisions. The new strict checker will stop with an exact byte report
+if the rebuilt rootfs still exceeds the fixed OEM window. A successful local
+world build and SPI/UART test are still required before hardware flashing.

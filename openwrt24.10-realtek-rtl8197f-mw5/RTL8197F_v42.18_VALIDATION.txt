@@ -1,0 +1,28 @@
+RTL8197F v42.18 validation
+==========================
+
+PASS - direct MW5 image is exactly 0x800000 bytes
+PASS - old LZMA SDK 4.40 decoder returns LZMA_RESULT_OK
+PASS - decompressed kernel size is 9,432,199 bytes
+PASS - LZMA stream fits fixed loader window with 683-byte reserve
+PASS - Realtek kernel checksum sum is 0x0000
+PASS - Realtek rootfs checksum sum is 0x0000
+PASS - MW5 full-flash verifier passes
+PASS - 0x000000..0x030000 is byte-identical to the private template
+PASS - 0x5c0000..0x800000 is byte-identical to the private template
+PASS - deterministic single-encoder rebuild is byte-identical
+PASS - Linux 6.6.114 DW-8250 patch dry-run applies cleanly
+PASS - MW5 DTS selects byte I/O and TX alias +0x24
+PASS - TX alias is protected by UART_LCR_DLAB
+PASS - source-tree shell/Python/JSON/patch/static checks pass
+
+NOT RUN - full OpenWrt world build
+NOT RUN - physical v42.18 boot
+NOT VERIFIED - rootfs mount and userspace start
+NOT VERIFIED - Ethernet, DSA, WLAN RF, sysupgrade or long-term stability
+
+Private-image warning
+---------------------
+The full-flash image and templates contain board-specific MAC, factory and RF
+calibration data. They are valid only for the matched MW5 unit and must not be
+published or flashed to another device.

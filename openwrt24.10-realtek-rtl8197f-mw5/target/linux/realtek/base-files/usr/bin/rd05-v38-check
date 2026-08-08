@@ -1,0 +1,156 @@
+#!/bin/sh
+# Non-destructive verification for Xiaomi RD05 native-DSA v38.3.
+
+fail=0
+warn=0
+section() { echo; echo "===== $* ====="; }
+num() { case "${1:-}" in ''|*[!0-9]*) echo 0 ;; *) echo "$1" ;; esac; }
+statv() { ethtool -S "$1" 2>/dev/null | awk -v k="$2" '$1 == k":" { print $2; exit }'; }
+read_param() { [ -r "$1" ] && cat "$1" || echo unavailable; }
+
+section "bring up LAN and wait for v38.x post-start"
+command -v ifup >/dev/null 2>&1 && ifup lan >/dev/null 2>&1 || true
+command -v ubus >/dev/null 2>&1 && ubus call network.interface.lan up >/dev/null 2>&1 || true
+waited=0
+while [ "$waited" -lt 30 ]; do
+	dmesg 2>/dev/null | grep -Eq 'rd05 poststart v38(\.[0-9]+)?:.*cpuicr1=.*rxbase=.*txbase=' && break
+	sleep 1; waited=$((waited + 1))
+done
+echo "waited ${waited}s; eth0=$(cat /sys/class/net/eth0/operstate 2>/dev/null || echo missing)"
+
+section "kernel, P0 and DSA markers"
+if dmesg 2>/dev/null | grep -Eq 'RD05 DSA master v38(\.[0-9]+)?:'; then echo "PASS: v38.x DSA master is loaded"; else echo "FAIL: v38.x DSA marker missing"; fail=1; fi
+p0="$(dmesg 2>/dev/null | grep -E 'rd05 p0 rgmii v38(\.[0-9]+)?:' | tail -1)"
+if printf '%s\n' "$p0" | grep -q 'cputag-rx=1.*cputag-tx=1.*preserve-tag=1'; then
+	echo "PASS: both RTL8197F P0 CPU-tag gates are enabled and tags are preserved"
+else echo "FAIL: v38.x P0 CPU-tag marker missing"; fail=1; fi
+if printf '%s\n' "$p0" | grep -q 'pitcr=0x[0-9a-fA-F].*extpcr0=0x[0-9a-fA-F]'; then
+	echo "PASS: RTL8197F-VG PITCR/EXTPCR0 IPG readback is present"
+	printf '%s\n' "$p0"
+else echo "FAIL: v38.x P0 IPG readback missing"; fail=1; fi
+post="$(dmesg 2>/dev/null | grep -E 'rd05 poststart v38(\.[0-9]+)?:' | tail -1)"
+if printf '%s\n' "$post" | grep -q 'cpuicr1=0x002081d3.*rxbase=.*txbase='; then echo "PASS: 8-dword descriptors and ring bases were accepted"; printf '%s\n' "$post"; else echo "FAIL: v38.x ring readback missing"; fail=1; fi
+
+path="$(dmesg 2>/dev/null | grep 'RTL8367D RD05 DSA CPU path:' | tail -1)"
+if printf '%s\n' "$path" | grep -q 'cpu7-ext1-sdk-baseline-calibratable-v38'; then echo "PASS: RTL8367D family-D SDK baseline and calibration path are active"; else echo "FAIL: v38 RTL8367D path marker missing"; fail=1; fi
+[ -n "$path" ] && printf '%s\n' "$path"
+bypass="$(printf '%s\n' "$path" | sed -n 's/.* bypass=\(0x[0-9a-fA-F]*\).*/\1/p')"
+if [ -n "$bypass" ]; then
+	bypass_dec=$((bypass))
+	if [ $((bypass_dec & 4)) -eq 0 ]; then echo "PASS: RTL8367D 0x03f7 EXT1 BYPASS_LINE_RATE bit is clear"; else echo "FAIL: RTL8367D EXT1 bypass bit remains set ($bypass)"; fail=1; fi
+else echo "WARN: bypass register readback was not found"; warn=1; fi
+crcskip="$(printf '%s\n' "$path" | sed -n 's/.*crcskip=\([01]\).*/\1/p')"
+if [ "$crcskip" = 0 ]; then echo "PASS: CPU7 CRC checking remains enabled"; elif [ "$crcskip" = 1 ]; then echo "FAIL: CPU7 CRC_SKIP masks physical errors"; fail=1; else echo "WARN: CPU7 CRC_SKIP readback missing"; warn=1; fi
+syncfifo="$(printf '%s\n' "$path" | sed -n 's/.* syncfifo=\([^ ]*\).*/\1/p')"
+[ -n "$syncfifo" ] && echo "sync FIFO: $syncfifo" || { echo "WARN: RTL8367D sync-FIFO readback missing"; warn=1; }
+
+section "active versioned RGMII profile"
+for f in \
+ /sys/module/rtl8197f_rtknet/parameters/rd05_p0_tx_delay \
+ /sys/module/rtl8197f_rtknet/parameters/rd05_p0_rx_delay \
+ /sys/module/rtl8365mb/parameters/rd05_ext1_tx_delay \
+ /sys/module/rtl8365mb/parameters/rd05_ext1_txc_tap \
+ /sys/module/rtl8365mb/parameters/rd05_ext1_rx_delay \
+ /sys/module/rtl8365mb/parameters/rd05_ext1_ssc; do
+	printf '%s=%s\n' "$(basename "$f")" "$(read_param "$f")"
+done
+if [ -r /etc/rd05-rgmii.conf ] && grep -q '^PROFILE_VERSION=38$' /etc/rd05-rgmii.conf; then
+	echo "PASS: /etc/rd05-rgmii.conf uses PROFILE_VERSION=38"
+else
+	echo "WARN: v38 profile version missing; run: rd05-rgmii-calibrate load"
+	warn=1
+fi
+if command -v rd05-rgmii-calibrate >/dev/null 2>&1; then
+	profile="$(rd05-rgmii-calibrate status 2>/dev/null || true)"
+	printf '%s\n' "$profile"
+	r_soc_tx="$(printf '%s\n' "$profile" | sed -n 's/^SOC_TX=//p' | tail -1)"
+	r_soc_rx="$(printf '%s\n' "$profile" | sed -n 's/^SOC_RX=//p' | tail -1)"
+	r_sw_tx="$(printf '%s\n' "$profile" | sed -n 's/^SW_TX=//p' | tail -1)"
+	r_sw_txc="$(printf '%s\n' "$profile" | sed -n 's/^SW_TXC=//p' | tail -1)"
+	r_sw_rx="$(printf '%s\n' "$profile" | sed -n 's/^SW_RX=//p' | tail -1)"
+	r_ssc="$(printf '%s\n' "$profile" | sed -n 's/^SSC=//p' | tail -1)"
+	if [ "$r_soc_tx$r_soc_rx$r_sw_tx$r_sw_txc$r_sw_rx$r_ssc" = 000000 ]; then
+		echo "FAIL: runtime RGMII profile is all zero after an aborted v38.2 sweep; restore it with: rd05-rgmii-calibrate sdk"
+		fail=1
+	fi
+else
+	echo "WARN: rd05-rgmii-calibrate is unavailable"
+	warn=1
+fi
+
+section "UART/IRQ, USB and PCIe platform support"
+[ -c /dev/ttyS0 ] && echo "PASS: UART0 console device exists" || { echo "FAIL: /dev/ttyS0 is missing"; fail=1; }
+if [ -r /proc/device-tree/soc/serial@147000/interrupts ]; then
+	echo "WARN: RD05 UART0 still has an IRQ property; v38.1 expects polling recovery mode"
+	warn=1
+else
+	echo "PASS: RD05 UART0 recovery console uses polling mode"
+fi
+irq_line="$(grep -E '[[:space:]]eth0$' /proc/interrupts 2>/dev/null | tail -1)"
+irq_count="$(printf '%s\n' "$irq_line" | awk '{ print $2 }')"; irq_count="$(num "$irq_count")"
+[ -n "$irq_line" ] && echo "IRQ: $irq_line"
+poll_runs="$(num "$(statv eth0 rx_poll_timer_runs)")"
+if [ "$irq_count" -eq 0 ]; then
+	echo "WARN: eth0 interrupt count is zero; the 50 ms RX polling fallback is the active safety path (runs=$poll_runs)"
+	warn=1
+else
+	echo "PASS: eth0 interrupt routing is active ($irq_count interrupts)"
+fi
+if dmesg 2>/dev/null | grep -q 'RTL8197F USB2 host initialized:'; then
+	echo "PASS: native RTL8197F USB2 glue initialized"
+elif [ -r /proc/device-tree/soc/usb-host@140200/status ] && grep -q disabled /proc/device-tree/soc/usb-host@140200/status 2>/dev/null; then
+	echo "INFO: RTL8197F USB2 host is present but disabled by the RD05 board DTS"
+else
+	echo "INFO: USB2 glue is board-controlled and did not initialize"
+fi
+pci_dev=/sys/bus/pci/devices/0000:00:00.0
+if [ -d "$pci_dev" ]; then
+	vendor="$(cat "$pci_dev/vendor" 2>/dev/null)"; device="$(cat "$pci_dev/device" 2>/dev/null)"
+	echo "endpoint: ${vendor:-unknown}:${device:-unknown}"
+	[ "$vendor" = 0x10ec ] && [ "$device" = 0xf812 ] && echo "PASS: OEM RTL8812FE endpoint enumerated" || { echo "WARN: PCI endpoint differs from 10ec:f812"; warn=1; }
+else echo "WARN: PCIe endpoint is not enumerated; independent of the wired CPU-port calibration"; warn=1; fi
+
+section "MTD and persistent overlay"
+cat /proc/mtd 2>/dev/null || true
+if dmesg 2>/dev/null | grep -q 'SPI-NOR WEL calibration deferred until first bounded write/erase'; then
+	echo "PASS: unsafe early SPI user-mode calibration is disabled"
+elif dmesg 2>/dev/null | grep -q 'probe-time WEL calibration ready before rootfs_data registration'; then
+	echo "WARN: old probe-time SPI calibration is still active"
+	warn=1
+else
+	echo "WARN: SPI calibration policy marker missing"
+	warn=1
+fi
+if dmesg 2>/dev/null | grep -q 'calibrated SPI-NOR WEL:'; then
+	echo "PASS: lazy SPI-NOR command/status calibration has completed"
+else
+	echo "INFO: lazy SPI-NOR calibration has not yet been needed"
+fi
+mtddev="$(awk -F: '/"rootfs_data"/ { print $1; exit }' /proc/mtd 2>/dev/null)"
+[ -n "$mtddev" ] && [ -c "/dev/$mtddev" ] && echo "PASS: /dev/$mtddev exists" || { echo "FAIL: rootfs_data device missing"; fail=1; }
+if mount 2>/dev/null | grep -q ' on /overlay ' && ! mount 2>/dev/null | grep ' on /overlay ' | grep -Eq 'tmpfs|loop|ext4'; then mount | grep ' on /overlay '; echo "PASS: persistent overlay is mounted"; else echo "FAIL: persistent /overlay is not mounted"; fail=1; fi
+
+section "CPU-port counters"
+ip -s link show eth0 2>/dev/null || true
+ip -s link show lan2 2>/dev/null || true
+ethtool -S eth0 2>/dev/null | grep -E 'rx_cdp_|rd05_rx_external|rd05_rx_arp|rd05_rxtrace_frames|rx_desc0_opts1|p07_if(In|Out)Octets|p07_dot3StatsFCSErrors|p07_etherStatsDropEvents' || true
+fcs="$(num "$(statv eth0 p07_dot3StatsFCSErrors)")"; drops="$(num "$(statv eth0 p07_etherStatsDropEvents)")"
+cdp="$(num "$(statv eth0 rx_cdp_advanced)")"; pout="$(num "$(statv eth0 p07_ifOutOctets)")"
+if [ "$fcs" -gt 0 ]; then echo "WARN: CPU7 has $fcs cumulative FCS errors (drops=$drops). Run: rd05-rgmii-calibrate tx-auto save"; warn=1; else echo "PASS: CPU7 currently reports no FCS errors"; fi
+if [ "$pout" -gt 0 ] && [ "$cdp" -eq 0 ]; then echo "WARN: CPU7 transmitted toward the SoC but the RTL8197F RX pointer is static. Run the v38 RX sweep with PC calibration traffic."; warn=1; fi
+command -v rd05-raw >/dev/null 2>&1 && echo "PASS: rd05-raw is installed" || { echo "WARN: install rtl8367d-compat release 11"; warn=1; }
+
+echo
+cat <<'EOT'
+Calibration order:
+  1. Router: rd05-rgmii-calibrate tx-auto save
+  2. PC:     sudo ./tools/rd05-pc-netdiag.py --interface IFACE --configure-ip --calibration --duration 240
+     Router: rd05-rgmii-calibrate rx-auto save
+  3. Router: rd05-netdiag full
+     PC:     sudo ./tools/rd05-pc-netdiag.py --interface IFACE --configure-ip --duration 120
+The explicit v38.3 SDK baseline/restore command is:
+  rd05-rgmii-calibrate sdk
+Equivalent explicit values: SOC_TX=0 SOC_RX=6 SW_TX=0 SW_TXC=0 SW_RX=5 SSC=1.
+EOT
+[ "$warn" -ne 0 ] && echo "Completed with warnings."
+exit "$fail"

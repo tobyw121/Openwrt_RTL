@@ -1,0 +1,1333 @@
+//
+// Copyright (C) 2011 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 25951 $
+// $Date: 2011-12-20 19:05:11 +0800 (Tue, 20 Dec 2011) $
+//
+// Purpose : Define diag shell commands for ACL.
+//
+// Feature : The file have include the following module and sub-modules
+//            1) Ingress ACL
+//            2) Egress ACL
+//            3) Field Selector
+//            4) Range Check
+//            5) Meter
+//            6) Counter
+//
+
+#ifdef CMD_ACL_CLEAR_COUNTER_BYTE_PACKET_INDEX
+//ACL configuration
+//clear configuration
+//counter configuration
+//byte-based counter
+//packet-based counter
+//counter index
+acl clear counter ( byte | packet ) <UINT:index>
+#endif
+
+#ifdef CMD_ACL_DEL_ENTRY_PHASE_START_END
+//ACL configuration
+//delete configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//start from this index
+//end to this index
+acl del entry <UINT:phase> <UINT:start> <UINT:end>
+#endif
+
+#ifdef CMD_ACL_GET_BLOCK_INDEX_GROUP_GROUP_2_GROUP_4_GROUP_8_ALL_STATE
+//ACL configuration
+//set configuration
+//block configuration
+//block index
+//block grouping configuration
+//group 2 block
+//group 4 block
+//group 8 block
+//group all block
+//state configuration
+acl get block <UINT:index> group ( group_2 | group_4 | group_8 | all ) state
+#endif
+
+#ifdef CMD_ACL_GET_BLOCK_INDEX_LOOKUP_STATE
+//ACL configuration
+//get configuration
+//block configuration
+//block index
+//lookup configuration
+//state configuration
+//disable action
+//enable action
+acl get block <UINT:index> lookup state
+#endif
+
+#ifdef CMD_ACL_GET_BLOCK_INDEX_MULTI_RESULT_STATE
+//ACL configuration
+//get configuration
+//block configuration
+//block index
+//multiple result configuration
+//state configuration
+acl get block <UINT:index> multi-result state
+#endif
+
+#ifdef CMD_ACL_GET_BLOCK_INDEX_POWER_STATE
+//ACL configuration
+//get configuration
+//block configuration
+//block index
+//power configuration
+//state configuration
+//disable action
+//enable action
+acl get block <UINT:index> power state
+#endif
+
+#ifdef CMD_ACL_GET_COUNTER_BYTE_PACKET_INDEX
+//ACL configuration
+//get configuration
+//counter configuration
+//byte-based counter
+//packet-based counter
+//counter index
+acl get counter ( byte | packet ) <UINT:index>
+#endif
+
+#ifdef CMD_ACL_GET_ENTRY_PHASE_ENTRY
+//ACL configuration
+//get configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+acl get entry <UINT:phase> <UINT:entry>
+#endif
+
+#ifdef CMD_ACL_GET_ENTRY_PHASE_ENTRY_ACTION
+//ACL configuration
+//get configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+acl get entry <UINT:phase> <UINT:entry> action
+#endif
+
+#ifdef CMD_ACL_GET_ENTRY_PHASE_ENTRY_FIELD_FIELD_NAME
+//ACL configuration
+//get configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//entry field
+//field name
+acl get entry <UINT:phase> <UINT:entry> field <STRING:field_name>
+#endif
+
+#ifdef CMD_ACL_GET_ENTRY_PHASE_ENTRY_OPERATION_AGGREGATE2_STATE
+//ACL configuration
+//get configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//operation configuration
+//aggregate 2 operation
+//state configuration
+acl get entry <UINT:phase> <UINT:entry> operation aggregate2 state
+#endif
+
+#ifdef CMD_ACL_GET_ENTRY_PHASE_ENTRY_OPERATION_AGGREGATE4_STATE
+//ACL configuration
+//get configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//operation configuration
+//aggregate 4 operation
+//state configuration
+acl get entry <UINT:phase> <UINT:entry> operation aggregate4 state
+#endif
+
+#ifdef CMD_ACL_GET_ENTRY_PHASE_ENTRY_OPERATION_REVERSE_STATE
+//ACL configuration
+//get configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//operation configuration
+//reverse operation
+//state configuration
+acl get entry <UINT:phase> <UINT:entry> operation reverse state
+#endif
+
+#ifdef CMD_ACL_GET_ENTRY_PHASE_ENTRY_VALIDATE
+//ACL configuration
+//get configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//validate configuration
+acl get entry <UINT:phase> <UINT:entry> validate
+#endif
+
+#ifdef CMD_ACL_GET_ENTRY_PHASE_FIELD_LIST
+//ACL configuration
+//get configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//display valid field list
+acl get entry <UINT:phase> field-list
+#endif
+
+#ifdef CMD_ACL_GET_METER_BURST_SIZE
+//ACL configuration
+//get configuration
+//meter configuration
+//meter burst-size configuration
+acl get meter burst-size
+#endif
+
+#ifdef CMD_ACL_GET_METER_ENTRY_INDEX
+//ACL configuration
+//get configuration
+//meter configuration
+//meter entry configuration
+//meter index
+acl get meter entry <UINT:index>
+#endif
+
+#ifdef CMD_ACL_GET_METER_EXCEED_FLAG
+//ACL configuration
+//get configuration
+//meter configuration
+//exceed flag status of all entries
+acl get meter exceed-flag
+#endif
+
+#ifdef CMD_ACL_GET_METER_IFG
+//ACL configuration
+//get configuration
+//meter configuration
+//interframe gap
+acl get meter ifg
+#endif
+
+#ifdef CMD_ACL_GET_METER_MODE_BLOCKIDX
+//ACL configuration
+//get configuration
+//meter configuration
+//meter mode
+//block index
+acl get meter mode <UINT:blockIdx>
+#endif
+
+#ifdef CMD_ACL_GET_PARTITION
+//ACL configuration
+//get configuration
+//ACL partition
+//partition value
+acl get partition
+#endif
+
+#ifdef CMD_ACL_GET_SELECTOR_BLOCK_INDEX
+//ACL configuration
+//get configuration
+//selector configuration
+//block index
+acl get selector <UINT:block_index>
+#endif
+
+#ifdef CMD_ACL_GET_TEMPLATE_INDEX
+//ACL configuration
+//get configuration
+//template configuration
+//template index
+acl get template <UINT:index>
+#endif
+
+#ifdef CMD_ACL_GET_TEMPLATE_PHASE_PHASE_FIELD_LIST
+//ACL configuration
+//get configuration
+//template configuration
+//phase configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//display valid field list
+acl get template phase <UINT:phase> field-list
+#endif
+
+#ifdef CMD_ACL_MOVE_ENTRY_PHASE_FROM_TO_ENTRY_NUM
+//ACL configuration
+//delete configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//move from this index
+//move to this index
+//entry number to be moved
+acl move entry <UINT:phase> <UINT:from> <UINT:to> <UINT:entry_num>
+#endif
+
+#ifdef CMD_ACL_SET_BLOCK_INDEX_GROUP_GROUP_2_GROUP_4_GROUP_8_ALL_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//block configuration
+//block index
+//block grouping configuration
+//group 2 block
+//group 4 block
+//group 8 block
+//group all block
+//state configuration
+//disable action
+//enable action
+acl set block <UINT:index> group ( group_2 | group_4 | group_8 | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_BLOCK_INDEX_LOOKUP_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//block configuration
+//block index
+//lookup configuration
+//state configuration
+//disable action
+//enable action
+acl set block <UINT:index> lookup state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_BLOCK_INDEX_MULTI_RESULT_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//block configuration
+//block index
+//multiple result configuration
+//state configuration
+//disable action
+//enable action
+acl set block <UINT:index> multi-result state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_BLOCK_INDEX_POWER_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//block configuration
+//block index
+//power configuration
+//state configuration
+//disable action
+//enable action
+acl set block <UINT:index> power state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_BYPASS_IGR_BW_CTRL_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//bypass action
+//ingress bandwidth control
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action bypass igr-bw-ctrl state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_BYPASS_IGR_DROP_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//bypass action
+//ingress modules filtering
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action bypass igr-drop state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_BYPASS_IGR_STP_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//bypass action
+//ingress spanning tree port state checking
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action bypass igr-stp state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_BYPASS_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//bypass action
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action bypass state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_COPY_MULTI_PORTMASK_INDEX
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//copy action
+//copy to multiple port
+//index to portmask table
+acl set entry <UINT:phase> <UINT:entry> action copy multi <UINT:portmask_index>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_COPY_UNI_DPN
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//copy action
+//copy to signle port
+//destination port number
+acl set entry <UINT:phase> <UINT:entry> action copy uni <UINT:dpn>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_DROP
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//permit action
+acl set entry <UINT:phase> <UINT:entry> action drop
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_FILTERING_PORTMASK_INDEX
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//filtering action
+//index to portmask table
+acl set entry <UINT:phase> <UINT:entry> action filtering <UINT:portmask_index>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_FORWARD_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//forward action
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action forward state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_METER_METER_INDEX
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//mirror action
+//meter index
+acl set entry <UINT:phase> <UINT:entry> action meter <UINT:meter_index>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_METER_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//meter action
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action meter state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_MIRROR_MIRROR_INDEX
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//mirror action
+//mirror set index
+acl set entry <UINT:phase> <UINT:entry> action mirror <UINT:mirror_index>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_MIRROR_MIRROR_INDEX_ORIGINAL_MODIFIED
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//mirror action
+//mirror set index
+//mirror origianl packet
+//mirror modified packet
+acl set entry <UINT:phase> <UINT:entry> action mirror <UINT:mirror_index> ( original | modified )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_MIRROR_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//mirror action
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action mirror state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_MPLS_PUSH_OUTER_PUSH_INNER_OUTER_LIB_INDEX
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//mpls action
+//push outer label
+//push both inner and outer label
+//LIB entry index
+acl set entry <UINT:phase> <UINT:entry> action mpls ( push-outer | push-inner-outer ) <UINT:lib_index>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_MPLS_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//mpls action
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action mpls state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_PERMIT
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//permit action
+acl set entry <UINT:phase> <UINT:entry> action permit
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_PRIORITY_CPU_PORT_ONLY_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//priority action
+//assign priority to the packet which sent to CPU port
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action priority cpu-port-only state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_PRIORITY_PRIORITY
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//priority action
+//priority value
+acl set entry <UINT:phase> <UINT:entry> action priority <UINT:priority>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_PRIORITY_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//priority action
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action priority state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_REDIRECT_MULTI_PORTMASK_INDEX
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//redirect action
+//redirect to multiple port
+//index to portmask table
+acl set entry <UINT:phase> <UINT:entry> action redirect multi <UINT:portmask_index>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_REDIRECT_UNI_DPN
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//redirect action
+//redirect to signle port
+//destination port number
+acl set entry <UINT:phase> <UINT:entry> action redirect uni <UINT:dpn>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_REMARK_COPY_INNER_TO_OUTER
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//remark action
+//copy inner tag priority as outer tag priority
+acl set entry <UINT:phase> <UINT:entry> action remark copy-inner-to-outer
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_REMARK_COPY_OUTER_TO_INNER
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//remark action
+//copy from outer tag priority as inner tag priority
+acl set entry <UINT:phase> <UINT:entry> action remark copy-outer-to-inner
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_REMARK_DSCP_DSCP_VALUE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//remark action
+//inner 1p priority
+//outer 1p priority
+//DSCP value
+acl set entry <UINT:phase> <UINT:entry> action remark dscp <UINT:dscp_value>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_REMARK_INNER_PRI_OUTER_PRI_PRIORITY
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//remark action
+//inner 1p priority
+//outer 1p priority
+//priority value
+acl set entry <UINT:phase> <UINT:entry> action remark ( inner-pri | outer-pri ) <UINT:priority>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_REMARK_IP_PRECEDENCE_PRECEDENCE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//remark action
+//inner 1p priority
+//outer 1p priority
+//precedence value,
+acl set entry <UINT:phase> <UINT:entry> action remark ip-precedence <UINT:precedence>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_REMARK_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//remark action
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action remark state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_ROUTING_UNICAST_NEXT_HOP_ENTRY_INDEX
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//routing action
+//unicast routing
+//next hop entry index
+acl set entry <UINT:phase> <UINT:entry> action routing unicast <UINT:next_hop_entry_index>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_STATISTIC_BYTE64_COUNTER_INDEX
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//statistic action
+//64-bit byte-based
+//counter index
+acl set entry <UINT:phase> <UINT:entry> action statistic byte64 <UINT:counter_index>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_STATISTIC_PACKET32_COUNTER_INDEX
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//statistic action
+//32-bit packet-based
+//counter index
+acl set entry <UINT:phase> <UINT:entry> action statistic packet32 <UINT:counter_index>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_STATISTIC_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//statistic action
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action statistic state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_TAG_INNER_OUTER_UNTAG_TAG_KEEP_CONTENT_RESERVED
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//egress tag status action
+//inner tag status configuration
+//outer tag status configuration
+//untag
+//tag
+//keep tag content
+//do nothing
+acl set entry <UINT:phase> <UINT:entry> action tag ( inner | outer ) ( untag | tag | keep-content | reserved )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_TAG_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//egress tag status action
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action tag state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_VLAN_XLATE_INNER_OUTER_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//vlan translation action
+//inner VLAN translation
+//outer VLAN translation
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action vlan-xlate ( inner | outer ) state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_VLAN_XLATE_INNER_TPID_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//vlan translation action
+//inner TPID assignment
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action vlan-xlate inner-tpid state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_VLAN_XLATE_INNER_TPID_TPID_INDEX
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//vlan translation action
+//inner TPID assignment
+//index to inner TPID list
+acl set entry <UINT:phase> <UINT:entry> action vlan-xlate inner-tpid <UINT:tpid_index>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_VLAN_XLATE_INNER_VID_ASSIGN_SHIFT_SHIFT_FROM_OUTER_VALUE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//vlan translation action
+//inner VID translation
+//translate to a specific value
+//shift with specified value
+//shift from outer VID with specified value
+//value to assign or shift
+acl set entry <UINT:phase> <UINT:entry> action vlan-xlate inner-vid ( assign | shift | shift-from-outer ) <UINT:value>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_VLAN_XLATE_INNER_VID_COPY_FROM_OUTER
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//vlan translation action
+//inner VID translation
+//copy from outer VID
+acl set entry <UINT:phase> <UINT:entry> action vlan-xlate inner-vid copy-from-outer
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_VLAN_XLATE_OUTER_TPID_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//vlan translation action
+//outer TPID assignment
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> action vlan-xlate outer-tpid state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_VLAN_XLATE_OUTER_TPID_TPID_INDEX
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//vlan translation action
+//outer TPID assignment
+//index to inner TPID list
+acl set entry <UINT:phase> <UINT:entry> action vlan-xlate outer-tpid <UINT:tpid_index>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_VLAN_XLATE_OUTER_VID_ASSIGN_SHIFT_SHIFT_FROM_INNER_VALUE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//vlan translation action
+//outer VID translation
+//translate to a specific value
+//shift with specified value
+//shift from outer VID with specified value
+//value to assign or shift
+acl set entry <UINT:phase> <UINT:entry> action vlan-xlate outer-vid ( assign | shift | shift-from-inner ) <UINT:value>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_ACTION_VLAN_XLATE_OUTER_VID_COPY_FROM_INNER
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//action configuration
+//vlan translation action
+//outer VID translation
+//copy from inner VID
+acl set entry <UINT:phase> <UINT:entry> action vlan-xlate outer-vid copy-from-inner
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_FIELD_FIELD_NAME_DATA_DATA_MASK_MASK
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//entry field
+//field name
+//field data
+//field data info
+//field mask
+//field mask info
+acl set entry <UINT:phase> <UINT:entry> field <STRING:field_name> data <STRING:data> mask <STRING:mask>
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_OPERATION_AGGREGATE2_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//operation configuration
+//aggregate 2 operation
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> operation aggregate2 state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_OPERATION_AGGREGATE4_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//operation configuration
+//aggregate 4 operation
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> operation aggregate4 state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_OPERATION_REVERSE_STATE_DISABLE_ENABLE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//operation configuration
+//reverse operation
+//state configuration
+//disable action
+//enable action
+acl set entry <UINT:phase> <UINT:entry> operation reverse state ( disable | enable )
+#endif
+
+#ifdef CMD_ACL_SET_ENTRY_PHASE_ENTRY_VALIDATE_INVALIDATE
+//ACL configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:ingress ACL, 1:Egress ACL
+//entry index
+//validate the entry
+//invalidate the entry
+acl set entry <UINT:phase> <UINT:entry> ( validate | invalidate )
+#endif
+
+#ifdef CMD_ACL_SET_METER_BURST_SIZE_BYTE_PACKET_DLB_SRTCM_TRTCM_LB0BS_LB1BS
+//ACL configuration
+//set configuration
+//meter configuration
+//meter burst-size configuration
+//byte based mode
+//packet based mode
+//dual leaky bucket
+//single rate three color marker
+//two rate three color marker
+//leaky bucket 0 burst size (DLB) or committed burst size (SrTCM or TrTCM)  (unit:128 bytes or 1 packet)
+//leaky bucket 1 burst size (DLB) or excess burst size (SrTCM) or peak burst size (TrTCM)  (unit:128 bytes or 1 packet)
+acl set meter burst-size ( byte | packet ) ( dlb | srtcm | trtcm ) <UINT:lb0bs> <UINT:lb1bs>
+#endif
+
+#ifdef CMD_ACL_SET_METER_ENTRY_INDEX_DLB_LB0_RATE_LB1_RATE
+//ACL configuration
+//set configuration
+//meter configuration
+//meter entry configuration
+//meter index
+//dual leaky bucket
+//Leaky bucket 0 rate  (unit:16 Kbps or 1 packet per sec)
+//Leaky bucket 1 rate  (unit:16 Kbps or 1 packet per sec)
+acl set meter entry <UINT:index> dlb <UINT:lb0_rate> <UINT:lb1_rate>
+#endif
+
+#ifdef CMD_ACL_SET_METER_ENTRY_INDEX_SRTCM_COLOR_AWARE_COLOR_UNAWARE_CIR
+//ACL configuration
+//set configuration
+//meter configuration
+//meter entry configuration
+//meter index
+//single rate three color marker
+//meter is color aware
+//meter is color unaware
+//Committed Information Rate (unit:16 Kbps or 1 packet per sec)
+acl set meter entry <UINT:index> srtcm ( color-aware | color-unaware ) <UINT:cir>
+#endif
+
+#ifdef CMD_ACL_SET_METER_ENTRY_INDEX_TRTCM_COLOR_AWARE_COLOR_UNAWARE_CIR_PIR
+//ACL configuration
+//set configuration
+//meter configuration
+//meter entry configuration
+//meter index
+//two rate three color marker
+//meter is color aware
+//meter is color unaware
+//Committed Information Rate (unit:16 Kbps or 1 packet per sec)
+//Peak Information Rate (unit:16 Kbps or 1 packet per sec)
+acl set meter entry <UINT:index> trtcm ( color-aware | color-unaware ) <UINT:cir> <UINT:pir>
+#endif
+
+#ifdef CMD_ACL_SET_METER_IFG_EXCLUDE_INCLUDE
+//ACL configuration
+//set configuration
+//meter configuration
+//interframe gap
+//exclude
+//include
+acl set meter ifg ( exclude | include )
+#endif
+
+#ifdef CMD_ACL_SET_METER_MODE_BLOCKIDX_BYTE_PACKET
+//ACL configuration
+//set configuration
+//meter configuration
+//meter mode
+//block index
+//byte based mode
+//packet based mode
+acl set meter mode <UINT:blockIdx> ( byte | packet )
+#endif
+
+#ifdef CMD_ACL_SET_PARTITION_VALUE
+//ACL configuration
+//set configuration
+//ACL partition
+//partition value
+acl set partition <UINT:value>
+#endif
+
+#ifdef CMD_ACL_SET_SELECTOR_BLOCK_INDEX_TEMPLATE_IDX1_TEMPLATE_IDX2
+//ACL configuration
+//set configuration
+//selector configuration
+//block index
+//template index 1
+//template index 2
+acl set selector <UINT:block_index> <UINT:template_idx1> <UINT:template_idx2>
+#endif
+
+#ifdef CMD_ACL_SET_TEMPLATE_TEMPLATE_INDEX_FIELD_INDEX_INDEX_FIELD_TYPE_FIELD_NAME
+//ACL configuration
+//set configuration
+//template configuration
+//template index
+//template field index configuration
+//template field index
+//template field type configuration
+//template field type name
+acl set template <UINT:template_index> field_index <UINT:index> field_type <STRING:field_name>
+#endif
+
+#ifdef CMD_FIELD_SELECTOR_GET_INDEX
+//field selector configuration
+//get configuration
+//field selector index
+field-selector get <UINT:index>
+#endif
+
+#ifdef CMD_FIELD_SELECTOR_SET_INDEX_CONTENT_RAW_LLC_L3_ARP_IPV4_IPV6_IP_L4_OFFSET
+//field selector configuration
+//set configuration
+//field selector index
+//field selector content
+//Raw packet(Start after SFD¡Abegin with DA)
+//LLC packet(begin with length 0000-05FF)
+//L3 packet(Start after Ethertype field¡AVLAN tag is bypassed)
+//ARP/RARP packet (Start from ARP/RARP header)
+//IPv4 packet (Start from IPv4 header)
+//IPv6 packet (Start from IPv6 header)
+//IP payload(Start from IP payload¡Aalso means start of layer 4 packet)
+//L4 payload (Start after TCP/UDP header¡AICMP/IGMP is not supported)
+//offset from starting position
+field-selector set <UINT:index> content ( raw | llc | l3 | arp | ipv4 | ipv6 | ip | l4 ) <UINT:offset>
+#endif
+
+#ifdef CMD_RANGE_CHECK_GET_ENTRY_INDEX_IP
+//range check configuration
+//get configuration
+//entry index
+//IP address range check
+range-check get <UINT:entry_index> ip
+#endif
+
+#ifdef CMD_RANGE_CHECK_GET_ENTRY_INDEX_IP_REVERSE_STATE
+//range check configuration
+//get configuration
+//entry index
+//IP address range check
+//reverse operation
+//state configuration
+range-check get <UINT:entry_index> ip reverse state
+#endif
+
+#ifdef CMD_RANGE_CHECK_GET_ENTRY_INDEX_L4PORT
+//range check configuration
+//get configuration
+//entry index
+//L4 port range check
+range-check get <UINT:entry_index> l4port
+#endif
+
+#ifdef CMD_RANGE_CHECK_GET_ENTRY_INDEX_L4PORT_REVERSE_STATE
+//range check configuration
+//get configuration
+//entry index
+//L4 port range check
+//reverse operation
+//state configuration
+range-check get <UINT:entry_index> l4port reverse state
+#endif
+
+#ifdef CMD_RANGE_CHECK_GET_ENTRY_INDEX_PKT_LEN
+//range check configuration
+//get configuration
+//entry index
+//packet length range check
+//lower bound
+//upper bound
+range-check get <UINT:entry_index> pkt-len
+#endif
+
+#ifdef CMD_RANGE_CHECK_GET_ENTRY_INDEX_PKT_LEN_REVERSE_STATE
+//range check configuration
+//get configuration
+//entry index
+//packet length range check
+//reverse operation
+//state configuration
+range-check get <UINT:entry_index> pkt-len reverse state
+#endif
+
+#ifdef CMD_RANGE_CHECK_GET_ENTRY_INDEX_VID
+//range check configuration
+//get configuration
+//entry index
+//VID range check
+range-check get <UINT:entry_index> vid
+#endif
+
+#ifdef CMD_RANGE_CHECK_GET_ENTRY_INDEX_VID_REVERSE_STATE
+//range check configuration
+//get configuration
+//entry index
+//VID range check
+//reverse operation
+//state configuration
+range-check get <UINT:entry_index> vid reverse state
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_ENTRY_INDEX_IP_IP4_SIP_IP4_DIP_IP6_SIP_IP6_DIP_LOWER_UPPER
+//range check configuration
+//set configuration
+//entry index
+//IP address range check
+//IPv4 source IP address
+//IPv4 dest. IP address
+//IPv6 source IP address
+//IPv6 dest. IP address
+//lower bound
+//upper bound
+range-check set <UINT:entry_index> ip ( ip4-sip | ip4-dip | ip6-sip | ip6-dip ) <HEX:lower> <HEX:upper>
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_ENTRY_INDEX_IP_IP6_SIP_SUFFIX_IP6_DIP_SUFFIX_LOWER_UPPER
+//range check configuration
+//set configuration
+//entry index
+//IP address range check
+//IPv6 suffix source IP address
+//IPv6 suffix dest. IP address
+//lower bound
+//upper bound
+range-check set <UINT:entry_index> ip ( ip6-sip-suffix | ip6-dip-suffix ) <HEX:lower> <HEX:upper>
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_ENTRY_INDEX_IP_REVERSE_STATE_DISABLE_ENABLE
+//range check configuration
+//set configuration
+//entry index
+//IP address range check
+//reverse operation
+//state configuration
+//disable action
+//enable action
+range-check set <UINT:entry_index> ip reverse state ( disable | enable )
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_ENTRY_INDEX_L4PORT_REVERSE_STATE_DISABLE_ENABLE
+//range check configuration
+//set configuration
+//entry index
+//L4 port range check
+//reverse operation
+//state configuration
+//disable action
+//enable action
+range-check set <UINT:entry_index> l4port reverse state ( disable | enable )
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_ENTRY_INDEX_L4PORT_SOURCE_DEST_LOWER_UPPER
+//range check configuration
+//set configuration
+//entry index
+//L4 port range check
+//source port
+//dest. port
+//lower bound
+//upper bound
+range-check set <UINT:entry_index> l4port ( source | dest ) <UINT:lower> <UINT:upper>
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_ENTRY_INDEX_PKT_LEN_LOWER_UPPER
+//range check configuration
+//set configuration
+//entry index
+//packet length range check
+//lower bound
+//upper bound
+range-check set <UINT:entry_index> pkt-len <UINT:lower> <UINT:upper>
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_ENTRY_INDEX_PKT_LEN_REVERSE_STATE_DISABLE_ENABLE
+//range check configuration
+//set configuration
+//entry index
+//packet length range check
+//reverse operation
+//state configuration
+//disable action
+//enable action
+range-check set <UINT:entry_index> pkt-len reverse state ( disable | enable )
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_ENTRY_INDEX_VID_INNER_OUTER_LOWER_UPPER
+//range check configuration
+//set configuration
+//entry index
+//VID range check
+//inner VID configuration
+//outer VID configuration
+//lower bound
+//upper bound
+range-check set <UINT:entry_index> vid ( inner | outer ) <UINT:lower> <UINT:upper>
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_ENTRY_INDEX_VID_REVERSE_STATE_DISABLE_ENABLE
+//range check configuration
+//set configuration
+//entry index
+//VID range check
+//reverse operation
+//state configuration
+//disable action
+//enable action
+range-check set <UINT:entry_index> vid reverse state ( disable | enable )
+#endif
+
+#ifdef CMD_RANGE_CHECK_GET_ENTRY_INDEX_PORT_CHECK_DESTINATION
+//range check configuration
+//get configuration
+//entry index
+//port range check
+//destination port
+range-check get <UINT:entry_index> port-check destination
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_ENTRY_INDEX_PORT_CHECK_DESTINATION_PORT_NONE
+//range check configuration
+//set configuration
+//entry index
+//port range check
+//destination port
+//ports
+//no any port
+range-check set <UINT:entry_index> port-check destination ( <PORT_LIST:port> | none )
+#endif
+
+#ifdef CMD_RANGE_CHECK_GET_ENTRY_INDEX_PORT_CHECK_SOURCE
+//range check configuration
+//get configuration
+//entry index
+//port range check
+//source port
+range-check get <UINT:entry_index> port-check source
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_ENTRY_INDEX_PORT_CHECK_SOURCE_PORT_NONE
+//range check configuration
+//set configuration
+//entry index
+//port range check
+//source port
+//ports
+//no any port
+range-check set <UINT:entry_index> port-check source ( <PORT_LIST:port> | none )
+#endif

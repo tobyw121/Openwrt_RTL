@@ -1,0 +1,14 @@
+RTL8197F v42.26 source validation
+PASS - MW5 selects six-dword/24-byte descriptors
+PASS - RD05/default retains eight-dword/32-byte descriptors
+PASS - ring allocation/free/index/CDP/DMA_CR1 use runtime stride
+PASS - opts6/opts7 are not touched for six-dword descriptors
+PASS - MW5 CPUICR1 leaves descriptor stride fields zero
+PASS - MW5 ring bases are reprogrammed after CPUIF start
+PASS - complete CHECK_SOURCE_TREE_V42.sh regression suite
+PASS - v42.25 -> v42.26 patch dry-run and real apply
+PASS - patched v42.25 tree passes CHECK_SOURCE_TREE_V42.sh
+PASS - checkpatch has no source-style findings; only standalone patch metadata warnings
+NOT RUN - full OpenWrt world build from v42.26 tree
+NOT RUN - C compilation with the OpenWrt MIPS toolchain (toolchain absent in this environment)
+NOT RUN - physical MW5 LAN/WAN validation

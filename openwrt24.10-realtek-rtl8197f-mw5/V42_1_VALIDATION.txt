@@ -1,0 +1,38 @@
+RTL8197F RD05/MW5/AC23 v42.1 WLAN build-fix validation
+Date: 2026-07-31
+Kernel target: Linux 6.6.114
+OpenWrt target: 24.10
+
+INPUT BUILD RESULT
+- The supplied real toolchain log compiled rtl8672_port.o and then stopped in
+  WlanHAL/HalCommon.c.
+- The only fatal compiler diagnostic in the supplied log was a redefinition of
+  local variable hci_type between the enabled RTL8822B and RTL8812F case paths.
+- Adjacent diagnostics were non-fatal SDK merge warnings.
+
+CORRECTIONS
+- Unique HCI selector variables for RTL8822B, RTL8822C, RTL8812F and RTL8821C.
+- BEAMFORMING_SUPPORT defaults to 0 only when the SDK did not define it.
+- get_desc/set_desc are explicitly undefined before the later vendor-selected
+  PCI/HCI definitions; the final effective descriptor semantics are unchanged.
+- Duplicate RF_T_METER_8197F macro is guarded.
+- Invalid whitespace after RTL8197F power-sequence continuation backslashes is
+  removed.
+- rtl8192cd-rtl8197f package release bumped to 4.
+
+PASSED
+- Standalone patch dry-run and application against the untouched v42.0 tree.
+- CHECK_SOURCE_TREE_V42.sh after applying all corrections.
+- Private RD05/MW5/AC23 template size, SHA-256, header and profile checks.
+- No remaining generic local `unsigned char hci_type` declarations in
+  HAL_ReadTypeID multi-chip cases.
+- No whitespace after C macro continuation backslashes in
+  Hal8197FPwrSeqCmd.h.
+
+NOT CLAIMED
+- A complete MIPS package compile was not possible in this container because it
+  does not contain the user's prepared OpenWrt staging/toolchain directories.
+- Further vendor-port errors may appear after HalCommon.o and must be corrected
+  iteratively from the next V=sc -j1 log.
+- No module load, RF, Ethernet, switch, UART boot or physical flash test was
+  performed by this source correction.

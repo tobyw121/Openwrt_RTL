@@ -1,0 +1,19 @@
+RTL8197F v42.24 validation
+PASS - loader flush_cache end is reloaded as fixed 0x809fec80
+PASS - UART RX uses +0x24 only while DLAB is clear
+PASS - DLL remains at +0x00 while DLAB is set
+PASS - ethernet DT TX port mask changed 0x40 -> 0x1
+PASS - ethernet DT DP_EXT changed 0x2 -> 0x0
+PASS - existing SDK P0/RGMII sequence selected for MW5 at hw_start
+PASS - RTL8197FS non-VG P0 settings TX0/RX5 and pad drive 6 encoded
+PASS - CPU-tag RX/TX enabled with tag removal disabled
+PASS - Python LZMA decoder accepted loader-visible stream
+PASS - LZMA SDK 4.40 decoder accepted loader-visible stream
+PASS - kernel checksum sum 0x0000
+PASS - rootfs checksum sum 0x0000
+PASS - protected 0x000000-0x030000 unchanged
+PASS - protected 0x5c0000-0x800000 unchanged
+NOT RUN - physical UART RX test
+NOT RUN - physical LAN/WAN traffic test
+PASS - source loader reloads lzma_outsize through volatile memory after decoder
+NOT RUN - complete OpenWrt world build from v42.24 tree

@@ -1,0 +1,46 @@
+From 7ebf517d141663f02246e813e3e904519605146e Mon Sep 17 00:00:00 2001
+From: OpenAI <noreply@openai.com>
+Date: Sat, 25 Jul 2026 14:21:00 +0000
+Subject: [PATCH] net: rtl8197f: document standard offload control planes
+
+Document the standard Linux interfaces that replace the vendor private
+swconfig, FastPath, HWNAT and ACL control paths. Keep this as a Kconfig
+policy note; no unsupported hardware offload is advertised.
+
+Signed-off-by: OpenAI <noreply@openai.com>
+---
+ drivers/net/ethernet/Kconfig | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/drivers/net/ethernet/Kconfig b/drivers/net/ethernet/Kconfig
+index 45008ca..ba0aae6 100644
+--- a/drivers/net/ethernet/Kconfig
++++ b/drivers/net/ethernet/Kconfig
+@@ -57,6 +57,24 @@ config RTL8197F_RTKNET
+ 	  It still requires board-level validation of descriptor address format,
+ 	  port-mask semantics and external switch wiring.
+ 
++config RTL8197F_RTKNET_MAINSTREAM_OFFLOADS
++	bool "RTL8197F mainstream offload control-plane documentation"
++	depends on RTL8197F_RTKNET
++	default y if RTL8197F_RTKNET
++	help
++	  The Realtek RTL8197F SDK provided swconfig, private IOCTLs, FastPath/HWNAT
++	  and ACL control paths. Those are intentionally not reintroduced as kernel
++	  ABIs. OpenWrt 24.10 should use:
++
++	    - DSA and bridge VLANs instead of swconfig;
++	    - ethtool and, where appropriate, devlink/debugfs for diagnostics;
++	    - nftables flowtables for software fastpath;
++	    - tc flower for switch ACL/offload requests;
++	    - Linux flowtable offload callbacks for future rtl865x HWNAT.
++
++	  Selecting this symbol documents that the compatibility layer is expected
++	  to live above standard Linux APIs rather than through Realtek private hooks.
++
+ config RTL8197F_RD05_OEM_SWITCH_PREINIT
+ 	bool "Xiaomi RD05 OEM RTL8367D reset/pinmux pre-initialisation"
+ 	depends on RTL8197F && HAS_IOMEM && OF
+-- 
+2.47.3
+

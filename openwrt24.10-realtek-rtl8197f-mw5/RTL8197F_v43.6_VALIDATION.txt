@@ -1,0 +1,44 @@
+RTL8197F / Tenda Nova MW5 v43.6 validation
+============================================
+
+Scope
+-----
+v43.6 is a focused compile correction on top of v43.5. It retains the v43.5
+RX tag reconstruction, runtime Factory-MAC table reseed and built-in
+LAN/WAN diagnostics.
+
+Build-log diagnosis
+-------------------
+- The supplied kernel command line uses global -Werror.
+- The copied tail contains only the later scripts/Makefile.build net Error 2.
+- The v43.5 tagger passed BIT(dp->index), an unsigned long expression, to %x.
+- An isolated GCC -Wall -Wformat=2 -Werror proof reproduces the exact failure.
+- The fixed u32 port_mask version compiles in the same proof.
+
+Source correction
+-----------------
+- u32 port_mask stores BIT(dp->index).
+- FIELD_PREP(RTL4_9_PORT, port_mask) uses the fixed-width value.
+- The TX trace passes port_mask to %x.
+- Driver and runtime markers are v43.6.
+- No LAN/WAN mapping changes: LAN=P1, WAN=P3.
+
+Static checks
+-------------
+- CHECK_MW5_V43.6.sh: 22 PASS, 0 FAIL.
+- CHECK_MW5_WANLAN_V43.sh: 57 PASS, 0 FAIL.
+- CHECK_MW5_DIAG_BUILTIN_V43.4.sh: 43 PASS, 0 FAIL.
+- CHECK_SOURCE_TREE_V42.sh under bash: PASS.
+- tag_rtl4_9.c checkpatch --strict -f: 0 errors, 0 warnings, 0 checks.
+- All installed MW5 diagnostic shell scripts pass sh -n.
+- Complete v43.5 -> v43.6 patch dry-run/apply with --fuzz=0: PASS.
+- Replayed complete tree is byte-identical to the v43.6 source tree.
+- Minimal tagger-only patch dry-run/apply with --fuzz=0: PASS.
+
+Limitations
+-----------
+- The exact OpenWrt MIPS cross-toolchain and populated build_dir/staging_dir
+  from the user's workstation are not available in this environment.
+- Therefore a complete target/linux/compile and world build were not run here.
+- The first user retry should use make target/linux/compile -j1 V=s so any
+  additional primary compiler diagnostic remains visible.

@@ -1,0 +1,28 @@
+--- a/drivers/net/ethernet/Kconfig
++++ b/drivers/net/ethernet/Kconfig
+@@ -12,6 +12,16 @@ if ETHERNET
+ config MDIO
+ 	tristate
+ 
++config RTL8197F_ETH_DIAG
++	tristate "Realtek RTL8197F read-only Ethernet/MDIO diagnostics"
++	depends on RTL8197F && HAS_IOMEM
++	default y if RTL8197F
++	help
++	  Enable a read-only diagnostic platform driver for the RTL8197F
++	  SWCORE/MDIO register window.  This is not a packet driver and does
++	  not configure the switch, DMA, VLANs or PHYs; it only prints register
++	  snapshots during early bring-up.
++
+ config SUNGEM_PHY
+ 	tristate
+ 
+--- a/drivers/net/ethernet/Makefile
++++ b/drivers/net/ethernet/Makefile
+@@ -4,5 +4,6 @@
+ #
+ 
++obj-$(CONFIG_RTL8197F_ETH_DIAG) += rtl8197f_ethdiag.o
+ obj-$(CONFIG_NET_VENDOR_3COM) += 3com/
+ obj-$(CONFIG_NET_VENDOR_8390) += 8390/
+ obj-$(CONFIG_NET_VENDOR_ACTIONS) += actions/

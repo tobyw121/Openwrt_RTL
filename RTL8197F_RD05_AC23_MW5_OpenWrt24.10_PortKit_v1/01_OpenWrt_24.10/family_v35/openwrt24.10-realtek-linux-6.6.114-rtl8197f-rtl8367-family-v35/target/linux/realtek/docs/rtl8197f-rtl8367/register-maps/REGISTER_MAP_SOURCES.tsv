@@ -1,0 +1,4 @@
+family	source_path	source_lines	indexed_defines	source_sha256
+B	/mnt/data/rtl8197f-rtl8367-work/sdk-extract/8197/rtl819x/rtl8367r/rtl8367b_reg.h	16719	13622	7942a65f5ff25ee68d766412740370ce77cfcc6fccd134825afc08608b0633e8
+C	/mnt/data/rtl8197f-rtl8367-work/sdk-extract/8197/RT8197F_RTL8367RB_Gesamtpaket/AX12v1_GPL_Paket/source_subset/rtl8197/rtknet/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367c/rtl8367c_reg.h	22819	18679	2f1160c72c2e6140bee61868e859080ccb68f430a8bb24ac194e8c86b56f635d
+D	/mnt/data/rtl8197f-rtl8367-work/sdk-extract/8197/RT8197F_RTL8367RB_Gesamtpaket/AX12v1_GPL_Paket/source_subset/rtl8197/rtknet/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/rtl8367d_reg.h	12393	10407	2d1cbb61dfb8f771a536fabb24dac67cf874f0491ebb2e7d4dcd50fd16bdbfd2

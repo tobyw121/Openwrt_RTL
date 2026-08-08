@@ -1,0 +1,18 @@
+MW5 WAN/LAN v43.2 - Linux 6.6.114 tagger compile fix
+=====================================================
+
+Observed failure:
+  net/dsa/tag_rtl4_9.c: implicit declaration of
+  netdev_err_ratelimited; all warnings are treated as errors.
+
+Cause:
+  netdev_err_ratelimited() is not provided by this Linux 6.6.114
+  build context. The tagger already uses netdev_err() successfully.
+
+Fix:
+  Replace the single netdev_err_ratelimited() call with netdev_err().
+  No new include and no new kernel API dependency are introduced.
+
+Required clean rebuild after replacing the source/tree:
+  make target/linux/clean
+  make target/linux/compile -j1 V=s

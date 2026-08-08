@@ -1,0 +1,1079 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 27613 $
+// $Date: 2012-03-30 17:33:46 +0800 (Fri, 30 Mar 2012) $
+//
+// Purpose : Define diag shell commands for OAM.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) OAM commands.
+//
+
+#ifdef CMD_OAM_ADD_DEL_REMOTE_MEPID_VALUE
+//OAM configuration
+//add configuration
+//delete configuration
+//remote mepid configuration
+//mepid value, uint16
+oam ( add | del ) remote-mepid <HEX:value>
+#endif  /* CMD_OAM_ADD_DEL_REMOTE_MEPID_VALUE */
+
+#ifdef CMD_OAM_DUMP_CFM_DYING_GASP_OAM
+//OAM configuration
+//dump configuration
+//CFM configuration
+//dying gasp configuration
+//OAM configuration
+oam dump ( cfm | dying-gasp | oam )
+#endif  /* CMD_OAM_DUMP_CFM_DYING_GASP_OAM */
+
+#ifdef CMD_OAM_DUMP_CFM_DYING_GASP_OAM_PORT_ALL
+//OAM configuration
+//dump configuration
+//CFM configuration
+//dying gasp configuration
+//OAM configuration
+//port list, <0-27>
+//all ports
+oam dump ( cfm | dying-gasp | oam ) ( <PORT_LIST:port> | all )
+#endif  /* CMD_OAM_DUMP_CFM_DYING_GASP_OAM_PORT_ALL */
+
+#ifdef CMD_OAM_GET_ASIC_AUTO_DYING_GASP_PORT_ALL_STATE
+//OAM configuration
+//get configuration
+//asic dying gasp configuration
+//port list, <0-27>
+//all ports
+//state configuration
+oam get asic-auto-dying-gasp ( <PORT_LIST:port> | all ) state 
+#endif  /* CMD_OAM_GET_ASIC_AUTO_DYING_GASP_PORT_ALL_STATE */
+
+#ifdef CMD_OAM_GET_CCM_PORT_ALL_GROUP_IDX_MEPID_VALUE
+//OAM configuration
+//get configuration
+//ccm configuration
+//port list, <0-27>
+//all ports
+//CFM group index value, <0-1>
+//mepid configuration
+//maid value, uint8 
+oam get ccm ( <PORT_LIST:port> | all ) <UINT:group_idx> mepid-value
+#endif  /* CMD_OAM_GET_CCM_PORT_ALL_GROUP_IDX_MEPID_VALUE */
+
+#ifdef CMD_OAM_GET_CCM_PORT_ALL_INTERFACE_STATUS
+//OAM configuration
+//get configuration
+//ccm configuration
+//port list, <0-27>
+//all ports
+//interface status
+oam get ccm ( <PORT_LIST:port> | all ) interface-status 
+#endif  /* CMD_OAM_GET_CCM_PORT_ALL_INTERFACE_STATUS */
+
+#ifdef CMD_OAM_GET_CCM_PORT_ALL_PORT_STATUS
+//OAM configuration
+//get configuration
+//ccm configuration
+//port list, <0-27>
+//all ports
+//port status
+oam get ccm ( <PORT_LIST:port> | all ) port-status 
+#endif  /* CMD_OAM_GET_CCM_PORT_ALL_PORT_STATUS */
+
+#ifdef CMD_OAM_GET_CCM_MEPID_STATUS_PORT_ALL_MEPID
+//OAM configuration
+//get configuration
+//ccm configuration
+//mepid status
+//port list, <0-27>
+//all
+//mepid value, uint16
+oam get ccm mepid-status ( <PORT_LIST:port> | all ) <HEX:mepid>
+#endif  /* CMD_OAM_GET_CCM_MEPID_STATUS_PORT_ALL_MEPID */
+
+#ifdef CMD_OAM_GET_CCM_ETHER_TYPE_OPCODE_SNAP_OUI
+//OAM configuration
+//get configuration
+//ccm configuration
+//etherType configuration
+//opCode configuration
+//snap oui value
+oam get ccm ( ether-type | opcode | snap-oui ) 
+#endif  /* CMD_OAM_GET_CCM_ETHER_TYPE_OPCODE_SNAP_OUI */
+
+#ifdef CMD_OAM_GET_CCM_INTERVAL
+//OAM configuration
+//get configuration
+//ccm configuration
+//ccm packet transfer interval
+oam get ccm interval 
+#endif  /* CMD_OAM_GET_CCM_INTERVAL */
+
+#ifdef CMD_OAM_GET_CFM_INDEX_INDEX_MD_LEVEL
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//entry index value, <0-1>
+//md level configuration
+oam get cfm-index <UINT:index> md-level 
+#endif  /* CMD_OAM_GET_CFM_INDEX_INDEX_MD_LEVEL */
+
+#ifdef CMD_OAM_GET_CFM_INDEX_INDEX_MAID_MAID_INDEX
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//entry index value, <0-1>
+//maid configuration
+//maid index value, <0-47>
+oam get cfm-index <UINT:index> maid <UINT:maid_index>
+#endif  /* CMD_OAM_GET_CFM_INDEX_INDEX_MAID_MAID_INDEX */
+
+#ifdef CMD_OAM_GET_CCM_CFM_INDEX_INDEX_INNER_TAG_CFI
+//OAM configuration
+//get configuration
+//ccm configuration
+//CFM entry configuration
+//CFM entry index, <0-1>
+//inner tag configuration
+//cfi value
+oam get ccm cfm-index <UINT:index> inner-tag cfi 
+#endif  /* CMD_OAM_GET_CCM_CFM_INDEX_INDEX_INNER_TAG_CFI */
+
+#ifdef CMD_OAM_GET_CCM_CFM_INDEX_INDEX_INNER_TAG_TPID
+//OAM configuration
+//get configuration
+//ccm configuration
+//CFM entry configuration
+//CFM entry index, <0-1>
+//inner tag configuration
+//TPID value, uint16
+oam get ccm cfm-index <UINT:index> inner-tag tpid
+#endif  /* CMD_OAM_GET_CCM_CFM_INDEX_INDEX_INNER_TAG_TPID */
+
+#ifdef CMD_OAM_GET_CCM_CFM_INDEX_INDEX_INNER_TAG_VID
+//OAM configuration
+//get configuration
+//ccm configuration
+//CFM entry configuration
+//CFM entry index, <0-1>
+//inner tag configuration
+//VLAN id, <0-4095>
+oam get ccm cfm-index <UINT:index> inner-tag vid
+#endif  /* CMD_OAM_GET_CCM_CFM_INDEX_INDEX_INNER_TAG_VID */
+
+#ifdef CMD_OAM_GET_CCM_CFM_INDEX_INDEX_INNER_TAG_PRI
+//OAM configuration
+//get configuration
+//ccm configuration
+//CFM entry configuration
+//CFM entry index, <0-1>
+//inner tag configuration
+//priority value, <0-7>
+oam get ccm cfm-index <UINT:index> inner-tag pri 
+#endif  /* CMD_OAM_GET_CCM_CFM_INDEX_INDEX_INNER_TAG_PRI */
+
+#ifdef CMD_OAM_GET_CCM_CFM_INDEX_INDEX_OUTER_TAG_DEI
+//OAM configuration
+//get configuration
+//ccm configuration
+//CFM entry configuration
+//CFM entry index, <0-1>
+//outer tag configuration
+//dei value
+oam get ccm cfm-index <UINT:index> outer-tag dei
+#endif  /* CMD_OAM_GET_CCM_CFM_INDEX_INDEX_OUTER_TAG_DEI */
+
+#ifdef CMD_OAM_GET_CCM_CFM_INDEX_INDEX_OUTER_TAG_TPID
+//OAM configuration
+//get configuration
+//ccm configuration
+//CFM entry configuration
+//CFM entry index, <0-1>
+//outer tag configuration
+//TPID value, uint16
+oam get ccm cfm-index <UINT:index> outer-tag tpid
+#endif  /* CMD_OAM_GET_CCM_CFM_INDEX_INDEX_OUTER_TAG_TPID */
+
+#ifdef CMD_OAM_GET_CCM_CFM_INDEX_INDEX_OUTER_TAG_VID
+//OAM configuration
+//get configuration
+//ccm configuration
+//CFM entry configuration
+//CFM entry index, <0-1>
+//outer tag configuration
+//VLAN id, <0-4095>
+oam get ccm cfm-index <UINT:index> outer-tag vid
+#endif  /* CMD_OAM_GET_CCM_CFM_INDEX_INDEX_OUTER_TAG_VID */
+
+#ifdef CMD_OAM_GET_CCM_CFM_INDEX_INDEX_OUTER_TAG_PRI
+//OAM configuration
+//get configuration
+//ccm configuration
+//CFM entry configuration
+//CFM entry index, <0-1>
+//outer tag configuration
+//priority value, <0-7>
+oam get ccm cfm-index <UINT:index> outer-tag pri
+#endif  /* CMD_OAM_GET_CCM_CFM_INDEX_INDEX_OUTER_TAG_PRI */
+
+#ifdef CMD_OAM_GET_CCM_CFM_INDEX_INDEX_CCM_FLAG
+//OAM configuration
+//get configuration
+//ccm configuration
+//CFM entry configuration
+//CFM entry index, <0-1>
+//ccm flag configuration
+oam get ccm cfm-index <UINT:index> ccm-flag 
+#endif  /* CMD_OAM_GET_CCM_CFM_INDEX_INDEX_CCM_FLAG */
+
+#ifdef CMD_OAM_GET_CCM_CFM_INDEX_INDEX_PKT_TYPE_MAC
+//OAM configuration
+//get configuration
+//ccm configuration
+//CFM entry configuration
+//CFM entry index, <0-1>
+//packet type configuration
+//destination MAC address, A:B:C:D:E:F , source MAC address, A:B:C:D:E:F
+oam get ccm cfm-index <UINT:index> pkt-type mac
+#endif  /* CMD_OAM_GET_CCM_CFM_INDEX_INDEX_PKT_TYPE_MAC */
+
+#ifdef CMD_OAM_GET_CCM_CFM_INDEX_INDEX_PKT_TYPE
+//OAM configuration
+//get configuration
+//ccm configuration
+//CFM entry configuration
+//CFM entry index, <0-1>
+//packet type configuration
+oam get ccm cfm-index <UINT:index> pkt-type 
+#endif  /* CMD_OAM_GET_CCM_CFM_INDEX_INDEX_PKT_TYPE */
+
+#ifdef CMD_OAM_GET_CFM_MEPID_COMPARE_PORT_ALL_STATE
+//OAM configuration
+//get configuration
+//CFM mepid asic auto compare configuration
+//port list, <0-27>
+//all ports
+//state configuration
+oam get cfm-mepid-compare ( <PORT_LIST:port> | all ) state 
+#endif  /* CMD_OAM_GET_CFM_MEPID_COMPARE_PORT_ALL_STATE */
+
+#ifdef CMD_OAM_GET_CFM_LOOPBACK_REPLY_PORT_ALL_STATE
+//OAM configuration
+//get configuration
+//CFM auto reply configuration
+//port list, <0-27>
+//all ports
+//state configuration
+oam get cfm-loopback-reply ( <PORT_LIST:port> | all ) state 
+#endif  /* CMD_OAM_GET_CFM_LOOPBACK_REPLY_PORT_ALL_STATE */
+
+#ifdef CMD_OAM_GET_DYING_GASP_PORT_ALL_LOCAL_TLV_REMOTE_TLV
+//OAM configuration
+//set configuration
+//dying gasp configuration
+//port list, <0-27>
+//all ports
+//local tlv configuration
+//remote tlv configuration
+oam get dying-gasp ( <PORT_LIST:port> | all ) ( local-tlv | remote-tlv ) 
+#endif  /* CMD_OAM_GET_DYING_GASP_PORT_ALL_LOCAL_TLV_REMOTE_TLV */
+
+#ifdef CMD_OAM_GET_DYING_GASP_WAITING_TIME
+//OAM configuration
+//get configuration
+//dying gasp configuration
+//dying gasp waiting time configuration
+oam get dying-gasp waiting-time
+#endif  /* CMD_OAM_GET_DYING_GASP_WAITING_TIME */
+
+#ifdef CMD_OAM_GET_LOOPBACK_CTRL_PORT_ALL_SA_ACTION_DA_ACTION
+//OAM configuration
+//get configuration
+//loopback control configuration
+//port list, <0-27>
+//all ports
+//smac action configuration
+//dmac action configuration, mcast or bcast always keep dmac
+oam get loopback-ctrl ( <PORT_LIST:port> | all ) sa-action da-action 
+#endif  /* CMD_OAM_GET_LOOPBACK_CTRL_PORT_ALL_SA_ACTION_DA_ACTION */
+
+#ifdef CMD_OAM_GET_LOOPBACK_MODE_PORT_ALL
+//OAM configuration
+//get configuration
+//loopback mode configuration
+//port list, <0-27>
+//all ports
+oam get loopback-mode ( <PORT_LIST:port> | all ) 
+#endif  /* CMD_OAM_GET_LOOPBACK_MODE_PORT_ALL */
+
+#ifdef CMD_OAM_GET_KEEP_INNER_VLAN_TAG_KEEP_OUTER_VLAN_TAG_STATE
+//OAM configuration
+//get configuration
+//keep inner VLAN tag
+//keep outer VLAN tag
+//state configuration
+oam get ( keep-inner-vlan-tag | keep-outer-vlan-tag ) state 
+#endif  /* CMD_OAM_GET_KEEP_INNER_VLAN_TAG_KEEP_OUTER_VLAN_TAG_STATE */
+
+#ifdef CMD_OAM_SET_ASIC_AUTO_DYING_GASP_PORT_ALL_STATE_DISABLE_ENABLE
+//OAM configuration
+//set configuration
+//asic dying gasp configuration
+//port list, <0-27>
+//all ports
+//state configuration
+//disable function
+//enable function
+oam set asic-auto-dying-gasp ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif  /* CMD_OAM_SET_ASIC_AUTO_DYING_GASP_PORT_ALL_STATE_DISABLE_ENABLE */
+
+#ifdef CMD_OAM_SET_CCM_PORT_ALL_GROUP_IDX_MEPID_VALUE
+//OAM configuration
+//set configuration
+//ccm configuration
+//port list, <0-27>
+//all ports
+//CFM group index value, <0-1>
+//mepid configuration
+//maid value, uint8 
+oam set ccm ( <PORT_LIST:port> | all ) <UINT:group_idx> <HEX:mepid_value>
+#endif  /* CMD_OAM_SET_CCM_PORT_ALL_GROUP_IDX_MEPID_VALUE */
+
+#ifdef CMD_OAM_SET_CCM_PORT_ALL_INTERFACE_STATUS_PORT_STATUS_VALUE
+//OAM configuration
+//set configuration
+//ccm configuration
+//port list, <0-27>
+//all ports
+//interface status
+//port status
+//status value, port status <1-2>; interface status <1-7>
+oam set ccm ( <PORT_LIST:port> | all ) ( interface-status | port-status ) <UINT:value>
+#endif  /* CMD_OAM_SET_CCM_PORT_ALL_INTERFACE_STATUS_PORT_STATUS_VALUE */
+
+#ifdef CMD_OAM_SET_CCM_PORT_ALL_START
+//OAM configuration
+//set configuration
+//ccm configuration
+//port list, <0-27>
+//all ports
+//start transfer ccm packet
+oam set ccm ( <PORT_LIST:port> | all ) start
+#endif  /* CMD_OAM_SET_CCM_PORT_ALL_START */
+
+#ifdef CMD_OAM_SET_CCM_STOP
+//OAM configuration
+//set configuration
+//ccm configuration
+//stop transfer ccm packet
+oam set ccm stop
+#endif  /* CMD_OAM_SET_CCM_STOP */
+
+#ifdef CMD_OAM_SET_CCM_CFM_INDEX_INDEX_PKT_TYPE_ETHERNET_II_SNAP_DST_MAC_SRC_MAC
+//OAM configuration
+//set configuration
+//ccm configuration
+//CFM entry configuration
+//CFM entry index, <0-1>
+//packet type configuration
+//ethernet ii packet
+//snap packet
+//destination MAC address, A:B:C:D:E:F
+//source MAC address, A:B:C:D:E:F
+oam set ccm cfm-index <UINT:index> pkt-type ( ethernet-ii | snap ) <MACADDR:dst_mac> <MACADDR:src_mac> 
+#endif  /* CMD_OAM_SET_CCM_CFM_INDEX_INDEX_PKT_TYPE_ETHERNET_II_SNAP_DST_MAC_SRC_MAC */
+
+#ifdef CMD_OAM_SET_CCM_CFM_INDEX_INDEX_INNER_TAG_TPID_VID_PRI_CFI
+//OAM configuration
+//set configuration
+//ccm configuration
+//CFM entry configuration
+//CFM entry index, <0-1>
+//inner tag configuration
+//TPID value, uint16
+//VLAN id, <0-4095>
+//priority value, <0-7>
+//cfi value
+oam set ccm cfm-index <UINT:index> inner-tag <HEX:tpid> <UINT:vid> <UINT:pri> { cfi }
+#endif  /* CMD_OAM_SET_CCM_CFM_INDEX_INDEX_INNER_TAG_TPID_VID_PRI_CFI */
+
+#ifdef CMD_OAM_SET_CCM_CFM_INDEX_INDEX_OUTER_TAG_TPID_VID_PRI_DEI
+//OAM configuration
+//set configuration
+//ccm configuration
+//CFM entry configuration
+//CFM entry index, <0-1>
+//outer tag configuration
+//TPID value, uint16
+//VLAN id, <0-4095>
+//priority value, <0-7>
+//dei value
+oam set ccm cfm-index <UINT:index> outer-tag <HEX:tpid> <UINT:vid> <UINT:pri> { dei }
+#endif  /* CMD_OAM_SET_CCM_CFM_INDEX_INDEX_OUTER_TAG_TPID_VID_PRI_DEI */
+
+#ifdef CMD_OAM_SET_CCM_ETHER_TYPE_OPCODE_VALUE
+//OAM configuration
+//set configuration
+//ccm configuration
+//etherType configuration
+//opCode configuration
+//value
+oam set ccm ( ether-type | opcode ) <HEX:value>
+#endif  /* CMD_OAM_SET_CCM_ETHER_TYPE_OPCODE_VALUE */
+
+#ifdef CMD_OAM_SET_CCM_INTERVAL_3DOT3MS_10MS_100MS_1S
+//OAM configuration
+//set configuration
+//ccm configuration
+//ccm packet transfer interval
+//3.3ms
+//10ms
+//100ms
+//1s
+oam set ccm interval ( 3dot3ms | 10ms | 100ms | 1s )
+#endif  /* CMD_OAM_SET_CCM_INTERVAL_3DOT3MS_10MS_100MS_1S */
+
+#ifdef CMD_OAM_SET_CCM_SNAP_OUI_VALUE
+//OAM configuration
+//set configuration
+//ccm configuration
+//snap oui configuration
+//snap oui value
+oam set ccm snap-oui <HEX:value>
+#endif  /* CMD_OAM_SET_CCM_SNAP_OUI_VALUE */
+
+#ifdef CMD_OAM_SET_CCM_CFM_INDEX_INDEX_CCM_FLAG_VALUE
+//OAM configuration
+//set configuration
+//ccm configuration
+//CFM entry configuration
+//CFM entry index, <0-1>
+//ccm flag configuration
+//ccm flag value, uint8
+oam set ccm cfm-index <UINT:index> ccm-flag <HEX:value>
+#endif  /* CMD_OAM_SET_CCM_CFM_INDEX_INDEX_CCM_FLAG_VALUE */
+
+#ifdef CMD_OAM_SET_CFM_INDEX_INDEX_MAID_MAID_INDEX_MAID_VALUE
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//entry index value, <0-1>
+//maid configuration
+//maid index value, <0-47>
+//maid value
+oam set cfm-index <UINT:index> maid <UINT:maid_index> <HEX:maid_value>
+#endif  /* CMD_OAM_SET_CFM_INDEX_INDEX_MAID_MAID_INDEX_MAID_VALUE */
+
+#ifdef CMD_OAM_SET_CFM_INDEX_INDEX_MD_LEVEL_LEVEL
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//entry index value, <0-1>
+//md level configuration
+//md level value, <0-7>
+oam set cfm-index <UINT:index> md-level <UINT:level> 
+#endif  /* CMD_OAM_SET_CFM_INDEX_INDEX_MD_LEVEL_LEVEL */
+
+#ifdef CMD_OAM_SET_CFM_MEPID_COMPARE_PORT_ALL_STATE_DISABLE_ENABLE
+//OAM configuration
+//set configuration
+//CFM mepid asic auto compare configuration
+//port list, <0-27>
+//all ports
+//state configuration
+//diasble
+//enable
+oam set cfm-mepid-compare ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif  /* CMD_OAM_SET_CFM_MEPID_COMPARE_PORT_ALL_STATE_DISABLE_ENABLE */
+
+#ifdef CMD_OAM_SET_CFM_LOOPBACK_REPLY_PORT_ALL_STATE_DISABLE_ENABLE
+//OAM configuration
+//set configuration
+//CFM auto reply configuration
+//port list, <0-27>
+//all ports
+//state configuration
+//disable function
+//enable function
+oam set cfm-loopback-reply ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif  /* CMD_OAM_SET_CFM_LOOPBACK_REPLY_PORT_ALL_STATE_DISABLE_ENABLE */
+
+#ifdef CMD_OAM_SET_DYING_GASP_PORT_ALL_LOCAL_TLV_REMOTE_TLV_TLV_VALUE
+//OAM configuration
+//set configuration
+//dying gasp configuration
+//port list, <0-27>
+//all ports
+//local tlv configuration
+//remote tlv configuration
+//tlv value, A:B:C:D:E:F:G:H:I:J:K:L:M:N:O:P
+oam set dying-gasp ( <PORT_LIST:port> | all ) ( local-tlv | remote-tlv ) <STRING:tlv_value>
+#endif  /* CMD_OAM_SET_DYING_GASP_PORT_ALL_LOCAL_TLV_REMOTE_TLV_TLV_VALUE */
+
+#ifdef CMD_OAM_SET_DYING_GASP_PORT_ALL_START
+//OAM configuration
+//set configuration
+//dying gasp configuration
+//port list, <0-27>
+//all ports
+//start configuration
+oam set dying-gasp ( <PORT_LIST:port> | all ) start
+#endif  /* CMD_OAM_SET_DYING_GASP_PORT_ALL_START */
+
+#ifdef CMD_OAM_SET_DYING_GASP_SEND_ENABLE
+//OAM configuration
+//set configuration
+//dying gasp configuration
+//trigger dying gasp send
+//enable configuration
+oam set dying-gasp send enable
+#endif  /* CMD_OAM_SET_DYING_GASP_SEND_ENABLE */
+
+#ifdef CMD_OAM_SET_DYING_GASP_WAITING_TIME_TIME
+//OAM configuration
+//set configuration
+//dying gasp configuration
+//dying gasp waiting time configuration
+//time value
+oam set dying-gasp waiting-time <UINT:time>
+#endif  /* CMD_OAM_SET_DYING_GASP_WAITING_TIME_TIME */
+
+#ifdef CMD_OAM_SET_LOOPBACK_CTRL_PORT_ALL_SA_ACTION_KEEP_USE_SWITCH_MAC_USE_PKT_DMAC_DA_ACTION_KEEP_USE_SWITCH_MAC_USE_PKT_SMAC
+//OAM configuration
+//set configuration
+//loopback control configuration
+//port list, <0-27>
+//all ports
+//smac action configuration
+//keep smac
+//use switch MAC as smac
+//use packet's dmac as smac
+//dmac action configuration, mcast or bcast always keep dmac
+//keep dmac
+//use switch mac as dmac
+//use packet's smac as dmac
+oam set loopback-ctrl ( <PORT_LIST:port> | all ) sa-action ( keep | use-switch-mac | use-pkt-dmac ) da-action ( keep | use-switch-mac | use-pkt-smac )
+#endif  /* CMD_OAM_SET_LOOPBACK_CTRL_PORT_ALL_SA_ACTION_KEEP_USE_SWITCH_MAC_USE_PKT_DMAC_DA_ACTION_KEEP_USE_SWITCH_MAC_USE_PKT_SMAC */
+
+#ifdef CMD_OAM_SET_LOOPBACK_CTRL_PORT_ALL_SA_ACTION_USER_DEFINED_MAC_SMAC_DA_ACTION_KEEP_USE_SWITCH_MAC_USE_PKT_SMAC
+//OAM configuration
+//set configuration
+//loopback control configuration
+//port list, <0-27>
+//all ports
+//smac action configuration
+//use user defined MAC address
+//user define MAC address A:B:C:D:E:F
+//dmac action configuration, mcast or bcast always keep dmac
+//keep dmac
+//use switch MAC as dmac
+//use packet's smac as dmac
+oam set loopback-ctrl ( <PORT_LIST:port> | all ) sa-action user-defined-mac <MACADDR:smac> da-action ( keep | use-switch-mac | use-pkt-smac )
+#endif  /* CMD_OAM_SET_LOOPBACK_CTRL_PORT_ALL_SA_ACTION_USER_DEFINED_MAC_SMAC_DA_ACTION_KEEP_USE_SWITCH_MAC_USE_PKT_SMAC */
+
+#ifdef CPARSER_CMD_OAM_SET_LOOPBACK_CTRL_PORT_ALL_SA_ACTION_KEEP_USE_SWITCH_MAC_USE_PKT_DMAC_DA_ACTION_USER_DEFINED_MAC_DMAC
+//OAM configuration
+//set configuration
+//loopback control configuration
+//port list, <0-27>
+//all ports
+//smac action configuration
+//use user defined MAC address
+//user define MAC address A:B:C:D:E:F
+//dmac action configuration, mcast or bcast always keep dmac
+//use user defined MAC address
+//user define MAC address A:B:C:D:E:F
+oam set loopback-ctrl ( <PORT_LIST:port> | all ) sa-action ( keep | use-switch-mac | use-pkt-dmac ) da-action user-defined-mac <MACADDR:dmac>
+#endif  /* CPARSER_CMD_OAM_SET_LOOPBACK_CTRL_PORT_ALL_SA_ACTION_KEEP_USE_SWITCH_MAC_USE_PKT_DMAC_DA_ACTION_USER_DEFINED_MAC_DMAC */
+
+#ifdef CMD_OAM_SET_LOOPBACK_CTRL_PORT_ALL_SA_ACTION_USER_DEFINED_MAC_SMAC_DA_ACTION_USER_DEFINED_MAC_DMAC
+//OAM configuration
+//set configuration
+//loopback control configuration
+//port list, <0-27>
+//all ports
+//smac action configuration
+//use user defined MAC address
+//user define MAC address A:B:C:D:E:F
+//dmac action configuration, mcast or bcast always keep dmac
+//use user defined MAC address
+//user define MAC address A:B:C:D:E:F
+oam set loopback-ctrl ( <PORT_LIST:port> | all ) sa-action user-defined-mac <MACADDR:smac> da-action user-defined-mac <MACADDR:dmac>
+#endif  /* CMD_OAM_SET_LOOPBACK_CTRL_PORT_ALL_SA_ACTION_USER_DEFINED_MAC_SMAC_DA_ACTION_USER_DEFINED_MAC_DMAC */
+
+#ifdef CMD_OAM_SET_LOOPBACK_MODE_PORT_ALL_LB_ALL_PKT_LB_TEST_PKT_ONLY_DROP_TEST_PKT_LB_OFF
+//OAM configuration
+//set configuration
+//loopback mode configuration
+//port list, <0-27>
+//all ports
+//loopback all packet
+//loopback OAM test packet
+//drop OAM test packet
+//trun off loopback
+oam set loopback-mode ( <PORT_LIST:port> | all ) ( lb-all-pkt | lb-test-pkt-only | drop-test-pkt | lb-off )
+#endif  /* CMD_OAM_SET_LOOPBACK_MODE_PORT_ALL_LB_ALL_PKT_LB_TEST_PKT_ONLY_DROP_TEST_PKT_LB_OFF */
+
+#ifdef CMD_OAM_SET_KEEP_INNER_VLAN_TAG_KEEP_OUTER_VLAN_TAG_STATE_DISABLE_ENABLE
+//OAM configuration
+//set configuration
+//keep inner VLAN tag
+//keep outer VLAN tag
+//state configuration
+//disable function
+//enable function
+oam set ( keep-inner-vlan-tag | keep-outer-vlan-tag ) state ( disable | enable )
+#endif  /* CMD_OAM_SET_KEEP_INNER_VLAN_TAG_KEEP_OUTER_VLAN_TAG_STATE_DISABLE_ENABLE */
+
+#ifdef CMD_OAM_SET_SPG_TX_PORT_LIST_PORT_ALL_CONTINUS_MODE_PKT_LEN_INTERVAL_START
+//OAM configuration
+//set configuration
+//smart packet generator configuration
+//tx port list configuration
+//tx port list, <0-27>
+//all ports
+//continus mode
+//packet length, <64-9216> 
+//packet tx interval, *0.1ms
+//start tx packet
+oam set spg tx-port-list ( <PORT_LIST:port> | all ) continus-mode <UINT:pkt_len> <UINT:interval> start
+#endif  /* CMD_OAM_SET_SPG_TX_PORT_LIST_PORT_ALL_CONTINUS_MODE_PKT_LEN_INTERVAL_START */
+
+#ifdef CMD_OAM_SET_SPG_TX_PORT_LIST_PORT_ALL_FIX_COUNT_MODE_COUNT_PKT_LEN_INTERVAL_START
+//OAM configuration
+//set configuration
+//smart packet generator configuration
+//tx port list configuration
+//tx port list, <0-27>
+//all ports
+//fix packet count mode
+//packet count
+//packet length, <64-9216> 
+//packet tx interval, *0.1ms
+//start tx packet
+oam set spg tx-port-list ( <PORT_LIST:port> | all ) fix-count-mode <UINT:count> <UINT:pkt_len> <UINT:interval> start
+#endif  /* CMD_OAM_SET_SPG_TX_PORT_LIST_PORT_ALL_FIX_COUNT_MODE_COUNT_PKT_LEN_INTERVAL_START */
+
+#ifdef CMD_OAM_SET_SPG_STOP
+//OAM configuration
+//set configuration
+//smart packet generator configuration
+//stop tx configuration
+oam set spg stop
+#endif  /* CMD_OAM_SET_SPG_STOP */
+
+#ifdef CMD_OAM_GET_LOOPBACK_CTRL_MAC_SWAP
+//OAM configuration
+//get configuration
+//loopback mode configuration
+//mac-swap configuration
+oam get loopback-ctrl mac-swap
+#endif  /* CMD_OAM_GET_LOOPBACK_CTRL_MAC_SWAP */
+
+#ifdef CMD_OAM_SET_LOOPBACK_CTRL_MAC_SWAP_DISABLE_ENABLE
+//OAM configuration
+//set configuration
+//loopback mode configuration
+//mac-swap configuration
+//disable function
+//enable function
+oam set loopback-ctrl mac-swap ( disable | enable )
+#endif  /* CMD_OAM_SET_LOOPBACK_CTRL_MAC_SWAP_DISABLE_ENABLE */
+
+#ifdef CMD_OAM_GET_LOOPBACK_CTRL_PORT_ALL_MUX
+//OAM configuration
+//get configuration
+//loopback mode configuration
+//port list, <0-51>
+//all ports
+//mux configuration
+oam get loopback-ctrl ( <PORT_LIST:port> | all ) mux
+#endif  /* CMD_OAM_GET_LOOPBACK_CTRL_PORT_ALL_MUX */
+
+#ifdef CMD_OAM_SET_LOOPBACK_CTRL_PORT_ALL_MUX_DROP_FORWARD
+//OAM configuration
+//set configuration
+//loopback mode configuration
+//port list, <0-51>
+//all ports
+//mux configuration
+//drop function
+//forward function
+oam set loopback-ctrl ( <PORT_LIST:port> | all ) mux ( drop | forward )
+#endif  /* CMD_OAM_SET_LOOPBACK_CTRL_PORT_ALL_MUX_DROP_FORWARD */
+
+#ifdef CMD_OAM_GET_CFM_CCM_PCP
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//priority code point configuration for tx frame
+oam get cfm ccm pcp
+#endif  /* CMD_OAM_GET_CFM_CCM_PCP */
+
+#ifdef CMD_OAM_SET_CFM_CCM_PCP_VALUE
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//priority code point configuration for tx frame
+//priority code point value <0-7>
+oam set cfm ccm pcp <UINT:value>
+#endif  /* CMD_OAM_SET_CFM_CCM_PCP_VALUE */
+
+#ifdef CMD_OAM_GET_CFM_CCM_CFI
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//canonical format identifier configuration for tx frame
+oam get cfm ccm cfi
+#endif  /* CMD_OAM_GET_CFM_CCM_CFI */
+
+#ifdef CMD_OAM_SET_CFM_CCM_CFI_VALUE
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//canonical format identifier configuration for tx frame
+//canonical format identifier value <0-1>
+oam set cfm ccm cfi <UINT:value>
+#endif  /* CMD_OAM_SET_CFM_CCM_CFI_VALUE */
+
+#ifdef CMD_OAM_GET_CFM_CCM_TPID
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//tag protocol identifier configuration for tx frame
+oam get cfm ccm tpid
+#endif  /* CMD_OAM_GET_CFM_CCM_TPID */
+
+#ifdef CMD_OAM_SET_CFM_CCM_TPID_VALUE
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//tag protocol identifier configuration for tx frame
+//tag protocol identifier value
+oam set cfm ccm tpid <HEX:value>
+#endif  /* CMD_OAM_SET_CFM_CCM_TPID_VALUE */
+
+#ifdef CMD_OAM_GET_CFM_CCM_INSTANCE_RESET_LIFETIME
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//control instance <0-7>
+//reset lifetime configuration when receive CCM frame
+oam get cfm ccm <UINT:instance> reset-lifetime
+#endif  /* CMD_OAM_GET_CFM_CCM_INSTANCE_RESET_LIFETIME */
+
+#ifdef CMD_OAM_SET_CFM_CCM_INSTANCE_RESET_LIFETIME_VALUE
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//control instance <0-7>
+//reset lifetime configuration when receive CCM frame
+//reset lifetime value <0-1023>
+oam set cfm ccm <UINT:instance> reset-lifetime <UINT:value>
+#endif  /* CMD_OAM_SET_CFM_CCM_INSTANCE_RESET_LIFETIME_VALUE */
+
+#ifdef CMD_OAM_GET_CFM_CCM_MEPID
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//packet tx MEPID configuration
+oam get cfm ccm mepid
+#endif  /* CMD_OAM_GET_CFM_CCM_MEPID */
+
+#ifdef CMD_OAM_SET_CFM_CCM_MEPID_MEPID
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//packet tx MEPID configuration
+//packet tx MEPID value <0-8191>
+oam set cfm ccm mepid <UINT:mepid>
+#endif  /* CMD_OAM_SET_CFM_CCM_MEPID_MEPID */
+
+#ifdef CMD_OAM_GET_CFM_CCM_LIFETIME
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//packet tx lifetime configuration
+oam get cfm ccm lifetime
+#endif  /* CMD_OAM_GET_CFM_CCM_LIFETIME */
+
+#ifdef CMD_OAM_SET_CFM_CCM_LIFETIME_LIFETIME
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//packet tx lifetime configuration
+//packet tx lifetime value <0-7>
+oam set cfm ccm lifetime <UINT:lifetime>
+#endif  /* CMD_OAM_SET_CFM_CCM_LIFETIME_LIFETIME */
+
+#ifdef CMD_OAM_GET_CFM_CCM_MDL
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//packet tx MD level configuration
+oam get cfm ccm mdl
+#endif  /* CMD_OAM_GET_CFM_CCM_MDL */
+
+#ifdef CMD_OAM_SET_CFM_CCM_MDL_MDL
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//packet tx MD level configuration
+//packet tx MD level value <0-7>
+oam set cfm ccm mdl <UINT:mdl>
+#endif  /* CMD_OAM_SET_CFM_CCM_MDL_MDL */
+
+#ifdef CMD_OAM_GET_CFM_CCM_INSTANCE_TAG_STATUS
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//tx instance <0-7>
+//tag status configuration for tx frame
+oam get cfm ccm <UINT:instance> tag-status
+#endif  /* CMD_OAM_GET_CFM_CCM_INSTANCE_TAG_STATUS */
+
+#ifdef CMD_OAM_SET_CFM_CCM_INSTANCE_TAG_STATUS_DISABLE_ENABLE
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//tx instance <0-7>
+//tag status configuration for tx frame
+//disable function
+//enable function
+oam set cfm ccm <UINT:instance> tag-status ( disable | enable )
+#endif  /* CMD_OAM_SET_CFM_CCM_INSTANCE_TAG_STATUS_DISABLE_ENABLE */
+
+#ifdef CMD_OAM_GET_CFM_CCM_INSTANCE_VID
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//tx instance <0-7>
+//packet tx vlan id configuration
+oam get cfm ccm <UINT:instance> vid
+#endif  /* CMD_OAM_GET_CFM_CCM_INSTANCE_VID */
+
+#ifdef CMD_OAM_SET_CFM_CCM_INSTANCE_VID_VID
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//tx instance <0-7>
+//packet tx vlan id configuration
+//packet tx vlan id value <1-4095>
+oam set cfm ccm <UINT:instance> vid <UINT:vid>
+#endif  /* CMD_OAM_SET_CFM_CCM_INSTANCE_VID_VID */
+
+#ifdef CMD_OAM_GET_CFM_CCM_INSTANCE_MAID
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//tx instance <0-7>
+//packet tx MAID configuration
+oam get cfm ccm <UINT:instance> maid
+#endif  /* CMD_OAM_GET_CFM_CCM_INSTANCE_MAID */
+
+#ifdef CMD_OAM_SET_CFM_CCM_INSTANCE_MAID_MAID
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//tx instance <0-7>
+//packet tx MAID configuration
+//packet tx MAID value <0-255>
+oam set cfm ccm <UINT:instance> maid <UINT:maid>
+#endif  /* CMD_OAM_SET_CFM_CCM_INSTANCE_MAID_MAID */
+
+#ifdef CMD_OAM_GET_CFM_CCM_INSTANCE_TX_STATUS
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//tx instance <0-7>
+//transmit status configuration
+oam get cfm ccm <UINT:instance> tx-status
+#endif  /* CMD_OAM_GET_CFM_CCM_INSTANCE_TX_STATUS */
+
+#ifdef CMD_OAM_SET_CFM_CCM_INSTANCE_TX_STATUS_DISABLE_ENABLE
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//tx instance <0-7>
+//transmit status configuration
+//disable function
+//enable function
+oam set cfm ccm <UINT:instance> tx-status ( disable | enable )
+#endif  /* CMD_OAM_SET_CFM_CCM_INSTANCE_TX_STATUS_DISABLE_ENABLE */
+
+#ifdef CMD_OAM_GET_CFM_CCM_INSTANCE_INTERVAL
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//tx instance <0-7>
+//packet tx interval configuration
+oam get cfm ccm <UINT:instance> interval
+#endif  /* CMD_OAM_GET_CFM_CCM_INSTANCE_INTERVAL */
+
+#ifdef CMD_OAM_SET_CFM_CCM_INSTANCE_INTERVAL_INTERVAL
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//tx instance <0-7>
+//packet tx interval configuration
+//packet tx interval value <0-1023>
+oam set cfm ccm <UINT:instance> interval <UINT:interval>
+#endif  /* CMD_OAM_SET_CFM_CCM_INSTANCE_INTERVAL_INTERVAL */
+
+#ifdef CMD_OAM_GET_CFM_CCM_INSTANCE_TX_INDEX_PORT
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//tx instance <0-7>
+//tx instance control
+//index of tx control of port member <0-1>
+//tx control member port
+oam get cfm ccm <UINT:instance> tx <UINT:index> port
+#endif  /* CMD_OAM_GET_CFM_CCM_INSTANCE_TX_INDEX_PORT */
+
+#ifdef CMD_OAM_SET_CFM_CCM_INSTANCE_TX_INDEX_PORT_PORT
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//tx instance <0-7>
+//tx instance control
+//index of tx control of port member <0-1>
+//tx control member port
+//port of tx control member port
+oam set cfm ccm <UINT:instance> tx <UINT:index> port <UINT:port>
+#endif  /* CMD_OAM_SET_CFM_CCM_INSTANCE_TX_INDEX_PORT_PORT */
+
+#ifdef CMD_OAM_GET_CFM_CCM_INSTANCE_RX_VID
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//rx instance <0-7>
+//rx instance control
+//vlan id configuration for rx control
+oam get cfm ccm <UINT:instance> rx vid
+#endif  /* CMD_OAM_GET_CFM_CCM_INSTANCE_RX_VID */
+
+#ifdef CMD_OAM_SET_CFM_CCM_INSTANCE_RX_VID_VID
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//rx instance <0-7>
+//rx instance control
+//vlan id configuration for rx control
+//vlan id value <0-4095>
+oam set cfm ccm <UINT:instance> rx vid <UINT:vid>
+#endif  /* CMD_OAM_SET_CFM_CCM_INSTANCE_RX_VID_VID */
+
+#ifdef CMD_OAM_GET_CFM_CCM_INSTANCE_RX_INDEX_PORT
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//rx instance <0-7>
+//rx instance control
+//index of rx control of port member <0-1>
+//rx control member port
+oam get cfm ccm <UINT:instance> rx <UINT:index> port
+#endif  /* CMD_OAM_GET_CFM_CCM_INSTANCE_RX_INDEX_PORT */
+
+#ifdef CMD_OAM_SET_CFM_CCM_INSTANCE_RX_INDEX_PORT_PORT
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//rx instance <0-7>
+//rx instance control
+//index of rx control of port member <0-1>
+//rx control member port
+//port of rx control member port
+oam set cfm ccm <UINT:instance> rx <UINT:index> port <UINT:port>
+#endif  /* CMD_OAM_SET_CFM_CCM_INSTANCE_RX_INDEX_PORT_PORT */
+
+#ifdef CMD_OAM_GET_CFM_CCM_INSTANCE_INDEX_KEEPALIVE
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//rx instance <0-7>
+//index of rx control of port member <0-1>
+//keep alive counter
+oam get cfm ccm <UINT:instance> <UINT:index> keepalive
+#endif  /* CMD_OAM_GET_CFM_CCM_INSTANCE_INDEX_KEEPALIVE */
+
+#ifdef CMD_OAM_GET_CFM_ETH_DM_PORT_ALL_STATE
+//OAM configuration
+//get configuration
+//CFM entry configuration
+//CFM ETH-DM frame
+//port list, <0-51>
+//all ports
+//state configuration
+oam get cfm eth-dm port ( <PORT_LIST:port> | all ) state
+#endif	/* CMD_OAM_GET_CFM_ETH_DM_PORT_ALL_STATE */
+
+#ifdef CMD_OAM_SET_CFM_ETH_DM_PORT_ALL_STATE_DISABLE_ENABLE
+//OAM configuration
+//set configuration
+//CFM entry configuration
+//CFM ETH-DM frame
+//port list, <0-51>
+//all ports
+//state configuration
+//disable function
+//enable function
+oam set cfm eth-dm port ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif	/* CMD_OAM_SET_CFM_ETH_DM_PORT_ALL_STATE_DISABLE_ENABLE */
+
+#ifdef CMD_OAM_GET_DYING_GASP_PACKET_COUNT
+//OAM configuration
+//get configuration
+//dying gasp configuration
+//send packet count
+oam get dying-gasp packet-count
+#endif
+
+#ifdef CMD_OAM_SET_DYING_GASP_PACKET_COUNT_COUNT
+//OAM configuration
+//set configuration
+//dying gasp configuration
+//send packet count
+//send packet count value
+oam set dying-gasp packet-count <UINT:count>
+#endif

@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Static RD05 recovery/default network.
+# uci-defaults may update MAC addresses from nvram/bdata on normal firstboot,
+# but this file must exist in the squashfs so netifd can configure DSA even
+# when the overlay is tmpfs/unformatted.
+
+config interface 'loopback'
+	option device 'lo'
+	option proto 'static'
+	option ipaddr '127.0.0.1'
+	option netmask '255.0.0.0'
+
+config globals 'globals'
+	option ula_prefix 'fd00:6969:6969::/48'
+
+config device
+	option name 'br-lan'
+	option type 'bridge'
+	option stp '0'
+	option igmp_snooping '0'
+	list ports 'lan1'
+	list ports 'lan2'
+
+config interface 'lan'
+	option device 'br-lan'
+	option proto 'static'
+	option ipaddr '192.168.1.1'
+	option netmask '255.255.255.0'
+	option ip6assign '60'
+
+config device
+	option name 'wan'
+	option ipv6 '1'
+
+config interface 'wan'
+	option device 'wan'
+	option proto 'dhcp'
+
+config interface 'wan6'
+	option device '@wan'
+	option proto 'dhcpv6'

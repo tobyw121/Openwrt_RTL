@@ -1,0 +1,11 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+ident="$(cat /tmp/sysinfo/board_name 2>/dev/null) $(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)"
+case "$ident" in
+	*tenda,nova-mw5*|*nova-mw5*)
+		/etc/init.d/mw5-diag enable 2>/dev/null || true
+		/etc/init.d/mw5-diag start 2>/dev/null || true
+		;;
+esac
+exit 0

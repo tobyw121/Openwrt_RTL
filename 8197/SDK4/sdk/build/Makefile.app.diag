@@ -1,0 +1,285 @@
+#
+# Copyright (C) 2009 Realtek Semiconductor Corp. 
+#
+# Makefile for SDK Diag Shell Source
+#
+
+CFLAGS_y += -Wall -Werror -Wuninitialized -Wstrict-prototypes -Wno-strict-aliasing
+INCLUDE =
+
+CMDS_y =
+CMDS_y							+= diag_main.c
+CMDS_y							+= diag_cmd.c
+CMDS_y							+= diag_dot1x.c
+CMDS_y							+= diag_om.c
+CMDS_y							+= diag_eee.c
+CMDS_y							+= diag_reg.c
+CMDS_y							+= diag_trap.c
+CMDS_y							+= diag_oam.c
+CMDS_y							+= diag_port.c
+CMDS_y							+= diag_stp.c
+CMDS_y							+= diag_time.c
+CMDS_y							+= diag_l2.c
+CMDS_y							+= diag_l3.c
+CMDS_y							+= diag_qos.c
+CMDS_y							+= diag_trunk.c
+CMDS_y							+= diag_rate.c
+CMDS_y							+= diag_switch.c
+CMDS_y							+= diag_counter.c
+CMDS_y							+= diag_sec.c
+CMDS_y							+= diag_mirror.c
+CMDS_y							+= diag_vlan.c
+CMDS_y							+= diag_flowctrl.c
+CMDS_y							+= diag_pie.c
+CMDS_y							+= diag_svlan.c
+ifneq ($(CONFIG_SDK_RTL8389),)
+CMDS_y							+= diag_filter.c
+endif
+CMDS_y							+= diag_led.c
+ifneq ($(CONFIG_SDK_RTL8390),)
+CMDS_y							+= diag_acl.c
+else ifneq ($(CONFIG_SDK_RTL8380),)
+CMDS_y							+= diag_acl.c
+endif
+CMDS_y							+= diag_mpls.c
+CMDS_y							+= diag_gpio.c
+CMDS_y							+= diag_smi.c
+CMDS_y							+= diag_diag.c
+ifneq ($(CONFIG_SDK_RTL8231),)
+CMDS_y							+= diag_rtl8231.c
+endif
+ifneq ($(CONFIG_SDK_DRIVER_NIC),)
+CMDS_y							+= diag_nic.c
+endif
+CMDS_y							+= diag_debug.c
+ifneq ($(CONFIG_RRCP_MASTER),)
+CMDS_y				  			+= diag_rrcpmaster.c
+endif
+ifneq ($(CONFIG_SDK_UART1),)
+CMDS_y				  			+= diag_uart.c
+endif
+ifneq ($(CONFIG_SDK_DRIVER_TEST),)
+CMDS_y				  			+= diag_sdk.c
+INCLUDE += -I$(UT_INCLUDE)
+endif
+
+DEF =
+ifneq ($(CONFIG_SDK_DRIVER_NIC),)
+DEF += -D CONFIG_SDK_DRIVER_NIC 
+endif
+ifneq ($(CONFIG_SDK_SOFTWARE_RX_CPU_TAG),)
+DEF += -D CONFIG_SDK_SOFTWARE_RX_CPU_TAG 
+endif
+ifneq ($(CONFIG_SDK_DRIVER_TEST),)
+DEF += -D CONFIG_SDK_DRIVER_TEST
+endif
+ifneq ($(CONFIG_SDK_RTL8231),)
+DEF += -D CONFIG_SDK_RTL8231
+endif
+ifneq ($(CONFIG_SDK_DEBUG),)
+DEF += -D CONFIG_SDK_DEBUG
+endif
+ifneq ($(CONFIG_SDK_UART1),)
+DEF += -D CONFIG_SDK_UART1
+endif
+ifneq ($(CONFIG_SDK_APP_DIAG_EXT),)
+DEF += -D CONFIG_SDK_APP_DIAG_EXT
+
+    ifeq ($(CONFIG_SDK_RTL8390),y)
+        DEF += -D CONFIG_SDK_DIAG_EXT_RTL8390
+    else
+        ifeq ($(CONFIG_SDK_RTL8380),y)
+            DEF += -D CONFIG_SDK_DIAG_EXT_RTL8380
+        endif
+    endif
+endif
+
+ifeq ($(CONFIG_SDK_RTL8389),y)
+DEF += -D CONFIG_SDK_RTL8389
+endif
+
+ifeq ($(CONFIG_SDK_RTL8328),y)
+DEF += -D CONFIG_SDK_RTL8328
+endif
+
+ifeq ($(CONFIG_SDK_RTL8390),y)
+DEF += -D CONFIG_SDK_RTL8390
+endif
+
+ifeq ($(CONFIG_SDK_RTL8380),y)
+DEF += -D CONFIG_SDK_RTL8380
+endif
+
+SDK_ROOT_DIR = ../../../..
+SYS_DIR = $(SDK_ROOT_DIR)/system/linux
+SYS_INC = $(SDK_ROOT_DIR)/system/include
+RTUSR_INC = $(SYS_DIR)/rtk/rtusr/include
+COMMON_DIR = $(SDK_ROOT_DIR)/src/common
+
+ifeq ($(CONFIG_SDK_APP_DIAG_DIR_DIAG),y)
+DIAG_DIR = diag
+else
+ifeq ($(CONFIG_SDK_APP_DIAG_DIR_DIAG_V2),y)
+DIAG_DIR = diag_v2
+endif
+endif
+
+DIAG_INC = $(SDK_ROOT_DIR)/src/app/$(DIAG_DIR)/include
+DIAG_SRC = $(SDK_ROOT_DIR)/src/app/$(DIAG_DIR)/src
+DIAG_CFG = $(SDK_ROOT_DIR)/src/app/$(DIAG_DIR)/config
+
+INCLUDE += -I$(SDK_INCLUDE) -I$(SYS_INC) -I$(DRV_INCLUDE) -I$(APP_LIB_INCLUDE)/rrcp -I$(DIAG_INC)
+FLTFLAGS += -s 524288
+CFLAGS_EXTRA = $(CFLAGS_y)
+LIB = -L$(SDK_LIBDIR) -lc
+
+ifeq ($(CONFIG_SDK_MODEL_MODE),y)
+INCLUDE += -I$(MODELDIR) -I$(MODELDIR)/common -I$(MODELDIR)/behavior_src/8390 -I$(MODELDIR)/testcase/8390
+endif
+
+UTIL = diag_util.c
+CMDS = $(CMDS_y)
+OBJ = $(COMMON_DIR)/rt_error.o
+
+ifneq ($(CONFIG_RRCP_MASTER),)
+LIB += -L$(APP_LIB_INCLUDE)/rrcp -lrrcp
+endif
+
+ifneq ($(CONFIG_SDK_KERNEL_LINUX_USER_MODE),)
+OBJ += $(SYS_DIR)/usrAppStart.o 
+LIB += -lrtk -lrtcore -lpthread
+ifneq ($(CONFIG_SDK_DRIVER_TEST),)
+LIB += -lut
+endif
+else
+INCLUDE += -I$(RTUSR_INC)
+LIB += -lrtusr
+endif
+
+EXEC = diag
+BIN = ../bin
+TARGET := obj
+SRC = $(UTIL) $(CMDS)
+OBJ += $(shell for i in $(SRC); do n=`basename $$i`; echo -n $(TARGET)/$${n%%.*}.o ""; done)
+OBJ += $(DIAG_SRC)/parser/cparser.o \
+       $(DIAG_SRC)/parser/cparser_fsm.o \
+       $(DIAG_SRC)/parser/cparser_io_unix.o \
+       $(DIAG_SRC)/parser/cparser_line.o \
+       $(DIAG_SRC)/parser/cparser_token.o \
+       $(DIAG_SRC)/parser/cparser_token_tbl.o \
+       $(DIAG_SRC)/parser/cparser_tree.o
+       
+ifneq ($(CONFIG_SDK_APP_DIAG_EXT),)
+    ifeq ($(CONFIG_SDK_RTL8390),y)
+        OBJ += $(DIAG_SRC)/ext/diag_ext_8390.o
+    else
+        ifeq ($(CONFIG_SDK_RTL8380),y)
+            OBJ += $(DIAG_SRC)/ext/diag_ext_8380.o
+        endif
+    endif
+endif
+
+RM_EXE:
+	rm -f $(BIN)/$(EXEC)
+	@if [ -f ../include/parser/cparser_tree.h ]; \
+	then \
+		echo ""; \
+	else \
+		cd ../config; \
+		chmod 755 ./script/mk_parser.py; \
+		./script/mk_parser.py $(DEF) diag_shell.cli -fd ../include/flag/ -f cmd_flag.h; \
+		echo "Prepare to copy cparser files"; \
+	fi
+	@if [ -f ../config/cparser_tree.h ]; \
+	then \
+		mv ../config/cparser_tree.h ../include/parser/cparser_tree.h; \
+	fi
+	@if [ -f ../config/cparser_tree.c ]; \
+	then \
+		mv ../config/cparser_tree.c ./parser/cparser_tree.c; \
+	fi
+
+CLI_SRC := \
+    $(DIAG_CFG)/debug.cli \
+    $(DIAG_CFG)/diag_shell.cli \
+    $(DIAG_CFG)/dot1x.cli \
+    $(DIAG_CFG)/eee.cli \
+    $(DIAG_CFG)/l2.cli \
+    $(DIAG_CFG)/l3.cli \
+    $(DIAG_CFG)/nic.cli \
+    $(DIAG_CFG)/oam.cli \
+    $(DIAG_CFG)/port.cli \
+    $(DIAG_CFG)/qos.cli \
+    $(DIAG_CFG)/reg.cli \
+    $(DIAG_CFG)/sdk.cli \
+    $(DIAG_CFG)/stp.cli \
+    $(DIAG_CFG)/time.cli \
+    $(DIAG_CFG)/l3.cli \
+    $(DIAG_CFG)/trap.cli \
+    $(DIAG_CFG)/trunk.cli \
+    $(DIAG_CFG)/switch.cli \
+    $(DIAG_CFG)/rate.cli \
+    $(DIAG_CFG)/counter.cli \
+    $(DIAG_CFG)/sec.cli \
+    $(DIAG_CFG)/mirror.cli \
+    $(DIAG_CFG)/flowctrl.cli \
+    $(DIAG_CFG)/pie.cli \
+    $(DIAG_CFG)/vlan.cli \
+    $(DIAG_CFG)/svlan.cli \
+    $(DIAG_CFG)/filter.cli \
+    $(DIAG_CFG)/led.cli \
+    $(DIAG_CFG)/acl.cli \
+    $(DIAG_CFG)/gpio.cli \
+    $(DIAG_CFG)/smi.cli \
+    $(DIAG_CFG)/rtl8231.cli \
+    $(DIAG_CFG)/diag.cli \
+    $(DIAG_CFG)/uart.cli
+
+ifneq ($(CONFIG_SDK_APP_DIAG_EXT),)
+    ifeq ($(CONFIG_SDK_RTL8390),y)
+        CLI_SRC	+= $(DIAG_CFG)/ext/ext_8390.cli
+    else
+        ifeq ($(CONFIG_SDK_RTL8380),y)
+            CLI_SRC	+= $(DIAG_CFG)/ext/ext_8380.cli
+        endif
+    endif
+endif
+
+all: RM_EXE $(CLI_OBJ) $(EXEC)
+
+CLI_OBJ := \
+    $(DIAG_INC)/parser/cparser_tree.h \
+    $(DIAG_SRC)/parser/cparser_tree.c \
+
+#$(CLI_OBJ): $(CLI_SRC)
+#	cd ../config; ./script/mk_parser.py $(DEF) diag_shell.cli
+#	mv ../config/cparser_tree.h ../include/parser/cparser_tree.h
+#	mv ../config/cparser_tree.c ./parser/cparser_tree.c
+
+$(EXEC): $(OBJ)
+	$(CC) $(CFLAGS) $(CFLAGS_EXTRA) $(LDFLAGS) $(INCLUDE) $(OPTIMIZE) $(OBJ) $(LIB) -o $(BIN)/$@
+	$(STRIP) $(BIN)/$@
+
+$(TARGET)/%.o: %.c
+	$(CC) $(INCLUDE) $(CFLAGS_EXTRA) $(CFLAGS) -c -o $@ $< 
+
+%.o: %.c
+	$(CC) $(INCLUDE) $(CFLAGS_EXTRA) $(CFLAGS) -c -o $@ $< 
+
+install: $(EXEC)
+	cp $(EXEC) $(BINDIR)
+	
+ifdef CONFIG_SYS_KERNEL_LINUX_COMPRESSED_FS
+romfs: $(EXEC)
+	$(SQFSINST) $(BIN)/$(EXEC) /bin/$(EXEC)
+else
+romfs: $(EXEC)
+	$(ROMFSINST) $(BIN)/$(EXEC) /bin/$(EXEC)
+endif
+
+clean:
+	rm -f $(OBJ) $(BIN)/$(EXEC) *.gdb *.elf *.elf2flt
+
+tgz: clean
+	cd ..; cd ..; tar zcvf $(EXEC).tgz $(EXEC)
+

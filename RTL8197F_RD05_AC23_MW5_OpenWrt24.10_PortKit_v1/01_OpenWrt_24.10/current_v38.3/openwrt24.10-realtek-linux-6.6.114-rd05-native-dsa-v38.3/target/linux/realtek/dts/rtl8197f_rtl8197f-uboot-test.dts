@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+
+#include "rtl8197f.dtsi"
+
+/ {
+	compatible = "realtek,rtl8197f-uboot-test", "realtek,rtl8197f-vg", "realtek,rtl8197f-soc";
+	model = "Realtek RTL8197F U-Boot Test Board";
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x00000000 0x08000000>;
+	};
+};

@@ -1,0 +1,13 @@
+[RTL839xM/5xM] L2 notification causes system crash when the looping is happen.
+Solution:
+    Suppress the memory allocation size in ISR.
+
+Modified files
+*     sdk/src/rtk/l2.c
+*     sdk/system/drv/swcore/l2notification.c
+*     sdk/system/drv/swcore/l2notification_usr_krn.c
+*     sdk/system/include/ioal/ioal_init.h
+*     sdk/system/linux/rtk/rtusr/src/rtusr_l2.c
+
+Release Files: (Mantis 0017820 and 0017826, r56503, r57873 and r57978)
+	rtk-ms-sdk-src-2.1.4.53590-patch009.tar.gz

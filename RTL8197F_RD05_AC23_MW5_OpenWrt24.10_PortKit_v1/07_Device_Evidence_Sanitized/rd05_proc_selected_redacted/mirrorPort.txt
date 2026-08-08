@@ -1,0 +1,7 @@
+>>Mirror Control Register:
+
+  Mirror Rx: 0x0
+  Mirror Tx: 0x0
+  Mirror Port: 0x1
+  Port isolation: 0
+  mirrorPort_enable: 0

@@ -1,0 +1,148 @@
+Whenever you suspect a bug, if possible, reconfigure with ./configure
+--enable-debug and run rlwrap with a -d7 option. This will create a file
+/tmp/rlwrap.debug that will help you (or me) find the problem. 
+
+
+* General inadequacy and weak spots:
+
+The more sophisticated the terminal handling of rlwrapped program (the
+"client") gets, the less rlwrap will be able to maintain its
+transparency.  Of course, more sophisticated programs generally have
+less need for rlwrap.
+
+rlwrap's vi-mode handling is slightly kludgy, and depends on
+undocumented assumptions about readline. 
+
+colouring prompts is not very robust.
+
+
+* Installation problems:
+
+---
+
+rlwrap needs the readline library (ftp://ftp.gnu.org/gnu/readline/),
+version 4.2 or newer. For .deb or .rpm users: install the readline
+-devel- package!
+
+---
+
+Even though rlwrap now uses the excellent pseudo-terminal (pty)
+handling code from rxvt, portable programming with ptys is something
+of a black art. The configure script tries to guess how ptys have to
+be handled on your system, but it may guess wrong. To quote rxvt's
+configure script: "if we don't guess right then it's up to the user",
+which means that you have to manually edit config.h, and save a copy
+of it somewhere, as configure will re-create config.h
+
+---
+
+Andreas Leitgeb wrote:
+
+  "If (on Solaris) configure fails to detect your libreadline, 
+  then (temporarily) move the dynamic libs libreadline.so*
+  out of sight, and try again. (seems to be a problem in the
+  readline-package obtained from sunfreeware.com)"
+
+-- 
+
+On recent OS X sytems, libreadline is not the real thing, but a
+non-GNU replacement. If the linker complains about missing
+symbols, install GNU readline and try again.
+
+--
+After "configure", make wil re-run configure. This is a minor
+annoyance, and probably due to my poor understanding of automake. 
+
+* Run-time problems
+
+rlwrap cannot handle prompts that contain control characters (except
+ANSI colour), though you may not notice this until your cursor almost
+reaches end-of-line
+
+---
+
+readline-4.3 support for multi-byte characters is slightly buggy,
+revert to 4.2 or upgrade to 5.0 (or, even better, to 5.1)
+
+---
+
+Christoffer Dam Bruun reported:
+
+  "I have just installed rlwrap along with readline on Solaris 8 and
+  found that rlwrap did not work properly with readline 4.3. After
+  linking rlwrap with readline 4.2 it works correctly.
+
+  What happended using readline 4.3 was that an extra prompt would be 
+  written after the first letter on a line, e.g. with a sqlplus prompt:
+  SQL>
+  (now writing select )
+  SQL> sSQL> select"
+
+I (HL) have not been able to reproduce this, but there have been a few
+more reports about this. In a few cases, the display was even more
+garbled, like
+
+  SQL> sSQL> se>SQL> selSQL> sele>SQL> selec> .... 
+
+Remedy: first make sure that your readline headers and runtime
+libraries are in sync. May people have a readline-dev package that is
+older than their runtime libraries. If this doesn't help: configure
+rlwrap with --enable-homegrown-redisplay and recompile.
+
+
+---
+Readline 5.0 has a slight bug where scrolling up through history and
+then back again ends on a non-empty line (the first history line, in
+fact). 
+
+---
+
+The -m option uses the system() (3) library function to call an
+external editor. I'm not quite sure how system() handles signals like
+TSTP an WINCH (and "system" is a difficult name to Google for...)
+Re-sizing the terminal may confuse the editor
+
+--
+
+Paolo Casaschi reported that his rlwrap failed with the message
+  
+  rlwrap: error: Could not open slave pty: Permission denied
+
+This turned out to be a problem with /etc/fstab, where the entry for
+/dev/pty was:
+
+  none    /dev/pts    devpts  gid=5,mode=20            0 0 
+
+instead of 
+
+  none   /dev/pts     devpts  gid=5,mode=620           0 0
+  
+which fixed the problem
+
+--
+
+The "Could not open slave pty: Permission denied" bug regularly crops
+up on FreeBSD mailing lists. If you are bitten by this, please drop me
+a mail - I suspect that rlwrap's configure script doesn't always find
+the getpty() library function, but this is just guessing.
+
+--
+
+rlwrap cannot handle long prompts with colour if the length of the
+prompt (including colour control codes) is longer than the line
+length. Colouring prompts with --prompt-colour will leave long prompts
+uncoloured, but if the client uses such coloured prompts, rlwrap will
+happily use them and mess up. (this is probably a rlwrap bug (but
+possibly a readline problem)
+
+--
+
+There is a problem with coloured prompts under urxvt: editing input
+will move the prompt one line up if the prompt contains colour. WThis
+may well be the same bug as above. Workaround: set TERM=ansi, or use
+xterm -u8 . I haven't been able to track it down yet.
+
+
+
+
+ 

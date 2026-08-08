@@ -1,0 +1,44 @@
+RTL8197F / Tenda Nova MW5 v43.4 built-in diagnostics validation
+================================================================
+
+Scope
+-----
+v43.4 keeps the v43.3 kernel driver, DTS, DSA tagger and network defaults
+unchanged. It adds router-resident diagnostic scripts through the Realtek
+target base-files overlay.
+
+Static validation
+-----------------
+- Existing MW5 WAN/LAN consistency check: 54 PASS, 0 FAIL
+- Existing full v42 source-tree check: PASS
+- Built-in diagnostic bundle check: 42 PASS, 0 FAIL
+- Shell syntax checked for every installed diagnostic/init/UCI/profile script
+- Executable modes checked for every command script
+- v43.3 -> v43.4 tree comparison contains additions only
+
+Installed router commands
+-------------------------
+/usr/sbin/mw5-netdiag
+/usr/sbin/MW5_V43.3_DIRECT_LAN_DIAG_FIX.sh
+/usr/sbin/MW5_V43.2_RUNTIME_TX_NETWORK_TEST.sh
+/usr/bin/mw5-v39-check
+
+Automatic boot report
+---------------------
+/etc/init.d/mw5-diag is enabled and started by:
+/etc/uci-defaults/97-mw5-diag-enable
+
+Expected output:
+/tmp/mw5-diag/boot-latest.txt
+
+SHA-256
+-------
+mw5-netdiag: 91903e9978cf388b1346179024dc8dad80a1c9eb6b6eb534d1c87c1f32b59307
+MW5_V43.3_DIRECT_LAN_DIAG_FIX.sh: 8862cc034908b6ddccd0091a8dfb4447ed327213c2caab7dd05a4fa452eddd67
+MW5_V43.2_RUNTIME_TX_NETWORK_TEST.sh: c6d8426fdbe02fe1bfc517e558743dbc426fd0fefec33bc18fb942416eb9c181
+
+Limitations
+-----------
+No full OpenWrt cross-build or hardware execution was performed in this
+environment. The tree and scripts were statically validated. The scripts will
+be included by target/linux/realtek/base-files during the normal image build.

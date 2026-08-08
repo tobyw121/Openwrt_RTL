@@ -1,0 +1,79 @@
+--- a/mt76.h
++++ b/mt76.h
+@@ -629,6 +629,7 @@
+ void mt76_seq_puts_array(struct seq_file *file, const char *str,
+ 			 s8 *val, int len);
+ 
++int mt76_request_eeprom_file(struct mt76_dev *dev, int len, const char *ee_name);
+ int mt76_eeprom_init(struct mt76_dev *dev, int len);
+ void mt76_eeprom_override(struct mt76_dev *dev);
+ 
+--- a/eeprom.c
++++ b/eeprom.c
+@@ -6,6 +6,7 @@
+ #include <linux/of_net.h>
+ #include <linux/mtd/mtd.h>
+ #include <linux/mtd/partitions.h>
++#include <linux/firmware.h>
+ #include <linux/etherdevice.h>
+ #include "mt76.h"
+ 
+@@ -104,6 +105,46 @@
+ }
+ EXPORT_SYMBOL_GPL(mt76_eeprom_override);
+ 
++int mt76_request_eeprom_file(struct mt76_dev *dev, int len, const char *ee_name)
++{
++	const struct firmware *ee;
++	int retval;
++
++	if (!ee_name)
++		return -EINVAL;
++
++	dev_info(dev->dev, "Loading EEPROM data from '%s'.\n", ee_name);
++
++	retval = request_firmware(&ee, ee_name, dev->dev);
++	if (retval) {
++		dev_info(dev->dev, "Failed to request EEPROM.\n");
++		return retval;
++	}
++
++	if (!ee || !ee->size || !ee->data) {
++		dev_info(dev->dev, "Failed to read EEPROM file.\n");
++		retval = -ENOENT;
++		goto err_exit;
++	}
++
++	if (ee->size < len) {
++		dev_info(dev->dev,
++			"EEPROM file size is invalid, it should be %d bytes\n",
++			len);
++		retval = -EINVAL;
++		goto err_release_ee;
++	}
++
++	memcpy(dev->eeprom.data, ee->data, len);
++	retval=0;
++
++err_release_ee:
++	release_firmware(ee);
++err_exit:
++	return retval;
++}
++EXPORT_SYMBOL_GPL(mt76_request_eeprom_file);
++
+ int
+ mt76_eeprom_init(struct mt76_dev *dev, int len)
+ {
+--- a/mt7603/eeprom.c
++++ b/mt7603/eeprom.c
+@@ -151,6 +151,9 @@
+ 	if (ret < 0)
+ 		return ret;
+ 
++	if (mt7603_check_eeprom(&dev->mt76) != 0)
++		mt76_request_eeprom_file(&dev->mt76, MT7603_EEPROM_SIZE, "wlan.mt7628.bin");
++
+ 	if (dev->mt76.otp.data) {
+ 		if (mt7603_check_eeprom(&dev->mt76) == 0)
+ 			mt7603_apply_cal_free_data(dev, dev->mt76.otp.data);

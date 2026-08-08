@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenWrt RTL8197F bringup <noreply@example.invalid>
+Date: Mon, 25 May 2026 00:00:00 +0000
+Subject: [PATCH] gpio: add Realtek RTL8197F/RTL8197FH GPIO controller
+
+Add Kconfig/Makefile hooks for the RTL8197F GPIO controller supplied by the
+OpenWrt target files overlay.
+
+Use low-context insertion points near stable top-level objects so this patch
+keeps applying across minor 6.6.y kernel refreshes where the alphabetic GPIO
+Makefile order may move.
+
+---
+--- a/drivers/gpio/Kconfig
++++ b/drivers/gpio/Kconfig
+@@ -592,6 +592,15 @@ config GPIO_REALTEK_OTTO
+ 	select GPIO_GENERIC
+ 	select GPIOLIB_IRQCHIP
+ 
++config GPIO_RTL8197F
++	tristate "Realtek RTL8197F/RTL8197FH GPIO support"
++	depends on MACH_REALTEK_RTL || COMPILE_TEST
++	depends on OF
++	select GPIOLIB_IRQCHIP
++	help
++	  Say yes here to support the GPIO controller found in Realtek
++	  RTL8197F/RTL8197FH/RTL8197F-VG router SoCs.
++
+ config GPIO_REG
+ 	bool
+ 	help
+--- a/drivers/gpio/Makefile
++++ b/drivers/gpio/Makefile
+@@ -2,6 +2,7 @@
+ ccflags-$(CONFIG_DEBUG_GPIO)	+= -DDEBUG
+ 
+ obj-$(CONFIG_GPIOLIB)		+= gpiolib.o
++obj-$(CONFIG_GPIO_RTL8197F)	+= gpio-rtl8197f.o
+ obj-$(CONFIG_GPIOLIB)		+= gpiolib-devres.o
+ obj-$(CONFIG_GPIOLIB)		+= gpiolib-legacy.o
+ obj-$(CONFIG_GPIOLIB)		+= gpiolib-cdev.o

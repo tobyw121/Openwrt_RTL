@@ -1,0 +1,595 @@
+diff --git a/RD05_NATIVE_DSA_V38_3.md b/RD05_NATIVE_DSA_V38_3.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..37bf1e3ae9962fd603ac72e7123127cfe4127346
+--- /dev/null
++++ b/RD05_NATIVE_DSA_V38_3.md
+@@ -0,0 +1,79 @@
++# RD05 Native DSA v38.3
++
++Calibration-safety update based on the first complete v38.2 hardware boot and
++paired LAN2/PC capture.
++
++## Hardware findings
++
++- v38.2 reaches userspace with UART0, MTD, RTL8367D detection, native DSA and
++  the RTL8197F CPU DMA rings initialized.
++- The PC capture contains no router frame (`router_mac=-`, `peer_frames=0`,
++  `from_router=0`).
++- RTL8367D port 7 transmits toward the SoC while `eth0` RX and the RTL8197F
++  current RX descriptor pointer remain static.
++- Router-to-switch traffic increments CPU7 FCS/drop counters.
++- The v38.2 calibration helper used `sleep 0.2`. The target BusyBox rejects
++  fractional sleep values, so both sweeps aborted after applying their first
++  candidate and could leave the runtime profile at all zeros.
++
++## v38.3 corrections
++
++- uses integer millisecond timing with `usleep`, `busybox usleep`, or a safe
++  whole-second fallback;
++- never invokes fractional BusyBox `sleep`;
++- snapshots all six RGMII parameters before a sweep;
++- restores the snapshot automatically on errors, signals and Ctrl+C;
++- verifies sysfs readback after every profile application;
++- saves a winning profile only after a successful complete sweep;
++- adds `rd05-rgmii-calibrate restore` as an alias for the SDK baseline;
++- detects and reports an all-zero runtime profile;
++- updates `rd05-v38-check` and `rd05-netdiag` to recognize v38.2/v38.x kernel
++  markers and removes the stale 64-input-IRQ wording.
++
++## Recovery from an aborted v38.2 sweep
++
++Run before collecting any additional traffic data:
++
++```sh
++rd05-rgmii-calibrate sdk
++rd05-rgmii-calibrate status
++```
++
++Expected baseline:
++
++```text
++SOC_TX=0
++SOC_RX=6
++SW_TX=0
++SW_TXC=0
++SW_RX=5
++SSC=1
++```
++
++Then run TX calibration first. RX calibration requires continuous PC traffic.
++
++```sh
++rd05-rgmii-calibrate tx-auto save
++```
++
++PC:
++
++```sh
++sudo ./tools/rd05-pc-netdiag.py --interface IFACE --configure-ip \
++  --calibration --duration 300
++```
++
++Router, while the PC command is running:
++
++```sh
++rd05-rgmii-calibrate rx-auto save
++```
++
++A failed or interrupted v38.3 sweep restores the exact pre-sweep profile.
++
++## Scope
++
++v38.3 deliberately does not change RTL8197F descriptor format, CPU-DMA start
++order, RTL8367D DSA tagging or the boot-proven v38.2 platform code. The 8-dword
++new-descriptor format matches the cache-aligned RTL8197F SDK build. A valid
++RGMII matrix must be collected before making another kernel datapath change.
+diff --git a/README.md b/README.md
+index bfd2a9b2af8bca93d4f04dbaae6c1f0bed6d3c56..8d1cc093ce36e5c218efe9a663d135ba015c175b 100644
+--- a/README.md
++++ b/README.md
+@@ -63,3 +63,8 @@ native USB2 glue, versioned RGMII profiles and expanded RTL8367-family IDs.
+ 
+ 
+ See `RD05_NATIVE_DSA_V38_1.md` for the UART polling and deferred SPI calibration boot-safety correction.
++
++## RD05 v38.3 calibration safety update
++
++See `RD05_NATIVE_DSA_V38_3.md` for the BusyBox fractional-sleep fix, atomic
++RGMII sweep rollback and the hardware interpretation of the v38.2 LAN test.
+diff --git a/package/network/config/rtl8367d-compat/Makefile b/package/network/config/rtl8367d-compat/Makefile
+index 3dc0958c39bba17bf59c6ea6f49a4bf72b196883..1d8e90b3a53935a88e5830135132f44503acf138 100644
+--- a/package/network/config/rtl8367d-compat/Makefile
++++ b/package/network/config/rtl8367d-compat/Makefile
+@@ -8,7 +8,7 @@ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=rtl8367d-compat
+ PKG_VERSION:=2026.07.26
+-PKG_RELEASE:=10
++PKG_RELEASE:=11
+ 
+ include $(INCLUDE_DIR)/package.mk
+ 
+diff --git a/package/network/config/rtl8367d-compat/files/rd05-rgmii-calibrate b/package/network/config/rtl8367d-compat/files/rd05-rgmii-calibrate
+index 05f0e69617f6e2c79370a1bc4a0aa0b2feefd327..14b8405d04bcb186a4098b494ed07c55b3dc4a99 100755
+--- a/package/network/config/rtl8367d-compat/files/rd05-rgmii-calibrate
++++ b/package/network/config/rtl8367d-compat/files/rd05-rgmii-calibrate
+@@ -1,17 +1,41 @@
+ #!/bin/sh
+ # SPDX-License-Identifier: GPL-2.0-or-later
+-# RD05 RTL8197F P0 <-> RTL8367D EXT1 RGMII calibration helper, v38.
++# RD05 RTL8197F P0 <-> RTL8367D EXT1 RGMII calibration helper, v38.3.
+ 
+ set -eu
+ 
+-SOC=/sys/module/rtl8197f_rtknet/parameters
+-SW=/sys/module/rtl8365mb/parameters
++SOC="${RD05_RGMII_SOC_SYSFS:-/sys/module/rtl8197f_rtknet/parameters}"
++SW="${RD05_RGMII_SW_SYSFS:-/sys/module/rtl8365mb/parameters}"
+ CONF_DEFAULT=/etc/rd05-rgmii.conf
+ CONF="${RD05_RGMII_CONF:-$CONF_DEFAULT}"
+-APPLY_SETTLE="${RD05_RGMII_APPLY_SETTLE:-1}"
++APPLY_SETTLE_MS="${RD05_RGMII_APPLY_SETTLE_MS:-1000}"
++SWEEP_SETTLE_MS="${RD05_RGMII_SWEEP_SETTLE_MS:-200}"
++ROLLBACK_ACTIVE=0
++ROLLBACK_SOC_TX=0
++ROLLBACK_SOC_RX=6
++ROLLBACK_SW_TX=0
++ROLLBACK_SW_TXC=0
++ROLLBACK_SW_RX=5
++ROLLBACK_SSC=1
+ 
+ fail() { echo "rd05-rgmii-calibrate: $*" >&2; exit 1; }
+ num() { case "${1:-}" in ''|*[!0-9]*) echo 0 ;; *) echo "$1" ;; esac; }
++uint() { case "${1:-}" in ''|*[!0-9]*) return 1 ;; *) return 0 ;; esac; }
++settle_ms() {
++	ms="${1:-0}"
++	uint "$ms" || fail "settle time must be an integer number of milliseconds"
++	[ "$ms" -le 60000 ] || fail "settle time exceeds 60000 ms"
++	[ "$ms" -gt 0 ] || return 0
++	if command -v usleep >/dev/null 2>&1; then
++		usleep "$((ms * 1000))"
++	elif command -v busybox >/dev/null 2>&1 && busybox usleep 1 >/dev/null 2>&1; then
++		busybox usleep "$((ms * 1000))"
++	else
++		# BusyBox builds without usleep also reject fractional sleep values.
++		# Round upward so calibration remains portable and safe.
++		sleep "$(((ms + 999) / 1000))"
++	fi
++}
+ readf() { [ -r "$1" ] && cat "$1" || echo -; }
+ statv() {
+ 	dev="$1"; key="$2"
+@@ -44,6 +68,43 @@ current() {
+ 	SW_RX="$(num "$(readf "$SW/rd05_ext1_rx_delay")")"
+ 	case "$(readf "$SW/rd05_ext1_ssc")" in Y|y|1) SSC=1 ;; *) SSC=0 ;; esac
+ }
++arm_rollback() {
++	current
++	ROLLBACK_SOC_TX="$SOC_TX"; ROLLBACK_SOC_RX="$SOC_RX"
++	ROLLBACK_SW_TX="$SW_TX"; ROLLBACK_SW_TXC="$SW_TXC"
++	ROLLBACK_SW_RX="$SW_RX"; ROLLBACK_SSC="$SSC"
++	ROLLBACK_ACTIVE=1
++	trap 'rollback_exit $?' EXIT
++	trap 'rollback_exit 129' HUP
++	trap 'rollback_exit 130' INT
++	trap 'rollback_exit 143' TERM
++}
++disarm_rollback() {
++	ROLLBACK_ACTIVE=0
++	trap - EXIT HUP INT TERM
++}
++rollback_exit() {
++	rc="${1:-1}"
++	trap - EXIT HUP INT TERM
++	if [ "$ROLLBACK_ACTIVE" -eq 1 ]; then
++		echo "rd05-rgmii-calibrate: restoring pre-sweep profile after exit $rc" >&2
++		set +e
++		APPLY_SETTLE_MS=1000 apply_values "$ROLLBACK_SOC_TX" "$ROLLBACK_SOC_RX" \
++			"$ROLLBACK_SW_TX" "$ROLLBACK_SW_TXC" "$ROLLBACK_SW_RX" "$ROLLBACK_SSC"
++		restore_rc=$?
++		set -e
++		[ "$restore_rc" -eq 0 ] || echo "rd05-rgmii-calibrate: rollback failed ($restore_rc); run: rd05-rgmii-calibrate sdk" >&2
++	fi
++	exit "$rc"
++}
++verify_values() {
++	exp_soc_tx="$1"; exp_soc_rx="$2"; exp_sw_tx="$3"
++	exp_sw_txc="$4"; exp_sw_rx="$5"; exp_ssc="$6"
++	current
++	[ "$SOC_TX" -eq "$exp_soc_tx" ] && [ "$SOC_RX" -eq "$exp_soc_rx" ] && \
++	[ "$SW_TX" -eq "$exp_sw_tx" ] && [ "$SW_TXC" -eq "$exp_sw_txc" ] && \
++	[ "$SW_RX" -eq "$exp_sw_rx" ] && [ "$SSC" -eq "$exp_ssc" ]
++}
+ apply_values() {
+ 	SOC_TX="$1"; SOC_RX="$2"; SW_TX="$3"; SW_TXC="$4"; SW_RX="$5"; SSC="$6"
+ 	validate "$SOC_TX" "$SOC_RX" "$SW_TX" "$SW_TXC" "$SW_RX" "$SSC"
+@@ -61,7 +122,9 @@ apply_values() {
+ 	else
+ 		fail "rd05-ioctl is missing"
+ 	fi
+-	sleep "$APPLY_SETTLE"
++	settle_ms "$APPLY_SETTLE_MS"
++	verify_values "$SOC_TX" "$SOC_RX" "$SW_TX" "$SW_TXC" "$SW_RX" "$SSC" || \
++		fail "RGMII parameter readback mismatch"
+ }
+ show_status() {
+ 	current
+@@ -71,7 +134,10 @@ show_status() {
+ 	echo "SW_TXC=$SW_TXC"
+ 	echo "SW_RX=$SW_RX"
+ 	echo "SSC=$SSC"
+-	dmesg 2>/dev/null | grep -E 'rd05 p0 rgmii v38:|RTL8367D RD05 (DSA CPU path|RGMII v38 reapply):' | tail -3 || true
++	if [ "$SOC_TX$SOC_RX$SW_TX$SW_TXC$SW_RX$SSC" = 000000 ]; then
++		echo "WARNING: all-zero runtime profile; restore the SDK baseline with: rd05-rgmii-calibrate sdk" >&2
++	fi
++	dmesg 2>/dev/null | grep -E 'rd05 p0 rgmii v38(\.[0-9]+)?:|RTL8367D RD05 (DSA CPU path|RGMII v38 reapply):' | tail -3 || true
+ 	ethtool -S eth0 2>/dev/null | grep -E 'rx_cdp_|rd05_rx_external|rd05_rx_arp|rx_desc0_opts1|p07_if(In|Out)Octets|p07_dot3StatsFCSErrors|p07_etherStatsDropEvents' || true
+ }
+ save_conf() {
+@@ -137,14 +203,14 @@ EOC
+ tx_auto() {
+ 	command -v rd05-raw >/dev/null 2>&1 || fail "rd05-raw is missing"
+ 	command -v ethtool >/dev/null 2>&1 || fail "ethtool is missing"
+-	current
+-	keep_soc_tx="$SOC_TX"; keep_soc_rx="$SOC_RX"; keep_sw_tx="$SW_TX"; keep_sw_txc="$SW_TXC"; keep_sw_rx="$SW_RX"; keep_ssc="$SSC"
++	arm_rollback
++	keep_soc_tx="$ROLLBACK_SOC_TX"; keep_soc_rx="$ROLLBACK_SOC_RX"; keep_sw_tx="$ROLLBACK_SW_TX"; keep_sw_txc="$ROLLBACK_SW_TXC"; keep_sw_rx="$ROLLBACK_SW_RX"; keep_ssc="$ROLLBACK_SSC"
+ 	best_score=2147483647; best_in=0; best_soc_tx=-1; best_sw_rx=-1; best_ssc=-1
+ 	session="rgmii-tx-$(date +%s 2>/dev/null || echo $$)"
+-	report=/tmp/rd05-rgmii-tx-v38.tsv
++	report=/tmp/rd05-rgmii-tx-v38.3.tsv
+ 	printf 'ssc\tsoc_tx\tsw_rx\tcpu7_in\tfcs\tdrop\tscore\n' > "$report"
+ 	echo "Sweeping RTL8197F TX delay, RTL8367D RX tap and SSC (32 rows)."
+-	old_settle="$APPLY_SETTLE"; APPLY_SETTLE=0.2
++	APPLY_SETTLE_MS="$SWEEP_SETTLE_MS"
+ 	for ssc in 0 1; do
+ 		for soc_tx in 0 1; do
+ 			for sw_rx in 0 1 2 3 4 5 6 7; do
+@@ -168,7 +234,7 @@ tx_auto() {
+ 			done
+ 		done
+ 	done
+-	APPLY_SETTLE="$old_settle"
++	APPLY_SETTLE_MS=1000
+ 	if [ "$best_soc_tx" -lt 0 ]; then
+ 		apply_values "$keep_soc_tx" "$keep_soc_rx" "$keep_sw_tx" "$keep_sw_txc" "$keep_sw_rx" "$keep_ssc"
+ 		fail "no CPU7 ingress was measured; report: $report"
+@@ -176,6 +242,7 @@ tx_auto() {
+ 	apply_values "$best_soc_tx" "$keep_soc_rx" "$keep_sw_tx" "$keep_sw_txc" "$best_sw_rx" "$best_ssc"
+ 	echo "BEST_TX SOC_TX=$best_soc_tx SW_RX=$best_sw_rx SSC=$best_ssc score=$best_score cpu7_in=$best_in report=$report"
+ 	[ "${1:-}" = save ] && save_conf
++	disarm_rollback
+ }
+ 
+ # Switch -> SoC direction. A PC must continuously transmit with:
+@@ -184,13 +251,13 @@ tx_auto() {
+ # the public coarse TX delay and RTL8197F RX tap.
+ rx_auto() {
+ 	command -v ethtool >/dev/null 2>&1 || fail "ethtool is missing"
+-	current
+-	keep_soc_tx="$SOC_TX"; keep_soc_rx="$SOC_RX"; keep_sw_tx="$SW_TX"; keep_sw_txc="$SW_TXC"; keep_sw_rx="$SW_RX"; keep_ssc="$SSC"
++	arm_rollback
++	keep_soc_tx="$ROLLBACK_SOC_TX"; keep_soc_rx="$ROLLBACK_SOC_RX"; keep_sw_tx="$ROLLBACK_SW_TX"; keep_sw_txc="$ROLLBACK_SW_TXC"; keep_sw_rx="$ROLLBACK_SW_RX"; keep_ssc="$ROLLBACK_SSC"
+ 	best_score=0; best_soc_rx=-1; best_sw_tx=-1; best_sw_txc=-1; best_out=0
+-	report=/tmp/rd05-rgmii-rx-v38.tsv
++	report=/tmp/rd05-rgmii-rx-v38.3.tsv
+ 	printf 'sw_tx\tsw_txc\tsoc_rx\tcpu7_out\teth0_rx\texternal\tcdp\tscore\n' > "$report"
+ 	echo "PC must send continuously. Sweeping switch coarse TX, 0x13f9 fine TXC and SoC RX (128 rows, about 3 minutes)."
+-	old_settle="$APPLY_SETTLE"; APPLY_SETTLE=0.2
++	APPLY_SETTLE_MS="$SWEEP_SETTLE_MS"
+ 	for sw_tx in 0 1; do
+ 		for sw_txc in 0 1 2 3 4 5 6 7; do
+ 			for soc_rx in 0 1 2 3 4 5 6 7; do
+@@ -209,7 +276,7 @@ rx_auto() {
+ 			done
+ 		done
+ 	done
+-	APPLY_SETTLE="$old_settle"
++	APPLY_SETTLE_MS=1000
+ 	if [ "$best_soc_rx" -lt 0 ] || [ "$best_score" -eq 0 ]; then
+ 		apply_values "$keep_soc_tx" "$keep_soc_rx" "$keep_sw_tx" "$keep_sw_txc" "$keep_sw_rx" "$keep_ssc"
+ 		fail "CPU7 emitted PC traffic, but no RTL8197F RX candidate succeeded; report: $report"
+@@ -217,6 +284,7 @@ rx_auto() {
+ 	apply_values "$keep_soc_tx" "$best_soc_rx" "$best_sw_tx" "$best_sw_txc" "$keep_sw_rx" "$keep_ssc"
+ 	echo "BEST_RX SOC_RX=$best_soc_rx SW_TX=$best_sw_tx SW_TXC=$best_sw_txc score=$best_score cpu7_out=$best_out report=$report"
+ 	[ "${1:-}" = save ] && save_conf
++	disarm_rollback
+ }
+ 
+ usage() {
+@@ -226,10 +294,12 @@ Usage: rd05-rgmii-calibrate COMMAND [arguments]
+   apply SOC_TX SOC_RX SW_TX SW_TXC SW_RX SSC
+   load                                    apply /etc/rd05-rgmii.conf
+   save                                    write /etc/rd05-rgmii.conf
+-  sdk                                     apply SDK production 0/6 0/0/5 SSC=1
++  sdk                                     restore SDK production 0/6 0/0/5 SSC=1
++  restore                                 alias for sdk
+   safe                                    apply conservative 0/6 0/0/2 SSC=0
+-  tx-auto [save]                          calibrate router/SoC -> RTL8367D
+-  rx-auto [save]                          full RTL8367D -> SoC sweep; PC traffic required
++  tx-auto [save]                          calibrate router/SoC -> RTL8367D; rollback on failure
++  rx-auto [save]                          full RTL8367D -> SoC sweep; rollback on failure
++  version                                 print helper version
+ EOT
+ }
+ 
+@@ -239,10 +309,11 @@ case "$cmd" in
+ 	apply) [ "$#" -eq 6 ] || { usage; exit 2; }; apply_values "$@"; show_status ;;
+ 	load) load_conf; show_status ;;
+ 	save) save_conf ;;
+-	sdk) apply_values 0 6 0 0 5 1; show_status ;;
++	sdk|restore) apply_values 0 6 0 0 5 1; show_status ;;
+ 	safe) apply_values 0 6 0 0 2 0; show_status ;;
+ 	tx-auto) tx_auto "${1:-}" ;;
+ 	rx-auto) rx_auto "${1:-}" ;;
++	version) echo "rd05-rgmii-calibrate v38.3 release 11" ;;
+ 	help|-h|--help) usage ;;
+ 	*) usage; exit 2 ;;
+ esac
+diff --git a/scripts/validate-realtek-driver-port.sh b/scripts/validate-realtek-driver-port.sh
+index 3813c2e78bcc779030af8bfdc9f906d0046a43c1..54bc25238ead55ee40a4c8170ffc25c55b3b67e5 100755
+--- a/scripts/validate-realtek-driver-port.sh
++++ b/scripts/validate-realtek-driver-port.sh
+@@ -26,6 +26,13 @@ check_grep() {
+     if grep -Eq "$pattern" "$file" 2>/dev/null; then pass "$description"; else fail "$description"; fi
+ }
+ 
++check_not_grep() {
++    pattern=$1
++    file=$2
++    description=$3
++    if grep -Eq "$pattern" "$file" 2>/dev/null; then fail "$description"; else pass "$description"; fi
++}
++
+ printf 'Realtek Linux 6.6.114 driver-port validation\n'
+ printf 'root: %s\n\n' "$ROOT"
+ 
+@@ -294,12 +301,13 @@ check_file "$ROOT/RD05_SDK_SOURCE_MAP.tsv"
+ check_file "$ROOT/RD05_SDK_COMPONENT_INVENTORY.tsv"
+ check_file "$ROOT/tools/rd05-pc-netdiag.py"
+ check_file "$ROOT/RD05_NATIVE_DSA_V38.md"
++check_file "$ROOT/RD05_NATIVE_DSA_V38_3.md"
+ check_file "$ROOT/package/network/config/rtl8367d-compat/files/rd05-rgmii-calibrate"
+ check_file "$ROOT/package/network/config/rtl8367d-compat/files/rd05-rgmii.conf"
+ check_file "$ROOT/package/network/config/rtl8367d-compat/files/rd05-rgmii.init"
+ check_grep 'RD05MAGIC-V31' "$ROOT/tools/rd05-pc-netdiag.py" 'PC companion uses the exact rd05-raw protocol token'
+ check_grep 'PACKET_OUTGOING' "$ROOT/tools/rd05-pc-netdiag.py" 'PC companion separates locally transmitted AF_PACKET frames'
+-check_grep '^PKG_RELEASE:=10$' "$ROOT/package/network/config/rtl8367d-compat/Makefile" 'RD05 compatibility package release contains native-v38 helpers'
++check_grep '^PKG_RELEASE:=11$' "$ROOT/package/network/config/rtl8367d-compat/Makefile" 'RD05 compatibility package release contains v38.3 calibration safety fixes'
+ check_grep 'SW_TXC=' "$ROOT/package/network/config/rtl8367d-compat/files/rd05-rgmii.conf" 'persistent RGMII profile stores the RTL8367D fine TX-clock tap'
+ check_grep '^PROFILE_VERSION=38$' "$ROOT/package/network/config/rtl8367d-compat/files/rd05-rgmii.conf" 'persistent RGMII profile is versioned for v38'
+ check_grep '^SW_RX=5$' "$ROOT/package/network/config/rtl8367d-compat/files/rd05-rgmii.conf" 'v38 default uses the RTL8367D SDK RX tap 5'
+@@ -307,6 +315,11 @@ check_grep '^SSC=1$' "$ROOT/package/network/config/rtl8367d-compat/files/rd05-rg
+ check_grep 'apply SOC_TX SOC_RX SW_TX SW_TXC SW_RX SSC' "$ROOT/package/network/config/rtl8367d-compat/files/rd05-rgmii-calibrate" 'v38 calibration accepts all six independent timing parameters'
+ check_grep 'for sw_txc in 0 1 2 3 4 5 6 7' "$ROOT/package/network/config/rtl8367d-compat/files/rd05-rgmii-calibrate" 'RX calibration sweeps all eight family-D fine TX-clock taps'
+ check_grep '128 rows' "$ROOT/package/network/config/rtl8367d-compat/files/rd05-rgmii-calibrate" 'RX calibration documents the complete 128-profile matrix'
++check_grep 'settle_ms' "$ROOT/package/network/config/rtl8367d-compat/files/rd05-rgmii-calibrate" 'RGMII calibration uses portable integer-millisecond settling'
++check_grep 'rollback_exit' "$ROOT/package/network/config/rtl8367d-compat/files/rd05-rgmii-calibrate" 'RGMII calibration restores the pre-sweep profile on errors and signals'
++check_grep 'verify_values' "$ROOT/package/network/config/rtl8367d-compat/files/rd05-rgmii-calibrate" 'RGMII calibration verifies sysfs readback after apply'
++check_not_grep 'sleep 0\.2' "$ROOT/package/network/config/rtl8367d-compat/files/rd05-rgmii-calibrate" 'RGMII calibration contains no unsupported fractional BusyBox sleep'
++check_grep 'runtime RGMII profile is all zero' "$TARGET/base-files/usr/bin/rd05-v38-check" 'RD05 checker detects the failed-v38.2 all-zero profile'
+ 
+ led_dts_count=$(grep -RIl 'realtek,rtl8231-leds' "$TARGET/dts" 2>/dev/null | wc -l | tr -d ' ')
+ if [ "$led_dts_count" -gt 0 ]; then
+diff --git a/target/linux/realtek/base-files/etc/rd05-v38-notes b/target/linux/realtek/base-files/etc/rd05-v38-notes
+index 040e9facf08c91ab10e2e11d4e4244af4dd3841d..b05dbe9f1eab531f4b7d3a4ece4e5c89cd2c317f 100644
+--- a/target/linux/realtek/base-files/etc/rd05-v38-notes
++++ b/target/linux/realtek/base-files/etc/rd05-v38-notes
+@@ -1,30 +1,31 @@
+-RD05 native DSA v38 SDK-expansion notes
++RD05 native DSA v38.3 notes
+ 
+ Topology
+ --------
+ RTL8197F/RTL8197FH-VG physical P0/RGMII <-> RTL8367D CPU7/EXT1.
+ Linux DSA owns the 8-byte rtl8_4 tag and bridge/VLAN/FDB/STP state.
+ 
+-V38 platform extensions
+------------------------
+-1. P0/RGMII is programmed during NIC probe, before the external DSA switch.
+-2. RTL8197FH/VG PITCR and EXTPCR0 use the BSP 8-byte IPG fields.
+-3. The RTL8197F interrupt controller supports both 32-input banks (64 HWIRQs).
+-4. UART0/1/2 use BSP HWIRQs 9/38/39; UART1/2 remain board-disabled by default.
+-5. Native USB2 host glue performs clock/mode/PHY setup and instantiates generic
+-   EHCI/OHCI children. The RD05 board keeps USB disabled unless hardware routing
+-   is confirmed.
+-6. RTL8367 family matching includes legacy IDs 0x0276, 0x0597, family ID 0x6367
+-   and RTL8367D/RB-VC ID 0x6642 with the family-D register model.
+-7. The persistent timing file is PROFILE_VERSION=38. Older experimental profiles
+-   are backed up as /etc/rd05-rgmii.conf.pre-v38 and migrated to the SDK baseline.
++Boot-proven platform state
++--------------------------
++- UART0/ttyS0 is 0x18147000 at 115200 8N1 and uses polling on RD05.
++- RTL8197F uses the stable first 32-input interrupt bank on RD05.
++- P0/RGMII programming is deferred to ndo_open.
++- SPI-NOR WEL calibration is lazy and rootfs_data-only.
++- RTL8367D/RB-VC chip ID 0x6642 revision 0x0030 uses CPU7/EXT1.
+ 
+ SDK baseline
+ ------------
+-  rd05-rgmii-calibrate apply 0 6 0 0 5 1
++  rd05-rgmii-calibrate sdk
+ 
+-Arguments:
+-  SOC_TX SOC_RX SW_TX SW_TXC SW_RX SSC
++Expected values:
++  SOC_TX=0 SOC_RX=6 SW_TX=0 SW_TXC=0 SW_RX=5 SSC=1
++
++V38.3 calibration safety
++------------------------
++The v38.2 helper used "sleep 0.2", which this BusyBox rejects. A failed sweep
++could leave the runtime profile at all zeros. V38.3 uses portable millisecond
++settling and automatically restores the exact pre-sweep values on every error,
++signal or Ctrl+C. It also verifies sysfs readback after every apply.
+ 
+ Calibration
+ -----------
+@@ -32,7 +33,7 @@ Calibration
+ 
+ For switch-to-SoC RX, generate continuous PC traffic:
+   PC: sudo ./tools/rd05-pc-netdiag.py --interface IFACE --configure-ip \
+-        --calibration --duration 240
++        --calibration --duration 300
+   Router: rd05-rgmii-calibrate rx-auto save
+ 
+ Final test
+@@ -40,6 +41,6 @@ Final test
+   rd05-v38-check
+   rd05-netdiag full
+ 
+-A successful result requires a real frame from the router on the PC, advancing
+-RTL8197F RX descriptors, nonzero eth0 RX and correct DSA delivery. A PC result
+-with router_mac=- or from_router=0 is not a successful link test.
++A successful result requires router_mac != -, from_router > 0, advancing
++RTL8197F RX descriptors and nonzero eth0 RX. The 50 ms RX polling fallback
++remains active even while IRQ 15 is zero.
+diff --git a/target/linux/realtek/base-files/usr/bin/rd05-netdiag b/target/linux/realtek/base-files/usr/bin/rd05-netdiag
+index e47361c03d5f5d6dab07d67893e5d095a025883c..d2d41ed1fb2ec52a1c452e34868c35c20f6a2581 100755
+--- a/target/linux/realtek/base-files/usr/bin/rd05-netdiag
++++ b/target/linux/realtek/base-files/usr/bin/rd05-netdiag
+@@ -1,5 +1,5 @@
+ #!/bin/sh
+-# rd05-netdiag - Xiaomi RD05 / RTL8197F P0-RGMII + RTL8367D CPU7/EXT1 diagnostics (v38)
++# rd05-netdiag - Xiaomi RD05 / RTL8197F P0-RGMII + RTL8367D CPU7/EXT1 diagnostics (v38.3)
+ # Usage:
+ #   rd05-netdiag          same as full
+ #   rd05-netdiag pre      snapshot before PC traffic
+@@ -119,14 +119,14 @@ rd05_ensure_network() {
+ 
+ 	waited=0
+ 	while [ "$waited" -lt 30 ]; do
+-		if dmesg 2>/dev/null | grep -q 'rd05 poststart v38:.*cpuicr1=.*rxbase=.*txbase='; then
++		if dmesg 2>/dev/null | grep -Eq 'rd05 poststart v38(\.[0-9]+)?:.*cpuicr1=.*rxbase=.*txbase='; then
+ 			break
+ 		fi
+ 		sleep 1
+ 		waited=$((waited + 1))
+ 	done
+ 	echo "LAN wait=${waited}s eth0=$(cat /sys/class/net/eth0/operstate 2>/dev/null || echo missing) lan2=$(cat /sys/class/net/lan2/operstate 2>/dev/null || echo missing)"
+-	dmesg 2>/dev/null | grep 'rd05 poststart v38:' | tail -1 || true
++	dmesg 2>/dev/null | grep -E 'rd05 poststart v38(\.[0-9]+)?:' | tail -1 || true
+ }
+ 
+ rd05_selected_eth0() {
+@@ -1779,7 +1779,10 @@ rd05_platform_snapshot() {
+ 	fi
+ 	if command -v rd05-rgmii-calibrate >/dev/null 2>&1; then
+ 		echo "--- active RD05 RGMII calibration profile ---"
+-		rd05-rgmii-calibrate status 2>&1 || true
++		profile_out="$(rd05-rgmii-calibrate status 2>/dev/null || true)"
++		printf '%s\n' "$profile_out"
++		profile_digits="$(printf '%s\n' "$profile_out" | sed -n -e 's/^SOC_TX=//p' -e 's/^SOC_RX=//p' -e 's/^SW_TX=//p' -e 's/^SW_TXC=//p' -e 's/^SW_RX=//p' -e 's/^SSC=//p' | tr -d '\n')"
++		[ "$profile_digits" != 000000 ] || echo "CRITICAL: runtime RGMII profile is all zero; run rd05-rgmii-calibrate sdk before interpreting traffic results"
+ 	fi
+ 	for dev in eth0 lan1 lan2 lan3 lan4 wan br-lan; do
+ 		[ -e "/sys/class/net/$dev" ] || continue
+diff --git a/target/linux/realtek/base-files/usr/bin/rd05-v38-check b/target/linux/realtek/base-files/usr/bin/rd05-v38-check
+index 82f9caee092208021d06e3871c948f36e277b84d..4d36e8d1fe960f8cdf5711ad039d791568c936bc 100755
+--- a/target/linux/realtek/base-files/usr/bin/rd05-v38-check
++++ b/target/linux/realtek/base-files/usr/bin/rd05-v38-check
+@@ -1,5 +1,5 @@
+ #!/bin/sh
+-# Non-destructive verification for Xiaomi RD05 native-DSA v38.
++# Non-destructive verification for Xiaomi RD05 native-DSA v38.3.
+ 
+ fail=0
+ warn=0
+@@ -8,28 +8,28 @@ num() { case "${1:-}" in ''|*[!0-9]*) echo 0 ;; *) echo "$1" ;; esac; }
+ statv() { ethtool -S "$1" 2>/dev/null | awk -v k="$2" '$1 == k":" { print $2; exit }'; }
+ read_param() { [ -r "$1" ] && cat "$1" || echo unavailable; }
+ 
+-section "bring up LAN and wait for v38 post-start"
++section "bring up LAN and wait for v38.x post-start"
+ command -v ifup >/dev/null 2>&1 && ifup lan >/dev/null 2>&1 || true
+ command -v ubus >/dev/null 2>&1 && ubus call network.interface.lan up >/dev/null 2>&1 || true
+ waited=0
+ while [ "$waited" -lt 30 ]; do
+-	dmesg 2>/dev/null | grep -q 'rd05 poststart v38:.*cpuicr1=.*rxbase=.*txbase=' && break
++	dmesg 2>/dev/null | grep -Eq 'rd05 poststart v38(\.[0-9]+)?:.*cpuicr1=.*rxbase=.*txbase=' && break
+ 	sleep 1; waited=$((waited + 1))
+ done
+ echo "waited ${waited}s; eth0=$(cat /sys/class/net/eth0/operstate 2>/dev/null || echo missing)"
+ 
+ section "kernel, P0 and DSA markers"
+-if dmesg 2>/dev/null | grep -q 'RD05 DSA master v38:'; then echo "PASS: v38 DSA master is loaded"; else echo "FAIL: v38 DSA marker missing"; fail=1; fi
+-p0="$(dmesg 2>/dev/null | grep 'rd05 p0 rgmii v38:' | tail -1)"
++if dmesg 2>/dev/null | grep -Eq 'RD05 DSA master v38(\.[0-9]+)?:'; then echo "PASS: v38.x DSA master is loaded"; else echo "FAIL: v38.x DSA marker missing"; fail=1; fi
++p0="$(dmesg 2>/dev/null | grep -E 'rd05 p0 rgmii v38(\.[0-9]+)?:' | tail -1)"
+ if printf '%s\n' "$p0" | grep -q 'cputag-rx=1.*cputag-tx=1.*preserve-tag=1'; then
+ 	echo "PASS: both RTL8197F P0 CPU-tag gates are enabled and tags are preserved"
+-else echo "FAIL: v38 P0 CPU-tag marker missing"; fail=1; fi
++else echo "FAIL: v38.x P0 CPU-tag marker missing"; fail=1; fi
+ if printf '%s\n' "$p0" | grep -q 'pitcr=0x[0-9a-fA-F].*extpcr0=0x[0-9a-fA-F]'; then
+ 	echo "PASS: RTL8197F-VG PITCR/EXTPCR0 IPG readback is present"
+ 	printf '%s\n' "$p0"
+-else echo "FAIL: v38 P0 IPG readback missing"; fail=1; fi
+-post="$(dmesg 2>/dev/null | grep 'rd05 poststart v38:' | tail -1)"
+-if printf '%s\n' "$post" | grep -q 'cpuicr1=0x002081d3.*rxbase=.*txbase='; then echo "PASS: 8-dword descriptors and ring bases were accepted"; printf '%s\n' "$post"; else echo "FAIL: v38 ring readback missing"; fail=1; fi
++else echo "FAIL: v38.x P0 IPG readback missing"; fail=1; fi
++post="$(dmesg 2>/dev/null | grep -E 'rd05 poststart v38(\.[0-9]+)?:' | tail -1)"
++if printf '%s\n' "$post" | grep -q 'cpuicr1=0x002081d3.*rxbase=.*txbase='; then echo "PASS: 8-dword descriptors and ring bases were accepted"; printf '%s\n' "$post"; else echo "FAIL: v38.x ring readback missing"; fail=1; fi
+ 
+ path="$(dmesg 2>/dev/null | grep 'RTL8367D RD05 DSA CPU path:' | tail -1)"
+ if printf '%s\n' "$path" | grep -q 'cpu7-ext1-sdk-baseline-calibratable-v38'; then echo "PASS: RTL8367D family-D SDK baseline and calibration path are active"; else echo "FAIL: v38 RTL8367D path marker missing"; fail=1; fi
+@@ -60,7 +60,23 @@ else
+ 	echo "WARN: v38 profile version missing; run: rd05-rgmii-calibrate load"
+ 	warn=1
+ fi
+-command -v rd05-rgmii-calibrate >/dev/null 2>&1 && rd05-rgmii-calibrate status || { echo "WARN: rd05-rgmii-calibrate is unavailable"; warn=1; }
++if command -v rd05-rgmii-calibrate >/dev/null 2>&1; then
++	profile="$(rd05-rgmii-calibrate status 2>/dev/null || true)"
++	printf '%s\n' "$profile"
++	r_soc_tx="$(printf '%s\n' "$profile" | sed -n 's/^SOC_TX=//p' | tail -1)"
++	r_soc_rx="$(printf '%s\n' "$profile" | sed -n 's/^SOC_RX=//p' | tail -1)"
++	r_sw_tx="$(printf '%s\n' "$profile" | sed -n 's/^SW_TX=//p' | tail -1)"
++	r_sw_txc="$(printf '%s\n' "$profile" | sed -n 's/^SW_TXC=//p' | tail -1)"
++	r_sw_rx="$(printf '%s\n' "$profile" | sed -n 's/^SW_RX=//p' | tail -1)"
++	r_ssc="$(printf '%s\n' "$profile" | sed -n 's/^SSC=//p' | tail -1)"
++	if [ "$r_soc_tx$r_soc_rx$r_sw_tx$r_sw_txc$r_sw_rx$r_ssc" = 000000 ]; then
++		echo "FAIL: runtime RGMII profile is all zero after an aborted v38.2 sweep; restore it with: rd05-rgmii-calibrate sdk"
++		fail=1
++	fi
++else
++	echo "WARN: rd05-rgmii-calibrate is unavailable"
++	warn=1
++fi
+ 
+ section "UART/IRQ, USB and PCIe platform support"
+ [ -c /dev/ttyS0 ] && echo "PASS: UART0 console device exists" || { echo "FAIL: /dev/ttyS0 is missing"; fail=1; }
+@@ -73,7 +89,13 @@ fi
+ irq_line="$(grep -E '[[:space:]]eth0$' /proc/interrupts 2>/dev/null | tail -1)"
+ irq_count="$(printf '%s\n' "$irq_line" | awk '{ print $2 }')"; irq_count="$(num "$irq_count")"
+ [ -n "$irq_line" ] && echo "IRQ: $irq_line"
+-if [ "$irq_count" -eq 0 ]; then echo "WARN: eth0 interrupt count is still zero; verify the v38 64-input IRQ routing under traffic"; warn=1; else echo "PASS: eth0 interrupt routing is active ($irq_count interrupts)"; fi
++poll_runs="$(num "$(statv eth0 rx_poll_timer_runs)")"
++if [ "$irq_count" -eq 0 ]; then
++	echo "WARN: eth0 interrupt count is zero; the 50 ms RX polling fallback is the active safety path (runs=$poll_runs)"
++	warn=1
++else
++	echo "PASS: eth0 interrupt routing is active ($irq_count interrupts)"
++fi
+ if dmesg 2>/dev/null | grep -q 'RTL8197F USB2 host initialized:'; then
+ 	echo "PASS: native RTL8197F USB2 glue initialized"
+ elif [ -r /proc/device-tree/soc/usb-host@140200/status ] && grep -q disabled /proc/device-tree/soc/usb-host@140200/status 2>/dev/null; then
+@@ -116,7 +138,7 @@ fcs="$(num "$(statv eth0 p07_dot3StatsFCSErrors)")"; drops="$(num "$(statv eth0
+ cdp="$(num "$(statv eth0 rx_cdp_advanced)")"; pout="$(num "$(statv eth0 p07_ifOutOctets)")"
+ if [ "$fcs" -gt 0 ]; then echo "WARN: CPU7 has $fcs cumulative FCS errors (drops=$drops). Run: rd05-rgmii-calibrate tx-auto save"; warn=1; else echo "PASS: CPU7 currently reports no FCS errors"; fi
+ if [ "$pout" -gt 0 ] && [ "$cdp" -eq 0 ]; then echo "WARN: CPU7 transmitted toward the SoC but the RTL8197F RX pointer is static. Run the v38 RX sweep with PC calibration traffic."; warn=1; fi
+-command -v rd05-raw >/dev/null 2>&1 && echo "PASS: rd05-raw is installed" || { echo "WARN: install rtl8367d-compat release 10"; warn=1; }
++command -v rd05-raw >/dev/null 2>&1 && echo "PASS: rd05-raw is installed" || { echo "WARN: install rtl8367d-compat release 11"; warn=1; }
+ 
+ echo
+ cat <<'EOT'
+@@ -126,9 +148,9 @@ Calibration order:
+      Router: rd05-rgmii-calibrate rx-auto save
+   3. Router: rd05-netdiag full
+      PC:     sudo ./tools/rd05-pc-netdiag.py --interface IFACE --configure-ip --duration 120
+-The explicit v38 SDK baseline command is:
+-  rd05-rgmii-calibrate apply 0 6 0 0 5 1
+-The six values are SOC_TX SOC_RX SW_TX SW_TXC SW_RX SSC.
++The explicit v38.3 SDK baseline/restore command is:
++  rd05-rgmii-calibrate sdk
++Equivalent explicit values: SOC_TX=0 SOC_RX=6 SW_TX=0 SW_TXC=0 SW_RX=5 SSC=1.
+ EOT
+ [ "$warn" -ne 0 ] && echo "Completed with warnings."
+ exit "$fail"

@@ -1,0 +1,441 @@
+ELF Header:
+  Magic:   7f 45 4c 46 01 02 01 00 00 00 00 00 00 00 00 00 
+  Class:                             ELF32
+  Data:                              2's complement, big endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              REL (Relocatable file)
+  Machine:                           MIPS R3000
+  Version:                           0x1
+  Entry point address:               0x0
+  Start of program headers:          0 (bytes into file)
+  Start of section headers:          10924 (bytes into file)
+  Flags:                             0x70001001, noreorder, o32, mips32r2
+  Size of this header:               52 (bytes)
+  Size of program headers:           0 (bytes)
+  Number of program headers:         0
+  Size of section headers:           40 (bytes)
+  Number of section headers:         47
+  Section header string table index: 44
+
+Section Headers:
+  [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            00000000 000000 000000 00      0   0  0
+  [ 1] .text             PROGBITS        00000000 000040 000000 00  AX  0   0 16
+  [ 2] .data             PROGBITS        00000000 000040 000080 00  WA  0   0 16
+  [ 3] .rel.data         REL             00000000 0037c4 000020 08     45   2  4
+  [ 4] .bss              NOBITS          00000000 0000c0 000020 00  WA  0   0 16
+  [ 5] .reginfo          MIPS_REGINFO    00000000 0000c0 000018 18   A  0   0  4
+  [ 6] .pdr              PROGBITS        00000000 0000d8 0001a0 00      0   0  4
+  [ 7] .rel.pdr          REL             00000000 0037e4 000068 08     45   6  4
+  [ 8] .mdebug.abi32     PROGBITS        00000000 000278 000000 00      0   0  1
+  [ 9] .text.__spi_comma PROGBITS        00000000 000278 001178 00  AX  0   0  4
+  [10] .rel.text.__spi_c REL             00000000 00384c 000148 08     45   9  4
+  [11] .text.__get_spi_S PROGBITS        00000000 0013f0 000030 00  AX  0   0  4
+  [12] .rel.text.__get_s REL             00000000 003994 000008 08     45  11  4
+  [13] .text.__wait_Read PROGBITS        00000000 001420 000088 00  AX  0   0  4
+  [14] .rel.text.__wait_ REL             00000000 00399c 000018 08     45  13  4
+  [15] .text.__wait_WEL  PROGBITS        00000000 0014a8 000100 00  AX  0   0  4
+  [16] .rel.text.__wait_ REL             00000000 0039b4 000028 08     45  15  4
+  [17] .text.__read_spi_ PROGBITS        00000000 0015a8 0000f4 00  AX  0   0  4
+  [18] .rel.text.__read_ REL             00000000 0039dc 000020 08     45  17  4
+  [19] .text.__spi_write PROGBITS        00000000 00169c 000054 00  AX  0   0  4
+  [20] .rel.text.__spi_w REL             00000000 0039fc 000010 08     45  19  4
+  [21] .text.__spi_init_ PROGBITS        00000000 0016f0 00017c 00  AX  0   0  4
+  [22] .rel.text.__spi_i REL             00000000 003a0c 000068 08     45  21  4
+  [23] .text.__write_spi PROGBITS        00000000 00186c 0001cc 00  AX  0   0  4
+  [24] .rel.text.__write REL             00000000 003a74 000050 08     45  23  4
+  [25] .rodata.str1.4    PROGBITS        00000000 001a38 000138 01 AMS  0   0  4
+  [26] .init.text        PROGBITS        00000000 001b70 00056c 00  AX  0   0  4
+  [27] .rel.init.text    REL             00000000 003ac4 000210 08     45  26  4
+  [28] .text.rtk_spi_wri PROGBITS        00000000 0020dc 000160 00  AX  0   0  4
+  [29] .rel.text.rtk_spi REL             00000000 003cd4 000088 08     45  28  4
+  [30] .text.rtk_spi_rea PROGBITS        00000000 00223c 000164 00  AX  0   0  4
+  [31] .rel.text.rtk_spi REL             00000000 003d5c 000078 08     45  30  4
+  [32] .text.rtk_spi_era PROGBITS        00000000 0023a0 0001b4 00  AX  0   0  4
+  [33] .rel.text.rtk_spi REL             00000000 003dd4 000070 08     45  32  4
+  [34] .exit.text        PROGBITS        00000000 002554 000068 00  AX  0   0  4
+  [35] .rel.exit.text    REL             00000000 003e44 000050 08     45  34  4
+  [36] .exitcall.exit    PROGBITS        00000000 0025bc 000004 00  WA  0   0  4
+  [37] .rel.exitcall.exi REL             00000000 003e94 000008 08     45  36  4
+  [38] .initcall6.init   PROGBITS        00000000 0025c0 000004 00  WA  0   0  4
+  [39] .rel.initcall6.in REL             00000000 003e9c 000008 08     45  38  4
+  [40] .rodata           PROGBITS        00000000 0025d0 0002a0 00   A  0   0 16
+  [41] .rel.rodata       REL             00000000 003ea4 0000a8 08     45  40  4
+  [42] .comment          PROGBITS        00000000 002870 000041 01  MS  0   0  1
+  [43] .gnu.attributes   LOOS+ffffff5    00000000 0028b1 000010 00      0   0  1
+  [44] .shstrtab         STRTAB          00000000 0028c1 0001e8 00      0   0  1
+  [45] .symtab           SYMTAB          00000000 003204 0003d0 10     46  47  4
+  [46] .strtab           STRTAB          00000000 0035d4 0001ee 00      0   0  1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings)
+  I (info), L (link order), G (group), x (unknown)
+  O (extra OS processing required) o (OS specific), p (processor specific)
+
+There are no section groups in this file.
+
+There are no program headers in this file.
+
+Relocation section '.rel.data' at offset 0x37c4 contains 4 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+00000000  00001502 R_MIPS_32         00000000   .rodata.str1.4
+00000020  00001502 R_MIPS_32         00000000   .rodata.str1.4
+00000040  00001502 R_MIPS_32         00000000   .rodata.str1.4
+00000060  00001502 R_MIPS_32         00000000   .rodata.str1.4
+
+Relocation section '.rel.pdr' at offset 0x37e4 contains 13 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+00000000  00000602 R_MIPS_32         00000000   .text.__spi_commands
+00000020  00000902 R_MIPS_32         00000000   .text.__get_spi_SR
+00000040  00000b02 R_MIPS_32         00000000   .text.__wait_Ready
+00000060  00000c02 R_MIPS_32         00000000   .text.__wait_WEL
+00000080  00000e02 R_MIPS_32         00000000   .text.__read_spi_flash
+000000a0  00002f02 R_MIPS_32         00000000   __spi_write_BlockProte
+000000c0  00003002 R_MIPS_32         00000000   __spi_init_io_status
+000000e0  00001302 R_MIPS_32         00000000   .text.__write_spi_flas
+00000100  00001602 R_MIPS_32         00000000   .init.text
+00000120  00001f02 R_MIPS_32         00000000   .text.rtk_spi_write
+00000140  00002002 R_MIPS_32         00000000   .text.rtk_spi_read
+00000160  00002102 R_MIPS_32         00000000   .text.rtk_spi_erase
+00000180  00002202 R_MIPS_32         00000000   .exit.text
+
+Relocation section '.rel.text.__spi_commands' at offset 0x384c contains 41 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+000000e4  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000104  00000604 R_MIPS_26         00000000   .text.__spi_commands
+0000019c  00000604 R_MIPS_26         00000000   .text.__spi_commands
+000001c8  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000200  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000218  00000604 R_MIPS_26         00000000   .text.__spi_commands
+0000023c  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000254  00000604 R_MIPS_26         00000000   .text.__spi_commands
+0000029c  00000604 R_MIPS_26         00000000   .text.__spi_commands
+000002dc  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000368  00000604 R_MIPS_26         00000000   .text.__spi_commands
+000003c4  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000438  00000604 R_MIPS_26         00000000   .text.__spi_commands
+0000046c  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000524  00000604 R_MIPS_26         00000000   .text.__spi_commands
+0000058c  00000604 R_MIPS_26         00000000   .text.__spi_commands
+000005c0  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000610  00000604 R_MIPS_26         00000000   .text.__spi_commands
+000006c8  00000b04 R_MIPS_26         00000000   .text.__wait_Ready
+000006d8  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000720  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000728  00000b04 R_MIPS_26         00000000   .text.__wait_Ready
+000007bc  00000604 R_MIPS_26         00000000   .text.__spi_commands
+000007c4  00000b04 R_MIPS_26         00000000   .text.__wait_Ready
+00000818  00000b04 R_MIPS_26         00000000   .text.__wait_Ready
+00000830  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000838  00000604 R_MIPS_26         00000000   .text.__spi_commands
+000008b4  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000920  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000988  00000604 R_MIPS_26         00000000   .text.__spi_commands
+000009bc  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000a98  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000bcc  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000c9c  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000d88  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000e0c  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000e70  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000ea4  00000b04 R_MIPS_26         00000000   .text.__wait_Ready
+00000eac  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00001040  00000604 R_MIPS_26         00000000   .text.__spi_commands
+000010a4  00000604 R_MIPS_26         00000000   .text.__spi_commands
+
+Relocation section '.rel.text.__get_spi_SR' at offset 0x3994 contains 1 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+00000018  00000604 R_MIPS_26         00000000   .text.__spi_commands
+
+Relocation section '.rel.text.__wait_Ready' at offset 0x399c contains 3 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+0000004c  00000904 R_MIPS_26         00000000   .text.__get_spi_SR
+00000060  00000b04 R_MIPS_26         00000000   .text.__wait_Ready
+00000068  00000904 R_MIPS_26         00000000   .text.__get_spi_SR
+
+Relocation section '.rel.text.__wait_WEL' at offset 0x39b4 contains 5 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+00000060  00000904 R_MIPS_26         00000000   .text.__get_spi_SR
+00000074  00000c04 R_MIPS_26         00000000   .text.__wait_WEL
+0000007c  00000904 R_MIPS_26         00000000   .text.__get_spi_SR
+000000b0  00000604 R_MIPS_26         00000000   .text.__spi_commands
+000000c8  00000904 R_MIPS_26         00000000   .text.__get_spi_SR
+
+Relocation section '.rel.text.__read_spi_flash' at offset 0x39dc contains 4 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+00000034  00000b04 R_MIPS_26         00000000   .text.__wait_Ready
+00000060  00000e04 R_MIPS_26         00000000   .text.__read_spi_flash
+00000070  00000604 R_MIPS_26         00000000   .text.__spi_commands
+000000bc  00000604 R_MIPS_26         00000000   .text.__spi_commands
+
+Relocation section '.rel.text.__spi_write_BlockProtect_Register' at offset 0x39fc contains 2 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+00000018  00000c04 R_MIPS_26         00000000   .text.__wait_WEL
+00000038  00000604 R_MIPS_26         00000000   .text.__spi_commands
+
+Relocation section '.rel.text.__spi_init_io_status' at offset 0x3a0c contains 13 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+0000001c  00000b04 R_MIPS_26         00000000   .text.__wait_Ready
+00000024  00000405 R_MIPS_HI16       00000000   .bss
+00000028  00000406 R_MIPS_LO16       00000000   .bss
+0000005c  00001104 R_MIPS_26         00000000   .text.__spi_init_io_st
+000000c8  00000b04 R_MIPS_26         00000000   .text.__wait_Ready
+000000e8  00001104 R_MIPS_26         00000000   .text.__spi_init_io_st
+000000fc  00001104 R_MIPS_26         00000000   .text.__spi_init_io_st
+00000124  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000150  00002f04 R_MIPS_26         00000000   __spi_write_BlockProte
+00000158  00000405 R_MIPS_HI16       00000000   .bss
+0000015c  00000406 R_MIPS_LO16       00000000   .bss
+00000148  00000405 R_MIPS_HI16       00000000   .bss
+00000168  00000406 R_MIPS_LO16       00000000   .bss
+
+Relocation section '.rel.text.__write_spi_flash' at offset 0x3a74 contains 10 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+0000004c  00000c04 R_MIPS_26         00000000   .text.__wait_WEL
+00000064  00000604 R_MIPS_26         00000000   .text.__spi_commands
+000000a4  00001304 R_MIPS_26         00000000   .text.__write_spi_flas
+000000cc  00000c04 R_MIPS_26         00000000   .text.__wait_WEL
+00000100  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000114  00001304 R_MIPS_26         00000000   .text.__write_spi_flas
+0000011c  00000c04 R_MIPS_26         00000000   .text.__wait_WEL
+0000013c  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000164  00000c04 R_MIPS_26         00000000   .text.__wait_WEL
+00000190  00000604 R_MIPS_26         00000000   .text.__spi_commands
+
+Relocation section '.rel.init.text' at offset 0x3ac4 contains 66 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+0000003c  00003205 R_MIPS_HI16       00000000   kmalloc_caches
+00000050  00003206 R_MIPS_LO16       00000000   kmalloc_caches
+00000064  00003304 R_MIPS_26         00000000   kmem_cache_alloc
+00000068  00000406 R_MIPS_LO16       00000000   .bss
+00000074  00003405 R_MIPS_HI16       00000000   flash_info
+00000078  00003406 R_MIPS_LO16       00000000   flash_info
+00000094  00002105 R_MIPS_HI16       00000000   .text.rtk_spi_erase
+000000a8  00002106 R_MIPS_LO16       00000000   .text.rtk_spi_erase
+0000009c  00002005 R_MIPS_HI16       00000000   .text.rtk_spi_read
+000000ac  00002006 R_MIPS_LO16       00000000   .text.rtk_spi_read
+000000a0  00001f05 R_MIPS_HI16       00000000   .text.rtk_spi_write
+000000b0  00001f06 R_MIPS_LO16       00000000   .text.rtk_spi_write
+000000b4  00003405 R_MIPS_HI16       00000000   flash_info
+000000d0  00003406 R_MIPS_LO16       00000000   flash_info
+000000ec  00003205 R_MIPS_HI16       00000000   kmalloc_caches
+000000f0  00003206 R_MIPS_LO16       00000000   kmalloc_caches
+000000f4  00003304 R_MIPS_26         00000000   kmem_cache_alloc
+00000134  00002105 R_MIPS_HI16       00000000   .text.rtk_spi_erase
+00000140  00002106 R_MIPS_LO16       00000000   .text.rtk_spi_erase
+00000138  00002005 R_MIPS_HI16       00000000   .text.rtk_spi_read
+00000144  00002006 R_MIPS_LO16       00000000   .text.rtk_spi_read
+0000013c  00001f05 R_MIPS_HI16       00000000   .text.rtk_spi_write
+00000148  00001f06 R_MIPS_LO16       00000000   .text.rtk_spi_write
+00000188  00000604 R_MIPS_26         00000000   .text.__spi_commands
+000001a0  00000604 R_MIPS_26         00000000   .text.__spi_commands
+000001f8  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000204  00002805 R_MIPS_HI16       00000000   .rodata
+0000020c  00002806 R_MIPS_LO16       00000000   .rodata
+00000238  00002805 R_MIPS_HI16       00000000   .rodata
+0000023c  00002806 R_MIPS_LO16       00000000   .rodata
+000002d4  00001604 R_MIPS_26         00000000   .init.text
+000002ec  00001604 R_MIPS_26         00000000   .init.text
+000002fc  00000405 R_MIPS_HI16       00000000   .bss
+0000031c  00000406 R_MIPS_LO16       00000000   .bss
+00000320  00000406 R_MIPS_LO16       00000000   .bss
+0000005c  00000405 R_MIPS_HI16       00000000   .bss
+00000330  00000406 R_MIPS_LO16       00000000   .bss
+00000304  00000405 R_MIPS_HI16       00000000   .bss
+0000033c  00000406 R_MIPS_LO16       00000000   .bss
+00000378  00003104 R_MIPS_26         00000000   __ucmpdi2
+000003b4  00001604 R_MIPS_26         00000000   .init.text
+000003d8  00003104 R_MIPS_26         00000000   __ucmpdi2
+000003fc  00001604 R_MIPS_26         00000000   .init.text
+00000414  00001604 R_MIPS_26         00000000   .init.text
+00000420  00001604 R_MIPS_26         00000000   .init.text
+0000042c  00001604 R_MIPS_26         00000000   .init.text
+00000438  00001604 R_MIPS_26         00000000   .init.text
+00000444  00001604 R_MIPS_26         00000000   .init.text
+00000450  00001604 R_MIPS_26         00000000   .init.text
+0000045c  00001604 R_MIPS_26         00000000   .init.text
+00000468  00001604 R_MIPS_26         00000000   .init.text
+00000480  00003004 R_MIPS_26         00000000   __spi_init_io_status
+000004cc  00003405 R_MIPS_HI16       00000000   flash_info
+000004d0  00003406 R_MIPS_LO16       00000000   flash_info
+000004dc  00000405 R_MIPS_HI16       00000000   .bss
+000004e0  00000406 R_MIPS_LO16       00000000   .bss
+000004e4  00002905 R_MIPS_HI16       00000000   $LC0
+000004e8  00002906 R_MIPS_LO16       00000000   $LC0
+00000508  00000305 R_MIPS_HI16       00000000   .data
+00000510  00000306 R_MIPS_LO16       00000000   .data
+00000514  00003504 R_MIPS_26         00000000   add_mtd_partitions
+0000051c  00001604 R_MIPS_26         00000000   .init.text
+00000528  00003604 R_MIPS_26         00000000   printk
+00000524  00002a05 R_MIPS_HI16       00000010   $LC1
+0000052c  00002a06 R_MIPS_LO16       00000010   $LC1
+00000530  00001604 R_MIPS_26         00000000   .init.text
+
+Relocation section '.rel.text.rtk_spi_write' at offset 0x3cd4 contains 17 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+00000054  00003405 R_MIPS_HI16       00000000   flash_info
+00000058  00003406 R_MIPS_LO16       00000000   flash_info
+00000078  00003704 R_MIPS_26         00000000   down
+00000080  00003405 R_MIPS_HI16       00000000   flash_info
+00000084  00003406 R_MIPS_LO16       00000000   flash_info
+00000090  00001f04 R_MIPS_26         00000000   .text.rtk_spi_write
+000000b4  00003704 R_MIPS_26         00000000   down
+000000ac  00003405 R_MIPS_HI16       00000000   flash_info
+000000b8  00003406 R_MIPS_LO16       00000000   flash_info
+000000cc  00001304 R_MIPS_26         00000000   .text.__write_spi_flas
+000000e0  00001304 R_MIPS_26         00000000   .text.__write_spi_flas
+000000e8  00001f04 R_MIPS_26         00000000   .text.rtk_spi_write
+000000f0  00003704 R_MIPS_26         00000000   down
+000000f8  00003405 R_MIPS_HI16       00000000   flash_info
+000000fc  00003406 R_MIPS_LO16       00000000   flash_info
+00000118  00001304 R_MIPS_26         00000000   .text.__write_spi_flas
+00000124  00003804 R_MIPS_26         00000000   up
+
+Relocation section '.rel.text.rtk_spi_read' at offset 0x3d5c contains 15 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+00000058  00003405 R_MIPS_HI16       00000000   flash_info
+0000005c  00003406 R_MIPS_LO16       00000000   flash_info
+00000080  00003704 R_MIPS_26         00000000   down
+00000088  00003405 R_MIPS_HI16       00000000   flash_info
+0000008c  00003406 R_MIPS_LO16       00000000   flash_info
+00000098  00002004 R_MIPS_26         00000000   .text.rtk_spi_read
+000000c0  00003704 R_MIPS_26         00000000   down
+000000b8  00003405 R_MIPS_HI16       00000000   flash_info
+000000c4  00003406 R_MIPS_LO16       00000000   flash_info
+000000d8  00000e04 R_MIPS_26         00000000   .text.__read_spi_flash
+000000ec  00000e04 R_MIPS_26         00000000   .text.__read_spi_flash
+000000f4  00002004 R_MIPS_26         00000000   .text.rtk_spi_read
+000000fc  00003704 R_MIPS_26         00000000   down
+0000011c  00000e04 R_MIPS_26         00000000   .text.__read_spi_flash
+00000128  00003804 R_MIPS_26         00000000   up
+
+Relocation section '.rel.text.rtk_spi_erase' at offset 0x3dd4 contains 14 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+00000050  00003904 R_MIPS_26         00000000   __umoddi3
+00000078  00003904 R_MIPS_26         00000000   __umoddi3
+000000d0  00003704 R_MIPS_26         00000000   down
+000000e0  00002104 R_MIPS_26         00000000   .text.rtk_spi_erase
+00000108  00003405 R_MIPS_HI16       00000000   flash_info
+000000e8  00003406 R_MIPS_LO16       00000000   flash_info
+0000010c  00000c04 R_MIPS_26         00000000   .text.__wait_WEL
+00000120  00002104 R_MIPS_26         00000000   .text.rtk_spi_erase
+00000164  00003405 R_MIPS_HI16       00000000   flash_info
+00000128  00003406 R_MIPS_LO16       00000000   flash_info
+00000130  00000c04 R_MIPS_26         00000000   .text.__wait_WEL
+0000014c  00000604 R_MIPS_26         00000000   .text.__spi_commands
+00000168  00003804 R_MIPS_26         00000000   up
+00000178  00003a04 R_MIPS_26         00000000   mtd_erase_callback
+
+Relocation section '.rel.exit.text' at offset 0x3e44 contains 10 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+0000000c  00003405 R_MIPS_HI16       00000000   flash_info
+00000010  00003406 R_MIPS_LO16       00000000   flash_info
+0000001c  00003b04 R_MIPS_26         00000000   del_mtd_device
+00000024  00003c04 R_MIPS_26         00000000   kfree
+00000018  00003405 R_MIPS_HI16       00000000   flash_info
+00000028  00003406 R_MIPS_LO16       00000000   flash_info
+0000002c  00003405 R_MIPS_HI16       00000000   flash_info
+00000030  00003406 R_MIPS_LO16       00000000   flash_info
+00000040  00003b04 R_MIPS_26         00000000   del_mtd_device
+00000054  00003c04 R_MIPS_26         00000000   kfree
+
+Relocation section '.rel.exitcall.exit' at offset 0x3e94 contains 1 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+00000000  00002202 R_MIPS_32         00000000   .exit.text
+
+Relocation section '.rel.initcall6.init' at offset 0x3e9c contains 1 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+00000000  00001602 R_MIPS_32         00000000   .init.text
+
+Relocation section '.rel.rodata' at offset 0x3ea4 contains 21 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+0000000c  00001502 R_MIPS_32         00000000   .rodata.str1.4
+0000002c  00001502 R_MIPS_32         00000000   .rodata.str1.4
+0000004c  00001502 R_MIPS_32         00000000   .rodata.str1.4
+0000006c  00001502 R_MIPS_32         00000000   .rodata.str1.4
+0000008c  00001502 R_MIPS_32         00000000   .rodata.str1.4
+000000ac  00001502 R_MIPS_32         00000000   .rodata.str1.4
+000000cc  00001502 R_MIPS_32         00000000   .rodata.str1.4
+000000ec  00001502 R_MIPS_32         00000000   .rodata.str1.4
+0000010c  00001502 R_MIPS_32         00000000   .rodata.str1.4
+0000012c  00001502 R_MIPS_32         00000000   .rodata.str1.4
+0000014c  00001502 R_MIPS_32         00000000   .rodata.str1.4
+0000016c  00001502 R_MIPS_32         00000000   .rodata.str1.4
+0000018c  00001502 R_MIPS_32         00000000   .rodata.str1.4
+000001ac  00001502 R_MIPS_32         00000000   .rodata.str1.4
+000001cc  00001502 R_MIPS_32         00000000   .rodata.str1.4
+000001ec  00001502 R_MIPS_32         00000000   .rodata.str1.4
+0000020c  00001502 R_MIPS_32         00000000   .rodata.str1.4
+0000022c  00001502 R_MIPS_32         00000000   .rodata.str1.4
+0000024c  00001502 R_MIPS_32         00000000   .rodata.str1.4
+0000026c  00001502 R_MIPS_32         00000000   .rodata.str1.4
+0000028c  00001502 R_MIPS_32         00000000   .rodata.str1.4
+
+There are no unwind sections in this file.
+
+Symbol table '.symtab' contains 61 entries:
+   Num:    Value  Size Type    Bind   Vis      Ndx Name
+     0: 00000000     0 NOTYPE  LOCAL  DEFAULT  UND 
+     1: 00000000     0 FILE    LOCAL  DEFAULT  ABS rtk_spi_flash_mio.c
+     2: 00000000     0 SECTION LOCAL  DEFAULT    1 
+     3: 00000000     0 SECTION LOCAL  DEFAULT    2 
+     4: 00000000     0 SECTION LOCAL  DEFAULT    4 
+     5: 00000000     0 SECTION LOCAL  DEFAULT    8 
+     6: 00000000     0 SECTION LOCAL  DEFAULT    9 
+     7: 00000000  4472 FUNC    LOCAL  DEFAULT    9 __spi_commands
+     8: 00000000   136 FUNC    LOCAL  DEFAULT   13 __wait_Ready
+     9: 00000000     0 SECTION LOCAL  DEFAULT   11 
+    10: 00000000    48 FUNC    LOCAL  DEFAULT   11 __get_spi_SR
+    11: 00000000     0 SECTION LOCAL  DEFAULT   13 
+    12: 00000000     0 SECTION LOCAL  DEFAULT   15 
+    13: 00000000   256 FUNC    LOCAL  DEFAULT   15 __wait_WEL
+    14: 00000000     0 SECTION LOCAL  DEFAULT   17 
+    15: 00000000   244 FUNC    LOCAL  DEFAULT   17 __read_spi_flash
+    16: 00000000     0 SECTION LOCAL  DEFAULT   19 
+    17: 00000000     0 SECTION LOCAL  DEFAULT   21 
+    18: 00000010     4 OBJECT  LOCAL  DEFAULT    4 i.12764
+    19: 00000000     0 SECTION LOCAL  DEFAULT   23 
+    20: 00000000   460 FUNC    LOCAL  DEFAULT   23 __write_spi_flash
+    21: 00000000     0 SECTION LOCAL  DEFAULT   25 
+    22: 00000000     0 SECTION LOCAL  DEFAULT   26 
+    23: 00000000  1388 FUNC    LOCAL  DEFAULT   26 spidev_init
+    24: 00000014     4 OBJECT  LOCAL  DEFAULT    4 spi_flash_total_size
+    25: 00000000   436 FUNC    LOCAL  DEFAULT   32 rtk_spi_erase
+    26: 00000000   356 FUNC    LOCAL  DEFAULT   30 rtk_spi_read
+    27: 00000000   352 FUNC    LOCAL  DEFAULT   28 rtk_spi_write
+    28: 00000000   672 OBJECT  LOCAL  DEFAULT   40 spi_chips
+    29: 0000000c     4 OBJECT  LOCAL  DEFAULT    4 spi_flash_num_of_chips
+    30: 00000000   128 OBJECT  LOCAL  DEFAULT    2 rtk_parts
+    31: 00000000     0 SECTION LOCAL  DEFAULT   28 
+    32: 00000000     0 SECTION LOCAL  DEFAULT   30 
+    33: 00000000     0 SECTION LOCAL  DEFAULT   32 
+    34: 00000000     0 SECTION LOCAL  DEFAULT   34 
+    35: 00000000   104 FUNC    LOCAL  DEFAULT   34 spidev_exit
+    36: 00000000     0 SECTION LOCAL  DEFAULT   36 
+    37: 00000000     4 OBJECT  LOCAL  DEFAULT   36 __exitcall_spidev_exit
+    38: 00000000     0 SECTION LOCAL  DEFAULT   38 
+    39: 00000000     4 OBJECT  LOCAL  DEFAULT   38 __initcall_spidev_init6
+    40: 00000000     0 SECTION LOCAL  DEFAULT   40 
+    41: 00000000     0 NOTYPE  LOCAL  DEFAULT   25 $LC0
+    42: 00000010     0 NOTYPE  LOCAL  DEFAULT   25 $LC1
+    43: 00000000     0 SECTION LOCAL  DEFAULT    5 
+    44: 00000000     0 SECTION LOCAL  DEFAULT    6 
+    45: 00000000     0 SECTION LOCAL  DEFAULT   42 
+    46: 00000000     0 SECTION LOCAL  DEFAULT   43 
+    47: 00000000    84 FUNC    GLOBAL DEFAULT   19 __spi_write_BlockProtect_
+    48: 00000000   380 FUNC    GLOBAL DEFAULT   21 __spi_init_io_status
+    49: 00000000     0 OBJECT  GLOBAL DEFAULT  UND __ucmpdi2
+    50: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND kmalloc_caches
+    51: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND kmem_cache_alloc
+    52: 00000000    12 OBJECT  GLOBAL DEFAULT    4 flash_info
+    53: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND add_mtd_partitions
+    54: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND printk
+    55: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND down
+    56: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND up
+    57: 00000000     0 OBJECT  GLOBAL DEFAULT  UND __umoddi3
+    58: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND mtd_erase_callback
+    59: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND del_mtd_device
+    60: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND kfree
+
+No version information found in this file.

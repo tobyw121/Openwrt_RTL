@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+/*
+ * Disabled template for old RTL8367 B-map devices using OpenWrt swconfig.
+ *
+ * The legacy rtl8367b driver contains the large, revision-specific init
+ * tables needed by RTL8367RB (0x1000), RTL8367R-VB (0x1010), RTL8367RB-VB
+ * (0x6367/0x0020), RTL8367S (0x6367/0x00a0) and RTL8367S-VB
+ * (0x6642/0x0010). It does not support RTL8367D/RB-VC 0x6642/0x0030; use
+ * the DSA D-map template for that chip. GPIOs and extif must be adapted to
+ * the board schematic. Keep status disabled until the exact chip/revision
+ * and RGMII interface number have been confirmed.
+ */
+
+/ {
+	rtl8367b_legacy: switch {
+		compatible = "realtek,rtl8367b";
+		/* Replace with board GPIOs. */
+		gpio-sck = <&gpio0 56 GPIO_ACTIVE_HIGH>;
+		gpio-sda = <&gpio0 55 GPIO_ACTIVE_HIGH>;
+
+		/* cpu_port, txdelay, rxdelay, mode, force_mode,
+		 * txpause, rxpause, link, duplex, speed.
+		 * cpu_port 5 is E0 on old B-map devices; C/D variants may need 6/7.
+		 */
+		realtek,extif = <5 0 5 1 1 1 1 1 1 2>;
+		status = "disabled";
+	};
+};
+
+&ethernet0 {
+	realtek,rtl8367-legacy-master;
+	realtek,p0-rgmii-tx-delay = <0>;
+	realtek,p0-rgmii-rx-delay = <5>;
+	realtek,p0-rgtxc = <3>;
+	realtek,tx-port-mask = <0x1>;
+	realtek,tx-dp-ext = <0>;
+	realtek,tx-extspa = <0>;
+};

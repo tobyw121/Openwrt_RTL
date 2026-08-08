@@ -1,0 +1,35 @@
+RTL8197F / Tenda Nova MW5 v43.8 validation
+==========================================
+
+Scope
+-----
+Source tree based on the delivered v43.7 tree. v43.8 changes the MW5
+RTL8197F CPU-DMA/descriptor-to-DSA receive integration, prevents live ring
+rewinds during ordinary reseed/MAC changes, restores standard OpenWrt
+firewall4 policy, and keeps the one-command mw5-netdiag workflow.
+
+Static/regression validation
+----------------------------
+PASS  CHECK_MW5_V43.8.sh: 38 PASS, 0 FAIL
+PASS  CHECK_MW5_WANLAN_V43.sh: 57 PASS, 0 FAIL
+PASS  CHECK_MW5_DIAG_BUILTIN_V43.4.sh: 43 PASS, 0 FAIL
+PASS  CHECK_SOURCE_TREE_V42.sh
+PASS  tag_rtl4_9.c checkpatch: 0 errors, 0 warnings
+PASS  v43.8 rtl8197f_rtknet.c delta checkpatch: 0 errors, 0 warnings
+      (commit-message/signoff checks ignored because this is a source-tree delta)
+PASS  modified shell scripts pass BusyBox/POSIX sh syntax checks
+
+Patch reproducibility
+---------------------
+PASS  v43.7 -> v43.8 patch dry-run with --fuzz=0
+PASS  v43.7 -> v43.8 patch apply with --fuzz=0
+PASS  replayed tree is byte-identical to the delivered v43.8 working tree
+
+Important limits
+----------------
+NOT RUN: full OpenWrt MIPS cross-build of v43.8 in this environment.
+NOT RUN: v43.8 hardware test on a Tenda Nova MW5.
+
+The user previously confirmed that v43.6 built and flashed successfully, but
+v43.8 contains new C driver logic and therefore must still be cross-built and
+validated on the router before being considered hardware-proven.

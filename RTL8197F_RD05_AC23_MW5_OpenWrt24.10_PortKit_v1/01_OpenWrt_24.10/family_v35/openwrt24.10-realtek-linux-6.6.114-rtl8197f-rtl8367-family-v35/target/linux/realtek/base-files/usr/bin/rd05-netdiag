@@ -1,0 +1,2040 @@
+#!/bin/sh
+# rd05-netdiag - Xiaomi RD05 / RTL8197F P0-RGMII + RTL8367D CPU7/EXT1 diagnostics (v34)
+# Usage:
+#   rd05-netdiag          same as full
+#   rd05-netdiag pre      snapshot before PC traffic
+#   rd05-netdiag post     snapshot after PC traffic
+#   rd05-netdiag full     complete non-destructive router capture, raw Magic exchange, PCAPs and automatic verdict
+#   rd05-netdiag arptest [seconds]  focused before/after LAN ARP/RX test window (also executed by full)
+#   rd05-netdiag lancheck focused one-shot LAN/ARP/RX state
+#   rd05-netdiag ports    print all known RTL8367D port/MIB counters
+#   rd05-netdiag watch    live kernel RX/DSA filter if dmesg -w is available
+#   rd05-netdiag prepare  explicitly reseed the RTL8197F vendor ingress/DMA tables
+#   rd05-netdiag autotune explicitly run the legacy experimental v29 switch/tag/TX matrix
+#   rd05-netdiag help     show usage and PC-side commands
+
+umask 077
+MODE="${1:-full}"
+OUTDIR="${RD05_OUTDIR:-/tmp}"
+TS="$(date +%Y%m%d-%H%M%S 2>/dev/null || echo now)"
+RD05_SESSION="${RD05_SESSION:-rd05-${TS}-$$}"
+RD05_SESSION="$(printf '%s' "$RD05_SESSION" | tr -cd 'A-Za-z0-9._-' 2>/dev/null)"
+[ -n "$RD05_SESSION" ] || RD05_SESSION="rd05-${TS}-$$"
+if [ "$MODE" = "full" ]; then
+	RUNDIR="$OUTDIR/rd05-netdiag-full-${TS}-$$"
+	if mkdir "$RUNDIR" 2>/dev/null; then
+		OUT="$RUNDIR/router.log"
+	else
+		RUNDIR=""
+		OUT="$OUTDIR/rd05-netdiag-full-${TS}-$$.txt"
+	fi
+else
+	RUNDIR=""
+	OUT="$OUTDIR/rd05-netdiag-${MODE}-${TS}.txt"
+fi
+# Full-mode LAN/RX window length. Keep all router-side commands inside rd05-netdiag full.
+FULL_ARPTEST_SECONDS="${RD05_FULL_ARPTEST_SECONDS:-120}"
+# The PC peer normally uses 192.168.1.3/24 and is connected to DSA slave lan2.
+RD05_PC_IP="${RD05_PC_IP:-192.168.1.3}"
+FULL_PROBE_TARGET="${RD05_FULL_PROBE_TARGET:-$RD05_PC_IP}"
+FULL_PROBE_IF="${RD05_FULL_PROBE_IF:-br-lan}"
+RD05_MAGIC_IF="${RD05_MAGIC_IF:-lan2}"
+RD05_MAGIC_INTERVAL_MS="${RD05_MAGIC_INTERVAL_MS:-200}"
+RD05_PC_MAC="${RD05_PC_MAC:--}"
+RD05_RAW_CAPTURE="${RD05_RAW_CAPTURE:-1}"
+RD05_RAW_SNAPLEN="${RD05_RAW_SNAPLEN:-256}"
+RD05_RAW_MAX_PACKETS="${RD05_RAW_MAX_PACKETS:-8192}"
+# v25 EXT1/CPU-control matrix: keep DSA tagger/TXDESC/portmap safe and vary RTL8367D CPU control/RGMII modes.
+TXMATRIX_SECONDS="${RD05_TXMATRIX_SECONDS:-12}"
+TXMATRIX_MODES="${RD05_TXMATRIX_MODES:-0}"
+PORTMAP_SECONDS="${RD05_PORTMAP_SECONDS:-12}"
+PORTMAP_PORTS="${RD05_PORTMAP_PORTS:-0 1 2 3 4}"
+PORTMAP_SWITCH_MODES="${RD05_PORTMAP_SWITCH_MODES:-0 focus}"
+EXTCPU_SECONDS="${RD05_EXTCPU_SECONDS:-12}"
+EXTCPU_MODES="${RD05_EXTCPU_MODES:-0 1 2 3 4 5 10 11 12 13 14 15 16 17}"
+
+hr() { echo; echo "===== $* ====="; }
+run() {
+	echo; echo "+ $*"
+	"$@" 2>&1 || echo "[exit $?] $*"
+}
+exists() { command -v "$1" >/dev/null 2>&1; }
+cat_if() { [ -e "$1" ] && { echo "--- $1 ---"; cat "$1" 2>&1; }; }
+
+val_ethtool() {
+	dev="$1"
+	key="$2"
+	ethtool -S "$dev" 2>/dev/null | awk -v k="$key" '$1 == k":" { gsub(/:/, "", $1); print $2; exit }'
+}
+
+val_procnet() {
+	dev="$1"
+	awk -v d="$dev" '
+		$1 ~ ("^" d ":") {
+			gsub(":", "", $1);
+			print $2, $3, $10, $11;
+			exit;
+		}' /proc/net/dev 2>/dev/null
+}
+
+safe_num() {
+	case "$1" in
+		''|*[!0-9]*) echo 0 ;;
+		*) echo "$1" ;;
+	esac
+}
+
+print_counter_delta() {
+	name="$1"; before="$2"; after="$3"
+	before="$(safe_num "$before")"
+	after="$(safe_num "$after")"
+	printf '  %-34s before=%-10s after=%-10s delta=%s\n' "$name" "$before" "$after" "$((after - before))"
+}
+
+rd05_router_probe_tick() {
+	# Trigger ingress from the peer without requiring a timed PC-side command.
+	# A same-subnet ping causes ARP requests/retries from br-lan; if the PC is
+	# configured at FULL_PROBE_TARGET it should answer back into lan2.
+	[ -n "$FULL_PROBE_TARGET" ] || return 0
+	if [ -e "/sys/class/net/$FULL_PROBE_IF" ]; then
+		ping -I "$FULL_PROBE_IF" -c 1 -W 1 "$FULL_PROBE_TARGET" >/dev/null 2>&1 &
+	else
+		ping -c 1 -W 1 "$FULL_PROBE_TARGET" >/dev/null 2>&1 &
+	fi
+	# Some BusyBox builds have arping; use it opportunistically. If absent or
+	# unsupported, the ping-triggered ARP path above is still enough.
+	if command -v arping >/dev/null 2>&1; then
+		arping -I "$FULL_PROBE_IF" -c 1 -w 1 "$FULL_PROBE_TARGET" >/dev/null 2>&1 &
+	fi
+}
+
+rd05_ensure_network() {
+	hr "ensure LAN is started before diagnostics"
+	if command -v ifup >/dev/null 2>&1; then
+		ifup lan >/dev/null 2>&1 || true
+	fi
+	if command -v ubus >/dev/null 2>&1; then
+		ubus call network.interface.lan up >/dev/null 2>&1 || true
+	fi
+
+	waited=0
+	while [ "$waited" -lt 30 ]; do
+		if dmesg 2>/dev/null | grep -q 'rd05 poststart v34:.*cpuicr1=.*rxbase=.*txbase='; then
+			break
+		fi
+		sleep 1
+		waited=$((waited + 1))
+	done
+	echo "LAN wait=${waited}s eth0=$(cat /sys/class/net/eth0/operstate 2>/dev/null || echo missing) lan2=$(cat /sys/class/net/lan2/operstate 2>/dev/null || echo missing)"
+	dmesg 2>/dev/null | grep 'rd05 poststart v34:' | tail -1 || true
+}
+
+rd05_selected_eth0() {
+	[ -e /sys/class/net/eth0 ] || { echo "eth0 missing"; return; }
+	ethtool -S eth0 2>/dev/null | grep -E 'rd05_magic|rd05_rx_external|rd05_rx_self_loop|rd05_rx_arp|rd05_rx_ipv4|rd05_rx_ipv6|rd05_rx_bcast|rd05_rx_mcast|rd05_rx_untagged|rd05_rx_direct|rd05_rxtrace|rd05_rxdesc|rd05_trap_ok|rd05_ffcr|rd05_daclrcr|rd05_ptrap|rd05_l2cpu_ok|rd05_pipe_ok|rd05_acl_ok|rx_crc_strips|reg_cpui|reg_dma|reg_cpur|rd05_sdk_newdesc_rx|rd05_legacy_rx' || true
+}
+
+rd05_selected_lan2() {
+	[ -e /sys/class/net/lan2 ] || { echo "lan2 missing"; return; }
+	ethtool -S lan2 2>/dev/null | grep -E 'tx_packets|rx_packets|ifInOctets|ifOutOctets|ifInUcastPkts|ifInMulticastPkts|ifInBroadcastPkts|ifOutUcastPkts|ifOutMulticastPkts|ifOutBroadcastPkts|dot1dTpPortInDiscards|ifOutDiscards|etherStatsDropEvents' || true
+}
+
+rd05_known_ports() {
+	cat <<'EOT'
+0 lan1 UTP0-LAN1
+1 lan2 UTP1-LAN2
+2 wan UTP2-WAN
+3 lan3 UTP3-LAN3
+4 lan4 UTP4-LAN4
+5 - P5-unknown/reserved
+6 - EXT0/CPU-candidate
+7 - EXT1/CPU-candidate
+EOT
+}
+
+val_cpuport() {
+	phys="$1"
+	key="$2"
+	pref="p0${phys}_${key}"
+	v="$(val_ethtool eth0 "$pref")"
+	[ -n "$v" ] && { echo "$v"; return; }
+	pref="p${phys}_${key}"
+	val_ethtool eth0 "$pref"
+}
+
+rd05_switch_port_matrix() {
+	hr "RTL8367D all known ports matrix"
+	printf '%-4s %-8s %-22s %-8s %-14s %-12s %-12s %-12s %-12s %-12s %-12s\n' \
+		"phy" "dev" "role" "carrier" "state" "ifInOct" "inBcast" "inMcast" "disc" "ifOutOct" "outBcast"
+	rd05_known_ports | while read phys dev role; do
+		[ -n "$phys" ] || continue
+		if [ "$dev" != "-" ] && [ -e "/sys/class/net/$dev" ]; then
+			carrier="$(cat /sys/class/net/$dev/carrier 2>/dev/null || echo '-')"
+			state="$(cat /sys/class/net/$dev/operstate 2>/dev/null || echo '-')"
+			in_oct="$(safe_num "$(val_ethtool "$dev" ifInOctets)")"
+			in_bc="$(safe_num "$(val_ethtool "$dev" ifInBroadcastPkts)")"
+			in_mc="$(safe_num "$(val_ethtool "$dev" ifInMulticastPkts)")"
+			disc="$(safe_num "$(val_ethtool "$dev" dot1dTpPortInDiscards)")"
+			out_oct="$(safe_num "$(val_ethtool "$dev" ifOutOctets)")"
+			out_bc="$(safe_num "$(val_ethtool "$dev" ifOutBroadcastPkts)")"
+		else
+			carrier="-"
+			state="hidden"
+			in_oct="$(safe_num "$(val_cpuport "$phys" ifInOctets)")"
+			in_bc="$(safe_num "$(val_cpuport "$phys" ifInBroadcastPkts)")"
+			in_mc="$(safe_num "$(val_cpuport "$phys" ifInMulticastPkts)")"
+			disc="$(safe_num "$(val_cpuport "$phys" dot1dTpPortInDiscards)")"
+			out_oct="$(safe_num "$(val_cpuport "$phys" ifOutOctets)")"
+			out_bc="$(safe_num "$(val_cpuport "$phys" ifOutBroadcastPkts)")"
+		fi
+		printf '%-4s %-8s %-22s %-8s %-14s %-12s %-12s %-12s %-12s %-12s %-12s\n' \
+			"$phys" "$dev" "$role" "$carrier" "$state" "$in_oct" "$in_bc" "$in_mc" "$disc" "$out_oct" "$out_bc"
+	done
+
+	echo
+	echo "--- eth0-exposed hidden/CPU-port MIB counters p00..p07, if present ---"
+	if [ -e /sys/class/net/eth0 ]; then
+		ethtool -S eth0 2>/dev/null | grep -E 'p0?[0-7]_(ifInOctets|ifOutOctets|ifInUcastPkts|ifInMulticastPkts|ifInBroadcastPkts|ifOutUcastPkts|ifOutMulticastPkts|ifOutBroadcastPkts|dot1dTpPortInDiscards|etherStatsDropEvents)' || echo "no p00..p07 counters exposed on eth0"
+	else
+		echo "eth0 missing"
+	fi
+}
+
+rd05_known_port_full_stats() {
+	hr "RTL8367D full known-port stats"
+	rd05_known_ports | while read phys dev role; do
+		[ -n "$phys" ] || continue
+		echo
+		echo "--- physical port $phys / $role / dev=$dev ---"
+		if [ "$dev" != "-" ] && [ -e "/sys/class/net/$dev" ]; then
+			ethtool -S "$dev" 2>/dev/null | grep -E 'tx_packets|tx_bytes|rx_packets|rx_bytes|ifInOctets|ifOutOctets|ifInUcastPkts|ifInMulticastPkts|ifInBroadcastPkts|ifOutUcastPkts|ifOutMulticastPkts|ifOutBroadcastPkts|dot1dTpPortInDiscards|ifOutDiscards|etherStatsDropEvents|dot3StatsFCSErrors|dot3StatsSymbolErrors' || true
+		else
+			if [ -e /sys/class/net/eth0 ]; then
+				ethtool -S eth0 2>/dev/null | grep -E "p0?${phys}_(ifInOctets|ifOutOctets|ifInUcastPkts|ifInMulticastPkts|ifInBroadcastPkts|ifOutUcastPkts|ifOutMulticastPkts|ifOutBroadcastPkts|dot1dTpPortInDiscards|etherStatsDropEvents|dot3StatsFCSErrors|dot3StatsSymbolErrors)" || echo "hidden port $phys has no eth0-exposed p${phys} counters"
+			else
+				echo "eth0 missing"
+			fi
+		fi
+	done
+}
+
+rd05_selected_brlan() {
+	[ -e /sys/class/net/br-lan ] || { echo "br-lan missing"; return; }
+	ip -s link show br-lan 2>/dev/null || true
+	ip addr show br-lan 2>/dev/null || true
+}
+
+rd05_lan_state() {
+	label="$1"
+	hr "focused LAN/ARP/RX state${label:+ - $label}"
+	echo "--- link state ---"
+	for dev in eth0 br-lan lan2; do
+		[ -e "/sys/class/net/$dev" ] || continue
+		printf '%-7s carrier=%s operstate=%s flags=' "$dev" \
+			"$(cat /sys/class/net/$dev/carrier 2>/dev/null || echo '-')" \
+			"$(cat /sys/class/net/$dev/operstate 2>/dev/null || echo '-')"
+		ip -o link show "$dev" 2>/dev/null | sed 's/^[0-9]*: [^:]*: //' || true
+	done
+	echo
+	echo "--- eth0 RD05 counters ---"
+	rd05_selected_eth0
+	echo
+	echo "--- lan2 switch/DSA counters ---"
+	rd05_selected_lan2
+	echo
+	rd05_switch_port_matrix
+	echo
+	echo "--- br-lan counters/address ---"
+	rd05_selected_brlan
+	echo
+	echo "--- filtered RX/ARP dmesg tail ---"
+	dmesg 2>/dev/null | grep -Ei 'v5am|rxext|rd05 rxtrace|rd05 rx observe|bridge-local|slave-local|proto 0x0806|proto 0x0800|proto 0x86dd|untagged rx|l2cpu v5|pipe v5|acl v5|cpu path|registered eth0|RTL8367D' | tail -160 || true
+}
+
+rd05_lan_decision() {
+	hr "focused LAN/ARP decision"
+	external="$(safe_num "$(val_ethtool eth0 rd05_rx_external)")"
+	self_loop="$(safe_num "$(val_ethtool eth0 rd05_rx_self_loop)")"
+	arp="$(safe_num "$(val_ethtool eth0 rd05_rx_arp)")"
+	ip4="$(safe_num "$(val_ethtool eth0 rd05_rx_ipv4)")"
+	ip6="$(safe_num "$(val_ethtool eth0 rd05_rx_ipv6)")"
+	bc="$(safe_num "$(val_ethtool eth0 rd05_rx_bcast)")"
+	mcast="$(safe_num "$(val_ethtool eth0 rd05_rx_mcast)")"
+	trace="$(safe_num "$(val_ethtool eth0 rd05_rxtrace_frames)")"
+	rtk8="$(safe_num "$(val_ethtool eth0 rd05_rxtrace_rtk0)")"
+	l2ok="$(safe_num "$(val_ethtool eth0 rd05_l2cpu_ok)")"
+	pipeok="$(safe_num "$(val_ethtool eth0 rd05_pipe_ok)")"
+	aclok="$(safe_num "$(val_ethtool eth0 rd05_acl_ok)")"
+	trapok="$(safe_num "$(val_ethtool eth0 rd05_trap_ok)")"
+	lan2b="$(safe_num "$(val_ethtool lan2 ifInBroadcastPkts)")"
+	lan2disc="$(safe_num "$(val_ethtool lan2 dot1dTpPortInDiscards)")"
+	p06in="$(safe_num "$(val_cpuport 6 ifInOctets)")"
+	p06out="$(safe_num "$(val_cpuport 6 ifOutOctets)")"
+	p07in="$(safe_num "$(val_cpuport 7 ifInOctets)")"
+	p07out="$(safe_num "$(val_cpuport 7 ifOutOctets)")"
+	p07fcs="$(safe_num "$(val_cpuport 7 dot3StatsFCSErrors)")"
+	p07drop="$(safe_num "$(val_cpuport 7 etherStatsDropEvents)")"
+
+	echo "eth0: rd05_rx_external=$external rd05_rx_self_loop=$self_loop rd05_rx_arp=$arp rd05_rx_ipv4=$ip4 rd05_rx_ipv6=$ip6 rd05_rx_bcast=$bc rd05_rx_mcast=$mcast rd05_rxtrace_frames=$trace rd05_rxtrace_rtk0=$rtk8"
+	echo "seeds: rd05_l2cpu_ok=$l2ok rd05_pipe_ok=$pipeok rd05_acl_ok=$aclok rd05_trap_ok=$trapok"
+	echo "lan2: ifInBroadcastPkts=$lan2b dot1dTpPortInDiscards=$lan2disc"
+	echo "cpu candidates: p06_ifInOctets=$p06in p06_ifOutOctets=$p06out p07_ifInOctets=$p07in p07_ifOutOctets=$p07out p07_fcs=$p07fcs p07_drop=$p07drop"
+	echo
+	if [ "$p07fcs" -gt 0 ] && [ "$p07out" -eq 0 ]; then
+		echo "RESULT: RTL8367D CPU7 receives SoC-originated frames with FCS errors. This is a switch-side EXT1 RX sampling problem, not proof about switch-to-SoC RX."
+		echo "NEXT: v34 uses adjacent EXT1 RX delay tap 6; verify that p07_dot3StatsFCSErrors no longer increases."
+	elif [ "$external" -gt 0 ] && [ "$arp" -gt 0 ]; then
+		echo "RESULT: externally sourced ARP reaches RTL8197F CPU RX. If the PC still has no answer, investigate DSA slave delivery and the reply/TX path."
+	elif [ "$external" -gt 0 ]; then
+		echo "RESULT: a non-router source MAC reaches the RTL8197F CPU ring. The P0/RGMII receive path is active; continue with CPU-tag source-port decode, DSA slave delivery and bridge policy."
+	elif [ "$self_loop" -gt 0 ] || [ "$trace" -gt 0 ]; then
+		echo "RESULT: CPU RX only shows local/self-reflected or otherwise unproven frames. This is not evidence that PC ingress works."
+		echo "NEXT: rd05_rx_external must increase for a real PC/LAN frame; inspect the v34 post-start CPUICR1/ring and EXT1/SSC readbacks if it remains zero."
+	elif [ "$lan2b" -gt 0 ] && [ "$p07out" -gt 0 ]; then
+		echo "RESULT: RTL8367D forwards LAN ingress out CPU7/EXT1, but RTL8197F CPU RX still sees no external frame."
+		echo "NEXT: verify the v34 post-start CPUICR1/ring readback, RGMII timing and RX descriptor ownership."
+	elif [ "$lan2b" -gt 0 ] && [ "$lan2disc" -eq 0 ]; then
+		echo "RESULT: lan2 sees broadcast and switch is not discarding, but CPU RX sees no ARP."
+		echo "NEXT: verify the RTL8367D CPU-port VLAN membership and P0/RGMII path."
+	elif [ "$lan2disc" -gt 0 ]; then
+		echo "RESULT: lan2 has cumulative bridge discards and there is no CPU7 egress proof in this snapshot. Check VLAN/PVID/member/ingress filtering."
+	else
+		echo "RESULT: no ARP seen at CPU and no clear lan2 broadcast evidence in this snapshot. Run rd05-netdiag arptest while PC arping runs."
+	fi
+}
+
+rd05_arptest() {
+	# Accept both "rd05_arptest 120" and "rd05_arptest arptest 120" call styles.
+	case "$1" in
+		''|*[!0-9]*) seconds="${2:-$FULL_ARPTEST_SECONDS}" ;;
+		*) seconds="$1" ;;
+	esac
+	case "$seconds" in ''|*[!0-9]*) seconds="$FULL_ARPTEST_SECONDS" ;; esac
+	[ "$seconds" -lt 30 ] 2>/dev/null && seconds=30
+	[ "$seconds" -gt 300 ] 2>/dev/null && seconds=300
+
+	hr "RD05 automated LAN ARP/RX test - fullauto trafficguard"
+	cat <<EOT
+This runs every router-side command automatically.
+
+IMPORTANT: the router cannot create inbound LAN2 frames by itself.
+During the live countdown below, generate traffic on the PC only.
+
+Start the supplied Linux PC companion before or together with this command:
+
+  sudo ./rd05-pc-netdiag.py --interface <pc-lan-interface> --configure-ip --duration $seconds
+
+The PC tool captures all Ethernet traffic, sends/receives raw EtherType 0x8899
+RD05MAGIC-V31 frames, generates ARP/ICMP/UDP probes and writes PCAP/JSON.
+No additional router command is required.
+EOT
+
+	# before counters
+	b_external="$(val_ethtool eth0 rd05_rx_external)"
+	b_magic="$(val_ethtool eth0 rd05_magic_hits)"
+	b_magic_cand="$(val_ethtool eth0 rd05_magic_last_candidate)"
+	b_self_loop="$(val_ethtool eth0 rd05_rx_self_loop)"
+	b_arp="$(val_ethtool eth0 rd05_rx_arp)"
+	b_ip4="$(val_ethtool eth0 rd05_rx_ipv4)"
+	b_ip6="$(val_ethtool eth0 rd05_rx_ipv6)"
+	b_bcast="$(val_ethtool eth0 rd05_rx_bcast)"
+	b_mcast="$(val_ethtool eth0 rd05_rx_mcast)"
+	b_untag="$(val_ethtool eth0 rd05_rx_untagged)"
+	b_direct="$(val_ethtool eth0 rd05_rx_direct_lan2)"
+	b_trace_frames="$(val_ethtool eth0 rd05_rxtrace_frames)"
+	b_trace_logs="$(val_ethtool eth0 rd05_rxtrace_logs)"
+	b_trace_arp0="$(val_ethtool eth0 rd05_rxtrace_arp0)"
+	b_trace_arp4="$(val_ethtool eth0 rd05_rxtrace_arp4)"
+	b_trace_arp8="$(val_ethtool eth0 rd05_rxtrace_arp8)"
+	b_trace_bcast0="$(val_ethtool eth0 rd05_rxtrace_bcast0)"
+	b_trace_bcast4="$(val_ethtool eth0 rd05_rxtrace_bcast4)"
+	b_trace_bcast8="$(val_ethtool eth0 rd05_rxtrace_bcast8)"
+	b_legacy_pkts="$(val_ethtool eth0 rd05_legacy_rx_pkts)"
+	b_legacy_empty="$(val_ethtool eth0 rd05_legacy_rx_empty)"
+	b_legacy_bad="$(val_ethtool eth0 rd05_legacy_rx_bad)"
+	b_legacy_ent="$(val_ethtool eth0 rd05_legacy_rx_last_ent)"
+	b_lan2_b="$(val_ethtool lan2 ifInBroadcastPkts)"
+	b_lan2_m="$(val_ethtool lan2 ifInMulticastPkts)"
+	b_lan2_oct="$(val_ethtool lan2 ifInOctets)"
+	b_lan2_disc="$(val_ethtool lan2 dot1dTpPortInDiscards)"
+	b_p06_in="$(val_cpuport 6 ifInOctets)"
+	b_p06_out="$(val_cpuport 6 ifOutOctets)"
+	b_p07_in="$(val_cpuport 7 ifInOctets)"
+	b_p07_out="$(val_cpuport 7 ifOutOctets)"
+	b_br="$(val_procnet br-lan)"
+	b_eth="$(val_procnet eth0)"
+
+	rd05_lan_state "before"
+	[ -n "$RUNDIR" ] && rd05_raw_start "$seconds"
+	echo "RD05_WINDOW_READY version=1 session=$RD05_SESSION duration_s=$seconds interface=$RD05_MAGIC_IF pc_ip=$RD05_PC_IP pc_mac=$RD05_PC_MAC"
+	echo
+	hr "LAN/RX TRAFFIC WINDOW - ROUTER SELF-PROBE AND RAW MAGIC ACTIVE"
+	echo "Window length: ${seconds}s. Router-side collection is automatic."
+	echo "v23 self-probe: router sends periodic probes to ${FULL_PROBE_TARGET} via ${FULL_PROBE_IF}."
+	echo "The PC only needs to be connected to lan2 and configured with that IP; no timed PC command is required."
+	echo
+	i=0
+	seen_lan2=0
+	seen_cpuport=0
+	seen_ethrx=0
+	while [ "$i" -lt "$seconds" ]; do
+		rd05_router_probe_tick
+		step=5
+		remaining=$((seconds - i))
+		[ "$remaining" -lt "$step" ] && step="$remaining"
+		sleep "$step"
+		i=$((i + step))
+		c_external="$(val_ethtool eth0 rd05_rx_external)"
+		c_magic="$(val_ethtool eth0 rd05_magic_hits)"
+		c_self_loop="$(val_ethtool eth0 rd05_rx_self_loop)"
+		c_arp="$(val_ethtool eth0 rd05_rx_arp)"
+		c_bcast="$(val_ethtool eth0 rd05_rx_bcast)"
+		c_trace="$(val_ethtool eth0 rd05_rxtrace_frames)"
+		c_legacy_pkts="$(val_ethtool eth0 rd05_legacy_rx_pkts)"
+		c_legacy_bad="$(val_ethtool eth0 rd05_legacy_rx_bad)"
+		c_legacy_empty="$(val_ethtool eth0 rd05_legacy_rx_empty)"
+		c_lan2_b="$(val_ethtool lan2 ifInBroadcastPkts)"
+		c_lan2_oct="$(val_ethtool lan2 ifInOctets)"
+		c_p07_out="$(val_cpuport 7 ifOutOctets)"
+		d_external=$(( $(safe_num "$c_external") - $(safe_num "$b_external") ))
+		d_magic_live=$(( $(safe_num "$c_magic") - $(safe_num "$b_magic") ))
+		d_self_loop=$(( $(safe_num "$c_self_loop") - $(safe_num "$b_self_loop") ))
+		d_arp=$(( $(safe_num "$c_arp") - $(safe_num "$b_arp") ))
+		d_bcast=$(( $(safe_num "$c_bcast") - $(safe_num "$b_bcast") ))
+		d_trace=$(( $(safe_num "$c_trace") - $(safe_num "$b_trace_frames") ))
+		d_legacy_pkts=$(( $(safe_num "$c_legacy_pkts") - $(safe_num "$b_legacy_pkts") ))
+		d_legacy_bad=$(( $(safe_num "$c_legacy_bad") - $(safe_num "$b_legacy_bad") ))
+		d_legacy_empty=$(( $(safe_num "$c_legacy_empty") - $(safe_num "$b_legacy_empty") ))
+		d_lan2_b=$(( $(safe_num "$c_lan2_b") - $(safe_num "$b_lan2_b") ))
+		d_lan2_oct=$(( $(safe_num "$c_lan2_oct") - $(safe_num "$b_lan2_oct") ))
+		d_p07_out=$(( $(safe_num "$c_p07_out") - $(safe_num "$b_p07_out") ))
+		[ "$d_lan2_oct" -gt 0 ] || [ "$d_lan2_b" -gt 0 ] && seen_lan2=1
+		[ "$d_p07_out" -gt 0 ] && seen_cpuport=1
+		[ "$d_external" -gt 0 ] && seen_ethrx=1
+		printf 'LIVE_WINDOW t=%03ss/%03ss lan2_oct_delta=%s lan2_bcast_delta=%s p07_out_delta=%s external_delta=%s magic_delta=%s self_loop_delta=%s legacy_pkts_delta=%s legacy_bad_delta=%s legacy_empty_delta=%s eth0_arp_delta=%s eth0_bcast_delta=%s rxtrace_delta=%s\n' \
+			"$i" "$seconds" "$d_lan2_oct" "$d_lan2_b" "$d_p07_out" "$d_external" "$d_magic_live" "$d_self_loop" "$d_legacy_pkts" "$d_legacy_bad" "$d_legacy_empty" "$d_arp" "$d_bcast" "$d_trace"
+		if [ "$i" -eq 30 ] && [ "$seen_lan2" -eq 0 ]; then
+			echo "LIVE_WINDOW_HINT: still no new LAN2 input. The router is already sending ARP/ping and raw RD05MAGIC-V31 probes; verify cable, LAN2 link and PC script."
+		fi
+	done
+	[ -n "$RUNDIR" ] && rd05_raw_wait
+	echo "RD05_WINDOW_DONE version=1 session=$RD05_SESSION duration_s=$seconds interface=$RD05_MAGIC_IF"
+
+	# after counters
+	a_external="$(val_ethtool eth0 rd05_rx_external)"
+	a_magic="$(val_ethtool eth0 rd05_magic_hits)"
+	a_magic_cand="$(val_ethtool eth0 rd05_magic_last_candidate)"
+	a_magic_len="$(val_ethtool eth0 rd05_magic_last_len)"
+	a_magic_p0="$(val_ethtool eth0 rd05_magic_last_proto0)"
+	a_magic_p4="$(val_ethtool eth0 rd05_magic_last_proto4)"
+	a_magic_p8="$(val_ethtool eth0 rd05_magic_last_proto8)"
+	a_self_loop="$(val_ethtool eth0 rd05_rx_self_loop)"
+	a_arp="$(val_ethtool eth0 rd05_rx_arp)"
+	a_ip4="$(val_ethtool eth0 rd05_rx_ipv4)"
+	a_ip6="$(val_ethtool eth0 rd05_rx_ipv6)"
+	a_bcast="$(val_ethtool eth0 rd05_rx_bcast)"
+	a_mcast="$(val_ethtool eth0 rd05_rx_mcast)"
+	a_untag="$(val_ethtool eth0 rd05_rx_untagged)"
+	a_direct="$(val_ethtool eth0 rd05_rx_direct_lan2)"
+	a_trace_frames="$(val_ethtool eth0 rd05_rxtrace_frames)"
+	a_trace_logs="$(val_ethtool eth0 rd05_rxtrace_logs)"
+	a_trace_arp0="$(val_ethtool eth0 rd05_rxtrace_arp0)"
+	a_trace_arp4="$(val_ethtool eth0 rd05_rxtrace_arp4)"
+	a_trace_arp8="$(val_ethtool eth0 rd05_rxtrace_arp8)"
+	a_trace_bcast0="$(val_ethtool eth0 rd05_rxtrace_bcast0)"
+	a_trace_bcast4="$(val_ethtool eth0 rd05_rxtrace_bcast4)"
+	a_trace_bcast8="$(val_ethtool eth0 rd05_rxtrace_bcast8)"
+	a_legacy_pkts="$(val_ethtool eth0 rd05_legacy_rx_pkts)"
+	a_legacy_empty="$(val_ethtool eth0 rd05_legacy_rx_empty)"
+	a_legacy_bad="$(val_ethtool eth0 rd05_legacy_rx_bad)"
+	a_legacy_ent="$(val_ethtool eth0 rd05_legacy_rx_last_ent)"
+	a_lan2_b="$(val_ethtool lan2 ifInBroadcastPkts)"
+	a_lan2_m="$(val_ethtool lan2 ifInMulticastPkts)"
+	a_lan2_oct="$(val_ethtool lan2 ifInOctets)"
+	a_lan2_disc="$(val_ethtool lan2 dot1dTpPortInDiscards)"
+	a_p06_in="$(val_cpuport 6 ifInOctets)"
+	a_p06_out="$(val_cpuport 6 ifOutOctets)"
+	a_p07_in="$(val_cpuport 7 ifInOctets)"
+	a_p07_out="$(val_cpuport 7 ifOutOctets)"
+	a_br="$(val_procnet br-lan)"
+	a_eth="$(val_procnet eth0)"
+
+	rd05_lan_state "after"
+	hr "focused before/after deltas"
+	print_counter_delta "eth0 rd05_rx_external" "$b_external" "$a_external"
+	print_counter_delta "eth0 rd05_magic_hits" "$b_magic" "$a_magic"
+	echo "eth0 rd05_magic_last_candidate before=$b_magic_cand after=$a_magic_cand len=$a_magic_len proto0/4/8=$a_magic_p0/$a_magic_p4/$a_magic_p8"
+	print_counter_delta "eth0 rd05_rx_self_loop" "$b_self_loop" "$a_self_loop"
+	print_counter_delta "eth0 rd05_rx_arp" "$b_arp" "$a_arp"
+	print_counter_delta "eth0 rd05_rx_ipv4" "$b_ip4" "$a_ip4"
+	print_counter_delta "eth0 rd05_rx_ipv6" "$b_ip6" "$a_ip6"
+	print_counter_delta "eth0 rd05_rx_bcast" "$b_bcast" "$a_bcast"
+	print_counter_delta "eth0 rd05_rx_mcast" "$b_mcast" "$a_mcast"
+	print_counter_delta "eth0 rd05_rx_untagged" "$b_untag" "$a_untag"
+	print_counter_delta "eth0 rd05_rx_direct_lan2" "$b_direct" "$a_direct"
+	print_counter_delta "eth0 rd05_rxtrace_frames" "$b_trace_frames" "$a_trace_frames"
+	print_counter_delta "eth0 rd05_rxtrace_logs" "$b_trace_logs" "$a_trace_logs"
+	print_counter_delta "eth0 rd05_rxtrace_arp0" "$b_trace_arp0" "$a_trace_arp0"
+	print_counter_delta "eth0 rd05_rxtrace_arp4" "$b_trace_arp4" "$a_trace_arp4"
+	print_counter_delta "eth0 rd05_rxtrace_arp8" "$b_trace_arp8" "$a_trace_arp8"
+	print_counter_delta "eth0 rd05_rxtrace_bcast0" "$b_trace_bcast0" "$a_trace_bcast0"
+	print_counter_delta "eth0 rd05_rxtrace_bcast4" "$b_trace_bcast4" "$a_trace_bcast4"
+	print_counter_delta "eth0 rd05_rxtrace_bcast8" "$b_trace_bcast8" "$a_trace_bcast8"
+	print_counter_delta "eth0 rd05_legacy_rx_pkts" "$b_legacy_pkts" "$a_legacy_pkts"
+	print_counter_delta "eth0 rd05_legacy_rx_empty" "$b_legacy_empty" "$a_legacy_empty"
+	print_counter_delta "eth0 rd05_legacy_rx_bad" "$b_legacy_bad" "$a_legacy_bad"
+	echo "eth0 rd05_legacy_rx_last_ent before: $b_legacy_ent"
+	echo "eth0 rd05_legacy_rx_last_ent after : $a_legacy_ent"
+	print_counter_delta "lan2 ifInBroadcastPkts" "$b_lan2_b" "$a_lan2_b"
+	print_counter_delta "lan2 ifInMulticastPkts" "$b_lan2_m" "$a_lan2_m"
+	print_counter_delta "lan2 ifInOctets" "$b_lan2_oct" "$a_lan2_oct"
+	print_counter_delta "lan2 dot1dTpPortInDiscards" "$b_lan2_disc" "$a_lan2_disc"
+	print_counter_delta "cpu cand p06_ifInOctets" "$b_p06_in" "$a_p06_in"
+	print_counter_delta "cpu cand p06_ifOutOctets" "$b_p06_out" "$a_p06_out"
+	print_counter_delta "cpu cand p07_ifInOctets" "$b_p07_in" "$a_p07_in"
+	print_counter_delta "cpu cand p07_ifOutOctets" "$b_p07_out" "$a_p07_out"
+
+	d_lan2_oct=$(( $(safe_num "$a_lan2_oct") - $(safe_num "$b_lan2_oct") ))
+	d_lan2_b=$(( $(safe_num "$a_lan2_b") - $(safe_num "$b_lan2_b") ))
+	d_p07_out=$(( $(safe_num "$a_p07_out") - $(safe_num "$b_p07_out") ))
+	d_legacy_pkts=$(( $(safe_num "$a_legacy_pkts") - $(safe_num "$b_legacy_pkts") ))
+	d_legacy_empty=$(( $(safe_num "$a_legacy_empty") - $(safe_num "$b_legacy_empty") ))
+	d_rx_external=$(( $(safe_num "$a_external") - $(safe_num "$b_external") ))
+	d_magic=$(( $(safe_num "$a_magic") - $(safe_num "$b_magic") ))
+	d_rx_self_loop=$(( $(safe_num "$a_self_loop") - $(safe_num "$b_self_loop") ))
+	d_rx_arp=$(( $(safe_num "$a_arp") - $(safe_num "$b_arp") ))
+	d_rx_bcast=$(( $(safe_num "$a_bcast") - $(safe_num "$b_bcast") ))
+	d_rxtrace=$(( $(safe_num "$a_trace_frames") - $(safe_num "$b_trace_frames") ))
+	hr "traffic-window verdict"
+	if [ "$d_magic" -gt 0 ]; then
+		result_window="RTL8197F_RAW_MAGIC_RX_CONFIRMED"
+		echo "RESULT_WINDOW: $result_window"
+		echo "Meaning: PC-origin RD05MAGIC-V31 bytes reached the RTL8197F raw DMA RX path before DSA/bridge processing."
+	elif [ "$d_lan2_oct" -eq 0 ] && [ "$d_lan2_b" -eq 0 ] && [ "$d_p07_out" -eq 0 ]; then
+		result_window="NO_NEW_LAN2_TRAFFIC_DETECTED_DURING_FULL_WINDOW"
+		echo "RESULT_WINDOW: $result_window"
+		echo "Meaning: router self-probes ran, but no peer traffic reached lan2 during the window."
+	elif [ "$d_rx_external" -gt 0 ]; then
+		result_window="RTL8197F_CPU_RX_SEES_EXTERNAL_INGRESS"
+		echo "RESULT_WINDOW: $result_window"
+		echo "Meaning: at least one non-router source MAC reached the CPU ring. P0/RGMII ingress is working; continue with rtl8_4 source-port decode, DSA slave delivery, bridge and reply TX."
+	elif [ "$d_lan2_oct" -gt 0 ] && [ "$d_p07_out" -gt 0 ] && [ "$d_rx_external" -eq 0 ]; then
+		result_window="LAN2_AND_RTL8367D_CPU_PORT_ACTIVE_BUT_NO_EXTERNAL_RTL8197F_RX"
+		echo "RESULT_WINDOW: $result_window"
+		echo "Meaning: the external switch forwards toward CPU7/EXT1, but no frame with a non-router source MAC reaches RTL8197F P0/DMA."
+	elif [ "$d_rx_self_loop" -gt 0 ] || [ "$d_rxtrace" -gt 0 ] || [ "$d_legacy_pkts" -gt 0 ]; then
+		result_window="RTL8197F_RX_ONLY_LOCAL_OR_UNPROVEN_FRAMES"
+		echo "RESULT_WINDOW: $result_window"
+		echo "Meaning: raw RX activity is present, but it does not prove PC ingress. The v30 self-reflection is counted separately and must not be treated as success."
+	else
+		result_window="PARTIAL_OR_AMBIGUOUS_TRAFFIC_DELTAS"
+		echo "RESULT_WINDOW: $result_window lan2_oct=$d_lan2_oct lan2_bcast=$d_lan2_b p07_out=$d_p07_out external=$d_rx_external magic=$d_magic self_loop=$d_rx_self_loop legacy_pkts=$d_legacy_pkts legacy_empty=$d_legacy_empty rxtrace=$d_rxtrace"
+	fi
+	echo "RD05_WINDOW_MAGIC_DELTA=$d_magic"
+	echo "RD05_WINDOW_EXTERNAL_DELTA=$d_rx_external"
+	echo "RD05_WINDOW_ARP_DELTA=$d_rx_arp"
+	echo
+	echo "br-lan /proc/net/dev before: $b_br"
+	echo "br-lan /proc/net/dev after : $a_br"
+	echo "eth0   /proc/net/dev before: $b_eth"
+	echo "eth0   /proc/net/dev after : $a_eth"
+	if [ -n "$RUNDIR" ] && [ -d "$RUNDIR" ]; then
+		cat > "$RUNDIR/window.env" <<EOT
+RD05_SESSION=$RD05_SESSION
+RD05_RESULT_WINDOW=$result_window
+RD05_WINDOW_MAGIC_DELTA=$d_magic
+RD05_WINDOW_EXTERNAL_DELTA=$d_rx_external
+RD05_WINDOW_ARP_DELTA=$d_rx_arp
+RD05_WINDOW_LAN2_OCTETS_DELTA=$d_lan2_oct
+RD05_WINDOW_LAN2_BCAST_DELTA=$d_lan2_b
+RD05_WINDOW_CPU7_OUT_DELTA=$d_p07_out
+RD05_MAGIC_LAST_CANDIDATE=$a_magic_cand
+RD05_MAGIC_LAST_LEN=$a_magic_len
+RD05_MAGIC_LAST_PROTO0=$a_magic_p0
+RD05_MAGIC_LAST_PROTO4=$a_magic_p4
+RD05_MAGIC_LAST_PROTO8=$a_magic_p8
+EOT
+	fi
+	rd05_lan_decision
+}
+
+grep_dmesg() {
+	dmesg 2>/dev/null | grep -Ei 'rd05|v5am|rxext|RTL8367D|rtl8367|realtek-smi|rtknet|registered eth0|DSA|oem-vid9|RD05 DSA CPU path|rxtrace|rx observe|slave-local|bridge-local|untagged rx|non-realtek|proto 0x0806|proto 0x0800|proto 0x86dd|cpu path|l2cpu|rtl865x l2|rtl865x acl|rtl865x pipe|acl|ffcr|daclrcr|ptrap|flood|vlan|pvid|msti|isolation|mirror|WATCHDOG|p0 rgmii v31|vendor datapath v31|vendor datapath v9|private ioctl/proc v10|private ioctl/proc v25|sdk newdesc v25|cpuidma v25|rtl865x pipe v25|private ioctl/proc v23|sdk newdesc v23|cpuidma v23|rtl865x pipe v25|rtl865x pipe v23|private ioctl/proc v22|sdk newdesc v22|cpuidma v22|rtl865x pipe v22|private ioctl/proc v21|sdk newdesc v21|cpuidma v21|rtl865x pipe v21|private ioctl/proc v20|sdk newdesc v20|cpuidma v20|rtl865x pipe v20|private ioctl/proc v18|sdk newdesc v18|cpuidma v18|rtl865x pipe v18|private ioctl/proc v15|sdk newdesc v15|cpuidma v15|rtl865x pipe v15|private ioctl/proc v14|sdk newdesc v14|cpuidma v14|rtl865x pipe v14|private ioctl/proc v13|legacy rxmbuf v13|extmac force v13|private ioctl/proc v12|legacy rxmbuf v12|private ioctl/proc v11|legacy rxmbuf v11|private ioctl v9' || true
+}
+
+
+rd05_v5am_auto_bundle() {
+	hr "v25 automatic SDK newdesc RX + RTL8367D EXT1/CPU-mode self-probe bundle"
+	cat <<'EOT'
+This state-changing preparation is executed only by "rd05-netdiag prepare"
+or when RD05_RUN_PREPARE=1 is explicitly supplied to full. It triggers the
+kernel RD05 proc/private-ioctl path and reports the RX ring state.
+EOT
+
+	echo
+	if command -v rd05-ioctl >/dev/null 2>&1; then
+		for cmd in reseed rxstart vendor-side; do
+			echo "+ rd05-ioctl eth0 $cmd  # v23 procfs/private hook"
+			rd05-ioctl eth0 "$cmd" 2>&1 || true
+		done
+		dmesg 2>/dev/null | grep -E 'rd05 vendor datapath v9|rd05 private ioctl/proc v10|private ioctl/proc v25|sdk newdesc v25|cpuidma v25|rtl865x pipe v25|private ioctl/proc v23|sdk newdesc v23|cpuidma v23|rtl865x pipe v25|rtl865x pipe v23|private ioctl/proc v22|sdk newdesc v22|cpuidma v22|rtl865x pipe v22|private ioctl/proc v21|sdk newdesc v21|cpuidma v21|rtl865x pipe v21|private ioctl/proc v20|sdk newdesc v20|cpuidma v20|rtl865x pipe v20|private ioctl/proc v18|sdk newdesc v18|cpuidma v18|rtl865x pipe v18|private ioctl/proc v15|sdk newdesc v15|cpuidma v15|rtl865x pipe v15|private ioctl/proc v14|sdk newdesc v14|cpuidma v14|rtl865x pipe v14|private ioctl/proc v13|legacy rxmbuf v13|extmac force v13|private ioctl/proc v12|legacy rxmbuf v12|private ioctl/proc v11|legacy rxmbuf v11|rd05 private ioctl v9' | tail -40 || true
+	else
+		echo "rd05-ioctl not installed or procfs wrapper missing"
+	fi
+
+	echo
+	echo "+ dmesg | grep -E 'v5am|rxext|rxtrace|registered eth0|DSA CPU path|RTL8367D|vendor datapath v9|private ioctl/proc v10|private ioctl/proc v25|sdk newdesc v25|cpuidma v25|rtl865x pipe v25|private ioctl/proc v23|sdk newdesc v23|cpuidma v23|rtl865x pipe v25|rtl865x pipe v23|private ioctl/proc v22|sdk newdesc v22|cpuidma v22|rtl865x pipe v22|private ioctl/proc v21|sdk newdesc v21|cpuidma v21|rtl865x pipe v21|private ioctl/proc v20|sdk newdesc v20|cpuidma v20|rtl865x pipe v20|private ioctl/proc v18|sdk newdesc v18|cpuidma v18|rtl865x pipe v18|private ioctl/proc v15|sdk newdesc v15|cpuidma v15|rtl865x pipe v15|private ioctl/proc v14|sdk newdesc v14|cpuidma v14|rtl865x pipe v14|private ioctl/proc v13|legacy rxmbuf v13|extmac force v13|private ioctl/proc v12|legacy rxmbuf v12|private ioctl/proc v11|legacy rxmbuf v11|private ioctl v9' | tail -250"
+	dmesg 2>/dev/null | grep -E 'v5am|rxext|rxtrace|registered eth0|DSA CPU path|RTL8367D|vendor datapath v9|private ioctl/proc v10|private ioctl/proc v25|sdk newdesc v25|cpuidma v25|rtl865x pipe v25|private ioctl/proc v23|sdk newdesc v23|cpuidma v23|rtl865x pipe v25|rtl865x pipe v23|private ioctl/proc v22|sdk newdesc v22|cpuidma v22|rtl865x pipe v22|private ioctl/proc v21|sdk newdesc v21|cpuidma v21|rtl865x pipe v21|private ioctl/proc v20|sdk newdesc v20|cpuidma v20|rtl865x pipe v20|private ioctl/proc v18|sdk newdesc v18|cpuidma v18|rtl865x pipe v18|private ioctl/proc v15|sdk newdesc v15|cpuidma v15|rtl865x pipe v15|private ioctl/proc v14|sdk newdesc v14|cpuidma v14|rtl865x pipe v14|private ioctl/proc v13|legacy rxmbuf v13|extmac force v13|private ioctl/proc v12|legacy rxmbuf v12|private ioctl/proc v11|legacy rxmbuf v11|private ioctl v9' | tail -250 || true
+
+	echo
+	echo "+ ethtool -S eth0 | grep -E 'rd05_rxdesc|rd05_rxtrace|rd05_sdk_newdesc_rx|rd05_legacy_rx|rd05_rx_arp|rd05_rx_bcast|rd05_rx_ipv|rd05_rx_untagged|rd05_l2cpu|rd05_pipe|rd05_acl|rd05_trap|rd05_ffcr|rd05_daclrcr|rd05_ptrapcr|reg_cpu|reg_dma|reg_cpui|last_cpu|last_dma|last_cpuqdm|last_sirr|last_macctrl|last_sys_clk|rx_desc0|tx_desc0|hw_rx_desc|reg_cpurmdcr0|rd05_sdk_newdesc_rx|rd05_legacy_rx'"
+	if [ -e /sys/class/net/eth0 ]; then
+		ethtool -S eth0 2>/dev/null | grep -E 'rd05_rxdesc|rd05_rxtrace|rd05_sdk_newdesc_rx|rd05_legacy_rx|rd05_rx_arp|rd05_rx_bcast|rd05_rx_ipv|rd05_rx_untagged|rd05_l2cpu|rd05_pipe|rd05_acl|rd05_trap|rd05_ffcr|rd05_daclrcr|rd05_ptrapcr|reg_cpu|reg_dma|reg_cpui|last_cpu|last_dma|last_cpuqdm|last_sirr|last_macctrl|last_sys_clk|rx_desc0|tx_desc0|hw_rx_desc|reg_cpurmdcr0|rd05_sdk_newdesc_rx|rd05_legacy_rx' || true
+	else
+		echo "eth0 missing"
+	fi
+
+	echo
+	echo "+ ethtool -S lan2 | grep -E 'ifInBroadcastPkts|ifInMulticastPkts|ifInOctets|dot1dTpPortInDiscards|etherStatsDropEvents'"
+	if [ -e /sys/class/net/lan2 ]; then
+		ethtool -S lan2 2>/dev/null | grep -E 'ifInBroadcastPkts|ifInMulticastPkts|ifInOctets|dot1dTpPortInDiscards|etherStatsDropEvents' || true
+	else
+		echo "lan2 missing"
+	fi
+
+	echo
+	rd05_switch_port_matrix
+	echo
+	echo "+ cat /proc/net/dev"
+	cat /proc/net/dev 2>/dev/null || true
+
+	echo
+	echo "+ ip -br link; ip -br addr; ip neigh show"
+	ip -br link 2>/dev/null || true
+	ip -br addr 2>/dev/null || true
+	ip neigh show 2>/dev/null || true
+
+	if exists bridge; then
+		echo
+		echo "+ bridge link"
+		bridge link 2>/dev/null || true
+	fi
+}
+
+
+rd05_txmode_param_path() {
+	for p in /sys/module/tag_rtl8_4/parameters/rd05_tx_mode \
+		 /sys/module/dsa_tag_rtl8_4/parameters/rd05_tx_mode \
+		 /sys/module/dsa_core/parameters/rd05_tx_mode; do
+		[ -e "$p" ] && { echo "$p"; return; }
+	done
+}
+
+rd05_txtrace_limit_path() {
+	for p in /sys/module/tag_rtl8_4/parameters/rd05_txtrace_limit \
+		 /sys/module/dsa_tag_rtl8_4/parameters/rd05_txtrace_limit \
+		 /sys/module/dsa_core/parameters/rd05_txtrace_limit; do
+		[ -e "$p" ] && { echo "$p"; return; }
+	done
+}
+
+rd05_tx_port_override_path() {
+	for p in /sys/module/tag_rtl8_4/parameters/rd05_tx_port_override \
+		 /sys/module/dsa_tag_rtl8_4/parameters/rd05_tx_port_override \
+		 /sys/module/dsa_core/parameters/rd05_tx_port_override; do
+		[ -e "$p" ] && { echo "$p"; return; }
+	done
+}
+
+rd05_portmap_mode_path() {
+	for p in /sys/module/rtl8365mb/parameters/rd05_portmap_mode \
+		 /sys/module/realtek_smi/parameters/rd05_portmap_mode \
+		 /sys/module/realtek/parameters/rd05_portmap_mode; do
+		[ -e "$p" ] && { echo "$p"; return; }
+	done
+}
+
+rd05_extcpu_mode_path() {
+	for p in /sys/module/rtl8365mb/parameters/rd05_extcpu_mode \
+		 /sys/module/realtek_smi/parameters/rd05_extcpu_mode \
+		 /sys/module/realtek/parameters/rd05_extcpu_mode; do
+		[ -e "$p" ] && { echo "$p"; return; }
+	done
+}
+
+rd05_ingress_cpu_mode_path() {
+	for p in /sys/module/rtl8365mb/parameters/rd05_ingress_cpu_mode \
+		 /sys/module/realtek_smi/parameters/rd05_ingress_cpu_mode \
+		 /sys/module/realtek/parameters/rd05_ingress_cpu_mode; do
+		[ -e "$p" ] && { echo "$p"; return; }
+	done
+}
+
+rd05_txdesc_param_path() {
+	for p in /sys/module/rtl8197f_rtknet/parameters/rd05_txdesc_mode \
+		 /sys/module/rtl8197f_rtknet_core/parameters/rd05_txdesc_mode; do
+		[ -e "$p" ] && { echo "$p"; return; }
+	done
+}
+
+rd05_txdesc_trace_limit_path() {
+	for p in /sys/module/rtl8197f_rtknet/parameters/rd05_txdesc_trace_limit \
+		 /sys/module/rtl8197f_rtknet_core/parameters/rd05_txdesc_trace_limit; do
+		[ -e "$p" ] && { echo "$p"; return; }
+	done
+}
+
+rd05_txmode_name() {
+	case "$1" in
+		0) echo "std-mask" ;;
+		*) echo "legacy-dsa-unsafe" ;;
+	esac
+}
+
+rd05_txdesc_name() {
+	case "$1" in
+		0) echo "direct-p0-rgmii" ;;
+		1) echo "legacy-dp40-ext2-loop" ;;
+		2) echo "dp40-ext0" ;;
+		3) echo "dp40-ext1" ;;
+		4) echo "dp40-ext3" ;;
+		5) echo "dp20-ext2" ;;
+		6) echo "dp10-ext2" ;;
+		7) echo "dp1f-ext2" ;;
+		8) echo "current-hwlookup" ;;
+		9) echo "current-bridge" ;;
+		10) echo "current-hwlookup-bridge" ;;
+		11) echo "current-extspa1" ;;
+		12) echo "current-extspa2" ;;
+		*) echo "unknown" ;;
+	esac
+}
+
+rd05_extcpu_name() {
+	case "$1" in
+		0) echo "sdk-toall-after-sa-8b-rx64-ssc-rx5" ;;
+		1) echo "tonone-after-sa-8b-rx64-delay0" ;;
+		2) echo "totrap-after-sa-8b-rx64-delay0" ;;
+		3) echo "toall-before-crc-8b-rx64-delay0" ;;
+		4) echo "toall-after-sa-4b-rx64-delay0" ;;
+		5) echo "toall-after-sa-8b-rx72-delay0" ;;
+		6) echo "toall-after-sa-8b-rx64-delay1" ;;
+		7) echo "toall-after-sa-8b-rx64-delay3" ;;
+		8) echo "toall-after-sa-8b-rx64-delay5" ;;
+		9) echo "toall-after-sa-8b-rx64-delay7" ;;
+		10) echo "sdk-toall-rx5-cpu7" ;;
+		11) echo "sdk-none-rx5-cpu7" ;;
+		12) echo "sdk-trap-rx5-cpu7" ;;
+		13) echo "sdk-none-rx5-4b-cpu7" ;;
+		14) echo "sdk-none-rx5-cpumask6" ;;
+		15) echo "sdk-none-rx5-cpumask7" ;;
+		16) echo "sdk-toall-rx5-cpumask6" ;;
+		17) echo "sdk-toall-rx5-cpumask7" ;;
+		*) echo "unknown" ;;
+	esac
+}
+
+rd05_set_extcpu_mode() {
+	mode="$1"
+	path="$(rd05_extcpu_mode_path)"
+	[ -n "$path" ] || { echo "V26_EXTCPU_SET: no rd05_extcpu_mode module parameter found"; return 1; }
+	echo "$mode" > "$path" 2>/dev/null || { echo "V26_EXTCPU_SET: failed to write mode=$mode to $path"; return 1; }
+	echo "V26_EXTCPU_SET: mode=$mode name=$(rd05_extcpu_name "$mode") path=$path readback=$(cat "$path" 2>/dev/null)"
+}
+
+rd05_set_txmode() {
+	mode="$1"
+	path="$(rd05_txmode_param_path)"
+	[ -n "$path" ] || { echo "V23_DSATAG_SET: no rd05_tx_mode module parameter found"; return 1; }
+	echo "$mode" > "$path" 2>/dev/null || { echo "V23_DSATAG_SET: failed to write mode=$mode to $path"; return 1; }
+	echo "V23_DSATAG_SET: mode=$mode name=$(rd05_txmode_name "$mode") path=$path readback=$(cat "$path" 2>/dev/null)"
+}
+
+rd05_set_txdesc_mode() {
+	mode="$1"
+	path="$(rd05_txdesc_param_path)"
+	[ -n "$path" ] || { echo "V23_TXDESC_SET: no rd05_txdesc_mode module parameter found"; return 1; }
+	echo "$mode" > "$path" 2>/dev/null || { echo "V23_TXDESC_SET: failed to write mode=$mode to $path"; return 1; }
+	echo "V23_TXDESC_SET: mode=$mode name=$(rd05_txdesc_name "$mode") path=$path readback=$(cat "$path" 2>/dev/null)"
+}
+
+rd05_txmode_sweep() {
+	seconds="$TXMATRIX_SECONDS"
+	case "$seconds" in ''|*[!0-9]*) seconds=12 ;; esac
+	[ "$seconds" -lt 8 ] 2>/dev/null && seconds=8
+	[ "$seconds" -gt 30 ] 2>/dev/null && seconds=30
+
+	hr "v23 RTL8197F SoC TX descriptor egress matrix"
+	cat <<EOT
+This is part of rd05-netdiag full. v23 keeps the DSA rtl8_4 tagger in safe
+standard header mode 0 and varies the RTL8197F rtl865x TX descriptor metadata.
+The goal is to prove which SoC-side TX destination selector, if any, makes the
+router-originated ARP visible on the PC NIC.
+
+DSA tag mode forced for every descriptor test:
+  rd05_tx_mode=0  std-mask / header tag / BIT(lan2)
+
+TX descriptor modes:
+  0  direct-p0-rgmii        v31 stable: DP=0x01, DP_EXT=0, EXTSPA=0
+  1  legacy-dp40-ext2-loop  v30 reproduction: DP=0x40, DP_EXT=2
+  2  dp40-ext0              DP=0x40, DP_EXT=0
+  3  dp40-ext1              DP=0x40, DP_EXT=1
+  4  dp40-ext3              DP=0x40, DP_EXT=3
+  5  dp20-ext2              DP=0x20, DP_EXT=2
+  6  dp10-ext2              DP=0x10, DP_EXT=2
+  7  dp1f-ext2              DP=0x1f, DP_EXT=2
+  8  current-hwlookup       v31 P0 plus TX_HWLKUP
+  9  current-bridge         v31 P0 plus TX_BRIDGE
+  10 current-hwlookup-bridge v31 P0 plus TX_HWLKUP+TX_BRIDGE
+  11 current-extspa1        v31 P0 plus EXTSPA=1
+  12 current-extspa2        v31 P0 plus EXTSPA=2
+
+Tail-tag and native-no-tag modes are intentionally not tested here because
+v20-v23 proved they generate self-loopback and/or TX watchdogs.
+EOT
+
+	# Keep DSA tagger in safe header mode 0.  This is not the matrix variable.
+	dsa_path="$(rd05_txmode_param_path)"
+	old_dsa=""
+	if [ -n "$dsa_path" ]; then
+		old_dsa="$(cat "$dsa_path" 2>/dev/null || echo 0)"
+		echo 0 > "$dsa_path" 2>/dev/null || true
+		echo "V23_DSATAG: path=$dsa_path old_mode=$old_dsa forced_mode=$(cat "$dsa_path" 2>/dev/null || echo unknown)"
+	else
+		echo "V23_DSATAG: rd05_tx_mode module parameter not found; continuing with compiled tagger default"
+	fi
+
+	path="$(rd05_txdesc_param_path)"
+	if [ -z "$path" ]; then
+		echo "V23_TXDESC_MATRIX: rd05_txdesc_mode module parameter not found; v23 kernel driver patch may not be active."
+		return 0
+	fi
+
+	limit_path="$(rd05_txdesc_trace_limit_path)"
+	[ -n "$limit_path" ] && echo 256 > "$limit_path" 2>/dev/null || true
+	trace_path="$(rd05_txtrace_limit_path)"
+	[ -n "$trace_path" ] && echo 128 > "$trace_path" 2>/dev/null || true
+	old_mode="$(cat "$path" 2>/dev/null || echo 0)"
+	echo "V23_TXDESC_MATRIX: param=$path old_mode=$old_mode seconds_per_mode=$seconds modes=$TXMATRIX_MODES txdesc_trace_limit_path=${limit_path:-none} dsa_trace_limit_path=${trace_path:-none}"
+
+	for mode in $TXMATRIX_MODES; do
+		case "$mode" in 0|1|2|3|4|5|6|7|8|9|10|11|12) ;; *) echo "V23_TXDESC_SKIP: invalid mode=$mode"; continue ;; esac
+		rd05_set_txdesc_mode "$mode" || continue
+		[ -n "$dsa_path" ] && echo 0 > "$dsa_path" 2>/dev/null || true
+		sleep 1
+		ip neigh flush "$FULL_PROBE_TARGET" dev "$FULL_PROBE_IF" >/dev/null 2>&1 || ip neigh flush "$FULL_PROBE_TARGET" >/dev/null 2>&1 || true
+
+		b_arp="$(val_ethtool eth0 rd05_rx_arp)"
+		b_ip4="$(val_ethtool eth0 rd05_rx_ipv4)"
+		b_untag="$(val_ethtool eth0 rd05_rx_untagged)"
+		b_trace="$(val_ethtool eth0 rd05_rxtrace_frames)"
+		b_tx_to="$(val_ethtool eth0 tx_timeouts)"
+		b_tx_kicks="$(val_ethtool eth0 tx_kicks)"
+		b_lan2_in="$(val_ethtool lan2 ifInOctets)"
+		b_lan2_out="$(val_ethtool lan2 ifOutOctets)"
+		b_lan2_b="$(val_ethtool lan2 ifInBroadcastPkts)"
+		b_lan2_disc="$(val_ethtool lan2 dot1dTpPortInDiscards)"
+		b_p06_in="$(val_cpuport 6 ifInOctets)"
+		b_p06_out="$(val_cpuport 6 ifOutOctets)"
+		b_p07_in="$(val_cpuport 7 ifInOctets)"
+		b_p07_out="$(val_cpuport 7 ifOutOctets)"
+		b_br="$(val_procnet br-lan)"
+		b_eth="$(val_procnet eth0)"
+
+		i=0
+		while [ "$i" -lt "$seconds" ]; do
+			rd05_router_probe_tick
+			sleep 4
+			i=$((i + 4))
+		done
+
+		a_arp="$(val_ethtool eth0 rd05_rx_arp)"
+		a_ip4="$(val_ethtool eth0 rd05_rx_ipv4)"
+		a_untag="$(val_ethtool eth0 rd05_rx_untagged)"
+		a_trace="$(val_ethtool eth0 rd05_rxtrace_frames)"
+		a_tx_to="$(val_ethtool eth0 tx_timeouts)"
+		a_tx_kicks="$(val_ethtool eth0 tx_kicks)"
+		a_lan2_in="$(val_ethtool lan2 ifInOctets)"
+		a_lan2_out="$(val_ethtool lan2 ifOutOctets)"
+		a_lan2_b="$(val_ethtool lan2 ifInBroadcastPkts)"
+		a_lan2_disc="$(val_ethtool lan2 dot1dTpPortInDiscards)"
+		a_p06_in="$(val_cpuport 6 ifInOctets)"
+		a_p06_out="$(val_cpuport 6 ifOutOctets)"
+		a_p07_in="$(val_cpuport 7 ifInOctets)"
+		a_p07_out="$(val_cpuport 7 ifOutOctets)"
+		a_br="$(val_procnet br-lan)"
+		a_eth="$(val_procnet eth0)"
+
+		d_magic=$(( $(safe_num "$a_magic") - $(safe_num "$b_magic") ))
+		d_arp=$(( $(safe_num "$a_arp") - $(safe_num "$b_arp") ))
+		d_ip4=$(( $(safe_num "$a_ip4") - $(safe_num "$b_ip4") ))
+		d_untag=$(( $(safe_num "$a_untag") - $(safe_num "$b_untag") ))
+		d_trace=$(( $(safe_num "$a_trace") - $(safe_num "$b_trace") ))
+		d_tx_to=$(( $(safe_num "$a_tx_to") - $(safe_num "$b_tx_to") ))
+		d_tx_kicks=$(( $(safe_num "$a_tx_kicks") - $(safe_num "$b_tx_kicks") ))
+		d_lan2_in=$(( $(safe_num "$a_lan2_in") - $(safe_num "$b_lan2_in") ))
+		d_lan2_out=$(( $(safe_num "$a_lan2_out") - $(safe_num "$b_lan2_out") ))
+		d_lan2_b=$(( $(safe_num "$a_lan2_b") - $(safe_num "$b_lan2_b") ))
+		d_lan2_disc=$(( $(safe_num "$a_lan2_disc") - $(safe_num "$b_lan2_disc") ))
+		d_p06_in=$(( $(safe_num "$a_p06_in") - $(safe_num "$b_p06_in") ))
+		d_p06_out=$(( $(safe_num "$a_p06_out") - $(safe_num "$b_p06_out") ))
+		d_p07_in=$(( $(safe_num "$a_p07_in") - $(safe_num "$b_p07_in") ))
+		d_p07_out=$(( $(safe_num "$a_p07_out") - $(safe_num "$b_p07_out") ))
+
+		neigh_line="$(ip neigh show 2>/dev/null | grep -F "$FULL_PROBE_TARGET" | head -1)"
+		neigh_valid="$(printf '%s\n' "$neigh_line" | grep -Ev '(^$| FAILED | INCOMPLETE | PROBE )' | head -1)"
+		fdb_pc="$(bridge fdb show 2>/dev/null | grep -i "$RD05_PC_MAC" | head -1)"
+		pc_seen=0
+		[ -n "$neigh_valid" ] && pc_seen=1
+		[ -n "$fdb_pc" ] && pc_seen=1
+		verdict="no-pc-reply"
+		[ "$d_tx_to" -gt 0 ] && verdict="tx-watchdog"
+		[ "$d_ip4" -gt 0 ] && verdict="ipv4-seen"
+		[ "$d_untag" -gt 0 ] && verdict="untagged-rx-seen"
+		[ "$pc_seen" -eq 1 ] && verdict="pc-neigh-or-fdb-seen"
+
+		printf 'V23_TXDESC mode=%s name=%s verdict=%s pc_seen=%s tx_kicks_delta=%s tx_timeout_delta=%s lan2_in_delta=%s lan2_out_delta=%s lan2_bcast_delta=%s lan2_disc_delta=%s p06_in_delta=%s p06_out_delta=%s p07_in_delta=%s p07_out_delta=%s eth0_arp_delta=%s eth0_ipv4_delta=%s eth0_untag_delta=%s rxtrace_delta=%s\n' \
+			"$mode" "$(rd05_txdesc_name "$mode")" "$verdict" "$pc_seen" "$d_tx_kicks" "$d_tx_to" "$d_lan2_in" "$d_lan2_out" "$d_lan2_b" "$d_lan2_disc" "$d_p06_in" "$d_p06_out" "$d_p07_in" "$d_p07_out" "$d_arp" "$d_ip4" "$d_untag" "$d_trace"
+		echo "V23_TXDESC mode=$mode br-lan before: $b_br"
+		echo "V23_TXDESC mode=$mode br-lan after : $a_br"
+		echo "V23_TXDESC mode=$mode eth0 before  : $b_eth"
+		echo "V23_TXDESC mode=$mode eth0 after   : $a_eth"
+		[ -n "$neigh_line" ] && echo "V23_TXDESC mode=$mode neigh: $neigh_line"
+		[ -n "$fdb_pc" ] && echo "V23_TXDESC mode=$mode fdb: $fdb_pc"
+	done
+
+	rd05_set_txdesc_mode "$old_mode" >/dev/null 2>&1 || true
+	[ -n "$dsa_path" ] && [ -n "$old_dsa" ] && echo "$old_dsa" > "$dsa_path" 2>/dev/null || true
+	echo "V23_TXDESC_MATRIX: restored_mode=$(cat "$path" 2>/dev/null || echo unknown)"
+	[ -n "$dsa_path" ] && echo "V23_DSATAG: restored_mode=$(cat "$dsa_path" 2>/dev/null || echo unknown)"
+	echo
+	echo "--- recent RD05 TX descriptor / rtl8_4 / RX traces ---"
+	dmesg 2>/dev/null | grep -E 'RD05 txdesc trace v23|RD05 rtl8_4 txtrace|rd05 magic-rx|rd05 rxtrace|rxtrace v5am|NETDEV WATCHDOG|TX timeout' | tail -180 || true
+}
+
+rd05_port_name() {
+	case "$1" in
+		0) echo "utp0-lan1" ;;
+		1) echo "utp1-lan2" ;;
+		2) echo "utp2-wan" ;;
+		3) echo "utp3-lan3" ;;
+		4) echo "utp4-lan4" ;;
+		*) echo "unknown" ;;
+	esac
+}
+
+rd05_port_dev() {
+	case "$1" in
+		0) echo "lan1" ;;
+		1) echo "lan2" ;;
+		2) echo "wan" ;;
+		3) echo "lan3" ;;
+		4) echo "lan4" ;;
+		*) echo "-" ;;
+	esac
+}
+
+rd05_set_tx_port_override() {
+	port="$1"
+	path="$(rd05_tx_port_override_path)"
+	[ -n "$path" ] || { echo "V24_TARGET_SET: no rd05_tx_port_override module parameter found"; return 1; }
+	echo "$port" > "$path" 2>/dev/null || { echo "V24_TARGET_SET: failed to write target=$port to $path"; return 1; }
+	echo "V24_TARGET_SET: target=$port name=$(rd05_port_name "$port") path=$path readback=$(cat "$path" 2>/dev/null)"
+}
+
+rd05_portmap_name() {
+	case "$1" in
+		0) echo "broad-split-flood" ;;
+		1) echo "broad-full-flood" ;;
+		2) echo "all-open-phy0-7" ;;
+		3) echo "focus-utp0" ;;
+		4) echo "focus-utp1" ;;
+		5) echo "focus-utp2" ;;
+		6) echo "focus-utp3" ;;
+		7) echo "focus-utp4" ;;
+		*) echo "unknown" ;;
+	esac
+}
+
+rd05_set_portmap_mode() {
+	mode="$1"
+	path="$(rd05_portmap_mode_path)"
+	[ -n "$path" ] || { echo "V24_PORTMAP_SET: no rd05_portmap_mode module parameter found"; return 1; }
+	echo "$mode" > "$path" 2>/dev/null || { echo "V24_PORTMAP_SET: failed to write mode=$mode to $path"; return 1; }
+	echo "V24_PORTMAP_SET: mode=$mode name=$(rd05_portmap_name "$mode") path=$path readback=$(cat "$path" 2>/dev/null)"
+}
+
+rd05_phys_val() {
+	phys="$1"; key="$2"; dev="$(rd05_port_dev "$phys")"
+	if [ "$dev" != "-" ] && [ -e "/sys/class/net/$dev" ]; then
+		v="$(val_ethtool "$dev" "$key")"
+		[ -n "$v" ] && { echo "$v"; return; }
+	fi
+	val_cpuport "$phys" "$key"
+}
+
+rd05_portmap_sweep() {
+	seconds="$PORTMAP_SECONDS"
+	case "$seconds" in ''|*[!0-9]*) seconds=12 ;; esac
+	[ "$seconds" -lt 8 ] 2>/dev/null && seconds=8
+	[ "$seconds" -gt 30 ] 2>/dev/null && seconds=30
+
+	hr "v24 RTL8367D external portmap / VLAN / isolation matrix"
+	cat <<EOT
+This is part of rd05-netdiag full. v24 keeps DSA tag mode 0 and RTL8197F
+TXDESC mode 0, then varies the Realtek CPU-tag target physical port and the
+external RTL8367D VLAN/isolation programming.
+
+Port target candidates:
+  0 UTP0/LAN1
+  1 UTP1/LAN2
+  2 UTP2/WAN
+  3 UTP3/LAN3
+  4 UTP4/LAN4
+
+Switch matrix modes:
+  0        broad-split-flood: v21/v23 baseline, CPU+UTP0..4 in VID9, flood UTP0..4
+  focus    focus-utpN: only CPU7+target UTPN in VID9/isolation/flood for that pass
+
+Success criterion is still the PC tcpdump: router MAC, ethertype 0x8899, ARP
+reply, or any frame sourced by 192.168.1.1. Router-side neighbor/FDB learning is
+also reported but PC capture is authoritative.
+EOT
+
+	dsa_path="$(rd05_txmode_param_path)"
+	target_path="$(rd05_tx_port_override_path)"
+	txdesc_path="$(rd05_txdesc_param_path)"
+	pm_path="$(rd05_portmap_mode_path)"
+	old_dsa=""; old_target=""; old_txdesc=""; old_pm=""
+	[ -n "$dsa_path" ] && old_dsa="$(cat "$dsa_path" 2>/dev/null || echo 0)" && echo 0 > "$dsa_path" 2>/dev/null || true
+	[ -n "$target_path" ] && old_target="$(cat "$target_path" 2>/dev/null || echo -1)"
+	[ -n "$txdesc_path" ] && old_txdesc="$(cat "$txdesc_path" 2>/dev/null || echo 0)" && echo 0 > "$txdesc_path" 2>/dev/null || true
+	[ -n "$pm_path" ] && old_pm="$(cat "$pm_path" 2>/dev/null || echo 0)"
+	limit_path="$(rd05_txdesc_trace_limit_path)"; [ -n "$limit_path" ] && echo 256 > "$limit_path" 2>/dev/null || true
+	trace_path="$(rd05_txtrace_limit_path)"; [ -n "$trace_path" ] && echo 256 > "$trace_path" 2>/dev/null || true
+
+	echo "V24_PORTMAP_MATRIX: seconds_per_mode=$seconds ports=$PORTMAP_PORTS switch_modes=$PORTMAP_SWITCH_MODES dsa_path=${dsa_path:-none} target_path=${target_path:-none} txdesc_path=${txdesc_path:-none} portmap_path=${pm_path:-none} old_dsa=${old_dsa:-none} old_target=${old_target:-none} old_txdesc=${old_txdesc:-none} old_portmap=${old_pm:-none}"
+	[ -n "$target_path" ] || echo "V24_PORTMAP_MATRIX: WARNING no target override parameter; kernel tagger v24 may be missing."
+	[ -n "$pm_path" ] || echo "V24_PORTMAP_MATRIX: WARNING no portmap mode parameter; DSA switch v24 may be missing."
+
+	for port in $PORTMAP_PORTS; do
+		case "$port" in 0|1|2|3|4) ;; *) echo "V24_PORTMAP_SKIP: invalid target=$port"; continue ;; esac
+		for sw in $PORTMAP_SWITCH_MODES; do
+			case "$sw" in
+				0|broad|broad-split|split) pmode=0; swname="broad-split-flood" ;;
+				1|full|full-flood) pmode=1; swname="broad-full-flood" ;;
+				2|open|all-open) pmode=2; swname="all-open-phy0-7" ;;
+				focus) pmode=$((port + 3)); swname="focus-$(rd05_port_name "$port")" ;;
+				3|4|5|6|7) pmode="$sw"; swname="$(rd05_portmap_name "$pmode")" ;;
+				*) echo "V24_PORTMAP_SKIP: invalid switch_mode=$sw"; continue ;;
+			esac
+
+			[ -n "$dsa_path" ] && echo 0 > "$dsa_path" 2>/dev/null || true
+			[ -n "$txdesc_path" ] && echo 0 > "$txdesc_path" 2>/dev/null || true
+			rd05_set_tx_port_override "$port" || true
+			rd05_set_portmap_mode "$pmode" || true
+			sleep 1
+			ip neigh flush "$FULL_PROBE_TARGET" dev "$FULL_PROBE_IF" >/dev/null 2>&1 || ip neigh flush "$FULL_PROBE_TARGET" >/dev/null 2>&1 || true
+
+			dev="$(rd05_port_dev "$port")"
+			carrier="-"; state="-"
+			[ "$dev" != "-" ] && [ -e "/sys/class/net/$dev" ] && carrier="$(cat /sys/class/net/$dev/carrier 2>/dev/null || echo '-')" && state="$(cat /sys/class/net/$dev/operstate 2>/dev/null || echo '-')"
+			b_arp="$(val_ethtool eth0 rd05_rx_arp)"; b_ip4="$(val_ethtool eth0 rd05_rx_ipv4)"; b_trace="$(val_ethtool eth0 rd05_rxtrace_frames)"; b_tx_to="$(val_ethtool eth0 tx_timeouts)"; b_tx_kicks="$(val_ethtool eth0 tx_kicks)"
+			b_tin="$(rd05_phys_val "$port" ifInOctets)"; b_tout="$(rd05_phys_val "$port" ifOutOctets)"; b_tb="$(rd05_phys_val "$port" ifInBroadcastPkts)"; b_td="$(rd05_phys_val "$port" dot1dTpPortInDiscards)"
+			b_lan2_in="$(val_ethtool lan2 ifInOctets)"; b_lan2_out="$(val_ethtool lan2 ifOutOctets)"; b_lan2_b="$(val_ethtool lan2 ifInBroadcastPkts)"; b_lan2_disc="$(val_ethtool lan2 dot1dTpPortInDiscards)"
+			b_br="$(val_procnet br-lan)"; b_eth="$(val_procnet eth0)"
+
+			i=0
+			while [ "$i" -lt "$seconds" ]; do
+				rd05_router_probe_tick
+				sleep 4
+				i=$((i + 4))
+			done
+
+			a_arp="$(val_ethtool eth0 rd05_rx_arp)"; a_ip4="$(val_ethtool eth0 rd05_rx_ipv4)"; a_trace="$(val_ethtool eth0 rd05_rxtrace_frames)"; a_tx_to="$(val_ethtool eth0 tx_timeouts)"; a_tx_kicks="$(val_ethtool eth0 tx_kicks)"
+			a_tin="$(rd05_phys_val "$port" ifInOctets)"; a_tout="$(rd05_phys_val "$port" ifOutOctets)"; a_tb="$(rd05_phys_val "$port" ifInBroadcastPkts)"; a_td="$(rd05_phys_val "$port" dot1dTpPortInDiscards)"
+			a_lan2_in="$(val_ethtool lan2 ifInOctets)"; a_lan2_out="$(val_ethtool lan2 ifOutOctets)"; a_lan2_b="$(val_ethtool lan2 ifInBroadcastPkts)"; a_lan2_disc="$(val_ethtool lan2 dot1dTpPortInDiscards)"
+			a_br="$(val_procnet br-lan)"; a_eth="$(val_procnet eth0)"
+
+			d_magic=$(( $(safe_num "$a_magic") - $(safe_num "$b_magic") ))
+		d_arp=$(( $(safe_num "$a_arp") - $(safe_num "$b_arp") ))
+			d_ip4=$(( $(safe_num "$a_ip4") - $(safe_num "$b_ip4") ))
+			d_trace=$(( $(safe_num "$a_trace") - $(safe_num "$b_trace") ))
+			d_tx_to=$(( $(safe_num "$a_tx_to") - $(safe_num "$b_tx_to") ))
+			d_tx_kicks=$(( $(safe_num "$a_tx_kicks") - $(safe_num "$b_tx_kicks") ))
+			d_tin=$(( $(safe_num "$a_tin") - $(safe_num "$b_tin") ))
+			d_tout=$(( $(safe_num "$a_tout") - $(safe_num "$b_tout") ))
+			d_tb=$(( $(safe_num "$a_tb") - $(safe_num "$b_tb") ))
+			d_td=$(( $(safe_num "$a_td") - $(safe_num "$b_td") ))
+			d_lan2_in=$(( $(safe_num "$a_lan2_in") - $(safe_num "$b_lan2_in") ))
+			d_lan2_out=$(( $(safe_num "$a_lan2_out") - $(safe_num "$b_lan2_out") ))
+			d_lan2_b=$(( $(safe_num "$a_lan2_b") - $(safe_num "$b_lan2_b") ))
+			d_lan2_disc=$(( $(safe_num "$a_lan2_disc") - $(safe_num "$b_lan2_disc") ))
+
+			neigh_line="$(ip neigh show 2>/dev/null | grep -F "$FULL_PROBE_TARGET" | head -1)"
+			neigh_valid="$(printf '%s\n' "$neigh_line" | grep -Ev '(^$| FAILED | INCOMPLETE | PROBE )' | head -1)"
+			fdb_pc="$(bridge fdb show 2>/dev/null | grep -i "$RD05_PC_MAC" | head -1)"
+			pc_seen=0; [ -n "$neigh_valid" ] && pc_seen=1; [ -n "$fdb_pc" ] && pc_seen=1
+			verdict="no-pc-reply"; [ "$d_tx_to" -gt 0 ] && verdict="tx-watchdog"; [ "$d_trace" -gt 0 ] && verdict="router-self-rx"; [ "$pc_seen" -eq 1 ] && verdict="pc-neigh-or-fdb-seen"
+
+			printf 'V24_PORTMAP target=%s target_name=%s target_dev=%s carrier=%s state=%s switch_mode=%s switch_name=%s verdict=%s pc_seen=%s tx_kicks_delta=%s tx_timeout_delta=%s target_in_delta=%s target_out_delta=%s target_bcast_delta=%s target_disc_delta=%s lan2_in_delta=%s lan2_out_delta=%s lan2_bcast_delta=%s lan2_disc_delta=%s eth0_arp_delta=%s eth0_ipv4_delta=%s rxtrace_delta=%s\n' \
+				"$port" "$(rd05_port_name "$port")" "$dev" "$carrier" "$state" "$pmode" "$swname" "$verdict" "$pc_seen" "$d_tx_kicks" "$d_tx_to" "$d_tin" "$d_tout" "$d_tb" "$d_td" "$d_lan2_in" "$d_lan2_out" "$d_lan2_b" "$d_lan2_disc" "$d_arp" "$d_ip4" "$d_trace"
+			echo "V24_PORTMAP target=$port switch_mode=$pmode br-lan before: $b_br"
+			echo "V24_PORTMAP target=$port switch_mode=$pmode br-lan after : $a_br"
+			echo "V24_PORTMAP target=$port switch_mode=$pmode eth0 before  : $b_eth"
+			echo "V24_PORTMAP target=$port switch_mode=$pmode eth0 after   : $a_eth"
+			[ -n "$neigh_line" ] && echo "V24_PORTMAP target=$port switch_mode=$pmode neigh: $neigh_line"
+			[ -n "$fdb_pc" ] && echo "V24_PORTMAP target=$port switch_mode=$pmode fdb: $fdb_pc"
+		done
+	done
+
+	[ -n "$target_path" ] && [ -n "$old_target" ] && echo "$old_target" > "$target_path" 2>/dev/null || true
+	[ -n "$pm_path" ] && [ -n "$old_pm" ] && echo "$old_pm" > "$pm_path" 2>/dev/null || true
+	[ -n "$txdesc_path" ] && [ -n "$old_txdesc" ] && echo "$old_txdesc" > "$txdesc_path" 2>/dev/null || true
+	[ -n "$dsa_path" ] && [ -n "$old_dsa" ] && echo "$old_dsa" > "$dsa_path" 2>/dev/null || true
+	echo "V24_PORTMAP_MATRIX: restored target=$( [ -n "$target_path" ] && cat "$target_path" 2>/dev/null || echo none ) portmap=$( [ -n "$pm_path" ] && cat "$pm_path" 2>/dev/null || echo none ) txdesc=$( [ -n "$txdesc_path" ] && cat "$txdesc_path" 2>/dev/null || echo none ) dsa=$( [ -n "$dsa_path" ] && cat "$dsa_path" 2>/dev/null || echo none )"
+	echo
+	echo "--- recent RD05 portmap / rtl8_4 / TXDESC / RX traces ---"
+	dmesg 2>/dev/null | grep -E 'v10-portmap|RD05 rtl8_4 txtrace|RD05 txdesc trace v24|rd05 magic-rx|rd05 rxtrace|rxtrace v5am|NETDEV WATCHDOG|TX timeout|RTL8367D RD05 DSA CPU path' | tail -220 || true
+}
+
+rd05_extcpu_sweep() {
+	seconds="$EXTCPU_SECONDS"
+	case "$seconds" in ''|*[!0-9]*) seconds=12 ;; esac
+	[ "$seconds" -lt 8 ] 2>/dev/null && seconds=8
+	[ "$seconds" -gt 30 ] 2>/dev/null && seconds=30
+
+	hr "v26 RTL8367D SDK-exact EXT1 / CPU-control audit matrix"
+	cat <<EOT
+This is part of rd05-netdiag full. v26 keeps the Linux DSA tagger, TX descriptor
+and RTL8367D portmap in the safest known baseline while changing only the
+external RTL8367D EXT1/CPU-control path. It is designed to exclude the
+remaining concrete root causes: CPU_INSERT mode, SDK RGMII rxDelay=5 and
+CPU-port mask/trap-port 6-vs-7.
+
+Forced baseline for every legacy EXT/CPU row:
+  rd05_tx_mode=0              header Realtek CPU tag
+  rd05_tx_port_override=-1    use normal DSA slave target
+  rd05_txdesc_mode=0          v31 direct P0/RGMII: DP=0x01 / DP_EXT=0
+  rd05_portmap_mode=0         broad split flood, VID9 users+CPU
+
+EXT/CPU modes:
+  0  current-v31        TO_ALL, tag after SA, 8-byte tag, RX min 64, RGMII tx0/rx5
+  1  insert-none        CPU_INSERT_TO_NONE, after SA, 8-byte, RX min 64
+  2  insert-trap        CPU_INSERT_TO_TRAPPING, after SA, 8-byte, RX min 64
+  3  before-crc         TO_ALL, tag before CRC, 8-byte, RX min 64
+  4  format-4b          TO_ALL, tag after SA, 4-byte tag, RX min 64
+  5  rxlen-72           TO_ALL, tag after SA, 8-byte tag, RX min 72
+  10 sdk-toall-rx5      SDK-style RGMII txDelay=0/rxDelay=5 with TO_ALL, CPU7
+  11 sdk-none-rx5       SDK-style RGMII txDelay=0/rxDelay=5 with INSERT_NONE, CPU7
+  12 sdk-trap-rx5       SDK-style RGMII txDelay=0/rxDelay=5 with INSERT_TRAP, CPU7
+  13 sdk-none-rx5-4b    SDK-style rxDelay=5 with INSERT_NONE and 4-byte CPU tag
+  14 sdk-none-cpu6      INSERT_NONE + rxDelay=5 + CPU mask/trap port 6
+  15 sdk-none-cpu7      INSERT_NONE + rxDelay=5 + CPU mask/trap port 7
+  16 sdk-toall-cpu6     TO_ALL + rxDelay=5 + CPU mask/trap port 6
+  17 sdk-toall-cpu7     TO_ALL + rxDelay=5 + CPU mask/trap port 7
+
+Success criterion remains PC tcpdump: router MAC, ethertype 0x8899, ARP Reply,
+or any frame sourced by 192.168.1.1. Router-side results are supporting evidence.
+EOT
+
+	dsa_path="$(rd05_txmode_param_path)"
+	target_path="$(rd05_tx_port_override_path)"
+	txdesc_path="$(rd05_txdesc_param_path)"
+	pm_path="$(rd05_portmap_mode_path)"
+	ext_path="$(rd05_extcpu_mode_path)"
+	ing_path="$(rd05_ingress_cpu_mode_path)"
+	magic_enable_path="/sys/module/rtl8197f_rtknet/parameters/rd05_magic_enable"
+	magic_candidate_path="/sys/module/rtl8197f_rtknet/parameters/rd05_magic_candidate"
+	magic_log_path="/sys/module/rtl8197f_rtknet/parameters/rd05_magic_log_limit"
+	limit_path="$(rd05_txdesc_trace_limit_path)"
+	trace_path="$(rd05_txtrace_limit_path)"
+
+	old_dsa=""; old_target=""; old_txdesc=""; old_pm=""; old_ext=""; old_ing=""
+	[ -n "$dsa_path" ] && old_dsa="$(cat "$dsa_path" 2>/dev/null || echo 0)" && echo 0 > "$dsa_path" 2>/dev/null || true
+	[ -n "$target_path" ] && old_target="$(cat "$target_path" 2>/dev/null || echo -1)" && echo -1 > "$target_path" 2>/dev/null || true
+	[ -n "$txdesc_path" ] && old_txdesc="$(cat "$txdesc_path" 2>/dev/null || echo 0)" && echo 0 > "$txdesc_path" 2>/dev/null || true
+	[ -n "$pm_path" ] && old_pm="$(cat "$pm_path" 2>/dev/null || echo 0)" && echo 0 > "$pm_path" 2>/dev/null || true
+	[ -n "$ext_path" ] && old_ext="$(cat "$ext_path" 2>/dev/null || echo 0)"
+	[ -n "$ing_path" ] && old_ing="$(cat "$ing_path" 2>/dev/null || echo 0)"
+	[ -n "$limit_path" ] && echo 256 > "$limit_path" 2>/dev/null || true
+	[ -n "$trace_path" ] && echo 160 > "$trace_path" 2>/dev/null || true
+
+	echo "V26_EXTCPU_MATRIX: seconds_per_mode=$seconds modes=$EXTCPU_MODES dsa_path=${dsa_path:-none} target_path=${target_path:-none} txdesc_path=${txdesc_path:-none} portmap_path=${pm_path:-none} extcpu_path=${ext_path:-none} old_dsa=${old_dsa:-none} old_target=${old_target:-none} old_txdesc=${old_txdesc:-none} old_portmap=${old_pm:-none} old_extcpu=${old_ext:-none} old_ingress=${old_ing:-none} magic_enable=${magic_enable_path:-none} magic_candidate=${magic_candidate_path:-none}"
+	[ -n "$ext_path" ] || { echo "V26_EXTCPU_MATRIX: rd05_extcpu_mode module parameter not found; v27 switch patch may not be active."; return 0; }
+
+	for mode in $EXTCPU_MODES; do
+		case "$mode" in 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17) ;; *) echo "V26_EXTCPU_SKIP: invalid mode=$mode"; continue ;; esac
+		rd05_set_extcpu_mode "$mode" || continue
+		[ -n "$dsa_path" ] && echo 0 > "$dsa_path" 2>/dev/null || true
+		[ -n "$target_path" ] && echo -1 > "$target_path" 2>/dev/null || true
+		[ -n "$txdesc_path" ] && echo 0 > "$txdesc_path" 2>/dev/null || true
+		[ -n "$pm_path" ] && echo 0 > "$pm_path" 2>/dev/null || true
+		sleep 1
+		ip neigh flush "$FULL_PROBE_TARGET" dev "$FULL_PROBE_IF" >/dev/null 2>&1 || ip neigh flush "$FULL_PROBE_TARGET" >/dev/null 2>&1 || true
+
+		b_magic="$(val_ethtool eth0 rd05_magic_hits)"; b_magic_cand="$(val_ethtool eth0 rd05_magic_last_candidate)"
+		b_arp="$(val_ethtool eth0 rd05_rx_arp)"; b_ip4="$(val_ethtool eth0 rd05_rx_ipv4)"; b_trace="$(val_ethtool eth0 rd05_rxtrace_frames)"; b_untag="$(val_ethtool eth0 rd05_rx_untagged)"
+		b_tx_to="$(val_ethtool eth0 tx_timeouts)"; b_tx_kicks="$(val_ethtool eth0 tx_kicks)"
+		b_lan2_in="$(val_ethtool lan2 ifInOctets)"; b_lan2_out="$(val_ethtool lan2 ifOutOctets)"; b_lan2_b="$(val_ethtool lan2 ifInBroadcastPkts)"; b_lan2_disc="$(val_ethtool lan2 dot1dTpPortInDiscards)"
+		b_p07_in="$(val_cpuport 7 ifInOctets)"; b_p07_out="$(val_cpuport 7 ifOutOctets)"
+		b_br="$(val_procnet br-lan)"; b_eth="$(val_procnet eth0)"
+
+		i=0
+		while [ "$i" -lt "$seconds" ]; do
+			rd05_router_probe_tick
+			sleep 4
+			i=$((i + 4))
+		done
+
+		a_magic="$(val_ethtool eth0 rd05_magic_hits)"; a_magic_cand="$(val_ethtool eth0 rd05_magic_last_candidate)"
+		a_magic_len="$(val_ethtool eth0 rd05_magic_last_len)"; a_magic_p0="$(val_ethtool eth0 rd05_magic_last_proto0)"; a_magic_p4="$(val_ethtool eth0 rd05_magic_last_proto4)"; a_magic_p8="$(val_ethtool eth0 rd05_magic_last_proto8)"
+		a_arp="$(val_ethtool eth0 rd05_rx_arp)"; a_ip4="$(val_ethtool eth0 rd05_rx_ipv4)"; a_trace="$(val_ethtool eth0 rd05_rxtrace_frames)"; a_untag="$(val_ethtool eth0 rd05_rx_untagged)"
+		a_tx_to="$(val_ethtool eth0 tx_timeouts)"; a_tx_kicks="$(val_ethtool eth0 tx_kicks)"
+		a_lan2_in="$(val_ethtool lan2 ifInOctets)"; a_lan2_out="$(val_ethtool lan2 ifOutOctets)"; a_lan2_b="$(val_ethtool lan2 ifInBroadcastPkts)"; a_lan2_disc="$(val_ethtool lan2 dot1dTpPortInDiscards)"
+		a_p07_in="$(val_cpuport 7 ifInOctets)"; a_p07_out="$(val_cpuport 7 ifOutOctets)"
+		a_br="$(val_procnet br-lan)"; a_eth="$(val_procnet eth0)"
+
+		d_magic=$(( $(safe_num "$a_magic") - $(safe_num "$b_magic") ))
+		d_arp=$(( $(safe_num "$a_arp") - $(safe_num "$b_arp") ))
+		d_ip4=$(( $(safe_num "$a_ip4") - $(safe_num "$b_ip4") ))
+		d_trace=$(( $(safe_num "$a_trace") - $(safe_num "$b_trace") ))
+		d_untag=$(( $(safe_num "$a_untag") - $(safe_num "$b_untag") ))
+		d_tx_to=$(( $(safe_num "$a_tx_to") - $(safe_num "$b_tx_to") ))
+		d_tx_kicks=$(( $(safe_num "$a_tx_kicks") - $(safe_num "$b_tx_kicks") ))
+		d_lan2_in=$(( $(safe_num "$a_lan2_in") - $(safe_num "$b_lan2_in") ))
+		d_lan2_out=$(( $(safe_num "$a_lan2_out") - $(safe_num "$b_lan2_out") ))
+		d_lan2_b=$(( $(safe_num "$a_lan2_b") - $(safe_num "$b_lan2_b") ))
+		d_lan2_disc=$(( $(safe_num "$a_lan2_disc") - $(safe_num "$b_lan2_disc") ))
+		d_p07_in=$(( $(safe_num "$a_p07_in") - $(safe_num "$b_p07_in") ))
+		d_p07_out=$(( $(safe_num "$a_p07_out") - $(safe_num "$b_p07_out") ))
+
+		neigh_line="$(ip neigh show 2>/dev/null | grep -F "$FULL_PROBE_TARGET" | head -1)"
+		neigh_valid="$(printf '%s\n' "$neigh_line" | grep -Ev '(^$| FAILED | INCOMPLETE | PROBE )' | head -1)"
+		fdb_pc="$(bridge fdb show 2>/dev/null | grep -i "$RD05_PC_MAC" | head -1)"
+		pc_seen=0; [ -n "$neigh_valid" ] && pc_seen=1; [ -n "$fdb_pc" ] && pc_seen=1
+		verdict="no-pc-reply"; [ "$d_tx_to" -gt 0 ] && verdict="tx-watchdog"; [ "$d_trace" -gt 0 ] && verdict="router-self-rx"; [ "$d_untag" -gt 0 ] && verdict="untagged-rx-seen"; [ "$pc_seen" -eq 1 ] && verdict="pc-neigh-or-fdb-seen"
+
+		printf 'V26_EXTCPU mode=%s name=%s verdict=%s pc_seen=%s tx_kicks_delta=%s tx_timeout_delta=%s lan2_in_delta=%s lan2_out_delta=%s lan2_bcast_delta=%s lan2_disc_delta=%s p07_in_delta=%s p07_out_delta=%s eth0_arp_delta=%s eth0_ipv4_delta=%s eth0_untag_delta=%s rxtrace_delta=%s\n' \
+			"$mode" "$(rd05_extcpu_name "$mode")" "$verdict" "$pc_seen" "$d_tx_kicks" "$d_tx_to" "$d_lan2_in" "$d_lan2_out" "$d_lan2_b" "$d_lan2_disc" "$d_p07_in" "$d_p07_out" "$d_arp" "$d_ip4" "$d_untag" "$d_trace"
+		echo "V26_EXTCPU mode=$mode br-lan before: $b_br"
+		echo "V26_EXTCPU mode=$mode br-lan after : $a_br"
+		echo "V26_EXTCPU mode=$mode eth0 before  : $b_eth"
+		echo "V26_EXTCPU mode=$mode eth0 after   : $a_eth"
+		[ -n "$neigh_line" ] && echo "V26_EXTCPU mode=$mode neigh: $neigh_line"
+		[ -n "$fdb_pc" ] && echo "V26_EXTCPU mode=$mode fdb: $fdb_pc"
+	done
+
+	[ -n "$ext_path" ] && [ -n "$old_ext" ] && echo "$old_ext" > "$ext_path" 2>/dev/null || true
+	[ -n "$pm_path" ] && [ -n "$old_pm" ] && echo "$old_pm" > "$pm_path" 2>/dev/null || true
+	[ -n "$txdesc_path" ] && [ -n "$old_txdesc" ] && echo "$old_txdesc" > "$txdesc_path" 2>/dev/null || true
+	[ -n "$target_path" ] && [ -n "$old_target" ] && echo "$old_target" > "$target_path" 2>/dev/null || true
+	[ -n "$dsa_path" ] && [ -n "$old_dsa" ] && echo "$old_dsa" > "$dsa_path" 2>/dev/null || true
+	echo "V26_EXTCPU_MATRIX: restored extcpu=$( [ -n "$ext_path" ] && cat "$ext_path" 2>/dev/null || echo none ) portmap=$( [ -n "$pm_path" ] && cat "$pm_path" 2>/dev/null || echo none ) txdesc=$( [ -n "$txdesc_path" ] && cat "$txdesc_path" 2>/dev/null || echo none ) target=$( [ -n "$target_path" ] && cat "$target_path" 2>/dev/null || echo none ) dsa=$( [ -n "$dsa_path" ] && cat "$dsa_path" 2>/dev/null || echo none )"
+	echo
+	echo "--- recent RD05 EXTCPU / CPU path / rtl8_4 / TXDESC / RX traces ---"
+	dmesg 2>/dev/null | grep -E 'v12-sdkexact|v11-extcpu|V26_EXTCPU|RTL8367D RD05 DSA CPU path|RD05 rtl8_4 txtrace|RD05 txdesc trace v26|RD05 txdesc trace v25|RD05 txdesc trace v24|rd05 magic-rx|rd05 rxtrace|rxtrace v5am|NETDEV WATCHDOG|TX timeout' | tail -240 || true
+}
+
+
+rd05_write_param() {
+	p="$1"
+	v="$2"
+	[ -n "$p" ] || return 0
+	[ -e "$p" ] || return 0
+	echo "$v" > "$p" 2>/dev/null || return 1
+	return 0
+}
+
+rd05_autotune_probe_tick() {
+	id="$1"
+	label="$2"
+	msg="RD05_AUTOTUNE id=$id label=$label dsa=${3:-} target=${4:-} txdesc=${5:-} portmap=${6:-} extcpu=${7:-} dst=$FULL_PROBE_TARGET"
+	# Hard success can only be known when the PC answers. A one-way frame visible
+	# only in PC tcpdump is still printed with a unique id/label for correlation.
+	if [ -e "/sys/class/net/$FULL_PROBE_IF" ]; then
+		ping -I "$FULL_PROBE_IF" -c 1 -W 1 "$FULL_PROBE_TARGET" >/dev/null 2>&1 && return 0
+	else
+		ping -c 1 -W 1 "$FULL_PROBE_TARGET" >/dev/null 2>&1 && return 0
+	fi
+	if command -v arping >/dev/null 2>&1; then
+		arping -I "$FULL_PROBE_IF" -c 1 -w 1 "$FULL_PROBE_TARGET" >/dev/null 2>&1 || true
+	fi
+	if command -v nc >/dev/null 2>&1; then
+		printf '%s\n' "$msg" | nc -u -w 1 "$FULL_PROBE_TARGET" "${RD05_AUTOTUNE_UDP_PORT:-5555}" >/dev/null 2>&1 || true
+	fi
+	return 1
+}
+
+rd05_autotune_candidates() {
+	id=0
+	# Phase 0: v29-specific ingress-to-CPU hypotheses.  These run first because
+	# v28 proved the PC magic is emitted but never reaches RTL8197F raw RX.
+	for ing in 1 2 4 5 6 7; do
+		printf '%03d ingress%s_ext15 0 -1 0 0 15 %s\n' "$id" "$ing" "$ing"
+		id=$((id + 1))
+	done
+	for ing in 1 2 3 4 5 6 7; do
+		printf '%03d ingress%s_ext0 0 -1 0 0 0 %s\n' "$id" "$ing" "$ing"
+		id=$((id + 1))
+	done
+	for ext in 14 16; do
+		printf '%03d ingress3_ext%s 0 -1 0 0 %s 3\n' "$id" "$ext" "$ext"
+		id=$((id + 1))
+	done
+	# Phase A: all known RTL8367D EXT1/CPU hypotheses from v26, with ingress off.
+	for ext in 0 1 2 3 4 5 10 11 12 13 14 15 16 17; do
+		printf '%03d extcpu_%s 0 -1 0 0 %s 0\n' "$id" "$(rd05_extcpu_name "$ext" | tr '/ -' '___')" "$ext"
+		id=$((id + 1))
+	done
+	# Phase B: DSA safe header variants, paired with current and SDK-most-likely CPU modes.
+	for ext in 0 11 15; do
+		for dsa in 0 1 2 3; do
+			printf '%03d dsa%s_ext%s %s -1 0 0 %s 0\n' "$id" "$dsa" "$ext" "$dsa" "$ext"
+			id=$((id + 1))
+		done
+	done
+	# Phase C: RTL8197F TX descriptor variants excluding the known watchdog-prone dp10 mode 5.
+	for ext in 0 11 15; do
+		for txd in 0 1 2 3 4 6 7 8 9 10 11 12; do
+			printf '%03d txdesc%s_ext%s 0 -1 %s 0 %s 0\n' "$id" "$txd" "$ext" "$txd" "$ext"
+			id=$((id + 1))
+		done
+	done
+	# Phase D: external RTL8367D physical target/portmap focus against the real LAN candidate.
+	for ext in 0 11 15; do
+		for target in -1 0 1 2 3 4; do
+			case "$target" in
+				-1) pm=0 ;;
+				0) pm=3 ;;
+				1) pm=4 ;;
+				2) pm=5 ;;
+				3) pm=6 ;;
+				4) pm=7 ;;
+			esac
+			printf '%03d target%s_pm%s_ext%s 0 %s 0 %s %s 0\n' "$id" "$target" "$pm" "$ext" "$target" "$pm" "$ext"
+			id=$((id + 1))
+		done
+	done
+	# Phase E: ingress mirror combined with physical UTP1 focus.
+	for ing in 1 2 4 5 6 7; do
+		printf '%03d ingress%s_target1_pm4_ext15 0 1 0 4 15 %s\n' "$id" "$ing" "$ing"
+		id=$((id + 1))
+	done
+	# Optional exhaustive mode: slow, but covers the full safe cartesian product.
+	if [ "${RD05_AUTOTUNE_EXHAUSTIVE:-0}" = "1" ]; then
+		for ing in 0 1 2 4 5 6 7; do
+			for ext in 0 11 15; do
+				for dsa in 0 1 2 3; do
+					for txd in 0 1 2 3 4 6 7 8 9 10 11 12; do
+						for target in -1 1; do
+							for pm in 0 1 4; do
+								printf '%03d exhaustive_i%s_d%s_t%s_x%s_p%s_e%s %s %s %s %s %s %s\n' "$id" "$ing" "$dsa" "$target" "$txd" "$pm" "$ext" "$dsa" "$target" "$txd" "$pm" "$ext" "$ing"
+								id=$((id + 1))
+							done
+						done
+					done
+				done
+			done
+		done
+	fi
+}
+
+rd05_autotune_hunt() {
+	seconds="${RD05_AUTOTUNE_SECONDS:-6}"
+	max="${RD05_AUTOTUNE_MAX_CANDIDATES:-0}"
+	stop_on_hit="${RD05_AUTOTUNE_STOP_ON_HIT:-1}"
+	result="/tmp/rd05-magic-winner.env"
+	bestfile="/tmp/rd05-magic-best.env"
+	candfile="/tmp/rd05-magic-candidates.$$"
+
+	hr "legacy v29 RTL8367D ingress-force-to-CPU magic autohunt"
+	cat <<EOT
+This experimental command runs only through "rd05-netdiag autotune" or
+RD05_RUN_AUTOTUNE=1. It iterates legacy DSA, RTL8197F TXDESC, RTL8367D
+portmap, SDK-exact EXT1/CPU initialization hypotheses, and
+new RTL8367D ingress-to-CPU mirror/force hypotheses. Each candidate sends
+router-side ARP/ping probes while watching for PC-sent RD05MAGIC-V29 frames on $FULL_PROBE_TARGET:${RD05_AUTOTUNE_UDP_PORT:-5555}. A hard hit is raw RX visibility in the RTL8197F driver: rd05_magic_hits increases.
+Ping success, valid neighbor, or PC MAC in FDB are still reported as secondary
+confirmations. Candidate ids are written into rd05_magic_candidate so the driver
+logs the exact winning hardware init.
+seconds_per_candidate=$seconds max_candidates=$max stop_on_hit=$stop_on_hit exhaustive=${RD05_AUTOTUNE_EXHAUSTIVE:-0}
+EOT
+
+	dsa_path="$(rd05_txmode_param_path)"
+	target_path="$(rd05_tx_port_override_path)"
+	txdesc_path="$(rd05_txdesc_param_path)"
+	pm_path="$(rd05_portmap_mode_path)"
+	ext_path="$(rd05_extcpu_mode_path)"
+	ing_path="$(rd05_ingress_cpu_mode_path)"
+	magic_enable_path="/sys/module/rtl8197f_rtknet/parameters/rd05_magic_enable"
+	magic_candidate_path="/sys/module/rtl8197f_rtknet/parameters/rd05_magic_candidate"
+	magic_log_path="/sys/module/rtl8197f_rtknet/parameters/rd05_magic_log_limit"
+	limit_path="$(rd05_txdesc_trace_limit_path)"
+	trace_path="$(rd05_txtrace_limit_path)"
+
+	old_dsa=""; old_target=""; old_txdesc=""; old_pm=""; old_ext=""; old_ing=""
+	[ -n "$dsa_path" ] && old_dsa="$(cat "$dsa_path" 2>/dev/null || echo 0)"
+	[ -n "$target_path" ] && old_target="$(cat "$target_path" 2>/dev/null || echo -1)"
+	[ -n "$txdesc_path" ] && old_txdesc="$(cat "$txdesc_path" 2>/dev/null || echo 0)"
+	[ -n "$pm_path" ] && old_pm="$(cat "$pm_path" 2>/dev/null || echo 0)"
+	[ -n "$ext_path" ] && old_ext="$(cat "$ext_path" 2>/dev/null || echo 0)"
+	[ -n "$ing_path" ] && old_ing="$(cat "$ing_path" 2>/dev/null || echo 0)"
+	[ -n "$limit_path" ] && echo 512 > "$limit_path" 2>/dev/null || true
+	[ -n "$trace_path" ] && echo 256 > "$trace_path" 2>/dev/null || true
+	[ -e "$magic_enable_path" ] && echo 1 > "$magic_enable_path" 2>/dev/null || true
+	[ -e "$magic_log_path" ] && echo 256 > "$magic_log_path" 2>/dev/null || true
+
+	echo "V29_INGRESS_PATHS dsa=${dsa_path:-none} target=${target_path:-none} txdesc=${txdesc_path:-none} portmap=${pm_path:-none} extcpu=${ext_path:-none} ingress=${ing_path:-none} old_dsa=${old_dsa:-none} old_target=${old_target:-none} old_txdesc=${old_txdesc:-none} old_portmap=${old_pm:-none} old_extcpu=${old_ext:-none} old_ingress=${old_ing:-none} magic_enable=${magic_enable_path:-none} magic_candidate=${magic_candidate_path:-none}"
+
+	rm -f "$result" "$bestfile" "$candfile"
+	rd05_autotune_candidates > "$candfile"
+	count_total="$(wc -l < "$candfile" 2>/dev/null | tr -d ' ')"
+	echo "V29_INGRESS_CANDIDATES total=$count_total"
+
+	best_score=-1
+	best_line=""
+	idx=0
+	winner=0
+	while read id label dsa target txdesc pm ext ing; do
+		[ -n "$id" ] || continue
+		[ -n "$ing" ] || ing=0
+		idx=$((idx + 1))
+		[ "$max" -gt 0 ] && [ "$idx" -gt "$max" ] && { echo "V29_INGRESS_STOP reason=max_candidates idx=$idx max=$max"; break; }
+		case "$dsa" in 0|1|2|3) ;; *) echo "V29_INGRESS_SKIP id=$id reason=bad_dsa dsa=$dsa"; continue ;; esac
+		case "$target" in -1|0|1|2|3|4) ;; *) echo "V29_INGRESS_SKIP id=$id reason=bad_target target=$target"; continue ;; esac
+		case "$txdesc" in 0|1|2|3|4|6|7|8|9|10|11|12) ;; *) echo "V29_INGRESS_SKIP id=$id reason=bad_txdesc txdesc=$txdesc"; continue ;; esac
+		case "$pm" in 0|1|2|3|4|5|6|7) ;; *) echo "V29_INGRESS_SKIP id=$id reason=bad_portmap portmap=$pm"; continue ;; esac
+		case "$ext" in 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17) ;; *) echo "V29_INGRESS_SKIP id=$id reason=bad_extcpu extcpu=$ext"; continue ;; esac
+		case "$ing" in 0|1|2|3|4|5|6|7) ;; *) echo "V29_INGRESS_SKIP id=$id reason=bad_ingress ingress=$ing"; continue ;; esac
+
+		rd05_write_param "$dsa_path" "$dsa" || true
+		rd05_write_param "$target_path" "$target" || true
+		rd05_write_param "$txdesc_path" "$txdesc" || true
+		rd05_write_param "$pm_path" "$pm" || true
+		rd05_write_param "$ext_path" "$ext" || true
+		rd05_write_param "$ing_path" "$ing" || true
+		rd05_write_param "$magic_candidate_path" "$id" || true
+		sleep 1
+		ip neigh flush "$FULL_PROBE_TARGET" dev "$FULL_PROBE_IF" >/dev/null 2>&1 || ip neigh flush "$FULL_PROBE_TARGET" >/dev/null 2>&1 || true
+
+		echo "V29_INGRESS_CAND id=$id idx=$idx label=$label dsa=$dsa target=$target txdesc=$txdesc portmap=$pm extcpu=$ext ingress=$ing pc_magic=RD05_AUTOTUNE id=$id"
+		b_magic="$(val_ethtool eth0 rd05_magic_hits)"; b_magic_cand="$(val_ethtool eth0 rd05_magic_last_candidate)"
+		b_arp="$(val_ethtool eth0 rd05_rx_arp)"; b_ip4="$(val_ethtool eth0 rd05_rx_ipv4)"; b_trace="$(val_ethtool eth0 rd05_rxtrace_frames)"; b_untag="$(val_ethtool eth0 rd05_rx_untagged)"
+		b_tx_to="$(val_ethtool eth0 tx_timeouts)"; b_tx_kicks="$(val_ethtool eth0 tx_kicks)"
+		b_lan2_in="$(val_ethtool lan2 ifInOctets)"; b_lan2_out="$(val_ethtool lan2 ifOutOctets)"; b_lan2_b="$(val_ethtool lan2 ifInBroadcastPkts)"; b_lan2_disc="$(val_ethtool lan2 dot1dTpPortInDiscards)"
+		b_br="$(val_procnet br-lan)"; b_eth="$(val_procnet eth0)"
+		ping_ok=0
+		i=0
+		while [ "$i" -lt "$seconds" ]; do
+			rd05_autotune_probe_tick "$id" "$label" "$dsa" "$target" "$txdesc" "$pm" "$ext" && ping_ok=1
+			sleep 2
+			i=$((i + 2))
+		done
+
+		a_magic="$(val_ethtool eth0 rd05_magic_hits)"; a_magic_cand="$(val_ethtool eth0 rd05_magic_last_candidate)"
+		a_magic_len="$(val_ethtool eth0 rd05_magic_last_len)"; a_magic_p0="$(val_ethtool eth0 rd05_magic_last_proto0)"; a_magic_p4="$(val_ethtool eth0 rd05_magic_last_proto4)"; a_magic_p8="$(val_ethtool eth0 rd05_magic_last_proto8)"
+		a_arp="$(val_ethtool eth0 rd05_rx_arp)"; a_ip4="$(val_ethtool eth0 rd05_rx_ipv4)"; a_trace="$(val_ethtool eth0 rd05_rxtrace_frames)"; a_untag="$(val_ethtool eth0 rd05_rx_untagged)"
+		a_tx_to="$(val_ethtool eth0 tx_timeouts)"; a_tx_kicks="$(val_ethtool eth0 tx_kicks)"
+		a_lan2_in="$(val_ethtool lan2 ifInOctets)"; a_lan2_out="$(val_ethtool lan2 ifOutOctets)"; a_lan2_b="$(val_ethtool lan2 ifInBroadcastPkts)"; a_lan2_disc="$(val_ethtool lan2 dot1dTpPortInDiscards)"
+		a_br="$(val_procnet br-lan)"; a_eth="$(val_procnet eth0)"
+		d_magic=$(( $(safe_num "$a_magic") - $(safe_num "$b_magic") ))
+		d_arp=$(( $(safe_num "$a_arp") - $(safe_num "$b_arp") ))
+		d_ip4=$(( $(safe_num "$a_ip4") - $(safe_num "$b_ip4") ))
+		d_trace=$(( $(safe_num "$a_trace") - $(safe_num "$b_trace") ))
+		d_untag=$(( $(safe_num "$a_untag") - $(safe_num "$b_untag") ))
+		d_tx_to=$(( $(safe_num "$a_tx_to") - $(safe_num "$b_tx_to") ))
+		d_tx_kicks=$(( $(safe_num "$a_tx_kicks") - $(safe_num "$b_tx_kicks") ))
+		d_lan2_in=$(( $(safe_num "$a_lan2_in") - $(safe_num "$b_lan2_in") ))
+		d_lan2_out=$(( $(safe_num "$a_lan2_out") - $(safe_num "$b_lan2_out") ))
+		d_lan2_b=$(( $(safe_num "$a_lan2_b") - $(safe_num "$b_lan2_b") ))
+		d_lan2_disc=$(( $(safe_num "$a_lan2_disc") - $(safe_num "$b_lan2_disc") ))
+
+		neigh_line="$(ip neigh show 2>/dev/null | grep -F "$FULL_PROBE_TARGET" | head -1)"
+		neigh_valid="$(printf '%s\n' "$neigh_line" | grep -Ev '(^$| FAILED | INCOMPLETE | PROBE )' | head -1)"
+		fdb_pc="$(bridge fdb show 2>/dev/null | grep -i "$RD05_PC_MAC" | head -1)"
+		pc_seen=0; [ "$d_magic" -gt 0 ] && pc_seen=1; [ -n "$neigh_valid" ] && pc_seen=1; [ -n "$fdb_pc" ] && pc_seen=1; [ "$ping_ok" -eq 1 ] && pc_seen=1
+		verdict="no-pc-reply"; [ "$d_tx_to" -gt 0 ] && verdict="tx-watchdog"; [ "$d_trace" -gt 0 ] && verdict="router-self-rx"; [ "$d_untag" -gt 0 ] && verdict="untagged-rx-seen"; [ "$pc_seen" -eq 1 ] && verdict="pc-answer-seen"; [ "$d_magic" -gt 0 ] && verdict="magic-rx-hit"; [ "$ping_ok" -eq 1 ] && verdict="ping-ok"
+		score=0
+		[ "$d_magic" -gt 0 ] && score=$((score + 2000))
+		[ "$ping_ok" -eq 1 ] && score=$((score + 1000))
+		[ -n "$neigh_valid" ] && score=$((score + 500))
+		[ -n "$fdb_pc" ] && score=$((score + 300))
+		[ "$d_ip4" -gt 0 ] && score=$((score + 40))
+		[ "$d_lan2_out" -gt 0 ] && score=$((score + 10))
+		[ "$d_arp" -gt 0 ] && score=$((score + 5))
+		[ "$d_trace" -gt 0 ] && score=$((score + 2))
+		[ "$d_tx_to" -gt 0 ] && score=$((score - 200))
+		printf 'V29_INGRESS_RESULT id=%s label=%s verdict=%s score=%s ping_ok=%s pc_seen=%s magic_delta=%s magic_last_candidate=%s magic_last_len=%s magic_p0=%s magic_p4=%s magic_p8=%s dsa=%s target=%s txdesc=%s portmap=%s extcpu=%s ingress=%s tx_kicks_delta=%s tx_timeout_delta=%s lan2_in_delta=%s lan2_out_delta=%s lan2_bcast_delta=%s lan2_disc_delta=%s eth0_arp_delta=%s eth0_ipv4_delta=%s eth0_untag_delta=%s rxtrace_delta=%s\n' \
+			"$id" "$label" "$verdict" "$score" "$ping_ok" "$pc_seen" "$d_magic" "$a_magic_cand" "$a_magic_len" "$a_magic_p0" "$a_magic_p4" "$a_magic_p8" "$dsa" "$target" "$txdesc" "$pm" "$ext" "$ing" "$d_tx_kicks" "$d_tx_to" "$d_lan2_in" "$d_lan2_out" "$d_lan2_b" "$d_lan2_disc" "$d_arp" "$d_ip4" "$d_untag" "$d_trace"
+		echo "V29_INGRESS id=$id br-lan before: $b_br"
+		echo "V29_INGRESS id=$id br-lan after : $a_br"
+		echo "V29_INGRESS id=$id eth0 before  : $b_eth"
+		echo "V29_INGRESS id=$id eth0 after   : $a_eth"
+		[ -n "$neigh_line" ] && echo "V29_INGRESS id=$id neigh: $neigh_line"
+		[ -n "$fdb_pc" ] && echo "V29_INGRESS id=$id fdb: $fdb_pc"
+
+		if [ "$score" -gt "$best_score" ]; then
+			best_score="$score"
+			best_line="id=$id label=$label verdict=$verdict score=$score dsa=$dsa target=$target txdesc=$txdesc portmap=$pm extcpu=$ext ingress=$ing"
+			{
+				echo "RD05_AUTOTUNE_ID=$id"
+				echo "RD05_AUTOTUNE_LABEL=$label"
+				echo "RD05_AUTOTUNE_VERDICT=$verdict"
+				echo "RD05_AUTOTUNE_SCORE=$score"
+				echo "RD05_MAGIC_DELTA=$d_magic"
+				echo "RD05_MAGIC_LAST_CANDIDATE=$a_magic_cand"
+				echo "RD05_MAGIC_LAST_LEN=$a_magic_len"
+				echo "RD05_AUTOTUNE_DSA=$dsa"
+				echo "RD05_AUTOTUNE_TARGET=$target"
+				echo "RD05_AUTOTUNE_TXDESC=$txdesc"
+				echo "RD05_AUTOTUNE_PORTMAP=$pm"
+				echo "RD05_AUTOTUNE_EXTCPU=$ext"
+				echo "RD05_AUTOTUNE_INGRESS=$ing"
+			} > "$bestfile"
+		fi
+
+		if [ "$pc_seen" -eq 1 ] && [ "$stop_on_hit" = "1" ]; then
+			winner=1
+			{
+				echo "RD05_AUTOTUNE_ID=$id"
+				echo "RD05_AUTOTUNE_LABEL=$label"
+				echo "RD05_AUTOTUNE_VERDICT=$verdict"
+				echo "RD05_AUTOTUNE_SCORE=$score"
+				echo "RD05_MAGIC_DELTA=$d_magic"
+				echo "RD05_MAGIC_LAST_CANDIDATE=$a_magic_cand"
+				echo "RD05_MAGIC_LAST_LEN=$a_magic_len"
+				echo "RD05_AUTOTUNE_DSA=$dsa"
+				echo "RD05_AUTOTUNE_TARGET=$target"
+				echo "RD05_AUTOTUNE_TXDESC=$txdesc"
+				echo "RD05_AUTOTUNE_PORTMAP=$pm"
+				echo "RD05_AUTOTUNE_EXTCPU=$ext"
+				echo "RD05_AUTOTUNE_INGRESS=$ing"
+			} > "$result"
+			echo "V29_INGRESS_WINNER id=$id label=$label verdict=$verdict score=$score action=kept_active result=$result"
+			break
+		fi
+	done < "$candfile"
+
+	if [ "$winner" -ne 1 ]; then
+		rd05_write_param "$ing_path" "${old_ing:-0}" || true
+		rd05_write_param "$ext_path" "${old_ext:-0}" || true
+		rd05_write_param "$pm_path" "${old_pm:-0}" || true
+		rd05_write_param "$txdesc_path" "${old_txdesc:-0}" || true
+		rd05_write_param "$target_path" "${old_target:--1}" || true
+		rd05_write_param "$dsa_path" "${old_dsa:-0}" || true
+		rd05_write_param "$magic_candidate_path" "-1" || true
+		echo "V29_INGRESS_NO_HARD_HIT best=\"$best_line\" bestfile=$bestfile action=restored_original"
+		[ -s "$bestfile" ] && { echo "--- $bestfile ---"; cat "$bestfile"; }
+	else
+		echo "V29_INGRESS_ACTIVE ingress=$( [ -n "$ing_path" ] && cat "$ing_path" 2>/dev/null || echo none ) extcpu=$( [ -n "$ext_path" ] && cat "$ext_path" 2>/dev/null || echo none ) portmap=$( [ -n "$pm_path" ] && cat "$pm_path" 2>/dev/null || echo none ) txdesc=$( [ -n "$txdesc_path" ] && cat "$txdesc_path" 2>/dev/null || echo none ) target=$( [ -n "$target_path" ] && cat "$target_path" 2>/dev/null || echo none ) dsa=$( [ -n "$dsa_path" ] && cat "$dsa_path" 2>/dev/null || echo none )"
+	fi
+	rm -f "$candfile"
+	echo
+	echo "--- recent RD05 ingress/magic autotune / CPU path / TX traces ---"
+	dmesg 2>/dev/null | grep -E 'v15-ingress|rd05_ingress|v13-autotune|v12-sdkexact|RTL8367D RD05 DSA CPU path|RD05 rtl8_4 txtrace|RD05 txdesc trace v28|RD05 txdesc trace v27|RD05 txdesc trace v26|rd05 magic-rx|rd05 rxtrace|rxtrace v5am|NETDEV WATCHDOG|TX timeout' | tail -260 || true
+}
+
+
+rd05_raw_start() {
+	seconds="$1"
+	RD05_RAW_EXCHANGE_PID=""
+	RD05_RAW_ETH0_PID=""
+	[ -n "$RUNDIR" ] && [ -d "$RUNDIR" ] || return 0
+	[ "$RD05_RAW_CAPTURE" = "1" ] || {
+		echo "RD05 raw capture disabled by RD05_RAW_CAPTURE=$RD05_RAW_CAPTURE"
+		return 0
+	}
+	if ! command -v rd05-raw >/dev/null 2>&1; then
+		echo "RD05_RAW_ERROR: /usr/sbin/rd05-raw is missing; rebuild/install rtl8367d-compat release 5."
+		return 0
+	fi
+
+	hr "bounded raw Ethernet capture and Magic handshake"
+	echo "session=$RD05_SESSION interface=$RD05_MAGIC_IF peer_mac=$RD05_PC_MAC seconds=$seconds interval_ms=$RD05_MAGIC_INTERVAL_MS"
+	echo "pcap limits: snaplen=$RD05_RAW_SNAPLEN max_packets=$RD05_RAW_MAX_PACKETS per capture"
+
+	if [ -e "/sys/class/net/$RD05_MAGIC_IF" ]; then
+		RD05_RAW_SNAPLEN="$RD05_RAW_SNAPLEN" \
+		RD05_RAW_MAX_PACKETS="$RD05_RAW_MAX_PACKETS" \
+			rd05-raw exchange "$RD05_MAGIC_IF" "$seconds" "$RD05_SESSION" \
+			"$RD05_PC_MAC" "$RD05_MAGIC_INTERVAL_MS" \
+			"$RUNDIR/router-${RD05_MAGIC_IF}.pcap" \
+			> "$RUNDIR/rd05-raw-${RD05_MAGIC_IF}.log" 2>&1 &
+		RD05_RAW_EXCHANGE_PID=$!
+		echo "started rd05-raw exchange pid=$RD05_RAW_EXCHANGE_PID"
+	else
+		echo "RD05_RAW_ERROR: interface $RD05_MAGIC_IF is missing"
+	fi
+
+	# Capturing the DSA master separately preserves the on-CPU-link rtl8_4 tag
+	# evidence.  This is capture-only and does not inject frames on eth0.
+	if [ -e /sys/class/net/eth0 ]; then
+		RD05_RAW_SNAPLEN="$RD05_RAW_SNAPLEN" \
+		RD05_RAW_MAX_PACKETS="$RD05_RAW_MAX_PACKETS" \
+			rd05-raw capture eth0 "$seconds" "$RUNDIR/router-eth0.pcap" \
+			> "$RUNDIR/rd05-raw-eth0.log" 2>&1 &
+		RD05_RAW_ETH0_PID=$!
+		echo "started rd05-raw capture eth0 pid=$RD05_RAW_ETH0_PID"
+	fi
+}
+
+rd05_raw_wait() {
+	[ -n "$RD05_RAW_EXCHANGE_PID" ] && wait "$RD05_RAW_EXCHANGE_PID" 2>/dev/null || true
+	[ -n "$RD05_RAW_ETH0_PID" ] && wait "$RD05_RAW_ETH0_PID" 2>/dev/null || true
+	if [ -n "$RUNDIR" ] && [ -d "$RUNDIR" ]; then
+		hr "rd05-raw LAN2 exchange log"
+		cat_if "$RUNDIR/rd05-raw-${RD05_MAGIC_IF}.log"
+		hr "rd05-raw eth0 master capture log"
+		cat_if "$RUNDIR/rd05-raw-eth0.log"
+	fi
+}
+
+rd05_raw_value() {
+	file="$1"
+	key="$2"
+	[ -f "$file" ] || { echo 0; return; }
+	awk -v wanted="$key" '
+		/^RD05_RAW_(CAPTURE_)?SUMMARY / {
+			for (i = 1; i <= NF; i++) {
+				split($i, kv, "=")
+				if (kv[1] == wanted) value = kv[2]
+			}
+		}
+		END { if (value == "") value = 0; print value }
+	' "$file"
+}
+
+rd05_window_value() {
+	key="$1"
+	[ -n "$RUNDIR" ] && [ -f "$RUNDIR/window.env" ] || { echo 0; return; }
+	awk -F= -v wanted="$key" '$1 == wanted { value=$2 } END { if (value == "") value=0; print value }' "$RUNDIR/window.env"
+}
+
+rd05_raw_verdict() {
+	[ -n "$RUNDIR" ] && [ -d "$RUNDIR" ] || return 0
+	rawlog="$RUNDIR/rd05-raw-${RD05_MAGIC_IF}.log"
+	masterlog="$RUNDIR/rd05-raw-eth0.log"
+	rx_pc_probe="$(safe_num "$(rd05_raw_value "$rawlog" rx_pc_probe)")"
+	rx_pc_ack="$(safe_num "$(rd05_raw_value "$rawlog" rx_pc_ack)")"
+	tx_probe="$(safe_num "$(rd05_raw_value "$rawlog" tx_probe)")"
+	tx_ack="$(safe_num "$(rd05_raw_value "$rawlog" tx_ack)")"
+	raw_rx_magic="$(safe_num "$(rd05_raw_value "$rawlog" rx_magic)")"
+	master_rx_magic="$(safe_num "$(rd05_raw_value "$masterlog" rx_magic)")"
+	master_rx_pc_probe="$(safe_num "$(rd05_raw_value "$masterlog" rx_pc_probe)")"
+	driver_magic="$(safe_num "$(rd05_window_value RD05_WINDOW_MAGIC_DELTA)")"
+	driver_external="$(safe_num "$(rd05_window_value RD05_WINDOW_EXTERNAL_DELTA)")"
+	window_result="$(rd05_window_value RD05_RESULT_WINDOW)"
+
+	if [ "$rx_pc_ack" -gt 0 ] && [ "$driver_magic" -gt 0 ]; then
+		verdict="PASS_ROUTER_RAW_BIDIRECTIONAL_DRIVER_CONFIRMED"
+		detail_code="BIDIRECTIONAL_RAW_AND_DRIVER"
+		detail="router probes reached the PC, PC ACKs returned, and RTL8197F raw RX detected the token"
+	elif [ "$rx_pc_probe" -gt 0 ] && [ "$driver_magic" -gt 0 ]; then
+		verdict="PASS_PC_TO_ROUTER_RAW_DRIVER_CONFIRMED_ROUTER_TO_PC_AWAIT_PC_REPORT"
+		detail_code="PC_TO_ROUTER_RAW_AND_DRIVER"
+		detail="PC probes reached AF_PACKET and RTL8197F raw RX; router ACKs were transmitted but PC receipt needs the PC report"
+	elif [ "$master_rx_pc_probe" -gt 0 ] && [ "$rx_pc_probe" -eq 0 ] && [ "$driver_magic" -gt 0 ]; then
+		verdict="PARTIAL_RTL8197F_MASTER_RX_DSA_SLAVE_DEMUX"
+		detail_code="MASTER_RX_PC_PROBE_NOT_ON_LAN2_SLAVE"
+		detail="eth0 master capture and RTL8197F raw RX saw PC probes, but lan2 AF_PACKET did not; inspect rtl8_4 receive demultiplexing"
+	elif [ "$driver_magic" -gt 0 ]; then
+		verdict="PASS_RTL8197F_RAW_INGRESS_ONLY"
+		detail_code="RTL8197F_RAW_INGRESS_ONLY"
+		detail="driver saw PC Magic bytes, but the userspace handshake is incomplete"
+	elif [ "$rx_pc_probe" -gt 0 ]; then
+		verdict="PARTIAL_DSA_SLAVE_RX_WITHOUT_DRIVER_MAGIC_DELTA"
+		detail_code="DSA_SLAVE_RX_NO_DRIVER_MAGIC"
+		detail="lan2 AF_PACKET saw PC probes but the raw driver counter did not increase"
+	elif [ "$tx_probe" -gt 0 ]; then
+		verdict="FAIL_NO_PC_MAGIC_RETURN"
+		detail_code="NO_PC_MAGIC_RETURN"
+		detail="router transmitted raw probes but received no PC probe/ACK"
+	else
+		verdict="FAIL_RAW_HELPER_NOT_ACTIVE_OR_NO_INTERFACE"
+		detail_code="RAW_HELPER_INACTIVE_OR_NO_INTERFACE"
+		detail="no usable rd05-raw exchange summary"
+	fi
+
+	hr "combined router-side automatic verdict"
+	echo "RD05_ROUTER_VERDICT=$verdict"
+	echo "detail=$detail"
+	echo "session=$RD05_SESSION tx_probe=$tx_probe tx_ack=$tx_ack rx_pc_probe=$rx_pc_probe rx_pc_ack=$rx_pc_ack raw_rx_magic=$raw_rx_magic master_rx_magic=$master_rx_magic master_rx_pc_probe=$master_rx_pc_probe driver_magic_delta=$driver_magic driver_external_delta=$driver_external window=$window_result"
+	cat > "$RUNDIR/router-summary.env" <<EOT
+RD05_SESSION=$RD05_SESSION
+RD05_ROUTER_VERDICT=$verdict
+RD05_ROUTER_DETAIL_CODE=$detail_code
+RD05_RAW_TX_PROBE=$tx_probe
+RD05_RAW_TX_ACK=$tx_ack
+RD05_RAW_RX_PC_PROBE=$rx_pc_probe
+RD05_RAW_RX_PC_ACK=$rx_pc_ack
+RD05_RAW_RX_MAGIC=$raw_rx_magic
+RD05_MASTER_RX_MAGIC=$master_rx_magic
+RD05_MASTER_RX_PC_PROBE=$master_rx_pc_probe
+RD05_DRIVER_MAGIC_DELTA=$driver_magic
+RD05_DRIVER_EXTERNAL_DELTA=$driver_external
+RD05_RESULT_WINDOW=$window_result
+EOT
+	cat > "$RUNDIR/router-verdict.txt" <<EOT
+RD05 router diagnostic verdict
+==============================
+Verdict: $verdict
+Detail: $detail
+Session: $RD05_SESSION
+Raw TX probes: $tx_probe
+Raw TX ACKs: $tx_ack
+Raw RX PC probes: $rx_pc_probe
+Raw RX PC ACKs: $rx_pc_ack
+Raw RX Magic frames on lan2: $raw_rx_magic
+Raw RX Magic frames on eth0 master: $master_rx_magic
+PC probes visible on eth0 master: $master_rx_pc_probe
+RTL8197F driver Magic delta: $driver_magic
+RTL8197F external RX delta: $driver_external
+Traffic-window result: $window_result
+EOT
+}
+
+rd05_platform_snapshot() {
+	phase="$1"
+	hr "platform and complete network snapshot - $phase"
+	run cat /etc/openwrt_release
+	exists ubus && run ubus call system board
+	run cat /proc/cpuinfo
+	run cat /proc/interrupts
+	run cat /proc/iomem
+	run cat /proc/modules
+	run ip -s -d link show
+	run ip -br address show
+	run ip route show table all
+	run ip rule show
+	run ip neigh show
+	if exists bridge; then
+		run bridge -s link show
+		run bridge vlan show
+		run bridge fdb show
+		run bridge mdb show
+	fi
+	exists ubus && run ubus call network.interface.lan status
+	exists devlink && { run devlink dev show; run devlink port show; }
+	if exists tc; then
+		for dev in eth0 lan1 lan2 lan3 lan4 wan; do
+			[ -e "/sys/class/net/$dev" ] || continue
+			echo "--- tc -s qdisc/filter $dev ---"
+			tc -s qdisc show dev "$dev" 2>&1 || true
+			tc -s filter show dev "$dev" ingress 2>&1 || true
+		done
+	fi
+	if exists nft; then
+		echo "--- nft flowtable/offload rules ---"
+		nft list ruleset 2>/dev/null | grep -Ei 'flowtable|offload|hook (ingress|forward)|devices' || true
+	fi
+	for dev in eth0 lan1 lan2 lan3 lan4 wan; do
+		[ -e "/sys/class/net/$dev" ] || continue
+		echo "--- ethtool identity/features/pause/EEE $dev ---"
+		ethtool -i "$dev" 2>&1 || true
+		ethtool -k "$dev" 2>&1 || true
+		ethtool -a "$dev" 2>&1 || true
+		ethtool --show-eee "$dev" 2>&1 || true
+	done
+	if [ -d /sys/module/rtl8197f_rtknet/parameters ]; then
+		echo "--- rtl8197f_rtknet module parameters ---"
+		for f in /sys/module/rtl8197f_rtknet/parameters/*; do
+			[ -f "$f" ] || continue
+			printf '%s=' "$(basename "$f")"
+			cat "$f" 2>/dev/null || echo unreadable
+		done
+	fi
+	if [ -d /sys/module/realtek_smi/parameters ]; then
+		echo "--- realtek_smi module parameters ---"
+		for f in /sys/module/realtek_smi/parameters/*; do
+			[ -f "$f" ] || continue
+			printf '%s=' "$(basename "$f")"
+			cat "$f" 2>/dev/null || echo unreadable
+		done
+	fi
+	for dev in eth0 lan1 lan2 lan3 lan4 wan br-lan; do
+		[ -e "/sys/class/net/$dev" ] || continue
+		echo "--- sysfs topology $dev ---"
+		readlink -f "/sys/class/net/$dev/device" 2>/dev/null || true
+		readlink -f "/sys/class/net/$dev/master" 2>/dev/null || true
+		find "/sys/class/net/$dev" -maxdepth 1 -type l -name 'lower_*' -print -exec readlink -f '{}' \; 2>/dev/null || true
+	done
+}
+
+rd05_finalize_bundle() {
+	[ -n "$RUNDIR" ] && [ -d "$RUNDIR" ] || return 0
+	dmesg > "$RUNDIR/dmesg-full.txt" 2>&1 || true
+	exists logread && logread > "$RUNDIR/logread-full.txt" 2>&1 || true
+	cat /proc/net/dev > "$RUNDIR/proc-net-dev-final.txt" 2>&1 || true
+	ip -s -d link show > "$RUNDIR/ip-link-final.txt" 2>&1 || true
+	ip address show > "$RUNDIR/ip-address-final.txt" 2>&1 || true
+	ip route show table all > "$RUNDIR/ip-route-final.txt" 2>&1 || true
+	ip neigh show > "$RUNDIR/ip-neigh-final.txt" 2>&1 || true
+	if exists bridge; then
+		bridge link show > "$RUNDIR/bridge-link-final.txt" 2>&1 || true
+		bridge vlan show > "$RUNDIR/bridge-vlan-final.txt" 2>&1 || true
+		bridge fdb show > "$RUNDIR/bridge-fdb-final.txt" 2>&1 || true
+	fi
+	for file in /etc/openwrt_release /etc/board.json /etc/config/network /etc/config/dhcp /etc/config/firewall; do
+		[ -f "$file" ] && cp "$file" "$RUNDIR/$(echo "$file" | tr '/' '_')" 2>/dev/null || true
+	done
+	{
+		echo "RD05_NETDIAG_VERSION=34"
+		echo "RD05_SESSION=$RD05_SESSION"
+		echo "RD05_STARTED=$TS"
+		echo "RD05_MAGIC_IF=$RD05_MAGIC_IF"
+		echo "RD05_PC_IP=$RD05_PC_IP"
+		echo "RD05_PC_MAC=$RD05_PC_MAC"
+		echo "RD05_DURATION=$FULL_ARPTEST_SECONDS"
+		echo "RD05_ROUTER_LOG=$OUT"
+	} > "$RUNDIR/manifest.env"
+	if exists sha256sum; then
+		(
+			cd "$RUNDIR" || exit
+			find . -type f ! -name SHA256SUMS -print | sort | while read f; do sha256sum "$f"; done
+		) > "$RUNDIR/SHA256SUMS" 2>/dev/null || true
+	fi
+
+	bundle="$RUNDIR.tar.gz"
+	if tar -czf "$bundle" -C "$(dirname "$RUNDIR")" "$(basename "$RUNDIR")" 2>/dev/null; then
+		:
+	else
+		bundle="$RUNDIR.tar"
+		tar -cf "$bundle" -C "$(dirname "$RUNDIR")" "$(basename "$RUNDIR")" 2>/dev/null || bundle=""
+	fi
+	echo "Saved: $OUT"
+	[ -n "$bundle" ] && echo "Bundle: $bundle"
+}
+
+pc_help() {
+	cat <<'EOT'
+V34 stable full diagnostics first bring up LAN and wait for the post-start ring
+marker. They are otherwise non-destructive: CPU-tag, flood, isolation,
+portmap and RTL8197F TX-descriptor modes are not changed. The stable topology is
+RTL8197F physical P0/RGMII <-> RTL8367D CPU7/EXT1 with DP=0x01/DP_EXT=0.
+
+Router command:
+
+  rd05-netdiag full
+
+The full mode now performs every router-side command itself, including:
+  * pre/post platform, DSA, bridge, IP, ethtool, tc and driver snapshots;
+  * LAN2/CPU7/eth0 counter deltas and automatic ARP/ping probes;
+  * CPU7 FCS/drop reporting for the EXT1 receive timing direction;
+  * bounded PCAP capture on DSA slave lan2 and DSA master eth0;
+  * raw EtherType 0x8899 RD05MAGIC-V31 probes and ACKs via rd05-raw;
+  * a machine-readable window.env/router-summary.env and final bundle.
+
+Linux PC companion (Python 3, no Scapy required):
+
+  sudo ./rd05-pc-netdiag.py --interface <pc-lan-interface> \
+    --configure-ip --duration 120
+
+It captures all Ethernet frames to PCAP, sends raw Magic probes, responds to
+router probes, generates ARP/ICMP/UDP traffic and writes JSON/text verdicts.
+With key-based SSH it can start the router command and download the bundle:
+
+  sudo -E ./rd05-pc-netdiag.py --interface <pc-lan-interface> \
+    --configure-ip --duration 120 --ssh root@192.168.1.1
+
+No second router terminal and no manual tcpdump/arping/ping commands are needed.
+Use "rd05-netdiag prepare" only for an explicit RTL8197F reseed. The legacy v29
+matrix remains available as "rd05-netdiag autotune" and is never run by full.
+EOT
+}
+
+summary_interpretation() {
+	hr "short interpretation hints"
+	cat <<'EOT'
+Focus values:
+  rd05_l2cpu_ok   >=4 means the raw rtl865x OEM L2/VLAN seed was accepted.
+  rd05_pipe_ok    >0 means PVID/netif/classifier register writes were accepted.
+  rd05_acl_ok     >=7 means explicit ingress ACL 0-5 plus egress ACL253 were accepted.
+  rd05_ffcr_read  shows unknown-multicast-to-CPU classifier state.
+  rd05_netif_ok   >0 means VID9 netif table entry was programmed.
+  rd05_trap_ok    >0 means ARP/DHCP protocol trap bits were written.
+  rd05_l2cpu_fail >0 means L2/VLAN TACI table programming failed.
+  rd05_acl_fail   >0 means ACL table programming failed.
+  rd05_rx_external >0 proves a frame with a non-router source MAC reached the RTL8197F CPU ring.
+  rd05_rx_self_loop >0 counts router-origin 0x8899 frames reflected back by the old extension path; it is not PC ingress.
+  rd05_rx_arp     >0 means externally sourced ARP reached RTL8197F CPU RX.
+  rd05_rxdesc_*   shows v5am RX descriptor ext/source-port audit counters.
+  rd05_rx_ipv6    >0 with rd05_rx_arp=0 means only IPv6 multicast reaches CPU RX.
+  p07_ifOutOctets >0 with eth0 RX=0 means RTL8367D emits on CPU7/EXT1, but the RTL8197F P0/RGMII receive path or timing is blocked.
+  eth0 RX=0 while lan2 RX grows means switch sees traffic but CPU RX path is blocked.
+  br-lan RX=0 means Linux bridge/IP stack still receives no LAN frames.
+  wan dot1dTpPortInDiscards growing means switch drops WAN-side frames before CPU/Linux TX path completes.
+EOT
+}
+
+netdev_list="eth0 br-lan lan1 lan2 lan3 lan4 wan lo"
+portdev_list="lan1 lan2 wan lan3 lan4"
+
+rd05_full_autotest_window() {
+	hr "automatic LAN/RX + raw Magic window inside full"
+	cat <<EOT
+This is part of rd05-netdiag full. No separate router-side command is needed.
+Window length: ${FULL_ARPTEST_SECONDS}s
+Session: $RD05_SESSION
+PC peer: $RD05_PC_IP / ${RD05_PC_MAC}
+Start rd05-pc-netdiag.py on the PC; the router runs capture, ARP/ping probes and
+raw EtherType 0x8899 exchange automatically.
+EOT
+	rd05_arptest "$FULL_ARPTEST_SECONDS"
+	rd05_raw_verdict
+}
+
+collect() {
+	hr "rd05-netdiag ${MODE} ${TS}"
+	rd05_ensure_network
+	run uname -a
+	run uptime
+	cat_if /proc/cmdline
+	echo "RD05_NETDIAG_VERSION=34 RD05_SESSION=$RD05_SESSION RUNDIR=${RUNDIR:-none}"
+	[ "$MODE" = "full" ] && rd05_platform_snapshot "pre"
+
+	hr "kernel / boot markers"
+	grep_dmesg
+
+	# v34 stable: a normal full collection must not rewrite CPU-tag, flood,
+	# isolation, portmap or TX descriptor modes. The driver programs physical
+	# RTL8197F P0/RGMII plus the ingress/DMA state during open/link-up.
+	# Destructive bring-up experiments remain explicit subcommands only.
+	[ "${RD05_RUN_PREPARE:-0}" = "1" ] && rd05_v5am_auto_bundle
+	[ "${RD05_RUN_AUTOTUNE:-0}" = "1" ] && rd05_autotune_hunt
+	[ "${RD05_RUN_EXTCPU_SWEEP:-0}" = "1" ] && rd05_extcpu_sweep
+
+	hr "rd05 RX counters"
+	if [ -e /sys/class/net/eth0 ]; then
+		ethtool -S eth0 2>/dev/null | grep -E 'rd05_magic|rd05_rx|rd05_rxdesc|rd05_l2cpu|rd05_pipe|rd05_pvid|rd05_netif|rd05_trap|rd05_acl|rd05_ffcr|rd05_daclrcr|rd05_ptrap|rx_crc_strips|rx_desc0_opts|tx_desc0_opts|p07_|rd05_sdk_newdesc_rx|rd05_legacy_rx|reg_cpurmdcr0|rx_bad_desc|rx_dma_errors|rx_missing_skb|rx_alloc_fail|tx_kicks|tx_crc_len_adjusts|reg_cpu|reg_dma|reg_cpui|last_cpu|last_dma|last_cpuqdm|last_sirr|last_macctrl|last_sys_clk|reg_cpurmdcr0|rd05_sdk_newdesc_rx|rd05_legacy_rx' || true
+	else
+		echo "eth0 missing"
+	fi
+
+	rd05_switch_port_matrix
+	rd05_known_port_full_stats
+
+	hr "netdev counters"
+	cat /proc/net/dev 2>/dev/null || true
+
+	hr "link/carrier summary"
+	for dev in $netdev_list; do
+		[ -e "/sys/class/net/$dev" ] || continue
+		printf '%-7s carrier=%s operstate=%s mtu=%s addr=%s master=%s\n' "$dev" \
+			"$(cat /sys/class/net/$dev/carrier 2>/dev/null || echo '-')" \
+			"$(cat /sys/class/net/$dev/operstate 2>/dev/null || echo '-')" \
+			"$(cat /sys/class/net/$dev/mtu 2>/dev/null || echo '-')" \
+			"$(cat /sys/class/net/$dev/address 2>/dev/null || echo '-')" \
+			"$(basename "$(readlink /sys/class/net/$dev/master 2>/dev/null)" 2>/dev/null || echo '-')"
+	done
+
+	hr "ip / bridge state"
+	run ip link
+	run ip addr
+	run ip route
+	run ip neigh
+	if exists bridge; then
+		run bridge link
+		run bridge fdb show
+	fi
+
+	hr "ethtool link"
+	for dev in eth0 $portdev_list; do
+		[ -e "/sys/class/net/$dev" ] || continue
+		echo; echo "--- ethtool $dev ---"
+		ethtool "$dev" 2>/dev/null | grep -E 'Settings|Supported ports|Speed|Duplex|Auto-negotiation|PHYAD|Link detected|Port|MDI' || true
+	done
+
+	hr "switch port stats summary"
+	for dev in eth0 $portdev_list; do
+		[ -e "/sys/class/net/$dev" ] || continue
+		echo; echo "--- ethtool -S $dev ---"
+		ethtool -S "$dev" 2>/dev/null | grep -E 'rd05_magic|rd05_rx|rd05_rxdesc|rd05_l2cpu|rd05_pipe|rd05_pvid|rd05_netif|rd05_trap|rd05_acl|rd05_ffcr|rd05_daclrcr|rd05_ptrap|tx_packets|tx_bytes|rx_packets|rx_bytes|ifInOctets|ifOutOctets|ifInUcastPkts|ifInMulticastPkts|ifInBroadcastPkts|ifOutUcastPkts|ifOutMulticastPkts|ifOutBroadcastPkts|dot1dTpPortInDiscards|ifOutDiscards|etherStatsDropEvents|rx_crc_strips|rx_desc0_opts|tx_desc0_opts|p0?[0-7]_if|p0?[0-7]_dot1d|p0?[0-7]_etherStatsDrop' || true
+	done
+
+	hr "network config"
+	cat_if /etc/config/network
+	cat_if /etc/config/dhcp
+	cat_if /etc/board.json
+
+	hr "recent dmesg tail"
+	dmesg 2>/dev/null | tail -220 2>/dev/null || dmesg 2>/dev/null
+
+	hr "filtered recent RX/DSA logs"
+	dmesg 2>/dev/null | grep -Ei 'rd05 rx observe|slave-local rx|bridge-local rx|untagged rx|non-realtek|proto 0x0806|proto 0x0800|proto 0x86dd|oem-vid9|cpu path|l2cpu|rtl865x l2|flood|mirror|pvid|vlan' || true
+
+	hr "capture implementation"
+	if exists rd05-raw; then
+		echo "rd05-raw is installed; full records bounded PCAPs on $RD05_MAGIC_IF and eth0."
+	else
+		echo "rd05-raw is missing; raw handshake and router PCAPs cannot run."
+	fi
+	exists tcpdump && echo "tcpdump is also available but is not required."
+
+	rd05_full_autotest_window
+	rd05_lan_state "full final snapshot"
+	rd05_lan_decision
+	[ "$MODE" = "full" ] && rd05_platform_snapshot "post"
+	pc_help
+	summary_interpretation
+}
+
+case "$MODE" in
+	help|-h|--help)
+		pc_help
+		echo
+		echo "Stable full diagnostics do not change switch/DSA matrix modes. Optional commands:"
+		echo "  rd05-netdiag prepare              # explicit RTL8197F reseed"
+		echo "  rd05-netdiag autotune             # legacy experimental v29 matrix"
+		echo "  rd05-netdiag arptest [seconds]"
+		echo "  rd05-netdiag lancheck"
+		exit 0
+		;;
+	arptest|arp|lanarp)
+		rd05_arptest "$@" | tee "$OUT"
+		echo
+		echo "Saved: $OUT"
+		;;
+	prepare|reseed)
+		rd05_v5am_auto_bundle | tee "$OUT"
+		echo
+		echo "Saved: $OUT"
+		;;
+	autotune|hunt)
+		rd05_autotune_hunt | tee "$OUT"
+		echo
+		echo "Saved: $OUT"
+		;;
+	ports|matrix)
+		rd05_switch_port_matrix | tee "$OUT"
+		rd05_known_port_full_stats | tee -a "$OUT"
+		echo
+		echo "Saved: $OUT"
+		;;
+	lancheck|lan|focus)
+		rd05_lan_state "one-shot" | tee "$OUT"
+		rd05_lan_decision | tee -a "$OUT"
+		echo
+		echo "Saved: $OUT"
+		;;
+	watch)
+		echo "Watching RD05 RX/DSA logs. Press Ctrl-C to stop."
+		if dmesg -w >/dev/null 2>&1 & then
+			pid=$!
+			kill "$pid" 2>/dev/null || true
+			dmesg -w | grep -Ei 'rd05|rtknet|RTL8367D|rtl8367|realtek-smi|untagged|non-realtek|proto 0x0806|proto 0x0800|proto 0x86dd|oem-vid9|cpu path|l2cpu|rtl865x l2|flood|mirror|pvid|vlan'
+		else
+			echo "dmesg -w not available; printing filtered dmesg once."
+			grep_dmesg
+		fi
+		;;
+	full)
+		collect | tee "$OUT"
+		rd05_finalize_bundle
+		;;
+	pre|post|*)
+		collect | tee "$OUT"
+		echo
+		echo "Saved: $OUT"
+		;;
+esac

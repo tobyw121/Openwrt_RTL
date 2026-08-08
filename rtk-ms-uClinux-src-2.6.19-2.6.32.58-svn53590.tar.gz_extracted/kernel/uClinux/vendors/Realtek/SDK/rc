@@ -1,0 +1,63 @@
+#!/bin/sh
+
+#
+# create essential directory 
+#
+mkdir /var/empty
+mkdir /dev/pts
+
+#
+# mount process
+#
+mount -t devpts devpts /dev/pts
+mount -t proc proc /proc
+mount -t jffs2 -o rw,sync /dev/mtdblock3 /mnt
+
+#
+# insert kernel module if exist
+# default path is /lib/modules/X.X.XX/kernel 
+#
+cd /lib/modules/X.X.XX/kernel
+
+if test -f "drivers/net/switch/rtcore/rtcore.ko"; then
+	insmod drivers/net/switch/rtcore/rtcore.ko
+fi
+
+if test -f "drivers/net/switch/rtnic/rtnic.ko"; then
+	insmod drivers/net/switch/rtnic/rtnic.ko
+fi
+
+if test -f "drivers/net/switch/rtk/rtk.ko"; then
+	insmod drivers/net/switch/rtk/rtk.ko
+fi
+
+if test -f "/lib/model/model.ko"
+then
+	insmod /lib/model/model.ko
+fi
+
+if test -f "drivers/net/switch/unittest/sdktest.ko"; then
+	insmod drivers/net/switch/unittest/sdktest.ko
+fi
+
+if test -f "net/switch/rtdrv/rtdrv.ko"; then
+	insmod net/switch/rtdrv/rtdrv.ko
+fi
+
+cd /
+
+#
+# network interface configuration 
+#
+ifconfig lo 127.0.0.1
+route add -net 127.0.0.0 netmask 255.255.255.0 lo
+
+ifconfig eth0 192.168.1.1
+
+#
+# start application
+#
+if test -f "/bin/diag"; then
+	diag
+fi
+

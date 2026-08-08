@@ -1,0 +1,46 @@
+RD05 native DSA v38.3 notes
+
+Topology
+--------
+RTL8197F/RTL8197FH-VG physical P0/RGMII <-> RTL8367D CPU7/EXT1.
+Linux DSA owns the 8-byte rtl8_4 tag and bridge/VLAN/FDB/STP state.
+
+Boot-proven platform state
+--------------------------
+- UART0/ttyS0 is 0x18147000 at 115200 8N1 and uses polling on RD05.
+- RTL8197F uses the stable first 32-input interrupt bank on RD05.
+- P0/RGMII programming is deferred to ndo_open.
+- SPI-NOR WEL calibration is lazy and rootfs_data-only.
+- RTL8367D/RB-VC chip ID 0x6642 revision 0x0030 uses CPU7/EXT1.
+
+SDK baseline
+------------
+  rd05-rgmii-calibrate sdk
+
+Expected values:
+  SOC_TX=0 SOC_RX=6 SW_TX=0 SW_TXC=0 SW_RX=5 SSC=1
+
+V38.3 calibration safety
+------------------------
+The v38.2 helper used "sleep 0.2", which this BusyBox rejects. A failed sweep
+could leave the runtime profile at all zeros. V38.3 uses portable millisecond
+settling and automatically restores the exact pre-sweep values on every error,
+signal or Ctrl+C. It also verifies sysfs readback after every apply.
+
+Calibration
+-----------
+  rd05-rgmii-calibrate tx-auto save
+
+For switch-to-SoC RX, generate continuous PC traffic:
+  PC: sudo ./tools/rd05-pc-netdiag.py --interface IFACE --configure-ip \
+        --calibration --duration 300
+  Router: rd05-rgmii-calibrate rx-auto save
+
+Final test
+----------
+  rd05-v38-check
+  rd05-netdiag full
+
+A successful result requires router_mac != -, from_router > 0, advancing
+RTL8197F RX descriptors and nonzero eth0 RX. The 50 ms RX polling fallback
+remains active even while IRQ 15 is zero.

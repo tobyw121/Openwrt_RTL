@@ -1,0 +1,226 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+/*
+ * Tenda AC23 / Lynx 8000 RTL8197FH + RTL8367RB board reconstructed from an
+ * 8 MiB BH25Q64 SPI dump.
+ *
+ * Dump facts:
+ *   0x000000..0x020000  Realtek/Tenda boot code, gzip self-extractor string
+ *                        reports RTL8197F-VG and rtl8367b switch helpers.
+ *   0x020000..0x030000  Tenda factory/calibration key-value store
+ *                        (TENDA.lan_mac, wlan0/wlan1 MACs, TSSI tables).
+ *   0x030000            Realtek firmware header "cr6c"
+ *                        start=0x80a00000 burn=0x00030000.
+ *   0x7e0000..0x7f0000  Tenda runtime config copy A.
+ *   0x7f0000..0x800000  Tenda runtime config copy B.
+ *
+ * The commercial model string is not present in clear text in the dump.  The
+ * factory SSIDs use "Lynx_...", so the board is named tenda,lynx-rtl8197f
+ * until the enclosure/label is confirmed.
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+
+#include "rtl8197f.dtsi"
+
+/ {
+	compatible = "tenda,ac23", "tenda,lynx-rtl8197f", "realtek,rtl8197f-vg", "realtek,rtl8197f-soc";
+	model = "Tenda AC23 / Lynx 8000";
+
+	aliases {
+		serial0 = &uart0;
+	};
+
+	chosen {
+		bootargs = "console=ttyS0,115200n8 lpj=5000000 rootfstype=squashfs,jffs2 clk_ignore_unused";
+		stdout-path = "serial0:115200n8";
+	};
+
+	/* Conservative: many 8 MiB RTL8197F Tenda boards ship with 64 MiB RAM.
+	 * If a validated boot log proves 128 MiB, this can safely be increased.
+	 */
+	memory@0 {
+		device_type = "memory";
+		reg = <0x00000000 0x04000000>;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		status = "disabled";
+	};
+
+	keys {
+		compatible = "gpio-keys";
+		status = "disabled";
+	};
+
+	/* External RTL8367-family switch.  The bootloader contains rtl8367b_* helper
+	 * strings, while the RTL8197F SDK and RD05 work both use the same 8367
+	 * SMI/RGMII CPU-port path.  Limit the compatible list to the RB family; the driver still
+	 * validates the chip ID and revision during probe.
+	 */
+	rtl8367_smi: switch {
+		compatible = "realtek,rtl8367rb", "realtek,rtl8367rb-vc", "realtek,rtl8365mb";
+		pinctrl-names = "default";
+		pinctrl-0 = <&rtl8367_smi_h0_g7_pins>;
+		mdc-gpios = <&gpio0 56 GPIO_ACTIVE_HIGH>;  /* SDK H0 */
+		mdio-gpios = <&gpio0 55 GPIO_ACTIVE_HIGH>; /* SDK G7 */
+		realtek,disable-leds;
+		status = "okay";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			/* Tenda user configuration has lan_ifnames=vlan1 wlan0 wlan1 and
+			 * multi-WAN software keys, but no clear physical port map.  For the
+			 * common 5-port RTL8367 router layout publish ports 0..3 as LAN and
+			 * port 4 as WAN.  This keeps all copper PHYs visible for validation.
+			 */
+			port@0 { reg = <0>; label = "lan1"; phy-handle = <&swphy0>; };
+			port@1 { reg = <1>; label = "lan2"; phy-handle = <&swphy1>; };
+			port@2 { reg = <2>; label = "lan3"; phy-handle = <&swphy2>; };
+			port@3 { reg = <3>; label = "lan4"; phy-handle = <&swphy3>; };
+			port@4 { reg = <4>; label = "wan";  phy-handle = <&swphy4>; };
+
+			/* RTL8197F-VG vendor CPU interface uses the rtl865x extension path.
+			 * Descriptor TD_DP bit 6 (0x40) plus TD_DP_EXT bit 1 (0x2) selects
+			 * the RTL8367 EXT1/RGMII CPU path; match that with DSA CPU port 6.
+			 */
+			port@6 {
+				reg = <6>;
+				label = "cpu";
+				ethernet = <&ethernet0>;
+				phy-mode = "rgmii";
+				tx-internal-delay-ps = <0>;
+				rx-internal-delay-ps = <600>;
+
+				fixed-link {
+					speed = <1000>;
+					full-duplex;
+					pause;
+				};
+			};
+		};
+
+		mdio {
+			compatible = "realtek,smi-mdio";
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			swphy0: ethernet-phy@0 { reg = <0>; eee-broken-100tx; eee-broken-1000t; };
+			swphy1: ethernet-phy@1 { reg = <1>; eee-broken-100tx; eee-broken-1000t; };
+			swphy2: ethernet-phy@2 { reg = <2>; eee-broken-100tx; eee-broken-1000t; };
+			swphy3: ethernet-phy@3 { reg = <3>; eee-broken-100tx; eee-broken-1000t; };
+			swphy4: ethernet-phy@4 { reg = <4>; eee-broken-100tx; eee-broken-1000t; };
+		};
+	};
+};
+
+&pinmux {
+	rtl8367_smi_h0_g7_pins: rtl8367-smi-h0-g7-pins {
+		pinctrl-single,bits = <0x34 0x03300000 0x0ff00000>;
+	};
+};
+
+&gpio0 {
+	/delete-property/ interrupt-controller;
+	/delete-property/ #interrupt-cells;
+	/delete-property/ interrupt-parent;
+	/delete-property/ interrupts;
+	status = "okay";
+};
+
+&uart0 {
+	/* Leave UART0 in polling mode initially.  On RD05 the IRQ experiment caused
+	 * console lockups; validate the Tenda interrupt lane before enabling it.
+	 */
+	/delete-property/ interrupt-parent;
+	/delete-property/ interrupts;
+};
+
+&spi0 {
+	status = "disabled";
+};
+
+&spirom0 {
+	status = "okay";
+	reg = <0x10000000 0x00800000>;
+	erase-size = <0x10000>;
+	/* RTL8197F auto-map byte reads behaved shifted on RD05; keep the same safe
+	 * fixed-read path for this RTL8197F-VG fullflash target.
+	 */
+	realtek,read-shift = <1>;
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "boot";
+			reg = <0x00000000 0x00020000>;
+			read-only;
+		};
+
+		partition@20000 {
+			label = "factory";
+			reg = <0x00020000 0x00010000>;
+			read-only;
+		};
+
+		/* The stock AC23 dump has a valid cr6c image at 0x30000, but no
+		 * uncompressed SquashFS magic at the previously assumed 0x320000.
+		 * Keep the complete 0x30000..0x7e0000 firmware window together and
+		 * let the RTL8197F firmware parser split OpenWrt's generated combined
+		 * kernel/rootfs image from IMG_HEADER_T.len.
+		 */
+		firmware: partition@30000 {
+			/* OpenWrt mtdsplit selects firmware parsers by the partition
+			 * name.  A compatible property here suppresses that path in
+			 * mtd_partition_split(), so keep this node name-based.
+			 */
+			label = "firmware";
+			reg = <0x030000 0x7b0000>;
+		};
+
+		partition@7e0000 {
+			label = "tenda_config";
+			reg = <0x007e0000 0x00010000>;
+			read-only;
+		};
+
+		partition@7f0000 {
+			label = "tenda_config_bak";
+			reg = <0x007f0000 0x00010000>;
+			read-only;
+		};
+	};
+};
+
+&ethdiag0 {
+	status = "disabled";
+};
+
+&ethernet0 {
+	realtek,tx-port-mask = <0x40>;
+	realtek,tx-dp-ext = <0x2>;
+	realtek,tx-extspa = <0x0>;
+	realtek,rx-poll-fallback;
+	realtek,rx-poll-ms = <50>;
+	realtek,sdk-cpuicr1-init;
+	realtek,sdk-swcore-init;
+	realtek,sdk-trxrdy;
+	status = "okay";
+};
+
+
+&pcie0 {
+	/* Board inventory identifies an RTL8814BR/RTL8814B-class PCIe radio.
+	 * RTL8197FH/VG SDK boards use the 40 MHz reference-clock tuning.
+	 * Enumeration is still a mandatory first-boot validation step.
+	 */
+	realtek,refclk-40mhz;
+	realtek,rtl8197f-vg;
+	status = "okay";
+};

@@ -1,0 +1,427 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 27613 $
+// $Date: 2012-03-30 17:33:46 +0800 (Fri, 30 Mar 2012) $
+//
+// Purpose : Define diag shell commands for mirror.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) port mirror commands.
+//           2) RSPAN
+//           3) sFlow
+//
+
+#ifdef CMD_MIRROR_DESTROY_ALL
+//mirror configuration
+//destroy mirror
+//all entries
+mirror destroy all
+#endif
+
+#ifdef CMD_MIRROR_CREATE_DESTROY_MIRRORING_PORT_ID
+//mirror configuration
+//create mirror
+//destroy mirror
+//mirroring port
+//port number
+mirror ( create | destroy ) mirroring <UINT:port_id>
+#endif
+
+#ifdef CMD_MIRROR_GET_EGRESS_MODE_PORT_ALL
+//mirror configuration
+//get configuration
+//egress mode configuration
+//port list
+//all ports
+mirror get egress-mode ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_MIRROR_GET_MIRRORING_PORT_ID
+//mirror configuration
+//get configuration
+//mirroring port
+//port number
+mirror get mirroring <UINT:port_id>
+#endif
+
+#ifdef CMD_MIRROR_GET_INDEX
+//mirror configuration
+//get configuration
+//mirror entry index
+mirror get <UINT:index>
+#endif
+
+#ifdef CMD_MIRROR_SET_EGRESS_MODE_PORT_ALL_ALL_PKT_MIRRORED_ONLY
+//mirror configuration
+//set configuration
+//egress mode configuration
+//port list
+//all ports
+//all packet
+//mirror packet only
+mirror set egress-mode ( <PORT_LIST:port> | all ) ( all-pkt | mirrored-only )
+#endif
+
+#ifdef CMD_MIRROR_SET_INGRESS_EGRESS_MIRRORING_PORT_ID_MIRRORED_PORT
+//mirror configuration
+//set configuration
+//ingress configuration
+//egress configuration
+//mirroring
+//mirroring port
+//mirrored
+//mirrored port list
+mirror set ( ingress | egress ) mirroring <UINT:port_id> mirrored <PORT_LIST:port>
+#endif
+
+#ifdef CMD_MIRROR_SET_INDEX_MIRRORING_PORT_ID_INGRESS_MIRRORED_INGRESS_PORT_NONE_EGRESS_MIRRORED_EGRESS_PORT_NONE_IGR_AND_EGR_CROSS_VLAN_UCAST_MCAST_BCAST_GOOD_PKT_BAD_PKT_ORIGINAL_PKT_FLOW_BASED_ONLY
+//mirror configuration
+//set configuration
+//mirror entry index
+//mirroring
+//mirroring port
+//ingress mirrored
+//ingress mirrored port list
+//none ingress mirrored port
+//egress mirrored
+//egress mirrored port list
+//none egress mirrored port
+//mirror ingress and egress match packet
+//mirror cross VLAN packet
+//mirror unicast packet
+//mirror multicast packet
+//mirror broadcast packet
+//mirror good packet
+//mirror bad packet
+//mirror original packet type
+//mirror flow-based packet only
+mirror set <UINT:index> mirroring <UINT:port_id> ingress-mirrored ( <PORT_LIST:ingress_port> | none ) egress-mirrored ( <PORT_LIST:egress_port> | none ) { igr-and-egr } { cross-vlan } { ucast } { mcast } { bcast } { good-pkt } { bad-pkt } { original-pkt } { flow-based-only }
+#endif
+
+#ifdef CMD_MIRROR_CLEAR_INDEX
+//mirror configuration
+//clear configuration
+//mirror entry index
+mirror clear <UINT:index>
+#endif
+
+#ifdef CMD_RSPAN_GET_EGRESS_MODE_PORT_ALL
+//RSPAN configuration
+//get configuration
+//egress mode
+//port list
+//all ports
+rspan get egress-mode ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_RSPAN_GET_EGRESS_TAG_PORT_ALL
+//RSPAN configuration
+//get configuration
+//egress tag
+//port list
+//all ports
+rspan get egress-tag ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_RSPAN_GET_INGRESS_MODE_PORT_ALL
+//RSPAN configuration
+//get configuration
+//ingress mode
+//port list
+//all ports
+rspan get ingress-mode ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_RSPAN_GET_INGRESS_TAG_PORT_ALL
+//RSPAN configuration
+//get configuration
+//ingress tag
+//port list
+//all ports
+rspan get ingress-tag ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_RSPAN_SET_EGRESS_MODE_PORT_ALL_ADD_TAG_NO_MODIFY_REMOVE_TAG
+//RSPAN configuration
+//set configuration
+//egress mode
+//port list
+//all ports
+//add tag
+//no modify tag
+//remove tag
+rspan set egress-mode ( <PORT_LIST:port> | all ) ( add-tag | no-modify | remove-tag )
+#endif
+
+#ifdef CMD_RSPAN_SET_EGRESS_TAG_PORT_ALL_TPID_VID_PRI_CFI
+//RSPAN configuration
+//set configuration
+//egress tag
+//port list
+//all ports
+//TPID value
+//vid value
+//pri value
+//cfi value
+rspan set egress-tag ( <PORT_LIST:port> | all ) <UINT:tpid> <UINT:vid> <UINT:pri> <UINT:cfi>
+#endif
+
+#ifdef CMD_RSPAN_SET_INGRESS_MODE_PORT_ALL_HANDLE_TAG_IGNORE_TAG
+//RSPAN configuration
+//set configuration
+//ingress mode
+//port list
+//all ports
+//handle tag
+//ignore tag
+rspan set ingress-mode ( <PORT_LIST:port> | all ) ( handle-tag | ignore-tag )
+#endif
+
+#ifdef CMD_RSPAN_SET_INGRESS_TAG_PORT_ALL_TPID_VID
+//RSPAN configuration
+//set configuration
+//ingress tag
+//port list
+//all ports
+//TPID value
+//vid value
+rspan set ingress-tag ( <PORT_LIST:port> | all ) <UINT:tpid> <UINT:vid>
+#endif
+
+#ifdef CMD_SFLOW_GET_CPU_TAG_STATE
+//sFlow configuration
+//get configuration
+//CPU tag
+//state configuration
+sflow get cpu-tag state
+#endif
+
+#ifdef CMD_SFLOW_GET_EGRESS_INGRESS_PORT_ALL
+//sFlow configuration
+//get configuration
+//egress configuration
+//ingress configuration
+//port list
+//all ports
+sflow get ( egress | ingress ) ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_SFLOW_GET_MIRROR_GROUP_INDEX
+//sFlow configuration
+//get configuration
+//mirror-group configuration
+//mirror-group index
+sflow get mirror-group <UINT:index>
+#endif
+
+#ifdef CMD_SFLOW_GET_MIRROR_GROUP_PORT_SEED
+//sFlow configuration
+//set configuration
+//mirror-group configuration
+//port configuration
+//seed
+sflow get ( mirror-group | port ) seed
+#endif
+
+#ifdef CMD_SFLOW_SET_CPU_TAG_STATE_DISABLE_ENABLE
+//sFlow configuration
+//set configuration
+//CPU tag
+//state configuration
+//disable function
+//enable function
+sflow set cpu-tag state ( disable | enable )
+#endif
+
+#ifdef CMD_SFLOW_SET_EGRESS_INGRESS_PORT_ALL_SAMPLE_STATE_DISABLE_ENABLE
+//sFlow configuration
+//set configuration
+//egress configuration
+//ingress configuration
+//port list
+//all ports
+//sample
+//state configuration
+//disable function
+//enable function
+sflow set ( egress | ingress ) ( <PORT_LIST:port> | all ) sample state ( disable | enable )
+#endif
+
+#ifdef CMD_SFLOW_SET_EGRESS_INGRESS_PORT_ALL_SAMPLE_RATE
+//sFlow configuration
+//set configuration
+//egress configuration
+//ingress configuration
+//port list
+//all ports
+//sample
+//rate value, <0~65535>
+sflow set ( egress | ingress ) ( <PORT_LIST:port> | all ) sample <UINT:rate>
+#endif
+
+#ifdef CMD_SFLOW_SET_MIRROR_GROUP_INDEX_SAMPLE_STATE_DISABLE_ENABLE
+//sFlow configuration
+//set configuration
+//mirror-group configuration
+//mirror-group index
+//sample
+//state configuration
+//disable function
+//enable function
+sflow set mirror-group <UINT:index> sample state ( disable | enable )
+#endif
+
+#ifdef CMD_SFLOW_SET_MIRROR_GROUP_INDEX_SAMPLE_RATE
+//sFlow configuration
+//set configuration
+//mirror-group configuration
+//mirror-group index
+//sample
+//rate value
+sflow set mirror-group <UINT:index> sample <UINT:rate>
+#endif
+
+#ifdef CMD_SFLOW_SET_MIRROR_GROUP_PORT_SEED_SEED_VALUE
+//sFlow configuration
+//set configuration
+//mirror-group configuration
+//port configuration
+//seed
+//seed value
+sflow set ( mirror-group | port ) seed <UINT:seed_value>
+#endif
+
+#ifdef CMD_MIRROR_SET_MIRROR_ID_INDEX_MIRRORING_PORT_ID_INGRESS_MIRRORED_INGRESS_PORT_NONE_EGRESS_MIRRORED_EGRESS_PORT_NONE_IGR_AND_EGR_MIRRORED_ONLY_ORIGINAL_PKT
+//mirror configuration
+//set configuration
+//mirror entry index
+//index
+//mirroring
+//mirroring port
+//ingress mirrored
+//ingress mirrored port list
+//none ingress mirrored port
+//egress mirrored
+//egress mirrored port list
+//none egress mirrored port
+//mirror ingress and egress match packet
+//mirroring port would TX mirrored packets only
+//mirror original packet type
+mirror set mirror-id  <UINT:index> mirroring <UINT:port_id> ingress-mirrored ( <PORT_LIST:ingress_port> | none ) egress-mirrored ( <PORT_LIST:egress_port> | none ) { igr-and-egr } { mirrored-only } { original-pkt }
+#endif
+
+#ifdef CMD_MIRROR_SET_STATE_INDEX_DISABLE_ENABLE
+//mirror configuration
+//set configuration
+//state configuration
+//index
+//disable function
+//enable function
+mirror set state <UINT:index> ( disable | enable )
+#endif
+
+#ifdef CMD_MIRROR_GET_STATE_INDEX
+//mirror configuration
+//get configuration
+//state configuration
+//index
+mirror get state <UINT:index>
+#endif
+
+#ifdef CMD_MIRROR_GET_MIRROR_ID_INDEX
+//mirror configuration
+//get configuration
+//mirror entry index
+//index
+mirror get mirror-id <UINT:index>
+#endif
+
+#ifdef CMD_RSPAN_GET_EGRESS_MODE_MIRROR_ID_INDEX
+//RSPAN configuration
+//get configuration
+//egress mode
+//mirror entry index
+//index
+rspan get egress-mode mirror-id <UINT:index>
+#endif
+
+#ifdef CMD_RSPAN_SET_EGRESS_MODE_MIRROR_ID_INDEX_ADD_TAG_NO_MODIFY_REMOVE_TAG
+//RSPAN configuration
+//set configuration
+//egress mode
+//mirror entry index
+//index
+//add tag
+//no modify tag
+//remove tag
+rspan set egress-mode mirror-id <UINT:index> ( add-tag | no-modify | remove-tag )
+#endif
+
+#ifdef CMD_RSPAN_GET_INGRESS_MODE_MIRROR_ID_INDEX
+//RSPAN configuration
+//get configuration
+//ingress mode
+//mirror entry index
+//index
+rspan get ingress-mode mirror-id <UINT:index>
+#endif
+
+#ifdef CMD_RSPAN_SET_INGRESS_MODE_MIRROR_ID_INDEX_HANDLE_TAG_IGNORE_TAG
+//RSPAN configuration
+//set configuration
+//ingress mode
+//mirror entry index
+//index
+//handle tag
+//ignore tag
+rspan set ingress-mode mirror-id <UINT:index> ( handle-tag | ignore-tag )
+#endif
+
+#ifdef CMD_MIRROR_GET_MIRROR_ID_INDEX
+//RSPAN configuration
+//get configuration
+//RSPAN tag
+//mirror entry index
+//index
+rspan get tag mirror-id <UINT:index>
+#endif
+
+#ifdef CMD_RSPAN_SET_TAG_MIRROR_ID_INDEX_TPID_IDX_VID_PRI_CFI
+//RSPAN configuration
+//set configuration
+//RSPAN tag
+//mirror entry index
+//index
+//TPID index to point to OTPID array
+//vid value
+//pri value
+//cfi value
+rspan set tag mirror-id <UINT:index>  <UINT:tpid_idx> <UINT:vid> <UINT:pri> <UINT:cfi>
+#endif
+
+#ifdef CMD_SFLOW_GET_SAMPLE_CONTROL
+//sFlow configuration
+//get configuration
+//sampling configuration
+//sampling control
+sflow get sample control
+#endif
+
+#ifdef CMD_SFLOW_SET_SAMPLE_CONTROL_INGRESS_EGRESS
+//sFlow configuration
+//get configuration
+//sampling configuration
+//sampling control
+//sampling control ingress
+//sampling control egress
+sflow set sample control ( ingress | egress )
+#endif

@@ -1,0 +1,28 @@
+Linux 6.6.114 source SHA-256:
+ca4175a03ce2943ae192d77ad91e37ee292f1f1bb7b2954b062b0ef7eb0cb97c
+
+Patch sequence applied to clean source and target overlay:
+BACKPORT=398
+PENDING=151
+HACK=51
+REALTEK_PRE325=18
+REALTEK_REST=20
+TOTAL=638
+
+Pre-325 preparation result:
+PRE325_CLEAN_PASS
+No reject/orig files and no fuzz/offset diagnostics.
+
+Patches 325 through 804 were rechecked with git apply --check and then applied
+without fuzz. This includes regenerated patches 325, 326 and new patch 327.
+REALTEK_REST_GIT_APPLY_PASS
+
+Final source comparison:
+rtl8365mb.c MATCH
+realtek-mdio.c MATCH
+realtek-smi.c MATCH
+realtek.yaml MATCH
+drivers/net/ethernet/Kconfig MATCH
+
+MANUAL_KERNEL_PREPARE_PASS
+RTL8367_FINAL_SOURCE_MATCH_PASS

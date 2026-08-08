@@ -1,0 +1,43 @@
+
+# Copyright (C) 2009 Realtek Semiconductor Corp. 
+#
+# Makefile for SDK Linux User Switch Directory
+#
+
+ifeq ($(SDK_CONFIG), $(wildcard $(SDK_CONFIG)))
+include $(SDK_CONFIG)
+endif
+
+RTCORE_DIR = rtcore
+
+dir_y =
+dir_$(CONFIG_SDK_KERNEL_LINUX_KERNEL_MODE) += rtusr
+dir_$(CONFIG_SDK_APP_DIAG) += diag
+
+all: librtcore	
+	for i in $(dir_y)  ; do \
+		$(MAKE) -C $$i || exit $? ; \
+	done
+
+ifneq ($(CONFIG_SDK_KERNEL_LINUX_USER_MODE),)
+dir_$(CONFIG_SDK_DRIVER_TEST) += unittest
+dir_$(CONFIG_SDK_DRIVER_RTK) += rtk
+
+librtcore:
+	$(MAKE) -C $(RTCORE_DIR) -f $(SDK_BUILD)/Makefile.linux.user.rtcore
+
+else
+librtcore:
+endif
+
+romfs:
+	for i in $(dir_y)  ; do \
+		$(MAKE) -C $$i romfs || exit $? ; \
+	done
+	
+clean:	
+	for i in $(dir_y)  ; do \
+		$(MAKE) -C $$i clean ; \
+	done
+	$(MAKE) -C $(RTCORE_DIR) clean -f $(SDK_BUILD)/Makefile.linux.user.rtcore
+

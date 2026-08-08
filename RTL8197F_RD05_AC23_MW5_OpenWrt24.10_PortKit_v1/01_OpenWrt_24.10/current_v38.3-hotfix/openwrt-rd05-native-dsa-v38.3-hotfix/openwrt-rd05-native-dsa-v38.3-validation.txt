@@ -1,0 +1,29 @@
+OpenWrt 24.10 RD05 Native-DSA v38.3 validation
+================================================
+
+Scope:
+- userspace calibration safety
+- v38.x diagnostics marker matching
+- no kernel, DTS, DSA or SPI driver change from boot-proven v38.2
+
+Project validator: PASS=228 WARN=5 FAIL=0
+POSIX shell syntax: PASS
+BusyBox ash syntax: PASS
+Unsupported fractional sleep absent: PASS
+Readback verification present: PASS
+Error rollback restores exact profile: PASS
+Signal rollback restores exact profile: PASS
+TERM returns exit status 143: PASS
+Patch applies to unmodified v38.2: PASS
+Patch/tree content, modes and symlinks: PASS
+Apply script idempotence: PASS
+
+Known hardware status:
+- v38.2 full boot/userspace: PASS on user hardware
+- RTL8367D 0x6642/0x0030 detection: PASS
+- DSA tree setup: PASS
+- persistent overlay eventually mounted: PASS
+- PC receives router frame: FAIL in current hardware test
+- RTL8197F RX descriptor progress: not observed
+- CPU7 FCS/drop-free SoC TX: not observed
+- full v38.3 TX/RX timing matrix: pending hardware test

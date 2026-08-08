@@ -1,0 +1,8 @@
+component	path_in_extracted_archive	regular_files	symlinks	bytes	role	status
+archive-total	.	38617	29	967111051	all supplied SDK generations	audited/inventory
+rtl8197f-bsp	RT8197F_RTL8367RB_Gesamtpaket/MR62X_SDK_Paket/selected_sources/sdk/openwrt-21.02/target/linux/target/bsp	30	0	160748	platform, IRQ, GPIO, SPI, PCIe	native-port-reference
+rtl8197f-rtknet	RT8197F_RTL8367RB_Gesamtpaket/MR62X_SDK_Paket/selected_sources/sdk/openwrt-21.02/target/linux/rtknet/drivers/net/rtl819x	564	0	19205559	CPU DMA, swcore, legacy networking	hardware-semantics-ported; legacy-stack-removed
+rtl8367d-dal	RT8197F_RTL8367RB_Gesamtpaket/MR62X_SDK_Paket/selected_sources/sdk/openwrt-21.02/target/linux/rtknet/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d	49	0	1621956	RTL8367D DAL, registers, MIB, VLAN, L2, CPU tag	translated-to-Linux-DSA
+rtl8197f-uboot	RT8197F_RTL8367RB_Gesamtpaket/MR62X_SDK_Paket/selected_sources/sdk/openwrt-21.02/package/uboot/realtek/generic/boot	1433	0	19676518	boot reset/pinmux/SPI initialization	board-sequence-reference
+rtl8192cd-wlan	backports/src/drivers/net/wireless/realtek/rtl8192fe	2356	0	68782282	RTL8197F integrated radio and RTL8812FE vendor FullMAC	inventoried-not-enabled-as-native
+rtl83xx-api-other	838x_9x-api	59	0	3150169	RTL838x/839x switch APIs unrelated to RD05 switch	not-RD05-specific

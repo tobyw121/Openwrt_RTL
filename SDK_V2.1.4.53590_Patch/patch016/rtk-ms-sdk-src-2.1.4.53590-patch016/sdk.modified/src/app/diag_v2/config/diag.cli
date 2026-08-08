@@ -1,0 +1,245 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 51398 $
+// $Date: 2014-09-17 17:15:47 +0800 (Wed, 17 Sep 2014) $
+//
+// Purpose : Define diag shell commands for port.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) diag commands.
+//
+
+#ifdef CMD_DIAG_GET_LOOPBACK_MAC_LOCAL_PORT_ALL_STATE
+//diag configuration
+//get configuration
+//loopback configuration
+//MAC configuration
+//local loopback
+//port list
+//all port
+//state configuration
+diag get loopback mac local ( <PORT_LIST:port> | all ) state
+#endif
+
+#ifdef CMD_DIAG_SET_LOOPBACK_MAC_LOCAL_PORT_ALL_STATE_DISABLE_ENABLE
+//diag configuration
+//set configuration
+//loopback configuration
+//MAC configuration
+//local loopback
+//port list
+//all port
+//state configuration
+//disable function
+//enable function
+diag set loopback mac local ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_DIAG_GET_LOOPBACK_MAC_REMOTE_PORT_ALL_STATE
+//diag configuration
+//get configuration
+//loopback configuration
+//MAC configuration
+//remote loopback
+//port list
+//all port
+//state configuration
+diag get loopback mac remote ( <PORT_LIST:port> | all ) state
+#endif
+
+#ifdef CMD_DIAG_SET_LOOPBACK_MAC_REMOTE_PORT_ALL_STATE_DISABLE_ENABLE
+//diag configuration
+//set configuration
+//loopback configuration
+//MAC configuration
+//remote loopback
+//port list
+//all port
+//state configuration
+//disable function
+//enable function
+diag set loopback mac remote ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_DIAG_SET_CABLE_DOCTOR_PORT_PORTS_ALL_START
+//diag configuration
+//set configuration
+//cable doctor configuration
+//port configuration
+//port list
+//all ports
+//start test
+diag set cable-doctor port ( <PORT_LIST:ports> | all ) start
+#endif
+
+#ifdef CMD_DIAG_GET_CABLE_DOCTOR_PORT_PORTS_ALL
+//diag configuration
+//get configuration
+//RTCT configuration
+//port list
+//all ports
+diag get cable-doctor port ( <PORT_LIST:ports> | all )
+#endif
+
+#ifdef CMD_DIAG_DUMP_TABLE_INDEX
+//customer configuration
+//dump registers or tables in console
+//whole tables
+//table index, which used for table token
+diag dump table <UINT:index>
+#endif
+
+#ifdef CMD_DIAG_DUMP_REGISTER
+//customer configuration
+//dump registers or tables in console
+//whole registers
+diag dump register
+#endif
+
+#ifdef CMD_DIAG_WHOLEDUMP_MAC_REG_PHY_REG_SOC_REG_TABLE_ALL
+//customer configuration
+//dump whole chip information in console
+//whole MAC realted registers
+//whole PHY standard registers
+//soc related registers
+//whole switch related tables
+//mac-reg, phy-reg, soc-reg and table
+diag wholedump ( mac-reg | phy-reg | soc-reg | table | all )
+#endif
+#ifdef CMD_DIAG_GET_SERDES_SDSID_LINK_STATUS
+//diag configuration
+//get configuration
+//serdes interface
+//serdes index
+//link status information
+diag get serdes <UINT:sdsId> link-status
+#endif
+
+#ifdef CMD_DIAG_RESET_SERDES_SDSID
+//diag configuration
+//reset configuration
+//serdes interface
+//serdes index
+diag reset serdes <UINT:sdsId>
+#endif
+
+#ifdef CMD_DIAG_GET_SERDES_SDSID_RX_SYM_ERR
+//diag configuration
+//get configuration
+//serdes interface
+//serdes index
+//rx symbol error count
+diag get serdes <UINT:sdsId> rx-sym-err
+#endif
+
+#ifdef CMD_DIAG_GET_PHY_PHYID_SERDES_LINK_STATUS
+//diag configuration
+//get configuration
+//PHY configuration
+//PHY index
+//serdes interface
+//link status information
+diag get phy <UINT:phyId> serdes link-status
+#endif
+
+#ifdef CMD_DIAG_GET_PHY_PHYID_SERDES_RX_SYM_ERR
+//diag configuration
+//get configuration
+//PHY configuration
+//PHY index
+//serdes interface
+//rx symbol error count
+diag get phy <UINT:phyId> serdes rx-sym-err
+#endif
+
+#ifdef CMD_DIAG_CLEAR_PHY_PHYID_SERDES_RX_SYM_ERR
+//diag configuration
+//clear configuration
+//PHY configuration
+//PHY index
+//serdes interface
+//rx symbol error count
+diag clear phy <UINT:phyId> serdes rx-sym-err
+#endif
+
+#ifdef CMD_DIAG_GET_PHY_PORT_PORTS_ALL_RX_CNT
+//diag configuration
+//get configuration
+//PHY configuration
+//port configuration
+//port list
+//all ports
+//rx count
+diag get phy port ( <PORT_LIST:ports> | all ) rx-cnt
+#endif
+
+#ifdef CMD_DIAG_CLEAR_PHY_PORT_PORTS_ALL_RX_CNT
+//diag configuration
+//clear configuration
+//PHY configuration
+//port configuration
+//port list
+//all ports
+//rx count
+diag clear phy port ( <PORT_LIST:ports> | all ) rx-cnt
+#endif
+
+#ifdef CMD_DIAG_SET_PHY_PORT_PORTS_ALL_RX_CNT_MAC_TX_PHY_RX
+//diag configuration
+//set configuration
+//PHY configuration
+//port configuration
+//port list
+//all ports
+//rx count configuration
+//from mac-tx
+//from phy-rx
+diag set phy port ( <PORT_LIST:ports> | all ) rx-cnt ( mac-tx | phy-rx )
+#endif
+
+#ifdef CMD_DIAG_SET_SERDES_SDSID_10G_SQUARE_STATE_DISABLE_ENABLE
+//diag configuration
+//set configuration
+//serdes interface
+//serdes index
+//10g square pattern test
+//state configuration
+//disable function
+//enable function
+diag set serdes <UINT:sdsId> 10g-square state ( disable | enable )
+#endif
+
+#ifdef CMD_DIAG_SET_SERDES_SDSID_10G_PRBS9_STATE_DISABLE_ENABLE
+//diag configuration
+//set configuration
+//serdes interface
+//serdes index
+//10g PRBS9 test
+//state configuration
+//disable function
+//enable function
+diag set serdes <UINT:sdsId> 10g-prbs9 state ( disable | enable )
+#endif
+
+#ifdef CMD_DIAG_SET_SERDES_SDSID_10G_PRBS31_STATE_DISABLE_ENABLE
+//diag configuration
+//set configuration
+//serdes interface
+//serdes index
+//10g PRBS31 test
+//state configuration
+//disable function
+//enable function
+diag set serdes <UINT:sdsId> 10g-prbs31 state ( disable | enable )
+#endif
+
+

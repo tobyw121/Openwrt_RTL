@@ -1,0 +1,7383 @@
+/*
+ * Include Files
+ */
+#include <common/rt_autoconf.h>
+
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_GMAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INPUT_BANDWIDTH_PORT_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PATTERN_MATCH_PORT_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PATTERN_MATCH_PORT_SET_0_4_BYTE_DATA_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PATTERN_MATCH_PORT_SET_1_4_BYTE_DATA_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_DA_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_DA_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_SA_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_SA_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_DA_SA_REPEAT_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_DATA_PAYLOAD_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_VLAN_HEADER_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_ETHER_TYPE_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_TEST_PACKET_COUNT_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_TRIGGER_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_TRIGGER_MAC_ADDRESS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_TRIGGER_MAC_ADDRESS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_TRIGGER_MAC_ADDRESS2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_TRIGGER_MAC_ADDRESS3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t GLOBAL_MAC_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t GLOBAL_MAC_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t GLOBAL_MAC_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t GLOBAL_MAC_INTERFACE_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t GLOBAL_MAC_INTERFACE_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SWITCH_MAC_ADDRESS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SWITCH_MAC_ADDRESS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_0_1_MAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_2_3_MAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_4_5_MAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_6_7_MAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_8_9_MAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_10_11_MAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_12_13_MAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_14_15_MAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_16_17_MAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_18_19_MAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_20_21_MAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_22_23_MAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_24_25_MAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_26_27_MAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_28_MAC_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_0_1_PHY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_2_3_PHY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_4_5_PHY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_6_7_PHY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_8_9_PHY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_10_11_PHY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_12_13_PHY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_14_15_PHY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_16_17_PHY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_18_19_PHY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_20_21_PHY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_22_23_PHY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_24_25_PHY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_26_27_PHY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_28_PHY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PAIR_0_1_SERDES_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PAIR_2_3_SERDES_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PAIR_4_5_SERDES_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PAIR_6_7_SERDES_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PAIR_8_9_SERDES_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PAIR_10_11_SERDES_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PAIR_0_1_INTRALINK_SERDES_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LED_GLOBAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LED_GLOBAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SOFTWARE_LED_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SOFTWARE_LED_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t VLAN_MODE_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t VLAN_MODE_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_CONFIGURATION0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_CONFIGURATION1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INPUT_BANDWIDTH_CONTROL_GLOBAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INPUT_BANDWIDTH_CONTROL_GLOBAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTERNAL_PRIORITY_TO_USER_PRIORITY_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTERNAL_PRIORITY_TO_USER_PRIORITY_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTERNAL_PRIORITY_TO_DSCP_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTERNAL_PRIORITY_TO_DSCP_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTERNAL_PRIORITY_TO_DSCP_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_GLOBAL_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SMART_PACKET_GENERATOR_PORT_STATUS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MAC_LINK_STATUS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MAC_SPEED_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MAC_SPEED_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MAC_DUPLEX_STATUS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MAC_TX_PAUSE_STATUS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MAC_RX_PAUSE_STATUS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t GLOBAL_MAC_INTERNAL_STATUS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t CPU_TAG_ID_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t GLOBAL_MAC_DEBUG_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t GLOBAL_MAC_DEBUG_DATA0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t GLOBAL_MAC_DEBUG_DATA1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MAC_FEFI_STATUS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t COPPER_AND_FIBER_SELECT_STATUS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t IO_DRIVING_ABILITY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PHY_REG_ACCESS_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PHY_REG_ACCESS_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PHY_REG_ACCESS_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RESET_GLOBAL_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RESET_GLOBAL_STATUS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SWITCH_INTERRUPT_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SWITCH_INTERRUPT_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SWITCH_INTERRUPT_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MEDIA_CHANGE_INTERRUPT_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FEFI_INTERRUPT_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SWITCH_INTERRUPT_SOURCE_STATUS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SWITCH_INTERRUPT_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SWITCH_INTERRUPT_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SWITCH_INTERRUPT_STATUS2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MEDIA_CHANGE_INTERRUPT_STATUS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FEFI_INTERRUPT_STATUS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_INTERRUPT_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_INTERRUPT_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRALINK_SERDES_INTERRUPT_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_INTERRUPT_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_INTERRUPT_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRALINK_SERDES_INTERRUPT_STATUS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_LED_ENABLE_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RTCT_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RTCT_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t GLOBAL_PLL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t GLOBAL_PLL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t CPU_PLL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEXTRABUST_PLL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MEMORY_PLL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t CPU_PLL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEXTRABUST_PLL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MEMORY_PLL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t GLOBAL_PLL_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SWITCH_PLL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BIAS_AND_POWER_ON_RESET_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t VLAN_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t VLAN_ACCEPT_TAGGED_OR_UNTAGGED_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t VLAN_ACCEPT_TAGGED_OR_UNTAGGED_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t EN_EGRESS_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_TABLE_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TAG_BASED_AND_PORT_BASED_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TAG_BASED_AND_PORT_BASED_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TAG_BASED_AND_PORT_BASED_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TAG_BASED_AND_PORT_BASED_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TAG_BASED_AND_PORT_BASED_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TAG_BASED_AND_PORT_BASED_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TAG_BASED_AND_PORT_BASED_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TAG_BASED_AND_PORT_BASED_CONTROL7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TAG_BASED_AND_PORT_BASED_CONTROL8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TAG_BASED_AND_PORT_BASED_CONTROL9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TAG_BASED_AND_PORT_BASED_CONTROL10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TAG_BASED_AND_PORT_BASED_CONTROL11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TAG_BASED_AND_PORT_BASED_CONTROL12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TAG_BASED_AND_PORT_BASED_CONTROL13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TAG_BASED_AND_PORT_BASED_CONTROL14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID16_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID17_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID18_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID19_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID20_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID21_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID22_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID23_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID24_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID25_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID26_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID27_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID28_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID29_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID30_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_ID31_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_PORT0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_PORT1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_PORT2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_PORT3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_PORT4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_PORT5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_PORT6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_PORT7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_PORT8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_PORT9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_PORT10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_PORT11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_PORT12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_PORT13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SVLAN_PORT14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL16_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL17_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL18_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL19_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL20_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL21_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL22_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL23_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL24_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL25_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL26_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL27_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MULTIPLE_SPANNING_TREE_STATE_CONTROL28_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_GLOBAL_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL16_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL17_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL18_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL19_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL20_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL21_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL22_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL23_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL24_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL25_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL26_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL27_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL28_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL29_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL30_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL31_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL32_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL33_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL34_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL35_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL36_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL37_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL38_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL39_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL40_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL41_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL42_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL43_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL44_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL45_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL46_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL47_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL48_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL49_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL50_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL51_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL52_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL53_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL54_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL55_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL56_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL57_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL58_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL59_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL60_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL61_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL62_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t ACL_RATE_LIMIT_LEAKY_BUCKET_CONTROL63_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t L2_TABLE_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LOOKUP_MISS_FLOODING_PORTMASK_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USER_PRIORITY_TO_INTERNAL_PRIORITY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DSCP_PRIORITY_ASSIGNMENT_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DSCP_PRIORITY_ASSIGNMENT_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DSCP_PRIORITY_ASSIGNMENT_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DSCP_PRIORITY_ASSIGNMENT_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DSCP_PRIORITY_ASSIGNMENT_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DSCP_PRIORITY_ASSIGNMENT_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DSCP_PRIORITY_ASSIGNMENT_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PRIORITY_SELECTION_TABLE_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t CPU_REASON_TO_PRIORITY_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DOT_1X_PORT_BASED_ACCESS_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DOT_1X_PORT_BASED_ACCESS_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DOT_1X_PORT_BASED_ACCESS_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DOT_1X_PORT_BASED_ACCESS_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DOT_1X_MAC_BASED_ACCESS_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP0_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP0_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP0_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP0_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP0_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP0_PARAMETER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP0_PARAMETER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP1_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP1_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP1_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP1_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP1_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP1_PARAMETER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP1_PARAMETER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP2_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP2_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP2_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP2_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP2_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP2_PARAMETER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP2_PARAMETER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP3_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP3_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP3_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP3_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP3_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP3_PARAMETER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP3_PARAMETER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP4_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP4_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP4_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP4_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP4_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP4_PARAMETER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP4_PARAMETER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP5_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP5_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP5_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP5_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP5_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP5_PARAMETER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP5_PARAMETER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP6_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP6_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP6_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP6_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP6_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP6_PARAMETER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP6_PARAMETER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP7_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP7_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP7_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP7_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP7_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP7_PARAMETER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_GROUP7_PARAMETER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_MIRROR_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_MIRROR_SET_0_MIRRORED_BITMAP_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_MIRROR_SET_1_MIRRORED_BITMAP_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILITERING_CONTROL_GLOBAL_CONTORL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_00_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_01_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_02_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_03_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_20_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_21_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_22_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_23_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_30_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_31_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_32_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_33_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_40_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_41_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_42_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_43_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_50_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_51_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_52_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_53_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_60_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_61_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_62_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_63_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_70_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_71_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_72_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_73_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_80_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_81_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_82_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_83_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_90_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_91_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_92_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_93_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_100_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_101_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_102_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_103_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_110_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_111_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_112_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_113_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_120_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_121_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_122_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_123_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_130_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_131_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_132_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_133_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_140_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_141_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_142_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_143_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_150_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_151_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_152_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_153_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_160_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_161_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_162_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_163_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_170_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_171_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_172_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_173_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_180_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_181_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_182_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_183_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_190_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_191_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_192_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_193_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_200_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_201_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_202_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_203_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_210_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_211_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_212_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_213_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_220_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_221_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_222_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_223_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_230_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_231_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_232_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_233_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_240_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_241_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_242_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_243_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_250_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_251_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_252_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_253_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_260_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_261_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_262_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_263_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_270_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_271_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_272_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_273_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_280_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_281_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_282_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t STORM_FILTERING_CONTROL_PORT_283_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LIMITED_L2_ENTRY_NUMBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LIMITED_L2_ENTRY_NUMBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LIMITED_L2_ENTRY_NUMBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LIMITED_L2_ENTRY_NUMBER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LIMITED_L2_ENTRY_NUMBER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LIMITED_L2_ENTRY_NUMBER_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LIMITED_L2_ENTRY_NUMBER_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LIMITED_L2_ENTRY_NUMBER_CONTROL7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LIMITED_L2_ENTRY_NUMBER_CONTROL8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LIMITED_L2_ENTRY_NUMBER_CONTROL9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LIMITED_L2_ENTRY_NUMBER_CONTROL10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LIMITED_L2_ENTRY_NUMBER_CONTROL11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LIMITED_L2_ENTRY_NUMBER_CONTROL12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LIMITED_L2_ENTRY_NUMBER_CONTROL13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LIMITED_L2_ENTRY_NUMBER_CONTROL14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEARNED_L2_ENTRY_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEARNED_L2_ENTRY_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEARNED_L2_ENTRY_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEARNED_L2_ENTRY_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEARNED_L2_ENTRY_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEARNED_L2_ENTRY_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEARNED_L2_ENTRY_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEARNED_L2_ENTRY_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEARNED_L2_ENTRY_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEARNED_L2_ENTRY_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEARNED_L2_ENTRY_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEARNED_L2_ENTRY_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEARNED_L2_ENTRY_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEARNED_L2_ENTRY_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LEARNED_L2_ENTRY_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL16_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL17_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL18_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL19_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL20_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL21_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL22_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL23_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL24_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL25_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL26_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL27_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_ISOLATION_CONTROL28_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RESERVED_MULTICAST_ADDRESS_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RESERVED_MULTICAST_ADDRESS_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RESERVED_MULTICAST_ADDRESS_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA0_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA1_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA2_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA3_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA4_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA5_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA6_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA7_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA8_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA9_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA10_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA11_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA12_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA13_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA14_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA15_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA16_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA17_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INDIRECT_DATA18_FOR_CPU_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_BEFORE_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_BEFORE_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_BEFORE_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_BEFORE_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_BEFORE_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_BEFORE_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_BEFORE_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_BEFORE_CONTROL7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_BEFORE_CONTROL8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_BEFORE_CONTROL9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_BEFORE_CONTROL10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_BEFORE_CONTROL11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_AFTER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_AFTER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_AFTER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_AFTER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t HEADER_STAMP_AFTER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DROP_COUNTER_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DROP_COUNTER_2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DROP_COUNTER_3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DROP_COUNTER_4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DROP_COUNTER_5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DROP_COUNTER_6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DROP_COUNTER_7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DROP_COUNTER_8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DROP_COUNTER_9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DROP_COUNTER_10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DROP_COUNTER_11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DROP_COUNTER_12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DROP_COUNTER_13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DROP_COUNTER_14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t CLEAR_SRAM_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t L2_TABLE_FLUSH_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PACKET_SCHEDULING_GLOBAL_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_0_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_0_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_0_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_0_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_0_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_1_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_1_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_1_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_1_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_1_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_2_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_2_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_2_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_2_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_2_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_3_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_3_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_3_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_3_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_3_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_4_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_4_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_4_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_4_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_4_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_5_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_5_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_5_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_5_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_5_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_6_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_6_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_6_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_6_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_6_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_7_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_7_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_7_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_7_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_7_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_8_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_8_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_8_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_8_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_8_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_9_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_9_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_9_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_9_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_9_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_10_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_10_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_10_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_10_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_10_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_11_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_11_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_11_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_11_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_11_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_12_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_12_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_12_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_12_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_12_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_13_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_13_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_13_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_13_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_13_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_14_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_14_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_14_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_14_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_14_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_15_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_15_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_15_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_15_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_15_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_16_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_16_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_16_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_16_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_16_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_17_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_17_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_17_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_17_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_17_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_18_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_18_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_18_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_18_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_18_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_19_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_19_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_19_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_19_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_19_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_20_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_20_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_20_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_20_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_20_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_21_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_21_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_21_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_21_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_21_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_22_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_22_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_22_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_22_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_22_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_23_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_23_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_23_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_23_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_23_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_24_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_24_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_24_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_24_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_24_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_25_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_25_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_25_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_25_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_25_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_26_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_26_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_26_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_26_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_26_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_27_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_27_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_27_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_27_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_27_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_28_LEAKY_BUCKET_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_28_LEAKY_BUCKET_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_28_LEAKY_BUCKET_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_28_LEAKY_BUCKET_PARAMETER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AVERAGE_PACKET_RATE_PORT_28_LEAKY_BUCKET_PARAMETER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_GLOBAL_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_0_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_0_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_0_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_1_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_1_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_1_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_2_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_2_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_2_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_3_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_3_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_3_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_4_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_4_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_4_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_5_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_5_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_5_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_6_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_6_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_6_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_7_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_7_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_7_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_8_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_8_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_8_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_9_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_9_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_9_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_10_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_10_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_10_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_11_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_11_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_11_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_12_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_12_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_12_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_13_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_13_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_13_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_14_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_14_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_14_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_15_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_15_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_15_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_16_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_16_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_16_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_17_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_17_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_17_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_18_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_18_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_18_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_19_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_19_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_19_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_20_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_20_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_20_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_21_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_21_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_21_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_22_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_22_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_22_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_23_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_23_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_23_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_24_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_24_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_24_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_25_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_25_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_25_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_26_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_26_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_26_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_27_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_27_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_27_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_28_PARAMETER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_28_PARAMETER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t WFQ_WRR_PORT_28_PARAMETER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t AGGRESSIVE_USE_TOKEN_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_GLOBAL_THRESHOLD_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_GLOBAL_THRESHOLD_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_GLOBAL_THRESHOLD_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_GLOBAL_THRESHOLD_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_0_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_0_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_0_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_1_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_1_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_1_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_2_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_2_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_2_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_3_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_3_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_3_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_4_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_4_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_4_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_5_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_5_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_5_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_6_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_6_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_6_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_7_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_7_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_7_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_8_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_8_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_8_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_9_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_9_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_9_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_10_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_10_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_10_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_11_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_11_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_11_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_12_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_12_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_12_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_13_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_13_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_13_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_14_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_14_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_14_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_15_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_15_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_15_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_16_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_16_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_16_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_17_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_17_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_17_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_18_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_18_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_18_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_19_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_19_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_19_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_20_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_20_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_20_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_21_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_21_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_21_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_22_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_22_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_22_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_23_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_23_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_23_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_24_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_24_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_24_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_25_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_25_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_25_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_26_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_26_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_26_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_27_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_27_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_27_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_28_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_28_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_PORT_28_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER16_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER17_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER18_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER19_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER20_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER21_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER22_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER23_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER24_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER25_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER26_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER27_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t USED_PAGE_COUNT_COUNTER28_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TOTAL_USED_PAGE_COUNT_COUNTER_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PACKET_BUFFER_PAGE_AGING_OUT_COUNTER_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_GLOBAL_THRESHOLD_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_ALL_PORT_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_ALL_PORT_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_ALL_PORT_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t FLOW_CONTROL_THRESHOLD_FOR_ALL_PORT_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_QUEUE_EGRESS_DROP_THRESHOLD_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_QUEUE_EGRESS_DROP_THRESHOLD_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_QUEUE_EGRESS_DROP_THRESHOLD_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_QUEUE_EGRESS_DROP_THRESHOLD_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_EGRESS_DROP_THRESHOLD_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_EGRESS_DROP_THRESHOLD_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_EGRESS_DROP_THRESHOLD_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_EGRESS_DROP_THRESHOLD_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_EGRESS_DROP_THRESHOLD_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_EGRESS_DROP_THRESHOLD_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_EGRESS_DROP_THRESHOLD_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_EGRESS_DROP_THRESHOLD_CONTROL7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_EGRESS_DROP_THRESHOLD_CONTROL8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_EGRESS_DROP_THRESHOLD_CONTROL9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_EGRESS_DROP_THRESHOLD_CONTROL10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_EGRESS_DROP_THRESHOLD_CONTROL11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_EGRESS_DROP_THRESHOLD_CONTROL12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_EGRESS_DROP_THRESHOLD_CONTROL13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PER_PORT_EGRESS_DROP_THRESHOLD_CONTROL14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT_INDEX_FOR_OUTPUT_QUEUE_PAGE_COUNT_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t OUTPUT_QUEUE_PAGE_COUNT_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t OUTPUT_QUEUE_PAGE_COUNT_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t OUTPUT_QUEUE_PAGE_COUNT_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t OUTPUT_QUEUE_PAGE_COUNT_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t QUEUE_NUMBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t QUEUE_NUMBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t QUEUE_NUMBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTERNAL_PRIORITY_TO_QUEUE_ID_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTERNAL_PRIORITY_TO_QUEUE_ID_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTERNAL_PRIORITY_TO_QUEUE_ID_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTERNAL_PRIORITY_TO_QUEUE_ID_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTERNAL_PRIORITY_TO_QUEUE_ID_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTERNAL_PRIORITY_TO_QUEUE_ID_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTERNAL_PRIORITY_TO_QUEUE_ID_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTERNAL_PRIORITY_TO_QUEUE_ID_CONTROL7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t LINK_AGGREGATION_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t OUTPUT_QUEUE_MAX_USED_PAGE_COUNT_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t OUTPUT_QUEUE_MAX_USED_PAGE_COUNT_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t OUTPUT_QUEUE_MAX_USED_PAGE_COUNT_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t OUTPUT_QUEUE_MAX_USED_PAGE_COUNT_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RX_PKTHDR_DESCRIPTOR_0_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RX_PKTHDR_DESCRIPTOR_1_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RX_PKTHDR_DESCRIPTOR_2_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RX_PKTHDR_DESCRIPTOR_3_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RX_PKTHDR_DESCRIPTOR_4_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RX_PKTHDR_DESCRIPTOR_5_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RX_PKTHDR_DESCRIPTOR_6_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RX_PKTHDR_DESCRIPTOR_7_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t RX_MBUF_DESCRIPTOR_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TX_PKTHDR_DESCRIPTOR_0_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TX_PKTHDR_DESCRIPTOR_1_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t CPU_INTERFACE_INTERRUPT_MASK_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t CPU_INTERFACE_INTERRUPT_STATUS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t CPU_INTERFACE_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_FIBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_FIBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_FIBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_FIBER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_FIBER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_DIGITAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_DIGITAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_DIGITAL_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_DIGITAL_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_DIGITAL_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_DIGITAL_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_0_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_FIBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_FIBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_FIBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_FIBER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_FIBER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_DIGITAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_DIGITAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_DIGITAL_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_DIGITAL_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_DIGITAL_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_DIGITAL_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_1_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_FIBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_FIBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_FIBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_FIBER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_FIBER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_DIGITAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_DIGITAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_DIGITAL_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_DIGITAL_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_DIGITAL_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_DIGITAL_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_2_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_FIBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_FIBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_FIBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_FIBER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_FIBER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_DIGITAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_DIGITAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_DIGITAL_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_DIGITAL_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_DIGITAL_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_DIGITAL_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_3_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_FIBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_FIBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_FIBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_FIBER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_FIBER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_DIGITAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_DIGITAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_DIGITAL_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_DIGITAL_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_DIGITAL_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_DIGITAL_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_4_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_FIBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_FIBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_FIBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_FIBER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_FIBER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_DIGITAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_DIGITAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_DIGITAL_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_DIGITAL_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_DIGITAL_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_DIGITAL_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_5_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_FIBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_FIBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_FIBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_FIBER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_FIBER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_DIGITAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_DIGITAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_DIGITAL_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_DIGITAL_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_DIGITAL_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_DIGITAL_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_6_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_FIBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_FIBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_FIBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_FIBER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_FIBER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_DIGITAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_DIGITAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_DIGITAL_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_DIGITAL_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_DIGITAL_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_DIGITAL_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_7_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_FIBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_FIBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_FIBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_FIBER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_FIBER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_DIGITAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_DIGITAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_DIGITAL_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_DIGITAL_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_DIGITAL_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_DIGITAL_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_8_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_FIBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_FIBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_FIBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_FIBER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_FIBER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_DIGITAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_DIGITAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_DIGITAL_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_DIGITAL_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_DIGITAL_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_DIGITAL_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_9_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_FIBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_FIBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_FIBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_FIBER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_FIBER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_DIGITAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_DIGITAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_DIGITAL_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_DIGITAL_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_DIGITAL_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_DIGITAL_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_10_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_FIBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_FIBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_FIBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_FIBER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_FIBER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_DIGITAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_DIGITAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_DIGITAL_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_DIGITAL_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_DIGITAL_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_DIGITAL_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t SERDES_11_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_FIBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_FIBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_FIBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_FIBER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_FIBER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_DIGITAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_DIGITAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_DIGITAL_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_DIGITAL_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_DIGITAL_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_DIGITAL_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_0_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_CONTROL6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_FIBER_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_FIBER_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_FIBER_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_FIBER_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_FIBER_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_DIGITAL_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_DIGITAL_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_DIGITAL_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_DIGITAL_CONTROL3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_DIGITAL_CONTROL4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_DIGITAL_CONTROL5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t INTRA_SERDES_1_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT0_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT1_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT2_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT3_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT4_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT5_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT6_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT7_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT8_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT9_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT10_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT11_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT12_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT13_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT14_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT15_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT16_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT17_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT18_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT19_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT20_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT21_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT22_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT23_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT24_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT25_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT26_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT27_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_ETHERNET_LIKE_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_ETHERNET_LIKE_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_ETHERNET_LIKE_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_ETHERNET_LIKE_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_ETHERNET_LIKE_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_ETHERNET_LIKE_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_ETHERNET_LIKE_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_ETHERNET_LIKE_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_ETHERNET_LIKE_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_ETHERNET_LIKE_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_ETHERNET_LIKE_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_RMON_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_RMON_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_RMON_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_RMON_MIB_COUNTER3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_RMON_MIB_COUNTER4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_RMON_MIB_COUNTER5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_RMON_MIB_COUNTER6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_RMON_MIB_COUNTER7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_RMON_MIB_COUNTER8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_RMON_MIB_COUNTER9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_RMON_MIB_COUNTER10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_RMON_MIB_COUNTER11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_RMON_MIB_COUNTER12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_RMON_MIB_COUNTER13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_RMON_MIB_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_DROP_COUNTER14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_DROP_COUNTER15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_TX_CRC_CHECK_FAIL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_SMART_TRIGGERING_HIT_0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_SMART_TRIGGERING_HIT_1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_MIB_II_AND_INTERFACE_GROUP_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_INTERFACE_GROUP_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t PORT28_INTERFACE_GROUP_MIB_COUNTER2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BRIDGE_AND_BRIDGE_EXTENSION_MIB_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BRIDGE_AND_BRIDGE_EXTENSION_MIB_COUNTER1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TX_UNICAST_PACKETS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TX_MULTICAST_PACKETS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t TX_BROADCAST_PACKETS_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t DROP_COUNTER0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t MIB_SYSTEM_CONTROL_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BIST_BISR_CONTROL0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BIST_BISR_CONTROL1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BIST_BISR_CONTROL2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BIST_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BIST_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS0_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS1_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS2_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS3_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS4_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS5_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS6_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS7_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS8_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS9_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS10_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS11_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS12_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS13_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS14_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS15_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS16_RTL8389_FIELDS[]; 
+#endif
+#if defined(CONFIG_SDK_RTL8389)
+extern rtk_regField_t BISR_STATUS17_RTL8389_FIELDS[]; 
+#endif
+

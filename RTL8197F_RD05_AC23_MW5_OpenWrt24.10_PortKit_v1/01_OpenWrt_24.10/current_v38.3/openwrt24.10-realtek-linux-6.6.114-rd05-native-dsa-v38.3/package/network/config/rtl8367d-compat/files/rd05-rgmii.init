@@ -1,0 +1,10 @@
+#!/bin/sh /etc/rc.common
+# SPDX-License-Identifier: GPL-2.0-or-later
+# One-shot profile load before OpenWrt brings the network interfaces up.
+START=19
+
+start() {
+	[ -x /usr/sbin/rd05-rgmii-calibrate ] || return 0
+	[ -r /etc/rd05-rgmii.conf ] || return 0
+	/usr/sbin/rd05-rgmii-calibrate load >/tmp/rd05-rgmii-boot.log 2>&1 || true
+}

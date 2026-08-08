@@ -1,0 +1,35 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenWrt RTL8197F port <noreply@example.invalid>
+Date: Sat, 25 Jul 2026 00:00:00 +0000
+Subject: [PATCH] PCI: controller: add native RTL8197F host bridge
+
+Add the Kconfig and Makefile hooks for the native RTL8197F PCIe host
+controller.  The implementation is supplied by the OpenWrt target files
+overlay as drivers/pci/controller/pcie-rtl8197f.c.
+
+---
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -1,2 +1,17 @@
+ # SPDX-License-Identifier: GPL-2.0
+ menu "PCI controller drivers"
++
++config PCIE_RTL8197F
++	tristate "Realtek RTL8197F PCIe host controller"
++	depends on RTL8197F && PCI && OF && HAS_IOMEM
++	select MFD_SYSCON
++	select REGMAP
++	help
++	  Enable the native PCIe root-complex driver for Realtek RTL8197F and
++	  RTL8197FH/VG SoCs.  The controller exposes one directly connected
++	  endpoint through the 0x18b10000 configuration window and provides the
++	  0x18c00000 IO and 0x19000000 memory apertures used by the vendor BSP.
++
++	  On Xiaomi RD05 this host enumerates the external Realtek 10ec:f812
++	  RTL8812FE WLAN endpoint.  The host driver does not include a WLAN
++	  device driver.
+--- a/drivers/pci/controller/Makefile
++++ b/drivers/pci/controller/Makefile
+@@ -1 +1,2 @@
+ # SPDX-License-Identifier: GPL-2.0
++obj-$(CONFIG_PCIE_RTL8197F) += pcie-rtl8197f.o

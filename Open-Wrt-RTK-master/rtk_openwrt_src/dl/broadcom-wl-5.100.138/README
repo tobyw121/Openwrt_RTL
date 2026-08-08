@@ -1,0 +1,7 @@
+This driver was extracted out of the GPL source package for NETGEAR WNDR4500
+
+It contains the Broadcom wireless driver 5.100.138
+This driver includes firmware version 666.2
+
+http://www.downloads.netgear.com/files/GPL/WNDR4500-V1.0.0.40_1.0.10_src.tar.zip
+WNDR4500-V1.0.0.40_1.0.10_src/src/wl

@@ -1,0 +1,30 @@
+RTL8197F MW5 v42.26 diagnostic
+
+Observed v42.25 hardware state:
+- external switch ID 0x6367 revision 0x0060 detected
+- LAN and WAN PHY links reach 1 Gbit/s
+- DSA tree setup completes
+- eth0 RX stays at zero
+- TX descriptors time out with NETDEV WATCHDOG
+- CPUICR1 readback is 0x000001d3: descriptor stride fields are zero
+- DMA_CR1 is 0x000007e0: Linux configured 63 * 32 bytes
+
+SDK correlation:
+- CONFIG_RTL_TX_CACHE_ALIGN and CONFIG_RTL_RX_CACHE_ALIGN are defined only
+  under CONFIG_RTL_8197F_VG
+- MW5 is RTL8197FS non-VG
+- native new descriptor is therefore 6 dwords / 24 bytes
+- zero CPUICR1 stride fields select the six-dword default
+
+v42.26 correction:
+- MW5 desc_dwords=6, desc_stride=24
+- VG/RD05 desc_dwords=8, desc_stride=32
+- DMA_CR1 uses runtime stride
+- CPURPDCR0/CPUTPDCR0 and CPUICR1 are rearmed after CPUIF is active
+
+Physical test expectations:
+- registered eth0 log contains desc=6/24
+- DMA_CR1 reads 0x000005e8 for 64 TX descriptors
+- both descriptor bases are non-zero after poststart
+- eth0 TX packets complete without NETDEV WATCHDOG
+- eth0 RX and ARP counters increase

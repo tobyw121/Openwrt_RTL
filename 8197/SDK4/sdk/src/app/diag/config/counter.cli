@@ -1,0 +1,96 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 28742 $
+// $Date: 2012-05-09 17:06:00 +0800 (Wed, 09 May 2012) $
+//
+// Purpose : Define diag shell commands for counter
+//
+// Feature : The file includes the following module and sub-modules
+//           1) counter commands.
+//
+
+#ifdef CMD_MIB_DUMP_COUNTER_PORT_PORTS_ALL
+//mib configuration
+//dump configuration
+//counter configuration
+//port configuration
+//port list
+//all ports
+mib dump counter port ( <PORT_LIST:ports> | all )
+#endif
+
+#ifdef CMD_MIB_DUMP_COUNTER_SMON_PRI
+//mib configuration
+//dump configuration
+//counter configuration
+//smon configuration
+//priority configuration
+mib dump counter smon <UINT:pri>
+#endif
+
+#ifdef CMD_MIB_DUMP_COUNTER_GLOBAL
+//mib configuration
+//dump configuration
+//counter configuration
+//global configuration
+mib dump counter global
+#endif
+
+#ifdef CMD_MIB_DUMP_COUNTER_PORT_PORTS_ALL_COUNTER_NAME
+//mib configuration
+//dump configuration
+//counter configuration
+//port configuration
+//port list
+//all ports
+//counter name (ifInOctets, ifInErrors...)
+mib dump counter port ( <PORT_LIST:ports> | all ) <STRING:counter_name>
+#endif
+
+#ifdef CMD_MIB_GET_TAG_LENGTH_RX_COUNTER_TX_COUNTER
+//mib configuration
+//get configuration
+//tag counting configuration
+//Rx counter
+//Tx counter
+mib get tag-length ( rx-counter | tx-counter )
+#endif
+
+#ifdef CMD_MIB_RESET_COUNTER_PORT_PORTS_ALL
+//mib configuration
+//reset configuration
+//counter configuration
+//port configuration
+//port list
+//all ports
+mib reset counter port ( <PORT_LIST:ports> | all )
+#endif
+
+#ifdef CMD_MIB_RESET_COUNTER_GLOBAL
+//mib configuration
+//reset configuration
+//counter configuration
+//global configuration
+mib reset counter global
+#endif
+
+#ifdef CMD_MIB_SET_TAG_LENGTH_RX_COUNTER_TX_COUNTER_EXCLUDE_INCLUDE
+//mib configuration
+//set configuration
+//tag counting configuration
+//Rx counter
+//Tx counter
+//exclude tag length
+//include tag length
+mib set tag-length ( rx-counter | tx-counter ) ( exclude | include )
+#endif
+

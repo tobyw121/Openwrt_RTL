@@ -1,0 +1,10 @@
+old_rc=1
+/mnt/data/work_openwrt/v43.6-format-proof/old.c: In function 'trace':
+/mnt/data/work_openwrt/v43.6-format-proof/old.c:5:25: error: format '%x' expects argument of type 'unsigned int', but argument 2 has type 'long unsigned int' [-Werror=format=]
+    5 |         printf("mask=0x%x\n", BIT(index));
+      |                        ~^
+      |                         |
+      |                         unsigned int
+      |                        %lx
+cc1: all warnings being treated as errors
+new_rc=0

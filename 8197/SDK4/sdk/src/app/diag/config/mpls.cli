@@ -1,0 +1,77 @@
+//
+// Copyright (C) 2011 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 22833 $
+// $Date: 2011-09-19 17:52:12 +0800 (Mon, 19 Sep 2011) $
+//
+// Purpose : Define diag shell commands for MPLS.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) MPLS commands.
+//
+
+#ifdef CMD_MPLS_GET_STATE
+//MPLS configuration
+//get configuration
+//MPLS function state
+mpls get state
+#endif
+
+#ifdef CMD_MPLS_GET_ENCAP_LIB_INDEX
+//MPLS configuration
+//get configuration
+//Encapsulate function
+//Label information base function
+//Index of label information base
+mpls get encap lib <UINT:index>
+#endif
+
+#ifdef CMD_MPLS_GET_ENCAP_TTL_INHERIT
+//MPLS configuration
+//get configuration
+//Encapsulate function
+//TTL of MPLS header function
+//TTL inherit function
+mpls get encap ttl inherit
+#endif
+
+#ifdef CMD_MPLS_SET_STATE_ENABLE_DISABLE
+//MPLS configuration
+//set configuration
+//MPLS function state
+//enable function
+//disable function
+mpls set state ( enable | disable )
+#endif
+
+#ifdef CMD_MPLS_SET_ENCAP_LIB_INDEX_LABEL_EXP_TTL
+//MPLS configuration
+//set configuration
+//Encapsulate function
+//Label information base function
+//Index of label information base
+//Label value of MPLS header in LIB
+//Exp value of MPLS header in LIB, <0~7>
+//TTL value of MPLS header in LIB, <0~255>
+mpls set encap lib <UINT:index> <UINT:label> <UINT:exp> <UINT:ttl>
+#endif
+
+#ifdef CMD_MPLS_SET_ENCAP_TTL_INHERIT_UNIFORM_PIPE
+//MPLS configuration
+//set configuration
+//Encapsulate function
+//TTL of MPLS header function
+//TTL inherit function
+//Uniform function
+//Pipe function
+mpls set encap ttl inherit ( uniform | pipe )
+#endif
+

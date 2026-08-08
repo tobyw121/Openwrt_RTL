@@ -1,0 +1,2087 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 41503 $
+// $Date: 2013-07-25 12:03:58 +0800 (Thu, 25 Jul 2013) $
+//
+// Purpose : Define diag shell commands for trap.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) trap commands.
+//
+
+#ifdef CMD_TRAP_DUMP_CFM
+//trap configuration
+//dump configuration
+//CFM configuration
+trap dump cfm
+#endif
+
+#ifdef CMD_TRAP_DUMP_OAMPDU_OPTION_TYPE_PORT_ALL
+//trap configuration
+//dump configuration
+//oampdu configuration
+//packet with optional header or cfi bit == 1 configuration
+//port list
+//all ports
+trap dump ( oampdu | option-type ) ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_TRAP_DUMP_PACKET_REASON
+//trap configuration
+//dump configuration
+//packet trap to CPU
+//reason of packet trap to CPU
+trap dump ( packet | reason )
+#endif
+
+#ifdef CMD_TRAP_DUMP_RMA_L2_USER_DEFINE
+//trap configuration
+//dump configuration
+//RMA configuration
+//user defined l2 RMA configuration
+trap dump rma l2-user-define
+#endif
+
+#ifdef CMD_TRAP_DUMP_RMA_LAYER2
+//trap configuration
+//dump configuration
+//RMA configuration
+//layer2 RMA configuration
+trap dump rma layer2
+#endif
+
+#ifdef CMD_TRAP_DUMP_RMA_L2_USER_DEFINE_L34_PROTOCOL_L34_USER_PROTOCOL_LAYER2_MGMT_IP_CHECK
+//trap configuration
+//dump configuration
+//RMA configuration
+//user defined l2 RMA configuration
+//l34 RMA protocol configuration
+//layer34 user defined management rma configuration
+//layer2 RMA configuration
+//management ip check configuration
+trap dump rma ( l2-user-define | l34-protocol | l34-user-protocol | layer2 | mgmt-ip-check )
+#endif
+
+#ifdef CMD_TRAP_DUMP_RMA_PORT_RMA_BPDU_PORT_ALL
+//trap configuration
+//dump configuration
+//RMA configuration
+//port RMA configuration
+//bpdu
+//port list
+//all ports
+trap dump rma port-rma bpdu ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_TRAP_DUMP_RMA_PORT_RMA_LLDP_PORT_ALL
+//trap configuration
+//dump configuration
+//RMA configuration
+//port RMA configuration
+//lldp
+//port list
+//all ports
+trap dump rma port-rma lldp ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_TRAP_DUMP_RMA_PORT_RMA_PORT_ALL
+//trap configuration
+//dump configuration
+//RMA configuration
+//port RMA configuration
+//port list
+//all ports
+trap dump rma port-rma ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_TRAP_DUMP_RMA_PORT_RMA_PTP_PORT_ALL
+//trap configuration
+//dump configuration
+//RMA configuration
+//port RMA configuration
+//ptp
+//port list
+//all ports
+trap dump rma port-rma ptp ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_TRAP_GET_ARP_REQUEST
+//trap configuration
+//get configuration
+//ARP request configuration
+trap get arp-request
+#endif
+
+#ifdef CMD_TRAP_GET_CFI
+//trap configuration
+//get configuration
+//CFI configuration
+trap get cfi
+#endif
+
+#ifdef CMD_TRAP_GET_CFI_PRIORITY
+//trap configuration
+//get configuration
+//CFI configuration
+//priority configuration
+trap get cfi priority
+#endif
+
+#ifdef CMD_TRAP_GET_CFM_CCM_LEVEL_ACTION
+//trap configuration
+//get configuration
+//CFM entry configuration
+//CFM CCM frame
+//MD level <0-7>
+//CFM loopback frame action
+trap get cfm ccm <UINT:level> action
+#endif
+
+#ifdef CMD_TRAP_GET_CFM_ETH_DM_LEVEL_ACTION
+//trap configuration
+//get configuration
+//CFM entry configuration
+//CFM ETH-DM frame
+//MD level <0-7>
+//CFM Ethernet Delay-Measurement action
+trap get cfm eth-dm <UINT:level> action
+#endif
+
+#ifdef CMD_TRAP_GET_CFM_LOOPBACK_LEVEL_ACTION
+//trap configuration
+//get configuration
+//CFM entry configuration
+//CFM loopback frame
+//MD level <0-7>
+//CFM loopback frame action
+trap get cfm loopback <UINT:level> action
+#endif
+
+#ifdef CMD_TRAP_GET_CFM_PRIORITY
+//trap configuration
+//get configuration
+//CFM configuration
+trap get cfm priority
+#endif
+
+#ifdef CMD_TRAP_GET_CFM_UNKNOWN_FRAME_ACTION
+//trap configuration
+//get configuration
+//CFM entry configuration
+//unknown type of CFM frame
+//unknown type of CFM frame action
+trap get cfm unknown-frame action
+#endif
+
+#ifdef CMD_TRAP_GET_EAPOL
+//trap configuration
+//get configuration
+//dot1x EAPOL configuration
+trap get eapol
+#endif
+
+#ifdef CMD_TRAP_GET_GW_MAC_ERR_ACTION
+//trap configuration
+//get configuration
+//gateway MAC error configuration
+//action cofiguration
+trap get gw-mac-err action
+#endif
+
+#ifdef CMD_TRAP_GET_GW_MAC_ERR_PRIORITY
+//trap configuration
+//get configuration
+//gateway MAC error configuration
+//priority configuration
+trap get gw-mac-err priority
+#endif
+
+#ifdef CMD_TRAP_GET_IGMP_MLD
+//trap configuration
+//get configuration
+//igmp
+//mld
+trap get ( igmp | mld )
+#endif
+
+#ifdef CMD_TRAP_GET_IP6_HOP_LIMIT_EXCEED_HDR_ERR_HOP_BY_HOP_ACTION
+//trap configuration
+//get configuration
+//ipv6 configuration
+//hop limit exceed configuration
+//header error configuration
+//hop-by-hop extend header
+//action cofiguration
+trap get ip6 ( hop-limit-exceed | hdr-err | hop-by-hop ) action
+#endif
+
+#ifdef CMD_TRAP_GET_IP6_HOP_LIMIT_EXCEED_HDR_ERR_HOP_BY_HOP_PRIORITY
+//trap configuration
+//get configuration
+//ipv6 configuration
+//hop limit exceed configuration
+//header error configuration
+//hop-by-hop extend header
+//priority configuration
+trap get ip6 ( hop-limit-exceed | hdr-err | hop-by-hop ) priority
+#endif
+
+#ifdef CMD_TRAP_GET_IP_TTL_EXCEED_HDR_ERR_HDR_WITH_OPTION_ACTION
+//trap configuration
+//get configuration
+//ipv4 configuration
+//ttl exceed configuration
+//header error configuration
+//header with option
+//action cofiguration
+trap get ip ( ttl-exceed | hdr-err | hdr-with-option ) action
+#endif
+
+#ifdef CMD_TRAP_GET_IP_TTL_EXCEED_HDR_ERR_HDR_WITH_OPTION_PRIORITY
+//trap configuration
+//get configuration
+//ipv4 configuration
+//ttl exceed configuration
+//header error configuration
+//header with option
+//priority configuration
+trap get ip ( ttl-exceed | hdr-err | hdr-with-option ) priority
+#endif
+
+#ifdef CMD_TRAP_GET_MANAGEMENT_VLAN_STATE
+//trap configuration
+//get configuration
+//management-vlan configuration
+//state
+trap get management-vlan state
+#endif
+
+#ifdef CMD_TRAP_GET_SELF_ARP_STATE
+//trap configuration
+//get configuration
+//self-ARP configuration
+//state
+trap get self-arp state
+#endif
+
+#ifdef CMD_TRAP_GET_NEIGHBOR_DISCOVERY
+//trap configuration
+//get configuration
+//IPv6 Neighbor Discovery configuration
+trap get neighbor-discovery
+#endif
+
+#ifdef CMD_TRAP_GET_HOP_BY_HOP_POSITION_ACTION
+//trap configuration
+//get configuration
+//IPv6 Hop-by-Hop Extension Header Position Error
+trap get hop-by-hop-position action
+#endif
+
+#ifdef CMD_TRAP_GET_IP6_UNKNOWN_HEADER_ACTION
+//trap configuration
+//get configuration
+//IPv6 Unknown Extension Header
+trap get ip6-unknown-header action
+#endif
+
+#ifdef CMD_TRAP_GET_CRC_ERROR_ACTION
+//trap configuration
+//get configuration
+//L2 CRC error
+trap get crc-error action
+#endif
+
+#ifdef CMD_TRAP_GET_IP4_CHECKSUM_ERROR_ACTION
+//trap configuration
+//get configuration
+//IPv4 checksum error
+trap get ip4-checksum-error action
+#endif
+
+#ifdef CMD_TRAP_GET_OAM_LOOPBACK_CTRL_PORT_ALL_PAR
+//trap configuration
+//get configuration
+//oam loopback mode configuration
+//port list, <0-51>
+//all ports
+//parser action configuration
+trap get oam-loopback-ctrl ( <PORT_LIST:port> | all ) par
+#endif
+
+#ifdef CMD_TRAP_GET_OAMPDU_INFO
+//trap configuration
+//get configuration
+//oampdu configuration
+//information
+trap get oampdu info
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_1X_EAPOL_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//dot1x EAPOL packet
+//priority
+trap get reason 1x-eapol priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_ARP_IPV6_ND_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//ARP packet
+//IPv6 Neighbor Discovery packet
+//priority
+trap get reason ( arp | ipv6-nd ) priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_BPDU_LACP_LLDP_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//BPDU packet
+//LACP packet
+//LLDP packet
+//priority
+trap get reason ( bpdu | lacp | lldp ) priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_INGRESS_VLAN_FILTER_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//Ingress-VLAN-Fliter packet
+//priority
+trap get reason ingress-vlan-filter priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_IPV4_IGMP_IPV6_MLD_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//IPv4 IGMP packet
+//IPv6 MLD packet
+//priority
+trap get reason ( ipv4-igmp | ipv6-mld ) priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_OTHER_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//Other packet
+//priority
+trap get reason other priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_PTP_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//PTP packet
+//priority
+trap get reason ptp priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_SWITCH_MAC_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//switch MAC packet
+//priority
+trap get reason switch-mac priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_UNKNOWN_DA_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//unknown-DA packet
+//priority
+trap get reason unknown-da priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_VLAN_ERROR_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//VLAN-Error packet
+//priority
+trap get reason vlan-error priority
+#endif
+
+#ifdef CMD_TRAP_GET_RMA_PRIORITY
+//trap configuration
+//get configuration
+//RMA configuration
+//priority
+trap get rma priority
+#endif
+
+#ifdef CMD_TRAP_GET_RMA_L2_USER_DEFINE_INDEX_BYPASS_STP
+//trap configuration
+//get configuration
+//RMA configuration
+//user defined l2 RMA configuration
+//bypass STP configuration
+trap get rma l2-user-define <UINT:index> bypass-stp
+#endif
+
+#ifdef CMD_TRAP_GET_RMA_L2_USER_DEFINE_INDEX_BYPASS_VLAN
+//trap configuration
+//get configuration
+//RMA configuration
+//user defined l2 RMA configuration
+//bypass VLAN configuration
+trap get rma l2-user-define <UINT:index> bypass-vlan
+#endif
+
+#ifdef CMD_TRAP_GET_RMA_L2_USER_DEFINE_INDEX_STATE
+//trap configuration
+//get configuration
+//RMA configuration
+//user defined l2 RMA configuration
+//entry index <0-2>
+trap get rma l2-user-define <UINT:index> state
+#endif
+
+#ifdef CMD_TRAP_GET_RMA_LAYER2_PTP_LLDP_BYPASS_STP
+//trap configuration
+//get configuration
+//RMA configuration
+//layer2 RMA configuration
+//ptp
+//lldp
+//bypass STP configuration
+trap get rma layer2 ( ptp | lldp ) bypass-stp
+#endif
+
+#ifdef CMD_TRAP_GET_RMA_LAYER2_PTP_LLDP_BYPASS_VLAN
+//trap configuration
+//get configuration
+//RMA configuration
+//layer2 RMA configuration
+//ptp
+//lldp
+//bypass VLAN configuration
+trap get rma layer2 ( ptp | lldp ) bypass-vlan
+#endif
+
+#ifdef CMD_TRAP_GET_RMA_LAYER2_BPDU_RMA_02_RMA_0E_RMA_0X_BYPASS_VLAN
+//trap configuration
+//get configuration
+//RMA configuration
+//layer2 RMA configuration
+//BPDU
+//RMA-02
+//RMA-0E
+//0180-C200-0000 ~ 0180-C200-000f (except 0180-C200-0000, 0180-C200-0002, 0180-C200-000E)
+//bypass VLAN configuration
+trap get rma layer2 ( bpdu | rma-02 | rma-0E | rma-0X ) bypass-vlan
+#endif
+
+#ifdef CMD_TRAP_GET_RMA_LAYER2_BPDU_OAM_RMA_02_RMA_03_RMA_0E_RMA_20_RMA_21_RMA_0X_BYPASS_VLAN
+//trap configuration
+//get configuration
+//RMA configuration
+//layer2 RMA configuration
+//BPDU
+//OAM
+//RMA-02
+//RMA-03
+//RMA-0E
+//RMA-20
+//RMA-21
+//RMA-0X
+//bypass VLAN configuration
+trap get rma layer2 ( bpdu | oam | rma-02 | rma-03 | rma-0E | rma-20 | rma-21 | rma-0X ) bypass-vlan
+#endif
+
+#ifdef CMD_TRAP_GET_RMA_LAYER2_RMA_TAIL_0X_SLOW_PROTO_BYPASS_STP
+//trap configuration
+//get configuration
+//RMA configuration
+//layer2 RMA configuration
+//0180-C200-0000 ~ 0180-C200-000f (except 0180-C200-0002)
+//slow protocol is 0180-C200-0002
+//bypass STP configuration
+trap get rma layer2 ( rma-tail-0X | slow-proto ) bypass-stp
+#endif
+
+#ifdef CMD_TRAP_GET_SWITCH_MAC
+//trap configuration
+//get configuration
+//switch MAC configuration
+trap get switch-mac
+#endif
+
+#ifdef CMD_TRAP_SET_ARP_REQUEST_FORWARD_COPY_TO_CPU
+//trap configuration
+//set configuration
+//ARP request configuration
+//forward packets
+//copy to CPU
+trap set arp-request ( forward | copy-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_CFI_INNER_OUTER_FORWARD_DROP_TRAP
+//trap configuration
+//set configuration
+//CFI configuration
+//inner tag
+//outer tag
+//forward packet
+//drop packet
+//trap packet to CPU
+trap set cfi ( inner | outer ) ( forward | drop | trap )
+#endif
+
+#ifdef CMD_TRAP_SET_CFI_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//CFI configuration
+//priority
+//priority value <0-7>
+trap set cfi priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_CFM_CCM_LEVEL_DROP_TRAP_FORWARD_LINK_FAULT_DETECTION
+//trap configuration
+//set configuration
+//CFM entry configuration
+//CFM CCM frame
+//MD level <0-7>
+//drop function
+//trap function
+//forward function
+//link fault detection function
+trap set cfm ccm <UINT:level> ( drop | trap | forward | link-fault-detection )
+#endif
+
+#ifdef CMD_TRAP_SET_CFM_ETH_DM_LEVEL_ACTION_DROP_TRAP_FORWARD
+//trap configuration
+//set configuration
+//CFM entry configuration
+//CFM ETH-DM frame
+//MD level <0-7>
+//CFM Ethernet Delay-Measurement action
+//drop function
+//trap function
+//forward function
+trap set cfm eth-dm <UINT:level> action ( drop | trap | forward )
+#endif
+
+#ifdef CMD_TRAP_SET_CFM_INSERT_CPU_TAG_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//CFM configuration
+//define trap insert CPU tag configuration
+//state configuration
+//disable function
+//enable function
+trap set cfm insert-cpu-tag state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_CFM_LOOPBACK_LEVEL_DROP_TRAP_FORWARD
+//trap configuration
+//set configuration
+//CFM entry configuration
+//CFM loopback frame
+//MD level <0-7>
+//drop function
+//trap function
+//forward function
+trap set cfm loopback <UINT:level> ( drop | trap | forward )
+#endif
+
+#ifdef CMD_TRAP_SET_CFM_MD_LEVEL_LEVEL_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//CFM configuration
+//md level configuration
+//md level value <0-7>
+//copy to CPU
+//drop RMA packets
+//forward RMA packets   
+//trap RMA packets to CPU
+trap set cfm md-level <UINT:level> ( copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_CFM_PRIORITY_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//CFM configuration
+//priority
+//state configuration
+//disable function
+//enable function
+trap set cfm priority state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_CFM_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//CFM configuration
+//priority
+//priority value <0-7>
+trap set cfm priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_CFM_UNKNOWN_FRAME_DROP_TRAP_FORWARD
+//trap configuration
+//set configuration
+//CFM entry configuration
+//unknown type of CFM frame
+//drop function
+//trap function
+//forward function
+trap set cfm unknown-frame ( drop | trap | forward )
+#endif
+
+#ifdef CMD_TRAP_SET_EAPOL_BYPASS_STP_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//dot1x EAPOL configuration
+//bypass STP configuration
+//state configuration
+//disable function
+//enable function
+trap set eapol bypass-stp state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_EAPOL_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//dot1x EAPOL configuration
+//forward packets
+//trap packets to CPU
+trap set eapol ( forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_GW_MAC_ERR_DROP_L2_FORWARD_TRAP
+//trap configuration
+//set configuration
+//gateway MAC error configuration
+//drop function
+//forward function
+//trap function
+trap set gw-mac-err ( drop | l2-forward | trap )
+#endif
+
+#ifdef CMD_TRAP_SET_GW_MAC_ERR_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//gateway MAC error configuration
+//priority configuration
+//priority value <0-7>
+trap set gw-mac-err priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_IGMP_MLD_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//igmp
+//mld
+//forward function
+//trap function
+trap set ( igmp | mld ) ( forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_IP6_HOP_LIMIT_EXCEED_HDR_ERR_HOP_BY_HOP_DROP_L2_FORWARD_TRAP
+//trap configuration
+//set configuration
+//ipv6 configuration
+//hop limit exceed configuration
+//header error configuration
+//hop-by-hop extend header
+//drop function
+//forward function
+//trap function
+trap set ip6 ( hop-limit-exceed | hdr-err | hop-by-hop ) ( drop | l2-forward | trap )
+#endif
+
+#ifdef CMD_TRAP_SET_IP6_HOP_LIMIT_EXCEED_HDR_ERR_HOP_BY_HOP_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//ipv6 configuration
+//hop limit exceed configuration
+//header error configuration
+//hop-by-hop extend header
+//priority configuration
+//priority value <0-7>
+trap set ip6 ( hop-limit-exceed | hdr-err | hop-by-hop ) priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_IP_TTL_EXCEED_HDR_ERR_HDR_WITH_OPTION_DROP_L2_FORWARD_TRAP
+//trap configuration
+//set configuration
+//ipv4 configuration
+//ttl exceed configuration
+//header error configuration
+//header with option
+//drop function
+//forward function
+//trap function
+trap set ip ( ttl-exceed | hdr-err | hdr-with-option ) ( drop | l2-forward | trap )
+#endif
+
+#ifdef CMD_TRAP_SET_IP_TTL_EXCEED_HDR_ERR_HDR_WITH_OPTION_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//ipv4 configuration
+//ttl exceed configuration
+//header error configuration
+//header with option
+//priority configuration
+//priority value <0-7>
+trap set ip ( ttl-exceed | hdr-err | hdr-with-option ) priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_MANAGEMENT_VLAN_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//management-vlan configuration
+//state
+//disable function
+//enable function
+trap set management-vlan state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_SELF_ARP_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//self-ARP configuration
+//state
+//disable function
+//enable function
+trap set self-arp state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_NEIGHBOR_DISCOVERY_FORWARD_COPY_TO_CPU
+//trap configuration
+//set configuration
+//IPv6 Neighbor Discovery configuration
+//forward packets
+//copy to CPU
+trap set neighbor-discovery ( forward | copy-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_HOP_BY_HOP_POSITION_ACTION_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//IPv6 Hop-by-Hop Extension Header Position Error
+//forward packets
+//trap to CPU
+trap set hop-by-hop-position action ( forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_GET_IP6_HOP_BY_HOP_POSITION_PRIORITY
+//trap configuration
+//get configuration
+//ipv6 configuration
+//IPv6 Hop-by-Hop Extension Header Position Error
+//priority configuration
+trap get ip6 hop-by-hop-position priority
+#endif
+
+#ifdef CMD_TRAP_SET_IP6_HOP_BY_HOP_POSITION_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//ipv6 configuration
+//IPv6 Hop-by-Hop Extension Header Position Error
+//priority configuration
+//priority value <0-7>
+trap set ip6 hop-by-hop-position priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_IP6_UNKNOWN_HEADER_ACTION_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//IPv6 Unknown Extension Header
+//forward packets
+//trap to CPU
+trap set ip6-unknown-header action ( forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_GET_IP6_UNKNOWN_HEADER_PRIORITY
+//trap configuration
+//set configuration
+//ipv6 configuration
+//IPv6 Unknown Extension Header
+//priority configuration
+trap get ip6 ip6-unknown-header priority
+#endif
+
+#ifdef CMD_TRAP_SET_IP6_UNKNOWN_HEADER_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//ipv6 configuration
+//IPv6 Unknown Extension Header
+//priority configuration
+//priority value <0-7>
+trap set ip6 ip6-unknown-header priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_GET_INVALID_SA_PRIORITY
+//trap configuration
+//set configuration
+//Invalid(broadcast,multicast,all zero) SA configuration
+//priority configuration
+trap get invalid-sa priority
+#endif
+
+#ifdef CMD_TRAP_SET_INVALID_SA_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//Invalid(broadcast,multicast,all zero) SA configuration
+//priority configuration
+//priority value <0-7>
+trap set invalid-sa priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_CRC_ERROR_ACTION_DROP_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//L2 CRC error
+//drop packets
+//forward packets
+//trap to CPU
+trap set crc-error action ( drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_IP4_CHECKSUM_ERROR_ACTION_DROP_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//L2 CRC error
+//drop packets
+//forward packets
+//trap to CPU
+trap set ip4-checksum-error action ( drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_OAM_LOOPBACK_CTRL_PORT_ALL_PAR_DROP_FORWARD_LOOPBACK_TRAP
+//trap configuration
+//set configuration
+//oam loopback mode configuration
+//port list, <0-51>
+//all ports
+//par configuration
+//drop function
+//forward function
+//loopback function
+//trap function
+trap set oam-loopback-ctrl ( <PORT_LIST:port> | all ) par ( drop | forward | loopback | trap )
+#endif
+
+#ifdef CMD_TRAP_SET_OAMPDU_DROP_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//oampdu configuration
+//port list
+//all ports
+//drop OAM PDU packets
+//forward OAM PDU packets
+//trap OAM PDU packets to CPU
+trap set oampdu ( drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_OAMPDU_PORT_ALL_DROP_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//oampdu configuration
+//port list
+//all ports
+//drop RMA packets
+//forward RMA packets   
+//trap RMA packets to CPU
+trap set oampdu ( <PORT_LIST:port> | all ) ( drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_OAMPDU_PORT_ALL_INSERT_CPU_TAG_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//oampdu configuration
+//port list
+//all ports
+//define trap insert CPU tag configuration
+//state configuration
+//disable function
+//enable function
+trap set oampdu ( <PORT_LIST:port> | all ) insert-cpu-tag state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_OAMPDU_PORT_ALL_PRIORITY_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//oampdu configuration
+//port list
+//all ports
+//priority
+//state configuration
+//disable function
+//enable function
+trap set oampdu ( <PORT_LIST:port> | all ) priority state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_OAMPDU_PORT_ALL_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//oampdu configuration
+//port list
+//all ports
+//priority
+//priority value <0-7>
+trap set oampdu ( <PORT_LIST:port> | all ) priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_OAMPDU_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//oampdu configuration
+//priority
+//priority value <0-7>
+trap set oampdu priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_OPTION_TYPE_IPV4_OPTION_HEADER_PKT_IPV6_OPTION_HEADER_PKT_VLAN_TAG_WITH_CFI_PORT_ALL_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//packet with optional header or cfi bit == 1 configuration
+//IPv4 packet with optional header
+//IPv6 packet with optional header
+//packet with cfi bit in inner VLAN tag
+//port list
+//all ports
+//forward RMA packets   
+//trap RMA packets to CPU
+trap set option-type ( ipv4-option-header-pkt | ipv6-option-header-pkt | vlan-tag-with-cfi ) ( <PORT_LIST:port> | all ) ( forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_OPTION_TYPE_IPV4_OPTION_HEADER_PKT_IPV6_OPTION_HEADER_PKT_VLAN_TAG_WITH_CFI_PORT_ALL_INSERT_CPU_TAG_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//packet with optional header or cfi bit == 1 configuration
+//IPv4 packet with optional header
+//IPv6 packet with optional header
+//packet with cfi bit in inner VLAN tag
+//port list
+//all ports
+//define trap insert CPU tag configuration
+//state configuration
+//disable function
+//enable function
+trap set option-type ( ipv4-option-header-pkt | ipv6-option-header-pkt | vlan-tag-with-cfi ) ( <PORT_LIST:port> | all ) insert-cpu-tag state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_OPTION_TYPE_IPV4_OPTION_HEADER_PKT_IPV6_OPTION_HEADER_PKT_VLAN_TAG_WITH_CFI_PORT_ALL_PRIORITY_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//packet with optional header or cfi bit == 1 configuration
+//IPv4 packet with optional header
+//IPv6 packet with optional header
+//packet with cfi bit in inner VLAN tag
+//port list
+//all ports
+//priority
+//state configuration
+//disable function
+//enable function
+trap set option-type ( ipv4-option-header-pkt | ipv6-option-header-pkt | vlan-tag-with-cfi ) ( <PORT_LIST:port> | all ) priority state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_OPTION_TYPE_IPV4_OPTION_HEADER_PKT_IPV6_OPTION_HEADER_PKT_VLAN_TAG_WITH_CFI_PORT_ALL_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//packet with optional header or cfi bit == 1 configuration
+//IPv4 packet with optional header
+//IPv6 packet with optional header
+//packet with cfi bit in inner VLAN tag
+//port list
+//all ports
+//priority
+//priority value <0-7>
+trap set option-type ( ipv4-option-header-pkt | ipv6-option-header-pkt | vlan-tag-with-cfi ) ( <PORT_LIST:port> | all ) priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_PACKET_1XMAC_PORT_CHANGE_CFI_IPMCAST_DLF_IPV4_IGMP_IPV6_MLD_L2MCAST_DLF_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//packet trap to CPU
+//dot1x mac-based packet port change
+//CFI packet
+//IP multicast packet destination lookup fail
+//IPv4 IGMP packet
+//IPv6-MLD packet
+//l2 multicast packet destination lookup fail
+//state configuration
+//disable function
+//enable function
+trap set packet ( 1xmac-port-change | cfi | ipmcast-dlf | ipv4-igmp | ipv6-mld | l2mcast-dlf ) state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_1X_EAPOL_1X_UNAUTH_CFI_IPV4_IGMP_IPV6_MLD_MCAST_DLF_RMA_SLP_CHANGE_VLAN_ERROR_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//dot1x EAPOL packet
+//unauthorized dot1x packet
+//CFI packet
+//IPv4 IGMP packet
+//IPv6-MLD packet
+//multicast DLF packet
+//RMA packet
+//SLP change packet
+//VLAN error packet
+//queue priority
+//priority value <0-7>
+trap set reason ( 1x-eapol | 1x-unauth | cfi | ipv4-igmp | ipv6-mld | mcast-dlf | rma | slp-change | vlan-error ) priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_1X_EAPOL_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//dot1x EAPOL packet
+//priority
+//priority value <0-7>
+trap set reason 1x-eapol priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_ARP_IPV6_ND_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//ARP packet
+//IPv6 Neighbor Discovery packet
+//priority
+//priority value <0-7>
+trap set reason ( arp | ipv6-nd ) priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_BPDU_LACP_LLDP_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//BPDU packet
+//LACP packet
+//LLDP packet
+//priority
+//priority value <0-7>
+trap set reason ( bpdu | lacp | lldp ) priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_INGRESS_VLAN_FILTER_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//Ingress-VLAN-Fliter packet
+//priority
+//priority value <0-7>
+trap set reason ingress-vlan-filter priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_IPV4_IGMP_IPV6_MLD_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//IPv4 IGMP packet
+//IPv6 MLD packet
+//priority
+//priority value <0-7>
+trap set reason ( ipv4-igmp | ipv6-mld ) priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_OTHER_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//Other packet
+//priority
+//priority value <0-7>
+trap set reason other priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_PTP_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//PTP packet
+//priority
+//priority value <0-7>
+trap set reason ptp priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_SWITCH_MAC_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//switch MAC packet
+//priority
+//priority value <0-7>
+trap set reason switch-mac priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_UNKNOWN_DA_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//unknown unicast/multicast packet
+//priority
+//priority value <0-7>
+trap set reason unknown-da priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_VLAN_ERROR_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//VLAN-Error packet
+//priority
+//priority value <0-7>
+trap set reason vlan-error priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//RMA configuration
+//priority
+//priority value <0-7>
+trap set rma priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_INSERT_CPU_TAG_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//define trap insert CPU tag configuration
+//state configuration
+//disable configuration
+//enable configuration
+trap set rma insert-cpu-tag state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L2_USER_DEFINE_INDEX_ACTION_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//RMA configuration
+//user defined l2 RMA configuration
+//entry index
+//action configuration
+//copy to CPU
+//drop RMA packets
+//forward RMA packets
+//trap RMA packets to CPU
+trap set rma l2-user-define <UINT:index> action ( copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L2_USER_DEFINE_INDEX_ACTION_DROP_FORWARD_TRAP_TO_CPU_FORWARD_AND_FLOOD
+//trap configuration
+//set configuration
+//RMA configuration
+//user defined l2 RMA configuration
+//entry index
+//action configuration
+//drop RMA packets
+//forward
+//trap to CPU
+//forward across VLAN
+trap set rma l2-user-define <UINT:index> action ( drop | forward | trap-to-cpu | forward-and-flood )                  
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L2_USER_DEFINE_INDEX_BYPASS_STP_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//user defined l2 RMA configuration
+//entry index
+//bypass stp
+//disable function
+//enable function
+trap set rma l2-user-define <UINT:index> bypass-stp ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L2_USER_DEFINE_INDEX_BYPASS_VLAN_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//user defined l2 RMA configuration
+//entry index
+//bypass VLAN configuration
+//disable function
+//enable function
+trap set rma l2-user-define <UINT:index> bypass-vlan ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L2_USER_DEFINE_INDEX_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//user defined l2 RMA configuration
+//entry index <0-2>
+//disable configuration
+//enable configuration
+trap set rma l2-user-define <UINT:index> state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L2_USER_DEFINE_INDEX_LEARN_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//user defined l2 RMA configuration
+//entry index
+//learn
+//disable function
+//enable function
+trap set rma l2-user-define <UINT:index> learn ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L2_USER_DEFINE_INDEX_MAC
+//trap configuration
+//set configuration
+//RMA configuration
+//user defined l2 RMA configuration
+//entry index
+//target MAC address
+trap set rma l2-user-define <UINT:index> <MACADDR:mac>
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L2_USER_DEFINE_INDEX_PRIORITY_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//user defined l2 RMA configuration
+//entry index
+//priority
+//state configuration
+//disable function
+//enable function
+trap set rma l2-user-define <UINT:index> priority state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L2_USER_DEFINE_INDEX_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//RMA configuration
+//user defined l2 RMA configuration
+//entry index
+//priority
+//priority value <0-7>
+trap set rma l2-user-define <UINT:index> priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L2_USER_DEFINE_INDEX_MAC_MASK_BPDU_VLAN_CARE
+//trap configuration
+//set configuration
+//RMA configuration
+//user defined l2 RMA configuration
+//entry index
+//target MAC address
+//MAC address mask
+//filtered by stp
+//care VLAN configuration
+trap set rma l2-user-define <UINT:index> <MACADDR:mac> <MACADDR:mask> { bpdu } { vlan-care }
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L34_PROTOCOL_ARP_BGPV4_FTP_HTTP_HTTPS_ICMP_ICMPV6_IGMP_MLD_OSPFV2_OSPFV3_RIP_SNMP_SSH_TELNET_TFTP_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//RMA configuration
+//l34 RMA protocol configuration
+//arp
+//bgpv4
+//ftp
+//http
+//https
+//ICMP
+//ICMPv6
+//IGMP
+//mld
+//ospfv2
+//ospfv3
+//rip
+//snmp
+//ssh
+//telnet
+//tftp
+//copy to CPU
+//drop RMA packets
+//forward RMA packets
+//trap RMA packets to CPU
+trap set rma l34-protocol ( arp | bgpv4 | ftp | http | https | icmp | icmpv6 | igmp | mld | ospfv2 | ospfv3 | rip | snmp  | ssh | telnet | tftp ) ( copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L34_PROTOCOL_ARP_BGPV4_FTP_HTTP_HTTPS_ICMP_ICMPV6_IGMP_MLD_OSPFV2_OSPFV3_RIP_SNMP_SSH_TELNET_TFTP_PRIORITY_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//l34 RMA protocol configuration
+//arp
+//bgpv4
+//ftp
+//http
+//https
+//ICMP
+//ICMPv6
+//IGMP
+//mld
+//ospfv2
+//ospfv3
+//rip
+//snmp
+//ssh
+//telnet
+//tftp
+//priority
+//state configuration
+//disable function
+//enable function
+trap set rma l34-protocol ( arp | bgpv4 | ftp | http | https | icmp | icmpv6 | igmp | mld | ospfv2 | ospfv3 | rip | snmp  | ssh | telnet | tftp ) priority state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L34_PROTOCOL_ARP_BGPV4_FTP_HTTP_HTTPS_ICMP_ICMPV6_IGMP_MLD_OSPFV2_OSPFV3_RIP_SNMP_SSH_TELNET_TFTP_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//RMA configuration
+//l34 RMA protocol configuration
+//arp
+//bgpv4
+//ftp
+//http
+//https
+//ICMP
+//ICMPv6
+//IGMP
+//mld
+//ospfv2
+//ospfv3
+//rip
+//snmp
+//ssh
+//telnet
+//tftp
+//priority
+//priority value <0-7>
+trap set rma l34-protocol ( arp | bgpv4 | ftp | http | https | icmp | icmpv6 | igmp | mld | ospfv2 | ospfv3 | rip | snmp  | ssh | telnet | tftp ) priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L34_PROTOCOL_ARP_BGPV4_FTP_HTTP_HTTPS_ICMP_ICMPV6_IGMP_MLD_OSPFV2_OSPFV3_RIP_SNMP_SSH_TELNET_TFTP_VLAN_CHECK_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//l34 RMA protocol configuration
+//arp
+//bgpv4
+//ftp
+//http
+//https
+//ICMP
+//ICMPv6
+//IGMP
+//mld
+//ospfv2
+//ospfv3
+//rip
+//snmp
+//ssh
+//telnet
+//tftp
+//VLAN care configuration
+//state configuration
+//disable function
+//enable function
+trap set rma l34-protocol ( arp | bgpv4 | ftp | http | https | icmp | icmpv6 | igmp | mld | ospfv2 | ospfv3 | rip | snmp  | ssh | telnet | tftp ) vlan-check state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L34_USER_PROTOCOL_INDEX_TCP_UDP_COMPARE_DMAC_COMPARE_DIP
+//trap configuration
+//set configuration
+//RMA configuration
+//layer34 user defined management rma configuration
+//entry index <0-1>
+//tcp
+//udp
+//compare dmac
+//compare dip
+trap set rma l34-user-protocol <UINT:index> ( tcp | udp ) { compare-dmac } { compare-dip }
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L34_USER_PROTOCOL_INDEX_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//RMA configuration
+//layer34 user defined management rma configuration
+//entry index <0-1>
+//copy to CPU
+//drop RMA packets
+//forward RMA packets   
+//trap RMA packets to CPU
+trap set rma l34-user-protocol <UINT:index> ( copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L34_USER_PROTOCOL_INDEX_COMPARE_L4_DPORT_VALUE_MASK
+//trap configuration
+//set configuration
+//RMA configuration
+//layer34 user defined management rma configuration
+//entry index <0-1>
+//compare layer4 dport
+//layer4 dport
+//layer4 dport mask
+trap set rma l34-user-protocol <UINT:index> compare-l4-dport <UINT:value>  <UINT:mask>
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L34_USER_PROTOCOL_INDEX_COMPARE_L4_SPORT_VALUE_MASK
+//trap configuration
+//set configuration
+//RMA configuration
+//layer34 user defined management rma configuration
+//entry index <0-1>
+//compare layer4 sport
+//layer4 sport
+//layer4 sport mask
+trap set rma l34-user-protocol <UINT:index> compare-l4-sport <UINT:value>  <UINT:mask>
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L34_USER_PROTOCOL_INDEX_PRIORITY_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//layer34 user defined management rma configuration
+//entry index <0-1>
+//priority
+//state configuration
+//disable function
+//enable function
+trap set rma l34-user-protocol <UINT:index> priority state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L34_USER_PROTOCOL_INDEX_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//RMA configuration
+//layer34 user defined management rma configuration
+//entry index <0-1>
+//priority
+//priority value <0-7>
+trap set rma l34-user-protocol <UINT:index> priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_L34_USER_PROTOCOL_INDEX_VLAN_CHECK_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//layer34 user defined management rma configuration
+//entry index <0-1>
+//VLAN care configuration
+//state configuration
+//disable function
+//enable function
+trap set rma l34-user-protocol <UINT:index> vlan-check state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_LAYER2_PTP_LLDP_BYPASS_STP_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//layer2 RMA configuration
+//ptp
+//lldp
+//bypass STP configuration
+//disable function
+//enable function
+trap set rma layer2 ( ptp | lldp ) bypass-stp ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_LAYER2_PTP_LLDP_BYPASS_VLAN_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//layer2 RMA configuration
+//ptp
+//lldp
+//bypass VLAN configuration
+//disable function
+//enable function
+trap set rma layer2 ( ptp | lldp ) bypass-vlan ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_LAYER2_RMA_TAIL_0X_SLOW_PROTO_BYPASS_STP_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//layer2 RMA configuration
+//0180-C200-0000 ~ 0180-C200-000f (except 0180-C200-0002)
+//slow protocol is 0180-C200-0002
+//bypass STP configuration
+//disable function
+//enable function
+trap set rma layer2 ( rma-tail-0X | slow-proto ) bypass-stp ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_LAYER2_BPDU_RMA_02_RMA_0E_RMA_0X_BYPASS_VLAN_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//layer2 RMA configuration
+//BPDU
+//RMA-02
+//RMA-0E
+//0180-C200-0000 ~ 0180-C200-000f (except 0180-C200-0002)
+//bypass VLAN configuration
+//disable function
+//enable function
+trap set rma layer2 ( bpdu | rma-02 | rma-0E | rma-0X ) bypass-vlan ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_LAYER2_BPDU_OAM_RMA_02_RMA_03_RMA_0E_RMA_0X_RMA_20_RMA_21_BYPASS_VLAN_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//layer2 RMA configuration
+//BPDU
+//OAM
+//RMA-02
+//RMA-03
+//RMA-0E
+//RMA-0X
+//RMA-20
+//RMA-21
+//bypass VLAN configuration
+//disable function
+//enable function
+trap set rma layer2 ( bpdu | oam | rma-02 | rma-03 | rma-0E | rma-0X | rma-20 | rma-21 ) bypass-vlan ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_LAYER2_OAM_RMA_02_RMA_03_RMA_0E_RMA_10_RMA_20_RMA_21_RMA_22_RMA_0X_RMA_1X_RMA_2X_ACTION_DROP_FORWARD_FORWARD_AND_FLOOD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//RMA configuration
+//layer2 RMA configuration
+//oam
+//rma-02
+//rma-03
+//rma-0E
+//rma-10
+//rma-20
+//rma-21
+//rma-22
+//rma-0X
+//rma-1X
+//rma-2X
+//action
+//drop RMA packets
+//flood to L2 lookupmiss portmask in VLAN  
+//flood to L2 lookupmiss portmask, not care VLAN
+//trap RMA packets to CPU
+trap set rma layer2 ( oam | rma-02 | rma-03 | rma-0E | rma-10 | rma-20 | rma-21 | rma-22 | rma-0X | rma-1X | rma-2X ) action ( drop | forward | forward-and-flood | trap-to-cpu )
+#endif
+
+
+#ifdef CMD_TRAP_SET_RMA_LAYER2_RMA_TAIL_ACTION_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//RMA configuration
+//layer2 RMA configuration
+//tail of RMA MAC address <0-2f>
+//action
+//copy to CPU
+//drop RMA packets
+//forward RMA packets   
+//trap RMA packets to CPU
+trap set rma layer2 <UINT:rma_tail> action ( copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_LAYER2_RMA_TAIL_RMA_TAIL_END_ACTION_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//RMA configuration
+//layer2 RMA configuration
+//tail-start of RMA MAC address <0-2f>
+//tail-end of RMA MAC address <0-2f>
+//action
+//copy to CPU
+//drop RMA packets
+//forward RMA packets
+//trap RMA packets to CPU
+trap set rma layer2 <UINT:rma_tail> <UINT:rma_tail_end> action ( copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_LAYER2_OAM_RMA_02_RMA_03_RMA_0E_RMA_10_RMA_20_RMA_21_RMA_22_RMA_0X_RMA_1X_RMA_2X_LEARN_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//layer2 RMA configuration
+//oam
+//rma-02
+//rma-03
+//rma-0E
+//rma-10
+//rma-20
+//rma-21
+//rma-22
+//rma-0X
+//rma-1X
+//rma-2X
+//learn
+//disable
+//enable
+trap set rma layer2 ( oam | rma-02 | rma-03 | rma-0E | rma-10 | rma-20 | rma-21 | rma-22 | rma-0X | rma-1X | rma-2X )  learn ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_LAYER2_RMA_TAIL_LEARN_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//layer2 RMA configuration
+//tail of RMA MAC address <0-2f>
+//learn
+//disable function
+//enable function
+trap set rma layer2 <UINT:rma_tail> learn ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_LAYER2_RMA_TAIL_RMA_TAIL_END_LEARN_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//layer2 RMA configuration
+//tail-start of RMA MAC address <0-2f>
+//tail-end of RMA MAC address <0-2f>
+//learn
+//disable function
+//enable function
+trap set rma layer2 <UINT:rma_tail> <UINT:rma_tail_end> learn ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_LAYER2_RMA_TAIL_PRIORITY_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//l2 RMA configuration
+//tail of RMA MAC address <0-2f>
+//priority
+//state configuration
+//disable function
+//enable function
+trap set rma layer2 <UINT:rma_tail> priority state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_LAYER2_RMA_TAIL_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//RMA configuration
+//l2 RMA configuration
+//tail of RMA MAC address <0-2f>
+//priority
+//priority value <0-7>
+trap set rma layer2 <UINT:rma_tail> priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_LAYER2_RMA_TAIL_VLAN_CHECK_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//layer2 RMA configuration
+//tail of RMA MAC address <0-2f>
+//VLAN care configuration
+//state configuration
+//disable function
+//enable function
+trap set rma layer2 <UINT:rma_tail> vlan-check state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_MGMT_IP_CHECK_IPV4_IPV6_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//management ip check configuration
+//IPv4 address
+//IPv6 address
+//state configuration
+//disable function
+//enable function
+trap set rma mgmt-ip-check ( ipv4 | ipv6 ) state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_PORT_RMA_BPDU_DHCP_DHCPV6_DOT1X_PAE_PORT_ALL_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//RMA configuration
+//port RMA configuration
+//spanning tree bpdu
+//dhcp protocol
+//dhcpv6 protocol
+//dot1x pae protocol
+//port list
+//all ports
+//copy to CPU
+//drop RMA packets
+//forward RMA packets   
+//trap RMA packets to CPU
+trap set rma port-rma ( bpdu | dhcp | dhcpv6 | dot1x-pae ) ( <PORT_LIST:port> | all ) ( copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_PORT_RMA_BPDU_DHCP_DHCPV6_DOT1X_PAE_PORT_ALL_PRIORITY_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//port RMA configuration
+//spanning tree bpdu
+//dhcp protocol
+//dhcpv6 protocol
+//dot1x pae protocol
+//port list
+//all ports
+//priority
+//state configuration
+//disable function
+//enable function
+trap set rma port-rma ( bpdu | dhcp | dhcpv6 | dot1x-pae ) ( <PORT_LIST:port> | all ) priority state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_PORT_RMA_BPDU_DHCP_DHCPV6_DOT1X_PAE_PORT_ALL_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//RMA configuration
+//port RMA configuration
+//spanning tree bpdu
+//dhcp protocol
+//dhcpv6 protocol
+//dot1x pae protocol
+//port list
+//all ports
+//priority
+//priority value <0-7>
+trap set rma port-rma ( bpdu | dhcp | dhcpv6 | dot1x-pae ) ( <PORT_LIST:port> | all ) priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_PORT_RMA_BPDU_DHCP_DHCPV6_DOT1X_PAE_PORT_ALL_VLAN_CHECK_VLAN_CROSS_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//port RMA configuration
+//spanning tree bpdu
+//dhcp protocol
+//dhcpv6 protocol
+//dot1x pae protocol
+//port list
+//all ports
+//VLAN check configuration
+//VLAN cross configuration
+//state configuration
+//disable function
+//enable function
+trap set rma port-rma ( bpdu | dhcp | dhcpv6 | dot1x-pae ) ( <PORT_LIST:port> | all ) ( vlan-check | vlan-cross ) state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_PORT_RMA_BPDU_PORT_ALL_DROP_FORWARD_FORWARD_AND_FLOOD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//RMA configuration
+//port RMA configuration
+//spanning tree bpdu
+//port list
+//all ports
+//drop RMA packets
+//forward RMA packets
+//flood to all port when lookup miss
+//trap RMA packets to CPU
+trap set rma port-rma bpdu ( <PORT_LIST:port> | all ) ( drop | forward | forward-and-flood | trap-to-cpu )
+#endif
+
+
+#ifdef CMD_TRAP_GET_RMA_BPDU_FLOOD_PORTMASK
+//trap configuration
+//get configuration
+//rma
+//bpdu configuration
+//flood-portmask
+trap get rma bpdu flood-portmask
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_BPDU_FLOOD_PORTMASK_PORT_ALL
+//trap configuration
+//set configuration
+//rma
+//bpdu configuration
+//flood-portmask
+//port list
+//all ports
+trap set rma bpdu flood-portmask ( <PORT_LIST:port> | all )
+#endif
+
+
+#ifdef CMD_TRAP_SET_RMA_PORT_RMA_LLDP_PORT_ALL_DROP_FORWARD_FORWARD_AND_FLOOD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//RMA configuration
+//port RMA configuration
+//lldp
+//port list
+//all ports
+//drop RMA packets
+//forward
+//forward across VLAN
+//trap to CPU
+trap set rma port-rma lldp ( <PORT_LIST:port> | all ) ( drop | forward | forward-and-flood | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_PORT_RMA_LLDP_PTP_LEARN_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//port RMA configuration
+//lldp
+//ptp
+//L2 table learning behavior
+//disable function
+//enable function
+trap set rma port-rma ( lldp | ptp ) learn ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_PORT_RMA_PTP_PORT_ALL_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//RMA configuration
+//port RMA configuration
+//ptp
+//port list
+//all ports
+//copy to CPU
+//drop RMA packets
+//forward RMA packets
+//trap RMA packets to CPU
+trap set rma port-rma ptp ( <PORT_LIST:port> | all ) ( copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_SET_SWITCH_MAC_DROP_FORWARD_TRAP_TO_CPU
+//trap configuration
+//set configuration
+//switch MAC configuration
+//drop packets
+//forward packets
+//trap packets to CPU
+trap set switch-mac ( drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_CFI_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//cfg=1 packet
+//priority
+trap get reason cfi priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_RLPP_RLDP_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//RLDP & RLPP packet
+//priority
+trap get reason rlpp-rldp priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_SYSTEM_MAC_CONSTRAIN_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//system mac constrain packet
+//priority
+trap get reason system-mac-constrain priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_PORT_MAC_CONSTRAIN_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//port mac constrain packet
+//priority
+trap get reason port-mac-constrain priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_VLAN_MAC_CONSTRAIN_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//vlan mac constrain packet
+//priority
+trap get reason vlan-mac-constrain priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_RMA_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//Reserved multicast address packet
+//priority
+trap get reason rma priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_SPECIAL_COPY_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//special pkt copy to cpu
+//priority
+trap get reason special-copy priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_SPECIAL_TRAP_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//special pkt trap to cpu
+//priority
+trap get reason special-trap priority
+#endif
+
+#ifdef CMD_TRAP_GET_REASON_ROUTING_EXCEPTION_PRIORITY
+//trap configuration
+//get configuration
+//reason of packet trap to CPU
+//routing exception packet
+//priority
+trap get reason routing-exception priority
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_CFI_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//cfg=1 packet
+//priority
+//priority value <0-7>
+trap set reason cfi priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_RLPP_RLDP_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//RLDP & RLPP packet
+//priority
+//priority value <0-7>
+trap set reason rlpp-rldp priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_SYSTEM_MAC_CONSTRAIN_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//system mac constrain packet
+//priority
+//priority value <0-7>
+trap set reason system-mac-constrain priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_PORT_MAC_CONSTRAIN_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//port mac constrain packet
+//priority
+//priority value <0-7>
+trap set reason port-mac-constrain priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_VLAN_MAC_CONSTRAIN_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//vlan mac constrain packet
+//priority
+//priority value <0-7>
+trap set reason vlan-mac-constrain priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_RMA_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//Reserved multicast address packet
+//priority
+//priority value <0-7>
+trap set reason rma priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_SPECIAL_COPY_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//special pkt copy to cpu
+//priority
+//priority value <0-7>
+trap set reason special-copy priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_SPECIAL_TRAP_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//special pkt trap to cpu
+//priority
+//priority value <0-7>
+trap set reason special-trap priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_SET_REASON_ROUTING_EXCEPTION_PRIORITY_PRIORITY
+//trap configuration
+//set configuration
+//reason of packet trap to CPU
+//routing exception packet
+//priority
+//priority value <0-7>
+trap set reason routing-exception priority <UINT:priority>
+#endif
+
+#ifdef CMD_TRAP_GET_RMA_LOOKUP_MISS_ACTION_STATE
+//trap configuration
+//get configuration
+//RMA configuration
+//care lookup miss action
+//disable function
+//enable function
+trap get rma lookup-miss-action state
+#endif
+
+#ifdef CMD_TRAP_SET_RMA_LOOKUP_MISS_ACTION_STATE_DISABLE_ENABLE
+//trap configuration
+//set configuration
+//RMA configuration
+//care lookup miss action
+//disable function
+//enable function
+trap set rma lookup-miss-action state ( disable | enable )
+#endif
+
+#ifdef CMD_TRAP_GET_NEXTHOP_AGE_OUT_ACTION
+//trap configuration
+//get configuration
+//next hop age out configuration
+//action configuration
+trap get nexthop-age-out action
+#endif
+
+#ifdef CMD_TRAP_SET_NEXTHOP_AGE_OUT_ACTION_DROP_L2_FORWARD_TRAP
+//trap configuration
+//set configuration
+//next hop age out configuration
+//action configuration
+//drop packet
+//L2 forward packet
+//trap packet to CPU
+trap set nexthop-age-out action ( drop | l2-forward | trap )
+#endif
+

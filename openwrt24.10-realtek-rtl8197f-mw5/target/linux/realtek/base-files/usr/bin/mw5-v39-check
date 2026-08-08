@@ -1,0 +1,47 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Read-only first-boot report for Tenda Nova MW5 v39.
+
+out="${1:-/tmp/mw5-v39-check.txt}"
+{
+	echo "Tenda Nova MW5 v39 first-boot report"
+	date 2>/dev/null
+	echo
+	echo "== board =="
+	ubus call system board 2>/dev/null || true
+	cat /tmp/sysinfo/board_name 2>/dev/null || true
+	echo
+	echo "== kernel command line =="
+	cat /proc/cmdline 2>/dev/null || true
+	echo
+	echo "== MTD =="
+	cat /proc/mtd 2>/dev/null || true
+	echo
+	echo "== relevant boot log =="
+	dmesg 2>/dev/null | grep -Ei 'rtl8197|rtl836|rtl83|realtek|DSA|switch|SMI|firmware|rootfs|mtdsplit|PCI|8822' || true
+	echo
+	echo "== interfaces =="
+	ip -details link show 2>/dev/null || ifconfig -a 2>/dev/null || true
+	echo
+	echo "== DSA ports =="
+	for n in /sys/class/net/lan /sys/class/net/wan; do
+		[ -e "$n" ] || continue
+		echo "--- ${n##*/}"
+		cat "$n/operstate" 2>/dev/null || true
+		cat "$n/carrier" 2>/dev/null || true
+		ethtool "${n##*/}" 2>/dev/null || true
+	done
+	echo
+	echo "== bridge/VLAN =="
+	bridge link show 2>/dev/null || true
+	bridge vlan show 2>/dev/null || true
+	echo
+	echo "== PCIe =="
+	cat /proc/bus/pci/devices 2>/dev/null || true
+	find /sys/bus/pci/devices -maxdepth 2 -type f \( -name vendor -o -name device -o -name resource \) -print -exec cat {} \; 2>/dev/null || true
+	echo
+	echo "== network UCI =="
+	uci show network 2>/dev/null || true
+} >"$out" 2>&1
+
+echo "$out"

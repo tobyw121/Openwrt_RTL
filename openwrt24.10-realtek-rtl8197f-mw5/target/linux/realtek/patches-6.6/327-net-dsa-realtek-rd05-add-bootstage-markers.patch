@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenAI <noreply@openai.com>
+Date: Sun, 26 Jul 2026 00:00:00 +0000
+Subject: [PATCH] net: dsa: realtek: add bounded RD05 detect boot markers
+
+The v38.1 hardware log stops after MTD registration and before the first
+RTL8367D or RTL8197F Ethernet message. Add two non-invasive markers around
+the RTL8365MB-family chip-ID transaction so a serial log distinguishes a
+hang before SMI detection from one inside the ID read. No switch register
+programming or timing is changed.
+
+Signed-off-by: OpenAI <noreply@openai.com>
+---
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -3328,12 +3328,16 @@
+ 	int ret;
+ 	int i;
+ 
++	dev_info(priv->dev, "RD05 bootstage v38.2: RTL8367 detect enter\n");
+ 	ret = rtl8365mb_get_chip_id_and_ver(priv->map, &chip_id, &chip_ver);
+ 	if (ret) {
+ 		dev_err(priv->dev, "failed to read chip id and version: %d\n",
+ 			ret);
+ 		return ret;
+ 	}
++	dev_info(priv->dev,
++		 "RD05 bootstage v38.2: RTL8367 id=0x%04x ver=0x%04x\n",
++		 chip_id, chip_ver);
+ 
+ 	for (i = 0; i < ARRAY_SIZE(rtl8365mb_chip_infos); i++) {
+ 		const struct rtl8365mb_chip_info *ci = &rtl8365mb_chip_infos[i];

@@ -1,0 +1,25 @@
+RTL8197F v42.17 validation
+
+Source-tree validation:
+- safe kick-then-stop helper exists in rtl8197f_rd05_oem_switch_preinit.c
+- helper is called before the MW5 two-second reset sequence and again afterwards
+- unsafe direct post-delay writel(0xa5000000) is removed
+- early loader/kernel K/S/P watchdog sequence remains exact 0xa5000000
+- CHECK_SOURCE_TREE_V42.sh passes
+
+Direct MW5 diagnostic image:
+- input: v42.16 private full flash
+- LZMA SDK 4.40 decode: OK
+- decompressed kernel: 9,432,199 bytes
+- loader LZMA window: 2,824,743 bytes
+- compressed stream: 2,823,975 bytes
+- free space in loader window: 768 bytes
+- kernel checksum: 0x0000
+- rootfs checksum: 0x0000
+- full flash size: 0x800000
+- bootloader/CFG and 0x5c0000-0x800000 protected areas unchanged
+- deterministic rebuild: byte-identical
+
+Physical status:
+- v42.16 reached PID 1/kthreadd creation and cpu_startup_entry, then reset by watchdog
+- v42.17 physical result is not yet known

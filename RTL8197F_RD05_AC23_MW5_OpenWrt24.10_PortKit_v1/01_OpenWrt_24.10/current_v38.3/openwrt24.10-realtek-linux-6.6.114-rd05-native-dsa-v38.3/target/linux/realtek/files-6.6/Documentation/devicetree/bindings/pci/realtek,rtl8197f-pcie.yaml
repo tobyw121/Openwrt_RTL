@@ -1,0 +1,75 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/pci/realtek,rtl8197f-pcie.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Realtek RTL8197F PCI Express host controller
+
+maintainers:
+  - OpenWrt RTL8197F port <noreply@example.invalid>
+
+description: |
+  The RTL8197F/RTL8197FH family contains a single-lane PCIe root complex with
+  separate root-complex and directly connected endpoint configuration windows.
+  The controller has one physical slot and no MSI support in the vendor BSP.
+
+allOf:
+  - $ref: /schemas/pci/pci-host-bridge.yaml#
+
+properties:
+  compatible:
+    const: realtek,rtl8197f-pcie
+
+  reg:
+    minItems: 2
+    maxItems: 2
+
+  reg-names:
+    items:
+      - const: rc
+      - const: ep
+
+  realtek,syscon:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: Phandle of the RTL8197F system-register syscon.
+
+  realtek,refclk-40mhz:
+    type: boolean
+    description: Select the GPL BSP's 40 MHz PCIe PHY MDIO tuning table.
+
+  realtek,rtl8197f-vg:
+    type: boolean
+    description: Apply the RTL8197FH/VG-specific PCIe PHY register-8 value.
+
+  interrupts:
+    maxItems: 1
+
+  bus-range:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - reg-names
+  - realtek,syscon
+  - interrupts
+  - ranges
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    pcie@18b00000 {
+        compatible = "realtek,rtl8197f-pcie";
+        device_type = "pci";
+        reg = <0x18b00000 0x10000>, <0x18b10000 0x10000>;
+        reg-names = "rc", "ep";
+        realtek,syscon = <&syscon>;
+        interrupts = <5>;
+        #address-cells = <3>;
+        #size-cells = <2>;
+        bus-range = <0 0>;
+        ranges = <0x01000000 0 0 0x18c00000 0 0x00200000>,
+                 <0x02000000 0 0 0x19000000 0 0x01000000>;
+    };

@@ -1,0 +1,169 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 27701 $
+// $Date: 2012-04-02 11:10:51 +0800 (Mon, 02 Apr 2012) $
+//
+// Purpose : Define diag shell commands for NIC.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) NIC commands.
+//
+
+#ifdef CMD_NIC_SET_RX_STATE_DISABLE_ENABLE
+//NIC configuration
+//set configuration
+//receive packet
+//state configuration
+//disable function
+//enable function
+nic set rx state ( disable | enable )
+#endif
+
+#ifdef CMD_NIC_SET_RX_TX_TRACE_START_RAW_DATA_CPU_TAG
+//NIC configuration
+//set configuration
+//receive packet
+//transmit packet
+//trace packet flow
+//start trace
+//packet raw data
+//CPU tag information
+nic set ( rx | tx ) trace start { raw-data } { cpu-tag }
+#endif
+
+#ifdef CMD_NIC_SET_RX_TX_TRACE_STOP
+//NIC configuration
+//set configuration
+//receive packet
+//transmit packet
+//trace packet flow
+//stop trace
+nic set ( rx | tx ) trace stop
+#endif
+
+#ifdef CMD_NIC_DUMP_BUFFER_USAGE
+//NIC configuration
+//dump configuration
+//buffer usage
+nic dump buffer-usage
+#endif
+
+#ifdef CMD_NIC_DUMP_PKTHDR_MBUF_RAW_DATA
+//NIC configuration
+//dump configuration
+//packet and mbuf usage
+//display raw data
+nic dump pkthdr-mbuf { raw-data }
+#endif
+
+#ifdef CMD_NIC_DUMP_PKTHDR_MBUF_TX_RING_IDX_RAW_DATA
+//NIC configuration
+//dump configuration
+//packet and mbuf usage
+//transmit packet
+//ring index <0-1>
+//display raw data
+nic dump pkthdr-mbuf tx { <UINT:ring_idx> } { raw-data }
+#endif
+
+#ifdef CMD_NIC_DUMP_PKTHDR_MBUF_RX_RING_IDX_RAW_DATA
+//NIC configuration
+//dump configuration
+//packet and mbuf usage
+//receive packet
+//ring index <0-7>
+//display raw data
+nic dump pkthdr-mbuf rx { <UINT:ring_idx> } { raw-data }
+#endif
+
+#ifdef CONFIG_SDK_SOFTWARE_RX_CPU_TAG
+#ifdef CMD_NIC_DUMP_SOFTWARE_DATABASE
+//NIC configuration
+//dump configuration
+//software database
+nic dump software-database
+#endif
+#endif
+
+#ifdef CMD_NIC_RESET_DUMP_COUNTER
+//NIC configuration
+//reset configuration
+//dump configuration
+//counter
+nic ( reset | dump ) counter
+#endif
+
+#ifdef CMD_NIC_GET
+//NIC configuration
+//get configuration
+nic get
+#endif
+
+#ifdef CMD_NIC_GET_RX_TX
+//NIC configuration
+//get configuration
+//receive packet
+//transmit packet
+nic get ( rx | tx )
+#endif
+
+#ifdef CONFIG_SDK_SOFTWARE_RX_CPU_TAG
+#ifdef CMD_NIC_ADD_SOFTWARE_DATABASE_ENTRY_INDEX
+//NIC configuration
+//add configuration
+//software database
+//pie rule entry index
+nic add software-database <UINT:entry_index>
+#endif
+
+#ifdef CMD_NIC_DEL_SOFTWARE_DATABASE_ENTRY_INDEX
+//NIC configuration
+//del configuration
+//software database
+//pie rule entry index
+nic del software-database <UINT:entry_index>
+#endif
+
+#ifdef CMD_NIC_SET_SOFTWARE_DATABASE_ENTRY_INDEX_DPM_VID_ETHERTYPE_PROTOCOL_ID_L4_DST_PORT_DATA_MASK
+//NIC configuration
+//set configuration
+//software database
+//pie rule entry index
+//dpm configuration
+//vid configuration
+//ethertype configuration
+//protocol-id configuration
+//L4 destination port configuration
+//data
+//carebits mask
+nic set software-database <UINT:entry_index> ( dpm | vid | ethertype | protocol-id | l4-dst-port ) <UINT:data> <UINT:mask>
+#endif
+
+#ifdef CMD_NIC_SET_SOFTWARE_DATABASE_ENTRY_INDEX_DMAC_MAC_CARE_MAC
+//NIC configuration
+//set configuration
+//software database
+//pie rule entry index
+//dmac configuration
+//data
+//carebits mask
+nic set software-database <UINT:entry_index> dmac <MACADDR:mac> <MACADDR:care_mac>
+#endif
+
+#ifdef CMD_NIC_GET_SOFTWARE_DATABASE_ENTRY_INDEX
+//NIC configuration
+//get configuration
+//software database
+//pie rule entry index
+nic get software-database <UINT:entry_index>
+#endif
+#endif

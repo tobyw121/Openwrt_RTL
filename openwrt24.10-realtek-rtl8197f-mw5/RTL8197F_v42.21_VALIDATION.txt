@@ -1,0 +1,18 @@
+RTL8197F v42.21 validation
+
+PASS - MW5 DTS realtek,read-shift is exactly 0
+PASS - stale MW5 realtek,read-shift 1 is absent
+PASS - board profile version is 42.21-development
+PASS - MW5 board profile records spi_automap_read_shift 0
+PASS - v42.20 firmware-compatible suppression regression retained
+PASS - RTL8197F mtdsplit parser and configs retained
+PASS - complete source-tree checker
+PASS - direct image SDK-4.40 LZMA decode
+PASS - direct image kernel checksum sum 0x0000
+PASS - direct image rootfs checksum sum 0x0000
+PASS - direct image full-flash preservation verifier
+PASS - protected 0x000000-0x030000 unchanged
+PASS - protected 0x5c0000-0x800000 unchanged
+
+NOT RUN - complete OpenWrt world build from v42.21 tree
+NOT RUN - physical MW5 v42.21 rootfs mount and userspace boot

@@ -1,0 +1,26 @@
+RTL8197F / Tenda Nova MW5 v43.10 validation
+============================================
+
+Source/static validation completed in this environment.
+
+PASS  CHECK_MW5_V43.10.sh: 64 PASS / 0 FAIL
+PASS  CHECK_MW5_WANLAN_V43.sh: 57 PASS / 0 FAIL
+PASS  CHECK_MW5_DIAG_BUILTIN_V43.4.sh: 43 PASS / 0 FAIL
+PASS  CHECK_SOURCE_TREE_V42.sh under bash with TERM=xterm
+PASS  mw5-netdiag / firewall migration / init / profile shell syntax
+PASS  tag_rtl4_9.c checkpatch: 0 errors / 0 warnings / 0 checks
+PASS  rtl8197f_rtknet v43.9->v43.10 source delta: no code-style
+      warnings/checks; raw diff checkpatch reports only patch metadata
+      (commit description / Signed-off-by), not source defects.
+
+Hardware-derived corrections in this release:
+- retain the successful v43.9 switch-to-CPU 0x0401 RX tag decoder;
+- RX completion follows OEM USE_SWITCH_RX_CDP semantics;
+- TX reclamation follows OEM USE_SWITCH_TX_CDP semantics;
+- stale TX OWN is cleared after a CDP-proven completion;
+- malformed RX descriptors include a bounded descriptor+payload snapshot.
+
+NOT CLAIMED:
+- no full OpenWrt MIPS cross-build was possible here because build_dir,
+  staging_dir and the populated target toolchain are not present;
+- no physical MW5 hardware validation of v43.10 has yet been performed.

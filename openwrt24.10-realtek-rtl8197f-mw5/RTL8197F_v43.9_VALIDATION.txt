@@ -1,0 +1,62 @@
+RTL8197F / Tenda Nova MW5 v43.9 validation
+===========================================
+
+Tree:
+  openwrt24.10-realtek-rtl8197f-mw5-wanlan-v43.9-rxtag-ring-completion
+
+Hardware evidence used from the v43.8 serial capture
+-----------------------------------------------------
+- Physical LAN remains RTL8367 port 1.
+- A real switch-to-CPU RX frame reached the RTL8197F DMA buffer with:
+    EtherType 0x8899, second tag word 0x0401, encapsulated IPv6 0x86dd.
+- v43.8 rejected that frame as "RX unknown protocol=0x0 tag=0x0401".
+- CPU-to-switch TX for LAN reached the pre-DMA trace with 0x8899/0x9202.
+- Therefore RX and TX second-word layouts are treated as directional/asymmetric.
+- The v43.8 log did not directly capture a raw WAN 0x0403 word. v43.9 decodes
+  the low six source-port bits generically after the observed 0x0400 marker.
+
+v43.9 source corrections
+------------------------
+- Driver version: 1.4.9-sdk-mw5-rxtag-ring-v43.9.
+- tag_rtl4_9 RX recognizes the observed switch-to-CPU 0x0400 marker layout.
+- tag_rtl4_9 TX keeps protocol 9 / learn-disable / destination-mask encoding.
+- Real 0x8899 RX frames pass through the master unchanged.
+- Descriptor fallback synthesizes 0x0400|source-port, not the TX protocol-9 word.
+- MW5 RX descriptor OWN is authoritative; CPURPDCR0 cannot override OWN.
+- RX recycle restores desc->addr from the software-owned rx_dma[] mapping.
+- Bounded RX descriptor address/opts/CDP diagnostics added.
+- Bounded TX submit/completion/CDP/OWN diagnostics added.
+- mw5-netdiag waits for normal netifd LAN/br-lan readiness before autotest.
+- Standard OpenWrt firewall4 policy remains enabled/unchanged from v43.8.
+
+Static/regression validation
+----------------------------
+- CHECK_MW5_V43.9.sh: 48 PASS, 0 FAIL.
+- CHECK_MW5_V43.8.sh compatibility entry point: 48 PASS, 0 FAIL.
+- CHECK_MW5_WANLAN_V43.sh: 57 PASS, 0 FAIL.
+- CHECK_MW5_DIAG_BUILTIN_V43.4.sh: 43 PASS, 0 FAIL.
+- CHECK_SOURCE_TREE_V42.sh under bash: PASS through all source-tree checks.
+- MW5-related base-files shell syntax: PASS.
+- tag_rtl4_9.c strict checkpatch: 0 errors, 0 warnings, 0 checks.
+- v43.8->v43.9 rtl8197f_rtknet.c source delta strict checkpatch with a synthetic
+  mail header: 0 errors, 0 warnings, 0 checks.
+
+Reproducibility/package validation
+----------------------------------
+- Final v43.8->v43.9 patch --dry-run --fuzz=0: PASS.
+- Final patch apply --fuzz=0: PASS.
+- Replayed tree vs final v43.9 tree: byte-identical.
+- Full source-tree ZIP integrity: PASS.
+- Upgrade bundle ZIP integrity: PASS.
+- SHA-256 checksums: PASS.
+
+Validation boundary
+-------------------
+No complete MIPS/OpenWrt cross-build of v43.9 was performed in this environment.
+No v43.9 image has yet been flashed/tested on the physical MW5. The first
+hardware run should use only `mw5-netdiag` over serial and inspect:
+  rtl4_9 v43.9 RX layout=s2c-0400
+  mw5 rxdesc v43.9
+  mw5 tx-submit v43.9
+  mw5 tx-complete v43.9
+  /proc/rd05-rtknet

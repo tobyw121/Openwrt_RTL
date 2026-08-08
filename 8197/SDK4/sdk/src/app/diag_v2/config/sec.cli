@@ -1,0 +1,205 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 29538 $
+// $Date: 2012-06-05 09:35:19 +0800 (Tue, 05 Jun 2012) $
+//
+// Purpose : Define diag shell commands for security.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) security commands.
+//
+
+
+#ifdef CMD_SECURITY_GET_ARP_VALIDATION_PORT_ALL_ACTION
+//security configuration
+//get configuration
+//arp validation
+//port list
+//all ports
+//action configuration
+security get arp-validation ( <PORT_LIST:port> | all ) action
+#endif
+
+#ifdef CMD_SECURITY_GET_ATTACK_PREVENT
+//security configuration
+//get configuration
+//attack prevent
+security get attack-prevent
+#endif
+
+#ifdef CMD_SECURITY_GET_ATTACK_PREVENT_MAX_PING_MIN_IPV6_FRAG_MIN_TCP_HEADER_SMURF_NETMASK_PORT_ALL
+//security configuration
+//get configuration
+//attack prevent
+//max ping
+//min IPv6 fragement
+//min tcp header
+//smurf netmask
+//port list
+//all ports
+security get ( attack-prevent | max-ping | min-ipv6-frag | min-tcp-header | smurf-netmask ) ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_SECURITY_GET_ATTACK_PREVENT_PORT_ALL_STATE
+//security configuration
+//get configuration
+//attack prevent
+//port list
+//all ports
+//state configuration
+security get attack-prevent ( <PORT_LIST:port> | all ) state
+#endif
+
+#ifdef CMD_SECURITY_GET_GRATUITOUS_ARP_PORT_ALL_ACTION
+//security configuration
+//get configuration
+//gratuitous arp
+//port list
+//all ports
+//action configuration
+security get gratuitous-arp ( <PORT_LIST:port> | all ) action
+#endif
+
+#ifdef CMD_SECURITY_GET_MAX_PING_MIN_IPV6_FRAG_MIN_TCP_HEADER_SMURF_NETMASK
+//security configuration
+//get configuration
+//max ping
+//min IPv6 fragement
+//min tcp header
+//smurf netmask
+//length
+security get ( max-ping | min-ipv6-frag | min-tcp-header | smurf-netmask )
+#endif
+
+#ifdef CMD_SECURITY_SET_ARP_VALIDATION_PORT_ALL_ACTION_DROP_FORWARD_TRAP_TO_CPU
+//security configuration
+//set configuration
+//arp validation
+//port list
+//all ports
+//action configuration
+security set arp-validation ( <PORT_LIST:port> | all ) action ( drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_SECURITY_SET_ATTACK_PREVENT_DAEQSA_DENY_ICMP_FRAG_PKTS_DENY_ICMPV4_PING_MAX_CHECK_ICMPV6_PING_MAX_CHECK_IPV6_MIN_FRAG_SIZE_CHECK_LAND_DENY_NULLSCAN_DENY_POD_DENY_SMURF_DENY_SYN_SPORTL1024_DENY_SYNFIN_DENY_SYNRST_DENY_TCP_FRAG_OFF_MIN_CHECK_TCPBLAT_DENY_TCPHDR_MIN_CHECK_UDPBLAT_DENY_XMA_DENY_ACTION_DROP_FORWARD_TRAP_TO_CPU
+//security configuration
+//set configuration
+//attack prevent
+//destination MAC equals to source MAC
+//fragmented ICMP packets
+//check ICMPv4 ping maximum packets size
+//check ICMPv6 ping maximum packets size
+//check minimum size of IPv6 fragments
+//source IP equals to destination IP
+//NULL Scan Attacks
+//Ping of Death Attacks
+//Smurf Attacks
+//SYN packets with sport less than 1024
+//SYN and FIN bits set in the packet
+//SYNC and RST bits set in the packet
+//TCP fragment packet with offset equals to one
+//source TCP port equals to destination TCP port
+//check minimum TCP header
+//source UDP port equals to destination UDP port
+//Xmascan: sequence number is zero and the FIN, URG and PSH bits are set
+//action
+//drop
+//forward
+//trap-to-cpu
+security set attack-prevent ( daeqsa-deny | icmp-frag-pkts-deny | icmpv4-ping-max-check | icmpv6-ping-max-check | ipv6-min-frag-size-check | land-deny | nullscan-deny | pod-deny | smurf-deny | syn-sportl1024-deny | synfin-deny | synrst-deny | tcp-frag-off-min-check | tcpblat-deny | tcphdr-min-check | udpblat-deny | xma-deny ) action ( drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_SECURITY_SET_ATTACK_PREVENT_PORT_ALL_DAEQSA_DENY_ICMP_FRAG_PKTS_DENY_ICMPV4_PING_MAX_CHECK_ICMPV6_PING_MAX_CHECK_IPV6_MIN_FRAG_SIZE_CHECK_LAND_DENY_NULLSCAN_DENY_POD_DENY_SMURF_DENY_SYN_SPORTL1024_DENY_SYNFIN_DENY_TCPBLAT_DENY_TCPHDR_MIN_CHECK_UDPBLAT_DENY_XMA_DENY_ACTION_DROP_FORWARD
+//security configuration
+//set configuration
+//attack prevent
+//port list
+//all ports
+//destination MAC equals to source MAC
+//fragmented ICMP packets
+//check ICMPv4 ping maximum packets size
+//check ICMPv6 ping maximum packets size
+//check minimum size of IPv6 fragments
+//source IP equals to destination IP
+//NULL Scan Attacks
+//Ping of Death Attacks
+//Smurf Attacks
+//SYN packets with sport less than 1024
+//SYN and FIN bits set in the packet
+//source TCP port equals to destination TCP port
+//check minimum TCP header
+//source UDP port equals to destination UDP port
+//Xmascan: sequence number is zero and the FIN, URG and PSH bits are set
+//action
+//drop
+//forward
+security set attack-prevent ( <PORT_LIST:port> | all ) ( daeqsa-deny | icmp-frag-pkts-deny | icmpv4-ping-max-check | icmpv6-ping-max-check | ipv6-min-frag-size-check | land-deny | nullscan-deny | pod-deny | smurf-deny | syn-sportl1024-deny | synfin-deny | tcpblat-deny | tcphdr-min-check | udpblat-deny | xma-deny ) action ( drop | forward )
+#endif
+
+#ifdef CMD_SECURITY_SET_ATTACK_PREVENT_PORT_ALL_STATE_DISABLE_ENABLE
+//security configuration
+//set configuration
+//attack prevent
+//port list
+//all ports
+//state configuration
+security set attack-prevent ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_SECURITY_SET_GRATUITOUS_ARP_PORT_ALL_ACTION_DROP_FORWARD_TRAP_TO_CPU
+//security configuration
+//set configuration
+//gratuitous arp
+//port list
+//all ports
+//action configuration
+//drop
+//forward
+//trap to cpu
+security set gratuitous-arp ( <PORT_LIST:port> | all ) action ( drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_SECURITY_SET_GRATUITOUS_ARP_PORT_ALL_ACTION_COPY_TO_CPU
+//security configuration
+//set configuration
+//gratuitous arp
+//port list
+//all ports
+//action configuration
+//copy to cpu
+security set gratuitous-arp ( <PORT_LIST:port> | all ) action copy-to-cpu
+#endif
+
+#ifdef CMD_SECURITY_SET_MAX_PING_MIN_IPV6_FRAG_MIN_TCP_HEADER_SMURF_NETMASK_LENGTH
+//security configuration
+//set configuration
+//max ping
+//min IPv6 fragement
+//min tcp header
+//smurf netmask
+//length
+security set ( max-ping | min-ipv6-frag | min-tcp-header | smurf-netmask ) <UINT:length>
+#endif
+
+#ifdef CMD_SECURITY_SET_MAX_PING_MIN_IPV6_FRAG_MIN_TCP_HEADER_SMURF_NETMASK_PORT_ALL_LENGTH
+//security configuration
+//set configuration
+//max ping
+//min IPv6 fragement
+//min tcp header
+//smurf netmask
+//port list
+//all ports
+//length
+security set ( max-ping | min-ipv6-frag | min-tcp-header | smurf-netmask ) ( <PORT_LIST:port> | all ) <UINT:length>
+#endif
+

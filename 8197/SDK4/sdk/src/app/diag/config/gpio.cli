@@ -1,0 +1,72 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 15266 $
+// $Date: 2011-01-07 20:02:10 +0800 (Fri, 07 Jan 2011) $
+//
+// Purpose : Define diag shell commands for internal GPIO.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) internal GPIO commands.
+//
+
+#ifdef CMD_GPIO_GET_GPIO_PORT_GPIO_PORT_GPIO_PIN_GPIO_PIN
+//internal GPIO configuration
+//get configuration
+//GPIO port configuration
+//GPIO port (0 mean A, 1 mean B, ... 6 mean G)
+//GPIO pin configuration
+//GPIO pin id <0-7>
+gpio get gpio-port <UINT:gpio_port> gpio-pin <UINT:gpio_pin>
+#endif
+
+#ifdef CMD_GPIO_SET_GPIO_PORT_GPIO_PORT_GPIO_PIN_GPIO_PIN_INIT_NORMAL_PERIPHERAL_IN_OUT_DISABLE_FALLING_EDGE_RISING_EDGE_BOTH_EDGE
+//internal GPIO configuration
+//set configuration
+//GPIO port configuration
+//GPIO port (0 mean A, 1 mean B, ... 6 mean G)
+//GPIO pin configuration
+//GPIO pin id <0-7>
+//GPIO pin init configuration
+//GPIO control function: normal
+//GPIO control function: peripheral
+//GPIO direction: input
+//GPIO direction: output
+//GPIO interrupt type: disable
+//GPIO interrupt type: falling-edge
+//GPIO interrupt type: rising-edge
+//GPIO interrupt type: both-edge
+gpio set gpio-port <UINT:gpio_port> gpio-pin <UINT:gpio_pin> init ( normal | peripheral ) ( in | out ) ( disable | falling-edge | rising-edge | both-edge )
+#endif
+
+#ifdef CMD_GPIO_SET_GPIO_PORT_GPIO_PORT_GPIO_PIN_GPIO_PIN_INIT_DATA
+//internal GPIO configuration
+//set configuration
+//GPIO port configuration
+//GPIO port (0 mean A, 1 mean B, ... 6 mean G)
+//GPIO pin configuration
+//GPIO pin id <0-7>
+//GPIO pin init configuration
+//GPIO pin init data (0 or 1)
+gpio set gpio-port <UINT:gpio_port> gpio-pin <UINT:gpio_pin> init <UINT:data>
+#endif
+
+#ifdef CMD_GPIO_SET_GPIO_PORT_GPIO_PORT_GPIO_PIN_GPIO_PIN_DATA
+//internal GPIO configuration
+//set configuration
+//GPIO port configuration
+//GPIO port (0 mean A, 1 mean B, ... 6 mean G)
+//GPIO pin configuration
+//GPIO pin id <0-7>
+//GPIO data value (0 or 1)
+gpio set gpio-port <UINT:gpio_port> gpio-pin <UINT:gpio_pin> <UINT:data>
+#endif
+

@@ -1,0 +1,15 @@
+RTL8197F/RTL8197FH Plattform	teilweise vorhanden
+UART	vorhanden / nutzbar
+GPIO	vorhanden, experimentell
+SPI-NOR	read-only Bring-up vorhanden
+Ethernet MAC / rtl865x	fehlt als echter Netdev-Treiber
+RTL8367RB Switch	fehlt als nativer DSA-Treiber
+RTL8197F/G WLAN	fehlt als mac80211/cfg80211-Treiber
+RTL8812F/RTL8812FR WLAN	fehlt als nativer Kernel-6.6-Treiber
+PCIe für RTL8812F	nicht funktionsfähig integriert
+
+
+Haupt-SoC / CPU	Realtek RTL8197F / RTL8197F_VG, MIPS 32-bit. Im Backup-Kernel steht eindeutig RTL8197F.
+Flash	Beim hochgeladenen Backup: 16 MB SPI-NOR, Treiber m25p80, RootFS als SquashFS. Der exakte Flash-Hersteller/Chip ist aus dem Dump allein nicht sicher bestimmbar. SDK-Targets enthalten zusätzlich SPI-NAND-Profile.
+Ethernet / Switch	Realtek RTL8367R/RB/RB-VC-Familie, in den SDK-Configs besonders RTL8367RB-VC. Anbindung: CPU-Port per RGMII, Management per GPIO-SMI/MDC/MDIO.
+WLAN	SDK-Profil nennt RTL8832BR. Im konkreten RD05-Backup tauchen WLAN-Erkennungen für RTL8812F und RTL8197G auf; der Treiberpfad ist Realtek rtl8192fe/RTK-8192FE-wlan-driver.

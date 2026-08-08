@@ -1,0 +1,31 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenWrt RTL8197F bringup <noreply@example.invalid>
+Date: Sat, 30 May 2026 00:00:00 +0000
+Subject: [PATCH] mips: realtek: force RTL8197F to little endian
+
+RTL8197F/RD05 boots a little-endian MIPS24Kc kernel.  The inherited
+Realtek RTL83xx platform Kconfig still advertises big-endian support, and
+because the MIPS endian choice has no platform default, oldconfig can keep or
+select CPU_BIG_ENDIAN.
+
+For this RD05 bring-up tree, make the Realtek machine little-endian only and
+also add an explicit default for RTL8197F in the MIPS endian choice.  This
+prevents the kernel from silently being rebuilt as big-endian while the
+OpenWrt target/toolchain is mipsel.
+---
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -629,7 +629,6 @@ config MACH_REALTEK_RTL
+ 	select IRQ_MIPS_CPU
+ 	select SYS_HAS_CPU_MIPS32_R1
+ 	select SYS_HAS_CPU_MIPS32_R2
+-	select SYS_SUPPORTS_BIG_ENDIAN
+ 	select SYS_SUPPORTS_LITTLE_ENDIAN
+ 	select SYS_SUPPORTS_32BIT_KERNEL
+ 	select SYS_SUPPORTS_MIPS16
+@@ -1139,4 +1138,5 @@ choice
+ 	prompt "Endianness selection"
++	default CPU_LITTLE_ENDIAN if RTL8197F
+ 	help
+ 	  Some MIPS machines can be configured for either little or big endian
+ 	  byte order. These modes require different kernels and a different

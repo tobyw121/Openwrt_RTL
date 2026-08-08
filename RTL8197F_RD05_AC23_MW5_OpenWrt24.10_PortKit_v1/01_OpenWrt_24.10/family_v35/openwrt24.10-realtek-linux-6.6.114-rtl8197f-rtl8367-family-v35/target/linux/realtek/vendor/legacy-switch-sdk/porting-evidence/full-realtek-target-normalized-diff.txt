@@ -1,0 +1,12 @@
+Comparison basis: complete user-supplied Realtek target
+Normalization: patches-6.6.disabled-rtl83xx/* is compared as patches-6.6/*
+added=1 removed=0 changed=2
+
+ADDED:
+DRIVER_PORT_STATUS.md
+
+REMOVED:
+
+CHANGED:
+rtl838x/config-6.6
+rtl839x/config-6.6

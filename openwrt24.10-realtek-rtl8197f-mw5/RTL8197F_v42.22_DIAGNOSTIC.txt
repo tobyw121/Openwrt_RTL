@@ -1,0 +1,37 @@
+MW5 v42.22 SquashFS bytes_used / OEM checksum separation fix
+source=openwrt-realtek-rtl8197f-tenda_nova_mw5-squashfs-spi-full-v42.21-automap-readshift-fix.bin
+output_sha256=e56dfaca9237f0445ad3dbd70254b96e2d8f4a235a029b94ba5741f0bf15894e
+firmware_sha256=4a25d644e9b0507e90c78926b07dbf3bf8816cb94e10095d6974439fb1430886
+firmware_relative_rootfs_offset=0x2b2eea
+absolute_rootfs_offset=0x2e2eea
+old_squashfs_bytes_used=0x25cf7c
+new_squashfs_bytes_used=0x25cf7a
+squashfs_id_table_start=0x25cf72
+squashfs_no_ids=1
+expected_id_index_bytes=8
+old_bytes_used_minus_id_table=10
+new_bytes_used_minus_id_table=8
+oem_checksum_offset=0x25d000
+oem_checksum_word=0xa672
+oem_checksum_sum=0x0000
+oem_boot_marker=0x0025cd80
+oem_boot_check_length=0x25d002
+lzma_size=2824176
+loader_window=2824743
+loader_window_free=567
+lzma440=result=0 in=2824157/2824730 out=9432199/9432199 lc=1 lp=2 pb=2
+kernel_checksum_sum=0x0000
+protected_000000_030000=unchanged
+protected_5c0000_800000=unchanged
+
+Root cause proven by Linux 6.6 fs/squashfs/id.c:
+  no_ids=1 requires an 8-byte ID index table.
+  v42.21 encoded bytes_used-id_table_start=10 because the 2-byte OEM checksum
+  was incorrectly added to the SquashFS superblock length.
+  v42.22 restores bytes_used-id_table_start=8 and keeps the OEM checksum at
+  the same 4 KiB-aligned external trailer location.
+
+Expected boot change:
+  no "unable to read id index table"
+  VFS: Mounted root (squashfs filesystem) readonly
+  Run /sbin/init as init process

@@ -1,0 +1,356 @@
+#############################################################################
+#
+# NOTE : it is fairly important that changes to this file consider their
+#        effect on other platforms and default setups.  If you can, only
+#        add to the file,  changing the name of a variable will break
+#        many configurations.
+#
+#        www.snapgear.com
+#
+#############################################################################
+
+mainmenu_name "SDK Configuration"
+
+#############################################################################
+
+mainmenu_option next_comment
+
+comment 'Chip Support'
+comment 'Select your target MACs chip'
+bool 'RTL8328/RTL8318' CONFIG_SDK_RTL8328 n
+bool 'RTL8390' CONFIG_SDK_RTL8390 n
+bool 'RTL8380' CONFIG_SDK_RTL8380 n
+comment 'Select your target PHYs chip'
+bool 'RTL8208' CONFIG_SDK_RTL8208 n
+bool 'RTL8214' CONFIG_SDK_RTL8214 n
+bool 'RTL8214F' CONFIG_SDK_RTL8214F n
+bool 'RTL8201' CONFIG_SDK_RTL8201 n
+bool 'RTL8218' CONFIG_SDK_RTL8218 n
+bool 'RTL8218B' CONFIG_SDK_RTL8218B n
+bool 'RTL8218FB' CONFIG_SDK_RTL8218FB n
+bool 'RTL8212F' CONFIG_SDK_RTL8212F n
+bool 'RTL8212B' CONFIG_SDK_RTL8212B n
+bool 'RTL8214B' CONFIG_SDK_RTL8214B n
+bool 'RTL8214FB' CONFIG_SDK_RTL8214FB n
+bool 'RTL8214FC' CONFIG_SDK_RTL8214FC n
+comment 'Select your target Peripheral chip'
+bool 'RTL8231' CONFIG_SDK_RTL8231 n
+
+endmenu
+
+#############################################################################
+
+mainmenu_option next_comment
+
+comment 'CPU Endian'
+choice 'Select CPU Endian' "Big CONFIG_SDK_ENDIAN_BIG \
+			    Little CONFIG_SDK_ENDIAN_LITTLE" Big
+endmenu
+
+#############################################################################
+
+mainmenu_option next_comment
+
+comment 'Operating System'
+choice 'Select OS Kernel' "Linux CONFIG_SDK_KERNEL_LINUX \
+			   eCos CONFIG_SDK_KERNEL_ECOS" Linux
+
+if [ "$CONFIG_SDK_KERNEL_LINUX" = "y" ]; then
+	choice 'Mode Support' "Kernel CONFIG_SDK_KERNEL_LINUX_KERNEL_MODE \
+				User CONFIG_SDK_KERNEL_LINUX_USER_MODE" Kernel
+	bool ' Loadable Module Support' CONFIG_SDK_KERNEL_LINUX_MODULE_LOADABLE y
+else
+	define_bool CONFIG_SDK_KERNEL_LINUX_MODULE_LOADABLE n
+fi
+
+if [ "$CONFIG_SDK_KERNEL_LINUX_USER_MODE" = "y" ]; then
+	if [ "$CONFIG_SDK_DRIVER_RTK" = "m" ]; then
+		define_tristate CONFIG_SDK_DRIVER_RTK y
+	fi
+	if [ "$CONFIG_SDK_DRIVER_RTDRV" = "m" -o "$CONFIG_SDK_DRIVER_RTDRV" = "y" ]; then
+		define_tristate CONFIG_SDK_DRIVER_RTDRV n
+	fi
+	if [ "$CONFIG_SDK_DRIVER_TEST" = "m" ]; then
+		define_tristate CONFIG_SDK_DRIVER_TEST y
+	fi
+fi
+
+endmenu
+
+#############################################################################
+
+mainmenu_option next_comment
+
+comment 'SDK Driver'
+
+tristate 'Rtcore Driver' CONFIG_SDK_DRIVER_RTCORE m
+
+if [ "$CONFIG_SDK_DRIVER_RTCORE" = "y" ]; then
+	bool 'Nic Driver' CONFIG_SDK_DRIVER_NIC y
+fi
+
+if [ "$CONFIG_SDK_DRIVER_RTCORE" = "m" ]; then
+	tristate 'Nic Driver' CONFIG_SDK_DRIVER_NIC m
+fi
+
+choice 'Mode Support' "Kernel CONFIG_SDK_DRIVER_NIC_KERNEL_MODE \
+			User CONFIG_SDK_DRIVER_NIC_USER_MODE" Kernel
+
+if [ "$CONFIG_SDK_DRIVER_NIC" = "y" ]; then
+	bool '  R8328 Driver' CONFIG_SDK_DRIVER_NIC_R8328 y
+	bool '  R8390 Driver' CONFIG_SDK_DRIVER_NIC_R8390 y
+	bool '  R8380 Driver' CONFIG_SDK_DRIVER_NIC_R8380 y
+	if [ "$CONFIG_SDK_DRIVER_NIC_R8328" = "m" ]; then
+		define_bool CONFIG_SDK_DRIVER_NIC_R8328 y
+	fi
+	if [ "$CONFIG_SDK_DRIVER_NIC_R8390" = "m" ]; then
+		define_bool CONFIG_SDK_DRIVER_NIC_R8390 y
+	fi
+	if [ "$CONFIG_SDK_DRIVER_NIC_R8380" = "m" ]; then
+		define_bool CONFIG_SDK_DRIVER_NIC_R8380 y
+	fi
+fi
+
+if [ "$CONFIG_SDK_DRIVER_RTCORE" = "m" -a "$CONFIG_SDK_DRIVER_NIC" = "m" ]; then
+	tristate '   R8328 Driver' CONFIG_SDK_DRIVER_NIC_R8328 m
+	tristate '   R8390 Driver' CONFIG_SDK_DRIVER_NIC_R8390 m
+	tristate '   R8380 Driver' CONFIG_SDK_DRIVER_NIC_R8380 m
+fi
+
+dep_mbool 'L2 Notification Driver' CONFIG_SDK_DRIVER_L2NTFY $CONFIG_SDK_DRIVER_RTCORE
+
+if [ "$CONFIG_SDK_DRIVER_L2NTFY" = "y" -a "$CONFIG_SDK_RTL8390" = "y" ]; then
+    define_bool CONFIG_SDK_DRIVER_L2NOTIFY_R8390 y
+else
+    define_bool CONFIG_SDK_DRIVER_L2NOTIFY_R8390 n
+fi
+
+if [ "$CONFIG_SDK_KERNEL_LINUX_KERNEL_MODE" = "y" ]; then
+	tristate 'Rtk Driver / RTK API' CONFIG_SDK_DRIVER_RTK m
+	if [ "$CONFIG_SDK_DRIVER_RTK" = "m" -o "$CONFIG_SDK_DRIVER_RTK" = "y" ]; then
+		bool '   Backward Compatible 8328 API' CONFIG_SDK_DRIVER_RTK_BACKWARD_COMPATIBLE_8328 y
+		bool '   Customization API' CONFIG_SDK_DRIVER_RTK_CUSTOMER y
+	fi
+fi
+
+if [ "$CONFIG_SDK_KERNEL_LINUX_USER_MODE" = "y" ]; then
+	tristate 'Rtk Driver / RTK API' CONFIG_SDK_DRIVER_RTK y
+	if [ "$CONFIG_SDK_DRIVER_RTK" = "m" -o "$CONFIG_SDK_DRIVER_RTK" = "y" ]; then
+		bool '   Customization API' CONFIG_SDK_DRIVER_RTK_CUSTOMER y
+	fi
+fi
+
+if [ "$CONFIG_SDK_KERNEL_LINUX" = "y" ]; then
+	tristate 'Linux Net Driver' CONFIG_SDK_DRIVER_MX m
+else
+	define_tristate CONFIG_SDK_DRIVER_MX n
+fi
+
+if [ "$CONFIG_SDK_DRIVER_MX" = "y" ]; then
+	bool '  Linux User/Kernel Interface' CONFIG_SDK_DRIVER_RTDRV y
+	bool '  Linux Ethernet Driver' CONFIG_SDK_DRIVER_RTNIC y
+	if [ "$CONFIG_SDK_DRIVER_RTDRV" = "m" ]; then
+		define_bool CONFIG_SDK_DRIVER_RTDRV y
+	fi
+	if [ "$CONFIG_SDK_DRIVER_RTNIC" = "m" ]; then
+		define_bool CONFIG_SDK_DRIVER_RTNIC y
+	fi
+fi
+
+if [ "$CONFIG_SDK_DRIVER_MX" = "m" ]; then
+	tristate '  Linux User/Kernel Interface' CONFIG_SDK_DRIVER_RTDRV m
+	tristate '  Linux Ethernet Driver' CONFIG_SDK_DRIVER_RTNIC m
+fi
+
+if [ "$CONFIG_SDK_DRIVER_RTCORE" = "m" ]; then
+	define_tristate CONFIG_SDK_DRIVER_COMPILE m
+fi
+
+if [ "$CONFIG_SDK_DRIVER_RTCORE" = "y" ]; then
+	define_tristate CONFIG_SDK_DRIVER_COMPILE y
+fi
+
+endmenu
+
+#############################################################################
+
+mainmenu_option next_comment
+
+comment 'SDK Application'
+bool 'SDK Diag Shell' CONFIG_SDK_APP_DIAG y
+if [ "$CONFIG_SDK_APP_DIAG" = "y" ]; then
+	choice 'Diag Directory' "diag CONFIG_SDK_APP_DIAG_DIR_DIAG \
+				diag_v2 CONFIG_SDK_APP_DIAG_DIR_DIAG_V2" diag
+
+	bool '  Extension Diag Shell' CONFIG_SDK_APP_DIAG_EXT y
+fi
+
+tristate 'RRCP Master' CONFIG_RRCP_MASTER n
+if [ "$CONFIG_RRCP_MASTER" = "m" ]; then
+	tristate '  Realtek Remote Control Protocol Type 1' CONFIG_RRCPV1 m
+	tristate '  Realtek Remote Control Protocol Type 2' CONFIG_RRCPV3 m
+	bool '  Build Release' CONFIG_RRCP_RELEASE n
+fi
+bool 'SDK Application Example (eCos)' CONFIG_SDK_APP_ECOS_EXAMPLE n
+
+if [ "$CONFIG_SDK_APP_DIAG" = "y" ]; then
+	define_bool CONFIG_SDK_APP_COMPILE y
+fi
+
+endmenu
+
+#############################################################################
+
+mainmenu_option next_comment
+
+comment 'SDK Debug'
+
+bool 'Enable SDK Debug Message' CONFIG_SDK_DEBUG y
+if [ "$CONFIG_SDK_DEBUG" = "y" ]; then
+	choice 'Debug Log Type' "Level CONFIG_SDK_DEBUG_LOG_TYPE_LEVEL \
+			     Level-Mask CONFIG_SDK_DEBUG_LOG_TYPE_LEVEL_MASK \
+			    " Level
+
+	if [ "$CONFIG_SDK_DEBUG_LOG_TYPE_LEVEL" = "y" ]; then
+		int 'Log Level' CONFIG_SDK_DEBUG_LOG_LEVEL 3
+	else
+		hex 'Log Level Mask' CONFIG_SDK_DEBUG_LOG_LEVEL_MASK 0xF
+	fi
+
+	hex 'Debug Log Module Mask' CONFIG_SDK_DEBUG_LOG_MOD_MASK 0x7FFFFFFF
+fi
+bool 'Dump Register content with Name' CONFIG_SDK_DUMP_REG_WITH_NAME n
+bool 'Dump Table content with Name' CONFIG_SDK_DUMP_TABLE_WITH_NAME n
+endmenu
+
+#############################################################################
+
+mainmenu_option next_comment
+
+comment 'BSP Option'
+bool 'SMI/GPIO Driver' CONFIG_SDK_BSP_SMI n
+bool 'Flash Common Setting' CONFIG_SDK_BSP_FLASH y
+
+if [ "$CONFIG_SDK_BSP_FLASH" = "y" ]; then
+	hex 'Flash Block Size' CONFIG_FLASH_BLOCK_SIZE 0x10000
+	choice 'Flash Size' " 4MB CONFIG_FLASH_SIZE_4MB \
+	                      8MB CONFIG_FLASH_SIZE_8MB \
+                              16MB CONFIG_FLASH_SIZE_16MB
+                              32MB CONFIG_FLASH_SIZE_32MB
+                            " 32MB
+	if [ "$CONFIG_FLASH_SIZE_16MB" = "y" -o "$CONFIG_FLASH_SIZE_32MB" = "y" ]; then
+		bool '    Dual Image' CONFIG_DUAL_IMAGE y
+		if [ "$CONFIG_DUAL_IMAGE" = "y" ]; then
+			hex '    Partition Size' CONFIG_DUAL_IMAGE_PARTITION_SIZE 0xD30000
+		fi
+	fi
+	choice 'Flash Layout' " Type1 CONFIG_FLASH_LAYOUT_TYPE1 \
+                                Type2 CONFIG_FLASH_LAYOUT_TYPE2 \
+                                Type3 CONFIG_FLASH_LAYOUT_TYPE3 \
+                                Type4 CONFIG_FLASH_LAYOUT_TYPE4
+                              " Type4
+fi
+
+if [ "$CONFIG_SDK_KERNEL_LINUX" = "y" ]; then
+	tristate 'Linux Mtd Driver' CONFIG_SDK_BSP_MTD m
+
+	if [ "$CONFIG_SDK_BSP_MTD" = "m" ]; then
+		tristate '  SPI Flash Driver' CONFIG_SDK_BSP_MTD_SPI m
+		if [ "$CONFIG_SDK_RTL8328" = "y" ]; then
+		    bool '    QUAD IO' CONFIG_SDK_BSP_MTD_SPI_QUAD_IO y
+		fi
+		tristate '  NOR Flash Driver' CONFIG_SDK_BSP_MTD_NOR n
+
+		define_tristate CONFIG_SDK_BSP_MTD_SPIM m
+	fi
+
+	if [ "$CONFIG_SDK_BSP_MTD" = "y" ]; then
+		bool '  SPI Flash Driver' CONFIG_SDK_BSP_MTD_SPI y
+		if [ "$CONFIG_SDK_RTL8328" = "y" ]; then
+		    bool '    QUAD IO' CONFIG_SDK_BSP_MTD_SPI_QUAD_IO y
+		fi
+		bool '  NOR Flash Driver' CONFIG_SDK_BSP_MTD_NOR n
+
+		define_bool CONFIG_SDK_BSP_MTD_SPIM y
+	fi
+fi
+
+endmenu
+
+#############################################################################
+
+#############################################################################
+
+mainmenu_option next_comment
+
+comment 'Misc Option'
+bool 'FPGA Platform' CONFIG_SDK_FPGA_PLATFORM n
+tristate 'SDK Unit Test' CONFIG_SDK_DRIVER_TEST n
+bool 'Model Code Simulation' CONFIG_SDK_MODEL_MODE n
+if [ "$CONFIG_SDK_MODEL_MODE" = "y" ]; then
+choice 'Select Model Execution Mode' "KERNEL CONFIG_SDK_MODEL_MODE_KERNEL \
+                                      USER CONFIG_SDK_MODEL_MODE_USER" KERNEL
+	bool '  Virtual Array ONLY' CONFIG_VIRTUAL_ARRAY_ONLY n
+fi
+bool 'Linked Kernel Module Mode' CONFIG_SDK_LINKED_KMOD n
+bool 'TRUNK FailOver Handling' CONFIG_TRUNK_FAILOVER_HANDLING n
+bool 'Register Default Value Information' CONFIG_SDK_REG_DFLT_VAL n
+bool 'Register Field Type Information' CONFIG_SDK_REG_FIELD_TYPE n
+bool 'Software Rx CPU Tag Field' CONFIG_SDK_SOFTWARE_RX_CPU_TAG n
+bool 'NIC Rx Thread' CONFIG_SDK_RX_THREAD n
+if [ "$CONFIG_SDK_KERNEL_LINUX_KERNEL_MODE" = "y" ]; then
+choice 'Select LinkMon Thread Mode' "Polling CONFIG_SDK_LINKMON_POLLING_MODE \
+                                     Interrupt CONFIG_SDK_LINKMON_ISR_MODE \
+                                     Mixed CONFIG_SDK_LINKMON_MIXED_MODE" Polling
+else
+choice 'Select LinkMon Thread Mode' "Polling CONFIG_SDK_LINKMON_POLLING_MODE \
+                                     Interrupt CONFIG_SDK_LINKMON_ISR_MODE" Polling
+fi
+bool 'Auto-sensing Combo Media by GPIO Signal' CONFIG_SDK_AUTO_COMBO_MEDIA_BY_GPIO n
+if [ "$CONFIG_SDK_RTL8328" = "y" ]; then
+    bool '  88E6063 Compatible Workaround' CONFIG_SDK_WA_88E6063_COMPATIBLE n
+	bool '  Linkdown Power Saving Workaround' CONFIG_SDK_WA_LINKDOWN_PWR_SAVING y
+	bool '  Back Pressure Workaround' CONFIG_SDK_WA_BACK_PRESSURE y
+	bool '  IntraLink Delay Workaround' CONFIG_SDK_WA_INTRALINK_DELAY y
+	bool '  EEE Compatible Workaround' CONFIG_SDK_WA_EEE_COMPATIBLE y
+	bool '  RTL8231 Reset Workaround' CONFIG_SDK_WA_RTL8231_RESET n
+	bool '  Packet Buffer Watchdog' CONFIG_SDK_WA_PKTBUF_WATCHDOG y
+	choice 'Select PIE Input Data Endian' "Big CONFIG_SDK_PIE_DATA_ENDIAN_BIG \
+			    Little CONFIG_SDK_PIE_DATA_ENDIAN_LITTLE" Little
+else
+	define_bool CONFIG_SDK_PIE_DATA_ENDIAN_BIG y
+	define_bool CONFIG_SDK_PIE_DATA_ENDIAN_LITTLE n
+fi
+if [ "$CONFIG_SDK_RTL8380" = "y" ]; then
+bool 'RTL833x Combo LED Workaround' CONFIG_SDK_WA_RTL833X_COMBO_LED n
+fi
+if [ "$CONFIG_SDK_RTL8390" = "y" ]; then
+bool 'Software Control LED' CONFIG_SDK_SOFTWARE_CONTROL_LED n
+	if [ "$CONFIG_SDK_SOFTWARE_CONTROL_LED" = "y" ]; then
+		int ' LED Reflash time (unit:10mS)' CONFIG_SDK_SOFTWARE_CONTROL_LED_RATE 5
+	fi
+fi
+if [ "$CONFIG_SDK_RTL8380" = "y" -o "$CONFIG_SDK_RTL8390" = "y" ]; then
+bool 'Select Uart1' CONFIG_SDK_UART1 n
+fi
+if [ "$CONFIG_SDK_RTL8380" = "y" ]; then
+choice 'Select RTK Port View' "PHYSICAL CONFIG_SDK_PORT_VIEW_PHYSICAL_PORT \
+                               ZERO_BASE CONFIG_SDK_PORT_VIEW_ZERO_BASE_PORT" PHYSICAL
+fi
+if [ "$CONFIG_SDK_RTL8390" = "y" ]; then
+	define_bool CONFIG_SDK_WA_PHY_WATCHDOG y
+	define_bool CONFIG_SDK_WA_PKTBUF_WATCHDOG y
+	define_bool CONFIG_SDK_WA_SERDES_WATCHDOG y
+	define_bool CONFIG_SDK_WA_FIBER_RX_WATCHDOG y
+	define_bool CONFIG_SDK_WA_SERDES_FIBER_LINKDOWN_WATCHDOG y
+fi
+if [ "$CONFIG_SDK_RTL8380" = "y" ]; then
+	define_bool CONFIG_SDK_WA_PHY_WATCHDOG y
+	define_bool CONFIG_SDK_WA_PKTBUF_WATCHDOG y
+	define_bool CONFIG_SDK_WA_SERDES_WATCHDOG y
+	define_bool CONFIG_SDK_WA_FIBER_RX_WATCHDOG y
+	define_bool CONFIG_SDK_WA_COMBO_FLOWCONTROL y
+fi
+endmenu
+
+#############################################################################

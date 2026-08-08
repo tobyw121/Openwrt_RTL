@@ -1,0 +1,18 @@
+RD05 v38.3 calibration helper validation
+========================================
+
+PASS: POSIX shell syntax
+PASS: BusyBox ash syntax
+PASS: no fractional BusyBox sleep
+
+sdk_result=0/6-0/0/5-1
+PASS: sdk restores 0/6-0/0/5-1
+
+rd05-rgmii-calibrate: no CPU7 ingress was measured; report: /tmp/rd05-rgmii-tx-v38.3.tsv
+rd05-rgmii-calibrate: restoring pre-sweep profile after exit 1
+error_exit=1 result=1/7-1/6/4-1
+PASS: failed sweep restores exact pre-sweep profile
+
+rd05-rgmii-calibrate: restoring pre-sweep profile after exit 143
+signal_exit=143 result=1/7-1/6/4-1
+PASS: TERM restores exact pre-sweep profile and returns 143

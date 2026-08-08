@@ -1,0 +1,51 @@
+RTL8197F v42.8 validation
+========================
+
+Observed MW5 boot progress
+--------------------------
+- OEM bootloader validates the cr6c kernel and proprietary rootfs trailer: PASS
+- OEM bootloader jumps to 0x80a00000: PASS
+- OpenWrt LZMA loader UART output: PASS
+- Linux kernel decompression: PASS
+- Loader jump to 0x80100000: PASS
+- Reset source after the jump: RTL8197F watchdog timeout
+
+Binary reconstruction
+---------------------
+- uploaded readback SHA-256 matches the v42.7 direct loader-patched image: PASS
+- embedded Linux 6.6 kernel extracted from the LZMA stream: PASS
+- raw MIPS entry, BSS/stack transition and prom_init locations identified: PASS
+- direct diagnostic kernel markers installed: K, S and P
+- early Linux putc replaced with bounded 8-bit MW5 UART access: PASS
+- watchdog stop value changed to SDK-defined 0xa5f00000: PASS
+- recompressed kernel independently decompressed byte-for-byte: PASS
+- cr6c kernel checksum sum: 0x0000 PASS
+- proprietary rootfs checksum sum: 0x0000 PASS
+- bootloader/CFG 0x000000-0x030000 preserved byte-for-byte: PASS
+- CFM/CFM_BACKUP/LOG/ENV 0x5c0000-0x800000 preserved byte-for-byte: PASS
+
+Direct diagnostic image
+-----------------------
+- full-flash SHA-256: 43845066026cb9a66db9839f74e977cdc581204f18311d4f7e6262afe0fc18e3
+- firmware SHA-256: fe99da10927cf279e805cfed834400d0bfc5d28afffa3d47eb3b55cf2bc5e9c6
+- expected earliest UART stages:
+  K = raw kernel entry reached
+  S = CPU/BSS/stack entry work completed
+  P = RTL8197F prom_init reached
+
+Source-tree validation
+----------------------
+- exact WDT stop 0xa5f00000 in loader head.S, board.c and prom.c: PASS
+- generic MIPS kernel_entry patch contains K before kernel_entry_setup: PASS
+- S marker after stack setup: PASS
+- P marker at the first RTL8197F prom_init operations: PASS
+- marker macro assembled successfully as MIPS32r2 little-endian: PASS
+- kernel head.S patch dry-run against Linux-6.6-compatible context: PASS
+- patch hunk counts: PASS
+- all existing WLAN/board/full-flash template checks: PASS
+
+Not yet claimed
+---------------
+- The direct v42.8 image is diagnostic and remains unverified on physical MW5 hardware.
+- A clean OpenWrt rebuild with the new Linux head.S patch was not performed in this analysis environment.
+- Which of K/S/P is the last visible marker must be established by the next UART test.

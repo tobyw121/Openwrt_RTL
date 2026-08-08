@@ -1,0 +1,32 @@
+#!/bin/sh
+# RD05 private-IOCTL/procfs compatibility helper, v12 legacy RX physical-ring reseed aware.
+# Usage: rd05-ioctl [eth0] reseed|rxstart|vendor-side
+
+DEV="eth0"
+case "$#" in
+	1) CMD="$1" ;;
+	2) DEV="$1"; CMD="$2" ;;
+	*) echo "usage: $0 [eth0] reseed|rxstart|vendor-side" >&2; exit 2 ;;
+esac
+
+case "$CMD" in
+	reseed|rxstart|vendor-side) ;;
+	*) echo "unsupported rd05 command: $CMD" >&2; exit 2 ;;
+esac
+
+# Prefer the compiled helper when rtl8367d-compat is included.  The kernel also
+# exposes /proc/rd05-rtknet so base-files images can trigger the same path before
+# the optional package is present.
+if [ -w /proc/rd05-rtknet ]; then
+	echo "$CMD" > /proc/rd05-rtknet
+	exit $?
+fi
+
+if [ -x /usr/sbin/rd05-ioctl.bin ]; then
+	/usr/sbin/rd05-ioctl.bin "$DEV" "$CMD" && exit 0
+	echo "rd05-ioctl.bin failed; /proc/rd05-rtknet is not writable for fallback" >&2
+	exit 1
+fi
+
+echo "rd05 control path missing: neither /usr/sbin/rd05-ioctl.bin nor /proc/rd05-rtknet is available" >&2
+exit 1

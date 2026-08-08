@@ -1,0 +1,11 @@
+WARNING: DT binding docs and includes should be a separate patch. See: Documentation/devicetree/bindings/submitting-patches.rst
+
+total: 0 errors, 1 warnings, 0 checks, 555 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+/mnt/data/rtl8197f-rtl8367-v35-work/openwrt24.10-realtek-linux-6.6.114-rtl8197f-rtl8367-family-v35/target/linux/realtek/patches-6.6/327-net-dsa-realtek-rtl8367-family-profiles.patch has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

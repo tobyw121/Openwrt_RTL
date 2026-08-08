@@ -1,0 +1,88 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 27613 $
+// $Date: 2012-03-30 17:33:46 +0800 (Fri, 30 Mar 2012) $
+//
+// Purpose : Define diag shell commands for stp.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) time commands.
+//
+
+#ifdef CMD_TIME_GET_PTP_PORTS_ALL_STATE
+//time configuration
+//get configuration
+//precision time protocol
+//port list
+//all ports
+//state configuration
+time get ptp ( <PORT_LIST:ports> | all ) state
+#endif
+
+#ifdef CMD_TIME_SET_PTP_PORTS_ALL_STATE_ENABLE_DISABLE
+//time configuration
+//set configuration
+//precision time protocol
+//port list
+//all ports
+//state configuration
+//enable function
+//disable function
+time set ptp ( <PORT_LIST:ports> | all ) state ( enable | disable )
+#endif
+
+#ifdef CMD_TIME_GET_REF_TIME
+//time configuration
+//get configuration
+//reference time
+time get ref-time
+#endif
+
+#ifdef CMD_TIME_SET_REF_TIME
+//time configuration
+//set configuration
+//reference time
+//secound
+//nanosecond
+time set ref-time <UINT:second> <UINT:nanosecond>
+#endif
+
+#ifdef CMD_TIME_SET_REF_TIME_INCREASE_DECREASE_SECOND_NANOSECOND
+//time configuration
+//set configuration
+//reference time
+//adjust (increase time)
+//adjust (decrease time)
+//secound
+//nanosecond
+time set ref-time ( increase | decrease ) <UINT:second> <UINT:nanosecond>
+#endif
+
+#ifdef CMD_TIME_GET_REF_TIME_STATE
+//time configuration
+//get configuration
+//reference time
+//state
+time get ref-time state
+#endif
+
+#ifdef CMD_TIME_SET_REF_TIME_STATE_ENABLE_DISABLE
+//time configuration
+//set configuration
+//reference time
+//state configuration
+//enable function
+//disable function
+time set ref-time state ( enable | disable )
+#endif
+
+

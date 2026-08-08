@@ -1,0 +1,11 @@
+[RTL833xM] Support RTL8332M with RTL8214FC.
+Purpose:
+		Support RTL8332M with RTL8214FC.
+
+Modified Files: (svn r59193, r59198 and r59291)
+*     /sdk/src/dal/maple/dal_maple_port.c
+*     /sdk/src/hal/phy/phy_8218b_patch.c
+
+
+Release Files:
+	rtk-ms-sdk-src-2.1.4.53590-patch001.tar.gz

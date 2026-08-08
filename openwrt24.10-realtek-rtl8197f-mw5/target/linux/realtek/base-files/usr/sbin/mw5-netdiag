@@ -1,0 +1,906 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Tenda Nova MW5 RTL8197F + RTL8367 wired-network diagnostics.
+#
+# v43.12: no argument runs the complete automatic LAN/WAN hardware test.
+#
+# Read-only modes:
+#   help                 Show commands and result interpretation.
+#   state [label]        Capture UCI/netifd/DSA/link/counter state.
+#   full [label]         Extended read-only capture including logs and MIBs.
+#   boot                 Delayed read-only boot capture used by init.d.
+#   watch [seconds]      Capture counters before/after a traffic window.
+#
+# Automatic / temporary recovery modes (MW5 only):
+#   autotest             One-shot LAN + WAN direct test; only move the cable.
+#   bridge               Rebuild br-lan with DSA port lan.
+#   direct [lan|wan|auto] Put 192.168.1.1/24 directly on one DSA port.
+#   restore              Restore the latest configuration backup.
+#   legacy-tx-test       Run the older v43.2 TX-bit/network test.
+#
+# Results are stored below /tmp/mw5-diag. The current development image uses
+# a tmpfs overlay, so configuration changes and logs disappear after reboot.
+
+umask 077
+MODE="${1:-autotest}"
+shift 2>/dev/null || true
+LABEL="${1:-}"
+OUTROOT="${MW5_DIAG_DIR:-/tmp/mw5-diag}"
+STAMP="$(date +%Y%m%d-%H%M%S 2>/dev/null || echo unknown)"
+PID="$$"
+mkdir -p "$OUTROOT" 2>/dev/null || true
+
+sanitize()
+{
+	printf '%s' "$1" | tr -cd 'A-Za-z0-9._-'
+}
+
+board_identity()
+{
+	{
+		cat /tmp/sysinfo/board_name 2>/dev/null || true
+		tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null || true
+		ubus call system board 2>/dev/null || true
+	} | tr '\n' ' '
+}
+
+board_ok()
+{
+	ident="$(board_identity)"
+	case "$ident" in
+		*tenda,nova-mw5*|*nova-mw5*) return 0 ;;
+	esac
+	echo "Refusing a modifying mode on an unrecognized board: $ident" >&2
+	return 1
+}
+
+command_exists()
+{
+	command -v "$1" >/dev/null 2>&1
+}
+
+firewall_state()
+{
+	if [ -x /etc/init.d/firewall ]; then
+		/etc/init.d/firewall enabled >/dev/null 2>&1 && enabled=1 || enabled=0
+		/etc/init.d/firewall status >/dev/null 2>&1 && active=1 || active=0
+	else
+		enabled=NA
+		active=NA
+	fi
+	echo "firewall-service-enabled=$enabled"
+	echo "firewall-service-active=$active"
+	uci -q get firewall.@defaults[0] >/dev/null 2>&1 && echo "firewall-uci-defaults=present" || echo "firewall-uci-defaults=missing"
+}
+
+section()
+{
+	printf '\n===== %s =====\n' "$*"
+}
+
+run()
+{
+	printf '\n+ %s\n' "$*"
+	"$@" 2>&1 || printf '[exit %s] %s\n' "$?" "$*"
+}
+
+read_one()
+{
+	[ -r "$1" ] && printf '%s=%s\n' "$1" "$(cat "$1" 2>/dev/null)"
+}
+
+netdev_snapshot()
+{
+	dev="$1"
+	[ -e "/sys/class/net/$dev" ] || {
+		echo "$dev: missing"
+		return
+	}
+	section "NETDEV $dev"
+	ip link show dev "$dev" 2>&1 || true
+	ip addr show dev "$dev" 2>&1 || true
+	read_one "/sys/class/net/$dev/operstate"
+	read_one "/sys/class/net/$dev/carrier"
+	read_one "/sys/class/net/$dev/flags"
+	read_one "/sys/class/net/$dev/mtu"
+	read_one "/sys/class/net/$dev/address"
+	if [ -L "/sys/class/net/$dev/master" ]; then
+		printf '%s-master=%s\n' "$dev" "$(readlink "/sys/class/net/$dev/master" 2>/dev/null)"
+	else
+		printf '%s-master=NONE\n' "$dev"
+	fi
+	for f in state hairpin_mode learning unicast_flood multicast_flood; do
+		read_one "/sys/class/net/$dev/brport/$f"
+	done
+	if command_exists ethtool; then
+		ethtool "$dev" 2>&1 || true
+		ethtool -S "$dev" 2>&1 || true
+	fi
+}
+
+basic_snapshot()
+{
+	section "MW5 DIAGNOSTIC METADATA"
+	echo "tx-tag-expected=LAN:0x9002 WAN:0x9008 RX-LAN:0x0401"
+	echo "mode=$MODE"
+	echo "timestamp=$STAMP"
+	echo "label=$LABEL"
+	echo "board=$(board_identity)"
+	uname -a 2>/dev/null || true
+	cat /proc/cmdline 2>/dev/null || true
+
+	section "SYSTEM BOARD"
+	ubus call system board 2>&1 || true
+	cat /tmp/sysinfo/board_name 2>/dev/null || true
+	tr '\0' '\n' </proc/device-tree/compatible 2>/dev/null || true
+
+	section "UCI NETWORK"
+	uci show network 2>&1 || true
+
+	section "UCI DHCP"
+	uci show dhcp 2>&1 || true
+
+	section "FIREWALL STANDARD STATE"
+	uci show firewall 2>&1 || true
+	firewall_state
+	if command_exists nft; then
+		nft list ruleset 2>&1 || true
+	fi
+
+	section "NETIFD INTERFACES"
+	ubus call network.interface dump 2>&1 || true
+	ubus call network.interface.lan status 2>&1 || true
+	ubus call network.interface.wan status 2>&1 || true
+	ubus call network.interface.wan6 status 2>&1 || true
+
+	section "NETIFD DEVICES"
+	for dev in br-lan lan wan eth0; do
+		ubus call network.device status "{\"name\":\"$dev\"}" 2>&1 || true
+	done
+
+	section "ALL LINKS"
+	ip link show 2>&1 || true
+
+	section "ADDRESSES AND ROUTES"
+	ip addr show 2>&1 || true
+	ip route show 2>&1 || true
+	ip -f inet6 route show 2>&1 || true
+
+	section "BRIDGE STATE"
+	if command_exists bridge; then
+		bridge link show 2>&1 || true
+		bridge vlan show 2>&1 || true
+		bridge fdb show 2>&1 || true
+		bridge mdb show 2>&1 || true
+	else
+		echo "bridge command unavailable"
+	fi
+
+	for dev in eth0 lan wan br-lan; do
+		netdev_snapshot "$dev"
+	done
+
+	section "PROC NET DEV"
+	cat /proc/net/dev 2>&1 || true
+
+	section "NEIGHBOURS"
+	ip neigh show 2>&1 || true
+	ip -6 neigh show 2>&1 || true
+
+	section "SOCKETS AND DHCP/DNS"
+	if command_exists ss; then
+		ss -lntup 2>&1 || true
+	elif command_exists netstat; then
+		netstat -lnptu 2>&1 || true
+	fi
+	if command_exists pgrep; then
+		pgrep -af 'netifd|dnsmasq|odhcpd|udhcpc' 2>&1 || true
+	else
+		ps w 2>&1 | grep -E 'netifd|dnsmasq|odhcpd|udhcpc' | grep -v grep || true
+	fi
+}
+
+extended_snapshot()
+{
+	basic_snapshot
+
+	section "RELEVANT DMESG"
+	dmesg 2>/dev/null | grep -Ei 'rtl8197|rtl836|realtek|rtl4_9|dsa|switch|smi|newdesc|txring|cpu.tag|p0|rgmii|netifd|br-lan|lan: Link|wan: Link|failed|error|reject' | tail -n 400 || true
+
+	section "RELEVANT LOGREAD"
+	logread 2>/dev/null | grep -Ei 'netifd|dnsmasq|odhcpd|udhcpc|br-lan|device.*lan|device.*wan|realtek|rtl4_9|dsa|failed|error' | tail -n 400 || true
+
+	section "MTD AND FILESYSTEM"
+	cat /proc/mtd 2>&1 || true
+	mount 2>&1 || true
+	df -h 2>&1 || true
+
+	section "RTL8197F CONTROL PATH"
+	if [ -r /proc/rd05-rtknet ]; then
+		cat /proc/rd05-rtknet 2>&1 || true
+	else
+		echo "/proc/rd05-rtknet is not readable"
+	fi
+	ls -l /proc/rd05-rtknet /usr/sbin/rd05-ioctl /usr/sbin/rd05-ioctl.bin 2>&1 || true
+
+	section "SELECTED RTL8197F REGISTERS"
+	if command_exists devmem; then
+		for reg in 0x1b80414c 0x1b800004 0x1b800008 0x1b800100 0x1b800104; do
+			printf '%s=' "$reg"
+			devmem "$reg" 32 2>&1 || true
+		done
+	else
+		echo "devmem unavailable"
+	fi
+
+	section "FIREWALL"
+	if command_exists nft; then
+		nft list ruleset 2>&1 || true
+	else
+		echo "nft unavailable"
+	fi
+}
+
+backup_config()
+{
+	BACKUP_DIR="$OUTROOT/backup-$STAMP-$PID"
+	mkdir -p "$BACKUP_DIR" || return 1
+	cp -f /etc/config/network "$BACKUP_DIR/network" 2>/dev/null || true
+	cp -f /etc/config/dhcp "$BACKUP_DIR/dhcp" 2>/dev/null || true
+	cp -f /etc/config/firewall "$BACKUP_DIR/firewall" 2>/dev/null || true
+	printf '%s\n' "$BACKUP_DIR" > "$OUTROOT/last-backup"
+	echo "Configuration backup: $BACKUP_DIR"
+}
+
+remember_macs()
+{
+	LAN_MAC="$(uci -q get network.br_lan.macaddr 2>/dev/null || uci -q get network.lan.macaddr 2>/dev/null || true)"
+	WAN_MAC="$(uci -q get network.wan_dev.macaddr 2>/dev/null || uci -q get network.wan.macaddr 2>/dev/null || true)"
+}
+
+remove_anonymous_devices()
+{
+	i=0
+	while [ "$i" -lt 64 ] && uci -q get 'network.@device[0]' >/dev/null 2>&1; do
+		uci -q delete 'network.@device[0]' || break
+		i=$((i + 1))
+	done
+}
+
+set_common_dhcp()
+{
+	uci -q set dhcp.lan='dhcp'
+	uci -q set dhcp.lan.interface='lan'
+	uci -q set dhcp.lan.start='100'
+	uci -q set dhcp.lan.limit='150'
+	uci -q set dhcp.lan.leasetime='12h'
+	uci -q delete dhcp.lan.ignore
+	uci -q commit dhcp
+}
+
+set_macs()
+{
+	if [ -n "${LAN_MAC:-}" ]; then
+		uci -q set network.lan.macaddr="$LAN_MAC"
+		[ "$MODE" = direct ] || uci -q set network.br_lan.macaddr="$LAN_MAC"
+	fi
+	if [ -n "${WAN_MAC:-}" ]; then
+		uci -q set network.wan_dev.macaddr="$WAN_MAC"
+		uci -q set network.wan.macaddr="$WAN_MAC"
+	fi
+	uci -q commit network
+}
+
+restart_network()
+{
+	[ ! -x /etc/init.d/network ] || /etc/init.d/network restart 2>&1 || true
+	sleep 7
+	[ ! -x /etc/init.d/dnsmasq ] || /etc/init.d/dnsmasq restart 2>&1 || true
+	[ ! -x /etc/init.d/odhcpd ] || /etc/init.d/odhcpd restart 2>&1 || true
+	[ ! -x /etc/init.d/firewall ] || /etc/init.d/firewall reload >/dev/null 2>&1 || true
+	sleep 3
+}
+
+configure_bridge()
+{
+	board_ok || return 1
+	remember_macs
+	backup_config || return 1
+	remove_anonymous_devices
+	uci -q batch <<'UCI'
+delete network.br_lan
+delete network.lan
+delete network.wan_dev
+delete network.wan
+delete network.wan6
+
+set network.br_lan='device'
+set network.br_lan.name='br-lan'
+set network.br_lan.type='bridge'
+set network.br_lan.stp='0'
+set network.br_lan.igmp_snooping='0'
+add_list network.br_lan.ports='lan'
+
+set network.lan='interface'
+set network.lan.device='br-lan'
+set network.lan.proto='static'
+set network.lan.ipaddr='192.168.1.1'
+set network.lan.netmask='255.255.255.0'
+set network.lan.ip6assign='60'
+
+set network.wan_dev='device'
+set network.wan_dev.name='wan'
+set network.wan_dev.ipv6='1'
+set network.wan='interface'
+set network.wan.device='wan'
+set network.wan.proto='dhcp'
+set network.wan6='interface'
+set network.wan6.device='@wan'
+set network.wan6.proto='dhcpv6'
+UCI
+	uci -q commit network
+	set_macs
+	set_common_dhcp
+	restart_network
+
+	ip link set dev eth0 up 2>/dev/null || true
+	ip link set dev br-lan up 2>/dev/null || true
+	ip link set dev lan down 2>/dev/null || true
+	ip link set dev lan master br-lan 2>/dev/null || true
+	ip link set dev lan up 2>/dev/null || true
+	ip link set dev wan up 2>/dev/null || true
+	ip addr replace 192.168.1.1/24 dev br-lan 2>/dev/null || true
+	ip route replace 192.168.1.0/24 dev br-lan 2>/dev/null || true
+	sleep 3
+}
+
+configure_direct()
+{
+	board_ok || return 1
+	requested="${1:-${LABEL:-auto}}"
+	case "$requested" in
+		lan|wan) target="$requested" ;;
+		auto|'')
+			if [ "$(cat /sys/class/net/lan/carrier 2>/dev/null)" = 1 ]; then
+				target=lan
+			elif [ "$(cat /sys/class/net/wan/carrier 2>/dev/null)" = 1 ]; then
+				target=wan
+			else
+				target=lan
+			fi
+			;;
+		*)
+			echo "direct expects lan, wan or auto; got: $requested" >&2
+			return 2
+			;;
+	esac
+
+	echo "Direct test target: $target (requested=$requested)"
+	remember_macs
+	if [ "${MW5_DIAG_SKIP_BACKUP:-0}" != 1 ]; then
+		backup_config || return 1
+	fi
+	remove_anonymous_devices
+	uci -q batch <<'UCI'
+delete network.br_lan
+delete network.lan
+delete network.wan_dev
+delete network.wan
+delete network.wan6
+set network.lan='interface'
+set network.lan.proto='static'
+set network.lan.ipaddr='192.168.1.1'
+set network.lan.netmask='255.255.255.0'
+UCI
+	uci -q set network.lan.device="$target"
+
+	if [ "$target" = lan ]; then
+		uci -q batch <<'UCI'
+set network.wan_dev='device'
+set network.wan_dev.name='wan'
+set network.wan_dev.ipv6='1'
+set network.wan='interface'
+set network.wan.device='wan'
+set network.wan.proto='dhcp'
+set network.wan6='interface'
+set network.wan6.device='@wan'
+set network.wan6.proto='dhcpv6'
+UCI
+	fi
+	uci -q commit network
+
+	if [ "$target" = wan ] && [ -n "${WAN_MAC:-}" ]; then
+		uci -q set network.lan.macaddr="$WAN_MAC"
+	elif [ -n "${LAN_MAC:-}" ]; then
+		uci -q set network.lan.macaddr="$LAN_MAC"
+	fi
+	uci -q commit network
+	set_common_dhcp
+	restart_network
+
+	ip link set dev lan nomaster 2>/dev/null || true
+	ip link set dev wan nomaster 2>/dev/null || true
+	ip link set dev eth0 up 2>/dev/null || true
+	ip link set dev lan up 2>/dev/null || true
+	ip link set dev wan up 2>/dev/null || true
+	ip addr flush dev br-lan 2>/dev/null || true
+	ip addr replace 192.168.1.1/24 dev "$target" 2>/dev/null || true
+	ip route replace 192.168.1.0/24 dev "$target" 2>/dev/null || true
+	sleep 3
+	echo "$target" > "$OUTROOT/direct-target"
+}
+restore_from_backup()
+{
+	board_ok || return 1
+	backup_dir="$1"
+	if [ -z "$backup_dir" ] || [ ! -f "$backup_dir/network" ]; then
+		echo "No usable network backup: $backup_dir" >&2
+		return 1
+	fi
+	cp -f "$backup_dir/network" /etc/config/network
+	[ ! -f "$backup_dir/dhcp" ] || cp -f "$backup_dir/dhcp" /etc/config/dhcp
+	[ ! -f "$backup_dir/firewall" ] || cp -f "$backup_dir/firewall" /etc/config/firewall
+	restart_network
+	echo "Restored network/DHCP/firewall: $backup_dir"
+}
+
+restore_config()
+{
+	backup_dir="$(cat "$OUTROOT/last-backup" 2>/dev/null || true)"
+	if [ -z "$backup_dir" ]; then
+		echo "No usable backup referenced by $OUTROOT/last-backup" >&2
+		return 1
+	fi
+	restore_from_backup "$backup_dir"
+}
+
+watch_counters()
+{
+	seconds="${LABEL:-30}"
+	case "$seconds" in ''|*[!0-9]*) seconds=30 ;; esac
+	[ "$seconds" -lt 5 ] 2>/dev/null && seconds=5
+	[ "$seconds" -gt 300 ] 2>/dev/null && seconds=300
+	section "COUNTERS BEFORE"
+	cat /proc/net/dev 2>&1 || true
+	for dev in eth0 lan wan br-lan; do
+		if command_exists ethtool && [ -e "/sys/class/net/$dev" ]; then
+			echo "--- ethtool -S $dev before ---"
+			ethtool -S "$dev" 2>&1 || true
+		fi
+	done
+	echo "Generate ARP/ping/DHCP traffic from the connected PC for $seconds seconds."
+	i="$seconds"
+	while [ "$i" -gt 0 ]; do
+		printf '\rremaining=%3ss ' "$i"
+		sleep 1
+		i=$((i - 1))
+	done
+	printf '\n'
+	section "COUNTERS AFTER"
+	cat /proc/net/dev 2>&1 || true
+	for dev in eth0 lan wan br-lan; do
+		if command_exists ethtool && [ -e "/sys/class/net/$dev" ]; then
+			echo "--- ethtool -S $dev after ---"
+			ethtool -S "$dev" 2>&1 || true
+		fi
+	done
+	ip neigh show 2>&1 || true
+}
+
+stat_value()
+{
+	dev="$1"
+	name="$2"
+	value="$(cat "/sys/class/net/$dev/statistics/$name" 2>/dev/null || echo 0)"
+	case "$value" in ''|*[!0-9]*) value=0 ;; esac
+	printf '%s\n' "$value"
+}
+
+wait_for_carrier()
+{
+	dev="$1"
+	seconds="${2:-60}"
+	i=0
+	while [ "$i" -lt "$seconds" ]; do
+		if [ "$(cat "/sys/class/net/$dev/carrier" 2>/dev/null)" = 1 ]; then
+			echo "$dev carrier detected after ${i}s"
+			return 0
+		fi
+		printf '\rWaiting for %s carrier: %2d/%2ds ' "$dev" "$i" "$seconds"
+		sleep 1
+		i=$((i + 1))
+	done
+	printf '\n'
+	echo "$dev carrier was not detected within ${seconds}s"
+	return 1
+}
+
+find_test_peer()
+{
+	dev="$1"
+	peer=""
+	if [ -r /tmp/dhcp.leases ]; then
+		peer="$(awk 'NF >= 3 && $3 ~ /^192\.168\.1\./ { print $3; exit }' /tmp/dhcp.leases 2>/dev/null)"
+	fi
+	if [ -z "$peer" ]; then
+		peer="$(ip neigh show dev "$dev" 2>/dev/null | awk '$1 ~ /^192\.168\.1\./ && $1 != "192.168.1.1" { print $1; exit }')"
+	fi
+	printf '%s\n' "$peer"
+}
+
+normal_lan_phase()
+{
+	wait_seconds="$1"
+	section "AUTOTEST NORMAL LAN / BR-LAN"
+	echo "Start with the Ethernet cable in the physical LAN jack."
+	echo "The PC may stay on DHCP/automatic; no command is required on it."
+
+	lan_rx_before="$(stat_value lan rx_packets)"
+	lan_tx_before="$(stat_value lan tx_packets)"
+	br_rx_before="$(stat_value br-lan rx_packets)"
+	br_tx_before="$(stat_value br-lan tx_packets)"
+	if wait_for_carrier lan "$wait_seconds"; then
+		carrier_result=PASS
+	else
+		carrier_result=FAIL
+	fi
+
+	for probe in 192.168.1.254 192.168.1.3 192.168.1.100; do
+		ping -c 1 -W 1 "$probe" >/dev/null 2>&1 || true
+	done
+	sleep 5
+	peer="$(find_test_peer br-lan)"
+	if [ -n "$peer" ]; then
+		echo "Detected normal-LAN peer: $peer"
+		if ping -c 3 -W 1 "$peer" >/dev/null 2>&1; then
+			ping_result=PASS
+		else
+			ping_result=FAIL
+		fi
+	else
+		ping_result=NO-PEER
+	fi
+
+	lan_rx_after="$(stat_value lan rx_packets)"
+	lan_tx_after="$(stat_value lan tx_packets)"
+	br_rx_after="$(stat_value br-lan rx_packets)"
+	br_tx_after="$(stat_value br-lan tx_packets)"
+	lan_rx_delta=$((lan_rx_after - lan_rx_before))
+	lan_tx_delta=$((lan_tx_after - lan_tx_before))
+	br_rx_delta=$((br_rx_after - br_rx_before))
+	br_tx_delta=$((br_tx_after - br_tx_before))
+
+	echo "normal-lan carrier=$carrier_result lan_rx_delta=$lan_rx_delta lan_tx_delta=$lan_tx_delta br_rx_delta=$br_rx_delta br_tx_delta=$br_tx_delta peer=${peer:-NONE} ping=$ping_result"
+	printf '%s\n' "normal-lan carrier=$carrier_result lan_rx_delta=$lan_rx_delta lan_tx_delta=$lan_tx_delta br_rx_delta=$br_rx_delta br_tx_delta=$br_tx_delta peer=${peer:-NONE} ping=$ping_result" >> "$AUTOTEST_SUMMARY"
+}
+
+routed_wan_phase()
+{
+	wait_seconds="$1"
+	section "AUTOTEST RESTORED ROUTED WAN DHCP"
+	echo "The cable may remain in the WAN jack."
+	echo "If it is connected to an upstream DHCP router, WAN lease acquisition is tested automatically."
+	echo "If it is connected directly to the test PC, NO-LEASE is expected and is recorded, not hidden."
+
+	wan_rx_before="$(stat_value wan rx_packets)"
+	wan_tx_before="$(stat_value wan tx_packets)"
+	if wait_for_carrier wan "$wait_seconds"; then
+		carrier_result=PASS
+	else
+		carrier_result=FAIL
+	fi
+
+	if command_exists ifup; then
+		ifup wan >/dev/null 2>&1 || true
+	fi
+	i=0
+	wan_addr=""
+	while [ "$i" -lt 20 ]; do
+		wan_addr="$(ip addr show dev wan 2>/dev/null | awk '$1 == "inet" { split($2, a, "/"); print a[1]; exit }')"
+		[ -n "$wan_addr" ] && break
+		sleep 1
+		i=$((i + 1))
+	done
+
+	if [ -n "$wan_addr" ]; then
+		dhcp_result=PASS
+		if ping -c 3 -W 1 1.1.1 >/dev/null 2>&1; then
+			internet_ping=PASS
+		else
+			internet_ping=FAIL
+		fi
+	else
+		dhcp_result=NO-LEASE
+		internet_ping=SKIPPED
+	fi
+	wan_rx_after="$(stat_value wan rx_packets)"
+	wan_tx_after="$(stat_value wan tx_packets)"
+	wan_rx_delta=$((wan_rx_after - wan_rx_before))
+	wan_tx_delta=$((wan_tx_after - wan_tx_before))
+
+	echo "routed-wan carrier=$carrier_result dhcp=$dhcp_result address=${wan_addr:-NONE} rx_delta=$wan_rx_delta tx_delta=$wan_tx_delta internet_ping=$internet_ping"
+	if command_exists ifstatus; then
+		ifstatus wan 2>&1 || true
+	fi
+	ip route show 2>&1 || true
+	printf '%s\n' "routed-wan carrier=$carrier_result dhcp=$dhcp_result address=${wan_addr:-NONE} rx_delta=$wan_rx_delta tx_delta=$wan_tx_delta internet_ping=$internet_ping" >> "$AUTOTEST_SUMMARY"
+}
+
+autotest_phase()
+{
+	target="$1"
+	wait_seconds="$2"
+
+	section "AUTOTEST DIRECT $target - CONFIGURE"
+	rx_before="$(stat_value "$target" rx_packets)"
+	tx_before="$(stat_value "$target" tx_packets)"
+	drop_before="$(stat_value eth0 rx_dropped)"
+	MW5_DIAG_SKIP_BACKUP=1
+	configure_direct "$target" || return 1
+
+	echo
+	case "$target" in lan) jack=LAN ;; wan) jack=WAN ;; *) jack="$target" ;; esac
+	echo "Connect/move the Ethernet cable to the physical $jack jack."
+	echo "No command is required on the PC; leave its Ethernet adapter on DHCP/automatic."
+	if wait_for_carrier "$target" "$wait_seconds"; then
+		carrier_result=PASS
+	else
+		carrier_result=FAIL
+	fi
+
+	sleep 5
+
+	section "AUTOTEST DIRECT $target - ACTIVE TRAFFIC"
+	echo "Generating router-originated ARP/IP traffic; no PC command is required."
+	for probe in 192.168.1.254 192.168.1.3 192.168.1.100; do
+		ping -c 1 -W 1 "$probe" >/dev/null 2>&1 || true
+	done
+
+	i=0
+	peer=""
+	while [ "$i" -lt 15 ]; do
+		peer="$(find_test_peer "$target")"
+		[ -n "$peer" ] && break
+		sleep 1
+		i=$((i + 1))
+	done
+	if [ -n "$peer" ]; then
+		echo "Detected peer: $peer"
+		if ping -c 3 -W 1 "$peer" >/dev/null 2>&1; then
+			ping_result=PASS
+		else
+			ping_result=FAIL
+		fi
+	else
+		echo "No DHCP lease/neighbour learned during the test window."
+		ping_result=NO-PEER
+	fi
+
+	sleep 3
+	rx_after="$(stat_value "$target" rx_packets)"
+	tx_after="$(stat_value "$target" tx_packets)"
+	drop_after="$(stat_value eth0 rx_dropped)"
+	rx_delta=$((rx_after - rx_before))
+	tx_delta=$((tx_after - tx_before))
+	drop_delta=$((drop_after - drop_before))
+
+	[ "$rx_delta" -gt 0 ] 2>/dev/null && rx_result=PASS || rx_result=NO-RX
+	[ "$tx_delta" -gt 0 ] 2>/dev/null && tx_result=PASS || tx_result=NO-TX
+
+	section "AUTOTEST DIRECT $target - RESULT"
+	echo "carrier=$carrier_result"
+	echo "rx_packets_before=$rx_before rx_packets_after=$rx_after rx_delta=$rx_delta result=$rx_result"
+	echo "tx_packets_before=$tx_before tx_packets_after=$tx_after tx_delta=$tx_delta result=$tx_result"
+	echo "eth0_rx_dropped_before=$drop_before eth0_rx_dropped_after=$drop_after drop_delta=$drop_delta"
+	echo "peer=${peer:-NONE} ping=$ping_result"
+	if [ -r /proc/rd05-rtknet ]; then
+		cat /proc/rd05-rtknet 2>&1 || true
+	fi
+	dmesg 2>/dev/null | grep -Ei 'rtl4_9 v43\.(9|10|11|12)|mw5 rx(desc|-bad) v43\.(10|11)|mw5 tx-(wire|submit|complete) v43\.(10|11)|rtl8197f-rtknet|cpu.tag|reseed|drop|error' | tail -n 260 || true
+
+	printf '%s carrier=%s rx_delta=%s tx_delta=%s peer=%s ping=%s eth0_rx_drop_delta=%s\n' \
+		"$target" "$carrier_result" "$rx_delta" "$tx_delta" "${peer:-NONE}" "$ping_result" "$drop_delta" >> "$AUTOTEST_SUMMARY"
+}
+
+wait_openwrt_network_ready()
+{
+	limit="${1:-90}"
+	i=0
+	section "AUTOTEST WAIT OPENWRT NETWORK READY"
+	while [ "$i" -lt "$limit" ]; do
+		if [ -d /sys/class/net/br-lan ] && \
+		   ubus call network.interface.lan status >"$OUTROOT/lan-ready.json" 2>/dev/null && \
+		   grep -q '"up": true' "$OUTROOT/lan-ready.json" 2>/dev/null; then
+			echo "OpenWrt LAN/netifd ready after ${i}s"
+			return 0
+		fi
+		i=$((i + 1))
+		sleep 1
+	done
+	echo "OpenWrt LAN/netifd was not fully ready after ${limit}s; continuing diagnostics with the captured state."
+	return 1
+}
+
+autotest_cleanup()
+{
+	[ "${AUTOTEST_RESTORED:-0}" = 1 ] && return 0
+	[ -n "${AUTOTEST_BACKUP:-}" ] || return 0
+	echo
+	echo "Autotest cleanup: restoring original network/DHCP configuration..."
+	restore_from_backup "$AUTOTEST_BACKUP" >/dev/null 2>&1 || true
+	AUTOTEST_RESTORED=1
+}
+
+autotest()
+{
+	board_ok || return 1
+	wait_seconds="${LABEL:-60}"
+	case "$wait_seconds" in ''|*[!0-9]*) wait_seconds=60 ;; esac
+	[ "$wait_seconds" -lt 15 ] 2>/dev/null && wait_seconds=15
+	[ "$wait_seconds" -gt 180 ] 2>/dev/null && wait_seconds=180
+
+	section "MW5 V43.12 AUTOMATIC WIRED TEST"
+	echo "Only physical action required: start with the cable in LAN, then move it to WAN when prompted."
+	echo "No ping/ip/uci/firewall commands are required on the PC or router."
+	echo "OpenWrt firewall4 stays at its standard configuration during the test."
+	wait_openwrt_network_ready 90 || true
+
+	section "AUTOTEST ORIGINAL STATE"
+	basic_snapshot
+	AUTOTEST_SUMMARY="$OUTROOT/autotest-summary-$STAMP-$PID.txt"
+	: > "$AUTOTEST_SUMMARY"
+	normal_lan_phase "$wait_seconds" || true
+
+	backup_config || return 1
+	AUTOTEST_BACKUP="$BACKUP_DIR"
+	AUTOTEST_RESTORED=0
+	trap 'autotest_cleanup' 0 1 2 15
+
+	autotest_phase lan "$wait_seconds" || true
+
+	section "MOVE CABLE"
+	echo "Move the same Ethernet cable from the physical LAN jack to the physical WAN jack now."
+	echo "The script continues automatically as soon as WAN carrier appears."
+	autotest_phase wan "$wait_seconds" || true
+
+	section "AUTOTEST RESTORE ORIGINAL NETWORK"
+	restore_from_backup "$AUTOTEST_BACKUP" || true
+	AUTOTEST_RESTORED=1
+	trap - 0 1 2 15
+
+	routed_wan_phase "$wait_seconds" || true
+
+	section "AUTOTEST FINAL STATE"
+	basic_snapshot
+	section "AUTOTEST SUMMARY"
+	cat "$AUTOTEST_SUMMARY" 2>/dev/null || true
+	if [ -x /etc/init.d/firewall ] && /etc/init.d/firewall status >/dev/null 2>&1; then
+		echo "firewall=STANDARD_ACTIVE"
+	else
+		echo "firewall=STANDARD_INACTIVE"
+	fi
+	echo "nftables=STANDARD_POLICY"
+	echo "network_restore=$AUTOTEST_BACKUP"
+	cp -f "$AUTOTEST_SUMMARY" "$OUTROOT/autotest-summary-latest.txt" 2>/dev/null || true
+}
+
+help_text()
+{
+	cat <<'HELP'
+MW5 wired-network diagnostics built into the image (v43.12)
+
+  mw5-netdiag                     Complete normal-LAN + direct-LAN/WAN + WAN-DHCP test
+  mw5-netdiag autotest [15..180]  Same test, optional carrier wait per port
+  mw5-netdiag state [label]       Read-only state capture
+  mw5-netdiag full [label]        Extended read-only capture
+  mw5-netdiag watch [5..300]      Before/after traffic counter window
+  mw5-netdiag direct [lan|wan|auto] Temporary direct port test
+  mw5-netdiag bridge              Temporary forced br-lan topology
+  mw5-netdiag restore             Restore latest /tmp backup
+  mw5-netdiag legacy-tx-test      Run the older v43.2 runtime test
+  mw5-netdiag help                This help
+
+Also installed for exact compatibility:
+
+  MW5_V43.3_DIRECT_LAN_DIAG_FIX.sh {state|bridge|direct|restore}
+  MW5_V43.2_RUNTIME_TX_NETWORK_TEST.sh
+  mw5-v39-check [output-file]
+
+Logs:
+
+  /tmp/mw5-diag/latest.txt
+  /tmp/mw5-diag/boot-latest.txt
+  /tmp/mw5-diag/mw5-*.txt
+
+Automatic test sequence over the serial console:
+
+  mw5-netdiag
+
+Start with the Ethernet cable in LAN.  The script first verifies normal
+br-lan/LAN operation, then direct LAN.  When it asks, move that same cable to
+WAN for the direct-WAN test.  After restore it also checks routed WAN DHCP.
+No other router or PC commands are required.  A DHCP-enabled PC is preferred
+because the script can discover and ping it automatically.
+
+Firewall policy:
+
+  Standard OpenWrt firewall4 configuration is retained.
+  LAN and WAN use the normal OpenWrt zone policy during diagnostics.
+  v43.7 no-firewall installations are migrated back from the saved backup
+  or /rom/etc/config/firewall on first boot.
+
+Interpretation:
+
+  selected-port RX rises, selected-port TX stays 0:
+    Inspect the v43.12 rtl4_9 TX/RX logs and the unchanged v43.11 DMA diagnostics in /proc/rd05-rtknet.
+  rtl4_9 RX encap=0x0806 but selected-port TX stays 0:
+    ARP reached the DSA port; verify MAC reseed and Linux ARP handling.
+  lan TX rises, eth0 TX stays unchanged:
+    DSA tagger or master handoff rejected the frame.
+  lan TX and eth0 TX rise but the PC receives nothing:
+    RTL4_9 tag encoding, RTL8197F P0 or RTL8367 CPU-port TX remains suspect.
+HELP
+}
+
+label_safe="$(sanitize "$LABEL")"
+[ -n "$label_safe" ] || label_safe="$MODE"
+LOG="$OUTROOT/mw5-${MODE}-${label_safe}-${STAMP}-${PID}.txt"
+
+# Capture normal invocations through tee. The boot mode is redirected by init.d.
+if [ -z "${MW5_DIAG_CAPTURED:-}" ] && [ "$MODE" != help ]; then
+	export MW5_DIAG_CAPTURED=1
+	"$0" "$MODE" "$@" 2>&1 | tee "$LOG"
+	status=$?
+	ln -sf "$LOG" "$OUTROOT/latest.txt" 2>/dev/null || cp -f "$LOG" "$OUTROOT/latest.txt" 2>/dev/null || true
+	echo "Diagnostic log: $LOG"
+	exit "$status"
+fi
+
+case "$MODE" in
+	help|-h|--help)
+		help_text
+		;;
+	autotest|auto-test|test)
+		autotest
+		;;
+	state)
+		basic_snapshot
+		;;
+	full|collect)
+		extended_snapshot
+		;;
+	boot)
+		sleep "${MW5_DIAG_BOOT_DELAY:-8}"
+		extended_snapshot
+		;;
+	watch)
+		watch_counters
+		;;
+	bridge)
+		section "STATE BEFORE BRIDGE RECOVERY"
+		basic_snapshot
+		configure_bridge
+		section "STATE AFTER BRIDGE RECOVERY"
+		basic_snapshot
+		;;
+	direct)
+		section "STATE BEFORE DIRECT PORT TEST"
+		basic_snapshot
+		configure_direct
+		section "STATE AFTER DIRECT PORT TEST"
+		basic_snapshot
+		;;
+	restore)
+		restore_config
+		basic_snapshot
+		;;
+	legacy-tx-test)
+		board_ok || exit 1
+		exec /usr/sbin/MW5_V43.2_RUNTIME_TX_NETWORK_TEST.sh
+		;;
+	*)
+		echo "Unknown mode: $MODE" >&2
+		help_text >&2
+		exit 2
+		;;
+esac

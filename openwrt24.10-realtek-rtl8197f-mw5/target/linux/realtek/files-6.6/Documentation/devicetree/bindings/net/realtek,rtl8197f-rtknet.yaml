@@ -1,0 +1,206 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/net/realtek,rtl8197f-rtknet.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Realtek RTL8197x rtl865x Ethernet CPU interface
+
+maintainers:
+  - OpenWrt RTL8197F bringup <noreply@example.invalid>
+
+description: |
+  Native Linux net_device/NAPI binding for the RTL8197x rtl865x CPU-interface
+  DMA block. External RTL8367 family switches are described as separate DSA
+  switch nodes whose CPU port references this Ethernet controller.
+
+allOf:
+  - $ref: ethernet-controller.yaml#
+
+properties:
+  compatible:
+    oneOf:
+      - items:
+          - enum:
+              - realtek,rtl8197d-rtknet
+              - realtek,rtl8197f-rtknet
+              - realtek,rtl8197fh-rtknet
+              - realtek,rtl8197g-rtknet
+          - const: realtek,rtl865x-cpuif
+      - const: realtek,rtl865x-cpuif
+
+  reg:
+    minItems: 1
+    maxItems: 3
+
+  reg-names:
+    minItems: 1
+    items:
+      - const: cpuif
+      - const: swcore
+      - const: system
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  phy-mode: true
+
+  local-mac-address: true
+  mac-address: true
+
+  realtek,rx-ring-size:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    minimum: 16
+    maximum: 512
+    default: 64
+    description: Number of receive descriptors.
+
+  realtek,tx-ring-size:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    minimum: 16
+    maximum: 512
+    default: 64
+    description: Number of transmit descriptors.
+
+  realtek,rx-buffer-size:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    minimum: 1536
+    maximum: 16384
+    default: 2048
+    description: Size of each receive DMA buffer.
+
+  realtek,tx-port-mask:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    minimum: 1
+    maximum: 127
+    default: 127
+    description: |
+      rtl865x descriptor destination-port mask used for transmitted frames.
+      RTL8197F boards with an RTL8367D on physical P0/RGMII, including RD05,
+      use BIT(0).  BIT(6) selects an internal rtl865x extension path instead.
+
+  realtek,tx-dp-ext:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    minimum: 0
+    maximum: 7
+    default: 0
+    description: |
+      rtl865x descriptor destination extension selector.  It is meaningful
+      only when a SoC design intentionally targets the internal extension
+      destination (normally tx-port-mask BIT(6)).  It must be zero for the
+      RD05 RTL8197F-P0 to RTL8367D-EXT1 RGMII cascade.
+
+  realtek,tx-extspa:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    minimum: 0
+    maximum: 3
+    default: 0
+    description: |
+      rtl865x descriptor source extension-port number.  CPU-originated frames
+      on the RD05 physical P0/RGMII path use zero; values 1..3 are diagnostic
+      or apply to other rtl865x extension-port topologies.
+
+  realtek,tx-hwlookup:
+    type: boolean
+    description: Let the rtl865x hardware lookup table select TX destinations.
+
+  realtek,tx-bridge:
+    type: boolean
+    description: Set the rtl865x TX descriptor bridge bit.
+
+  realtek,desc-addr-kseg1:
+    type: boolean
+    description: Program descriptor and buffer pointers in the KSEG1-like format used by the vendor BSP.
+
+  realtek,desc-addr-physical:
+    type: boolean
+    description: Program descriptor and buffer pointers as physical addresses.
+
+  realtek,legacy-rd05-sdk-pipeline:
+    type: boolean
+    description: |
+      Seed the RTL8197F internal VID9, netif, L2 and ACL host-link state used
+      by RD05.  The host member is physical P0 only; RTL8367D user ports remain
+      owned by DSA.
+
+  realtek,rx-poll-fallback:
+    type: boolean
+    description: |
+      Periodically schedule NAPI even when the CPU-interface IRQ line does not
+      report RX events. This is an RD05 bring-up fallback observed to be needed
+      when RTL8367D ingress MIB counters increase but the rtl865x CPU-interface
+      receives no RX IRQ.
+
+  realtek,rx-poll-ms:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    minimum: 10
+    maximum: 1000
+    default: 100
+    description: RX-poll fallback interval in milliseconds.
+
+  realtek,sdk-cpuicr1-init:
+    type: boolean
+    description: |
+      Apply the RTL8197F SDK CPU-interface setup bits in CPUICR1: split TX/RX
+      LX bus, little-endian NIC master mode, TSO ID selection, TX gather and
+      queue-ID to RX-ring-0 mapping. Required on RD05 where the DMA rings can
+      otherwise remain idle even though NAPI is polled.
+
+  realtek,sdk-trxrdy:
+    type: boolean
+    description: |
+      Assert the rtl865x switch-core SIRR/TRXRDY bit through the optional
+      swcore register range. In the Realtek SDK this bit is located at
+      SWCORE_BASE + 0x4204, not in the normal SYSTEM register window.
+
+  realtek,sdk-swcore-init:
+    type: boolean
+    description: |
+      Apply the RTL8197F switch-core side CPU-interface setup from the SDK:
+      MACCTRL1.CMAC_CLK_SEL, SYS_CLK_MAG LX clock/arbiter bits and the
+      board-specific TXRINGCR setup. The MW5 single-ring path enables only
+      TX ring 0; VG/multi-ring boards retain their own ring policy.
+
+  realtek,sdk-crc-lengths:
+    type: boolean
+    description: |
+      Match the RTL8197F SDK descriptor-length convention: CPUICR.EXCLUDE_CRC
+      is clear, TX descriptor lengths include four FCS bytes generated by
+      hardware, and RX descriptor lengths include four FCS bytes that Linux
+      strips before delivering the skb.
+
+required:
+  - compatible
+  - reg
+  - interrupts
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    ethernet@10000 {
+        compatible = "realtek,rtl8197f-rtknet", "realtek,rtl865x-cpuif";
+        reg = <0x10000 0x1000>, <0x03800000 0x10000>, <0x0 0x4000>;
+        reg-names = "cpuif", "swcore", "system";
+        interrupt-parent = <&intc>;
+        interrupts = <15 2>;
+        clocks = <&lx_clk>;
+        phy-mode = "rgmii";
+        realtek,rx-ring-size = <64>;
+        realtek,tx-ring-size = <64>;
+        realtek,rx-buffer-size = <2048>;
+        realtek,tx-port-mask = <0x1>;
+        realtek,tx-dp-ext = <0x0>;
+        realtek,tx-extspa = <0x0>;
+        realtek,desc-addr-kseg1;
+        realtek,rx-poll-fallback;
+        realtek,rx-poll-ms = <50>;
+        realtek,sdk-cpuicr1-init;
+        realtek,sdk-swcore-init;
+        realtek,sdk-trxrdy;
+        realtek,sdk-crc-lengths;
+    };
+...

@@ -1,0 +1,234 @@
+kbuild: O= fixes
+
+consider:
+make distclean && chown -R 0.0 . && make O=/tmp/x
+Someone should double check that and send upstream..
+
+Signed-off-by: Bernhard Reutner-Fischer <aldot@uclibc.org>
+
+diff -rdup a/scripts/kconfig/confdata.c b/extra/config/confdata.c
+--- a/scripts/kconfig/confdata.c	2013-11-04 10:52:05.229403047 +0100
++++ b/extra/config/confdata.c	2013-11-05 18:29:57.413500468 +0100
+@@ -734,31 +734,31 @@ int conf_write(const char *name)
+ 	struct menu *menu;
+ 	const char *basename;
+ 	const char *str;
+-	char dirname[PATH_MAX+1], tmpname[PATH_MAX+1], newname[PATH_MAX+1];
+-	char *env;
++	char tmpname[PATH_MAX+1], newname[PATH_MAX+1];
++	char *env, *dirname = NULL;
+ 
+-	dirname[0] = 0;
+ 	if (name && name[0]) {
+ 		struct stat st;
+ 		char *slash;
+ 
+ 		if (!stat(name, &st) && S_ISDIR(st.st_mode)) {
+-			strcpy(dirname, name);
++			dirname = strndup(name, strlen(name) + 1);
+ 			strcat(dirname, "/");
+ 			basename = conf_get_configname();
+ 		} else if ((slash = strrchr(name, '/'))) {
+ 			int size = slash - name + 1;
+-			memcpy(dirname, name, size);
+-			dirname[size] = 0;
++			dirname = strndup(name, size);
+ 			if (slash[1])
+ 				basename = slash + 1;
+ 			else
+ 				basename = conf_get_configname();
+ 		} else
+ 			basename = name;
+-	} else
+-		basename = conf_get_configname();
+-
++	} else {
++		dirname = strdup(conf_get_configname());
++		basename = strdup(base_name(dirname));
++		dirname = dir_name(dirname);
++	}
+ 	sprintf(newname, "%s%s", dirname, basename);
+ 	env = getenv("KCONFIG_OVERWRITECONFIG");
+ 	if (!env || !*env) {
+@@ -768,6 +768,7 @@ int conf_write(const char *name)
+ 		*tmpname = 0;
+ 		out = fopen(newname, "w");
+ 	}
++	free(dirname);
+ 	if (!out)
+ 		return 1;
+ 
+@@ -813,9 +814,10 @@ next:
+ 	fclose(out);
+ 
+ 	if (*tmpname) {
+-		strcat(dirname, basename);
++		dirname = strndup(basename, strlen(basename) + 4);
+ 		strcat(dirname, ".old");
+ 		rename(newname, dirname);
++		free(dirname);
+ 		if (rename(tmpname, newname))
+ 			return 1;
+ 	}
+@@ -830,16 +832,21 @@ next:
+ static int conf_split_config(void)
+ {
+ 	const char *name;
+-	char path[PATH_MAX+1];
++	char path[PATH_MAX+1], opwd[PATH_MAX+1];
+ 	char *s, *d, c;
+ 	struct symbol *sym;
+ 	struct stat sb;
+ 	int res, i, fd;
+ 
++	if (getcwd(opwd, sizeof(opwd)) == NULL)
++		return 1;
+ 	name = conf_get_autoconfig_name();
+ 	conf_read_simple(name, S_DEF_AUTO);
+ 
+-	if (chdir("include/config"))
++	strcpy(path, name);
++	dir_name(path);
++
++	if (chdir(path))
+ 		return 1;
+ 
+ 	res = 0;
+@@ -933,7 +940,7 @@ static int conf_split_config(void)
+ 		close(fd);
+ 	}
+ out:
+-	if (chdir("../.."))
++	if (chdir(opwd))
+ 		return 1;
+ 
+ 	return res;
+@@ -943,27 +950,37 @@ int conf_write_autoconf(void)
+ {
+ 	struct symbol *sym;
+ 	const char *name;
++	char cfg_fname[PATH_MAX+1], tristate_fname[PATH_MAX+1],
++		 cfgh_fname[PATH_MAX+1];
++	char *dirname;
+ 	FILE *out, *tristate, *out_h;
+ 	int i;
+ 
+ 	sym_clear_all_valid();
+ 
+-	file_write_dep("include/config/auto.conf.cmd");
++	sprintf(cfg_fname, "%s.cmd", conf_get_autoconfig_name());
++	file_write_dep(cfg_fname);
+ 
+ 	if (conf_split_config())
+ 		return 1;
+ 
+-	out = fopen(".tmpconfig", "w");
++	dirname = dir_name(strdup(conf_get_configname()));
++	sprintf(cfg_fname, "%s.tmpconfig", dirname);
++	sprintf(tristate_fname, "%s.tmpconfig_tristate", dirname);
++	sprintf(cfgh_fname, "%s.tmpconfig.h", dirname);
++	free(dirname);
++
++	out = fopen(cfg_fname, "w");
+ 	if (!out)
+ 		return 1;
+ 
+-	tristate = fopen(".tmpconfig_tristate", "w");
++	tristate = fopen(tristate_fname, "w");
+ 	if (!tristate) {
+ 		fclose(out);
+ 		return 1;
+ 	}
+ 
+-	out_h = fopen(".tmpconfig.h", "w");
++	out_h = fopen(cfgh_fname, "w");
+ 	if (!out_h) {
+ 		fclose(out);
+ 		fclose(tristate);
+@@ -995,19 +1012,19 @@ int conf_write_autoconf(void)
+ 	name = getenv("KCONFIG_AUTOHEADER");
+ 	if (!name)
+ 		name = "include/generated/autoconf.h";
+-	if (rename(".tmpconfig.h", name))
++	if (rename(cfgh_fname, name))
+ 		return 1;
+ 	name = getenv("KCONFIG_TRISTATE");
+ 	if (!name)
+ 		name = "include/config/tristate.conf";
+-	if (rename(".tmpconfig_tristate", name))
++	if (rename(tristate_fname, name))
+ 		return 1;
+ 	name = conf_get_autoconfig_name();
+ 	/*
+ 	 * This must be the last step, kbuild has a dependency on auto.conf
+ 	 * and this marks the successful completion of the previous steps.
+ 	 */
+-	if (rename(".tmpconfig", name))
++	if (rename(cfg_fname, name))
+ 		return 1;
+ 
+ 	return 0;
+diff -rdup a/scripts/kconfig/lkc.h b/extra/config/lkc.h
+--- a/scripts/kconfig/lkc.h	2013-08-02 13:40:56.908213256 +0200
++++ b/extra/config/lkc.h	2013-11-05 17:22:30.572040336 +0100
+@@ -125,6 +125,8 @@ struct file *file_lookup(const char *nam
+ int file_write_dep(const char *name);
+ void *xmalloc(size_t size);
+ void *xcalloc(size_t nmemb, size_t size);
++char *dir_name(char *path);
++char *base_name(char *path);
+ 
+ struct gstr {
+ 	size_t len;
+diff -rdup a/scripts/kconfig/util.c b/extra/config/util.c
+--- a/scripts/kconfig/util.c	2013-03-11 11:27:49.000000000 +0100
++++ b/extra/config/util.c	2013-11-05 18:25:42.330765189 +0100
+@@ -37,11 +37,15 @@ int file_write_dep(const char *name)
+ 	struct symbol *sym, *env_sym;
+ 	struct expr *e;
+ 	struct file *file;
++	char tmpf[PATH_MAX+1];
+ 	FILE *out;
+ 
+ 	if (!name)
+ 		name = ".kconfig.d";
+-	out = fopen("..config.tmp", "w");
++	strcpy(tmpf, name);
++	dir_name(tmpf);
++	strcat(tmpf, "..config.tmp");
++	out = fopen(tmpf, "w");
+ 	if (!out)
+ 		return 1;
+ 	fprintf(out, "deps_config := \\\n");
+@@ -72,7 +76,7 @@ int file_write_dep(const char *name)
+ 
+ 	fprintf(out, "\n$(deps_config): ;\n");
+ 	fclose(out);
+-	rename("..config.tmp", name);
++	rename(tmpf, name);
+ 	return 0;
+ }
+ 
+@@ -156,4 +160,22 @@ void *xcalloc(size_t nmemb, size_t size)
+ 	exit(1);
+ }
+ 
++/* basename, dirname - parse pathname components */
++char *dir_name(char *path)
++{
++	char *slash = strrchr(path, '/');
++	int size = 0;
++	if (slash)
++		size = slash - path + 1;
++	path[size] = 0;
++	return path;
++}
++char *base_name(char *path)
++{
++	char *slash = strrchr(path, '/');
++	if (slash)
++		path += slash - path + 1;
++	return path;
++
++}
+ 

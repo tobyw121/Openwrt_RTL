@@ -1,0 +1,113 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/mtd/realtek,rtl8197f-spirom.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Realtek RTL8197F/RTL8197FH SPI-NOR auto-map MTD window
+
+maintainers:
+  - OpenWrt RTL8197F bringup <noreply@example.invalid>
+
+description: |
+  MTD map over the RTL8197F SPI-NOR automatic read window. Array reads use the
+  bootloader-programmed mapping and avoid active JEDEC/SFDP probing. Boards may
+  optionally expose the controller resource and a strictly bounded writable
+  window. The driver accepts program and erase operations only inside that
+  window, allowing a dedicated rootfs_data partition to remain writable while
+  boot, calibration, kernel and squashfs partitions stay read-only.
+
+properties:
+  compatible:
+    enum:
+      - realtek,rtl8197f-spirom
+      - realtek,rtl8197fh-spirom
+
+  reg:
+    minItems: 1
+    maxItems: 2
+
+  reg-names:
+    minItems: 1
+    items:
+      - const: automap
+      - const: controller
+
+  clocks:
+    maxItems: 1
+    description: SPI controller clock, required when a writable window is used.
+
+  label: true
+
+  erase-size:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Erase block size exposed to MTD.
+
+  bank-width:
+    $ref: /schemas/types.yaml#/definitions/uint32
+
+  realtek,read-shift:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    maximum: 3
+    description: Byte offset compensation for boards whose auto-map reads are shifted.
+
+  realtek,writable-offset:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: First flash byte accepted by program and erase callbacks.
+
+  realtek,writable-size:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Size of the only writable flash window.
+
+  realtek,spi-clock-div:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    minimum: 2
+    maximum: 65535
+    description: Conservative controller clock divider for write and erase commands.
+
+patternProperties:
+  '^partitions$':
+    type: object
+
+required:
+  - compatible
+  - reg
+
+allOf:
+  - if:
+      required:
+        - realtek,writable-offset
+    then:
+      required:
+        - realtek,writable-size
+        - reg-names
+        - clocks
+      properties:
+        reg:
+          minItems: 2
+        reg-names:
+          minItems: 2
+  - if:
+      required:
+        - realtek,writable-size
+    then:
+      required:
+        - realtek,writable-offset
+
+additionalProperties: false
+
+examples:
+  - |
+    flash@10000000 {
+        compatible = "realtek,rtl8197f-spirom";
+        reg = <0x10000000 0x01000000>, <0x18143000 0x1000>;
+        reg-names = "automap", "controller";
+        clocks = <&lx_clk>;
+        label = "rtl8197f-spirom";
+        erase-size = <0x10000>;
+        realtek,read-shift = <1>;
+        realtek,writable-offset = <0x00e60000>;
+        realtek,writable-size = <0x001a0000>;
+        realtek,spi-clock-div = <8>;
+    };
+...

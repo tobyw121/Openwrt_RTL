@@ -1,0 +1,328 @@
+#
+# Copyright (C) 2009 Realtek Semiconductor Corp.
+#
+# Makefile for SDK Linux Rtk Kernel Module
+#
+
+ifeq ($(SDK_CONFIG), $(wildcard $(SDK_CONFIG)))
+include $(SDK_CONFIG)
+endif
+
+
+ifeq ($(CONFIG_SDK_DRIVER_RTK_CUSTOMER),y)
+CUSTOMER_RTK_API_DIR := $(SDKDIR)/src/rtk/customer
+include $(CUSTOMER_RTK_API_DIR)/customer_api.mk
+endif
+
+EXTRA_CFLAGS += -Wall -Werror -Wuninitialized -Wstrict-prototypes
+EXTRA_CFLAGS += -I$(SDK_INCLUDE) -I$(SYS_INCLUDE) -I$(DRV_INCLUDE)
+
+TARGET := rtk
+
+DRV_DIR := ../system/linux
+MOD_DIR := $(DRV_DIR)/rtk
+MOD_OBJ := \
+	$(MOD_DIR)/module.o
+
+ifeq ($(CONFIG_SDK_MODEL_MODE),y)
+MOD_OBJ += \
+	$(MOD_DIR)/model_module.o
+else ifeq ($(CONFIG_SDK_APP_DIAG_EXT),y)
+MOD_OBJ += \
+	$(MOD_DIR)/model_module.o
+endif
+
+COMMON_DIR := common
+COMMON_UTIL_DIR := $(COMMON_DIR)/util
+COMMON_OBJ := \
+	$(COMMON_DIR)/rt_error.o \
+	$(COMMON_UTIL_DIR)/rt_bitop.o \
+	$(COMMON_UTIL_DIR)/rt_util.o
+
+HAL_DIR := hal
+HAL_CHIPDEF_DIR := $(HAL_DIR)/chipdef
+HAL_COMMON_DIR := $(HAL_DIR)/common
+HAL_MAC_DIR := $(HAL_DIR)/mac
+HAL_PHY_DIR := $(HAL_DIR)/phy
+HAL_OBJ := \
+	$(HAL_CHIPDEF_DIR)/chip.o \
+	$(HAL_CHIPDEF_DIR)/driver.o \
+	$(HAL_COMMON_DIR)/halctrl.o \
+	$(HAL_COMMON_DIR)/miim.o \
+	$(HAL_MAC_DIR)/mac_probe.o \
+	$(HAL_MAC_DIR)/drv.o \
+	$(HAL_MAC_DIR)/mem.o \
+	$(HAL_MAC_DIR)/reg.o \
+	$(HAL_PHY_DIR)/phy_probe.o \
+	$(HAL_PHY_DIR)/identify.o \
+	$(HAL_PHY_DIR)/phy_common.o \
+	$(HAL_MAC_DIR)/mac_debug.o
+ifeq ($(CONFIG_SDK_RTL8201),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8201.o
+endif
+ifeq ($(CONFIG_SDK_RTL8208),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8208.o
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8208_patch.o
+endif
+ifeq ($(CONFIG_SDK_RTL8212F),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8212f.o
+endif
+ifeq ($(CONFIG_SDK_RTL8212B),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8214fb.o
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8214fb_patch.o
+else ifeq ($(CONFIG_SDK_RTL8214B),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8214fb.o
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8214fb_patch.o
+else ifeq ($(CONFIG_SDK_RTL8214FB),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8214fb.o
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8214fb_patch.o
+endif
+ifeq ($(CONFIG_SDK_RTL8214),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8214f.o
+else ifeq ($(CONFIG_SDK_RTL8214F),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8214f.o
+endif
+ifeq ($(CONFIG_SDK_RTL8218),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8218.o
+else ifeq ($(CONFIG_SDK_RTL8218B),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8218.o
+endif
+ifeq ($(CONFIG_SDK_RTL8218B),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8218b.o
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8218b_patch.o
+else ifeq ($(CONFIG_SDK_RTL8218FB),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8218b.o
+else ifeq ($(CONFIG_SDK_RTL8214FC),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8218b.o
+endif
+ifeq ($(CONFIG_SDK_RTL8389),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8389.o \
+	$(HAL_CHIPDEF_DIR)/ssw/rtk_ssw_reg_list.o \
+	$(HAL_CHIPDEF_DIR)/ssw/rtk_ssw_regField_list.o \
+	$(HAL_CHIPDEF_DIR)/ssw/rtk_ssw_table_list.o \
+	$(HAL_CHIPDEF_DIR)/ssw/rtk_ssw_tableField_list.o \
+	$(HAL_CHIPDEF_DIR)/ssw/chip_rtl8389.o
+endif
+ifeq ($(CONFIG_SDK_RTL8328),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8328.o \
+	$(HAL_CHIPDEF_DIR)/esw/rtk_esw_reg_list.o \
+	$(HAL_CHIPDEF_DIR)/esw/rtk_esw_regField_list.o \
+	$(HAL_CHIPDEF_DIR)/esw/rtk_esw_table_list.o \
+	$(HAL_CHIPDEF_DIR)/esw/rtk_esw_tableField_list.o \
+	$(HAL_CHIPDEF_DIR)/esw/chip_rtl8328.o
+endif
+ifeq ($(CONFIG_SDK_RTL8390),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8390.o \
+	$(HAL_CHIPDEF_DIR)/cypress/rtk_cypress_reg_list.o \
+	$(HAL_CHIPDEF_DIR)/cypress/rtk_cypress_regField_list.o \
+	$(HAL_CHIPDEF_DIR)/cypress/rtk_cypress_table_list.o \
+	$(HAL_CHIPDEF_DIR)/cypress/rtk_cypress_tableField_list.o \
+	$(HAL_CHIPDEF_DIR)/cypress/chip_rtl8390.o
+endif
+ifeq ($(CONFIG_SDK_RTL8380),y)
+HAL_OBJ += \
+	$(HAL_PHY_DIR)/phy_8380.o \
+	$(HAL_CHIPDEF_DIR)/maple/rtk_maple_reg_list.o \
+	$(HAL_CHIPDEF_DIR)/maple/rtk_maple_regField_list.o \
+	$(HAL_CHIPDEF_DIR)/maple/rtk_maple_table_list.o \
+	$(HAL_CHIPDEF_DIR)/maple/rtk_maple_tableField_list.o \
+	$(HAL_CHIPDEF_DIR)/maple/chip_rtl8380.o
+endif
+
+DAL_DIR := dal
+DAL_SSW_DIR := $(DAL_DIR)/ssw
+DAL_ESW_DIR := $(DAL_DIR)/esw
+DAL_CYPRESS_DIR := $(DAL_DIR)/cypress
+DAL_MAPLE_DIR := $(DAL_DIR)/maple
+
+DAL_OBJ := \
+	$(DAL_DIR)/dal_common.o \
+	$(DAL_DIR)/dal_mgmt.o \
+	$(DAL_DIR)/dal_linkMon.o \
+	$(DAL_DIR)/dal_linkFaultMon.o
+ifeq ($(CONFIG_SDK_AUTO_COMBO_MEDIA_BY_GPIO),y)
+DAL_OBJ += \
+	$(DAL_DIR)/dal_losMon.o \
+	$(DAL_DIR)/dal_losMon_conf.o
+endif
+ifeq ($(CONFIG_SDK_RTL8389),y)
+DAL_OBJ += \
+	$(DAL_SSW_DIR)/dal_ssw_mapper.o \
+	$(DAL_SSW_DIR)/dal_ssw_dot1x.o \
+	$(DAL_SSW_DIR)/dal_ssw_flowctrl.o \
+	$(DAL_SSW_DIR)/dal_ssw_l2.o \
+	$(DAL_SSW_DIR)/dal_ssw_mirror.o \
+	$(DAL_SSW_DIR)/dal_ssw_port.o \
+	$(DAL_SSW_DIR)/dal_ssw_qos.o \
+	$(DAL_SSW_DIR)/dal_ssw_rate.o \
+	$(DAL_SSW_DIR)/dal_ssw_stat.o \
+	$(DAL_SSW_DIR)/dal_ssw_stp.o \
+	$(DAL_SSW_DIR)/dal_ssw_switch.o \
+	$(DAL_SSW_DIR)/dal_ssw_trap.o \
+	$(DAL_SSW_DIR)/dal_ssw_trunk.o \
+	$(DAL_SSW_DIR)/dal_ssw_vlan.o \
+	$(DAL_SSW_DIR)/dal_ssw_svlan.o \
+	$(DAL_SSW_DIR)/dal_ssw_filter.o \
+	$(DAL_SSW_DIR)/dal_ssw_led.o \
+	$(DAL_SSW_DIR)/dal_ssw_eee.o \
+	$(DAL_SSW_DIR)/dal_ssw_time.o \
+	$(DAL_SSW_DIR)/dal_ssw_diag.o
+endif
+ifeq ($(CONFIG_SDK_RTL8328),y)
+DAL_OBJ += \
+	$(DAL_DIR)/dal_waMon.o \
+	$(DAL_DIR)/dal_macMon.o \
+	$(DAL_ESW_DIR)/dal_esw_mapper.o \
+	$(DAL_ESW_DIR)/dal_esw_dot1x.o \
+	$(DAL_ESW_DIR)/dal_esw_eee.o \
+	$(DAL_ESW_DIR)/dal_esw_flowctrl.o \
+	$(DAL_ESW_DIR)/dal_esw_l2.o \
+	$(DAL_ESW_DIR)/dal_esw_l3.o \
+	$(DAL_ESW_DIR)/dal_esw_mirror.o \
+	$(DAL_ESW_DIR)/dal_esw_oam.o \
+	$(DAL_ESW_DIR)/dal_esw_pie.o \
+	$(DAL_ESW_DIR)/dal_esw_port.o \
+	$(DAL_ESW_DIR)/dal_esw_qos.o \
+	$(DAL_ESW_DIR)/dal_esw_rate.o \
+	$(DAL_ESW_DIR)/dal_esw_sec.o \
+	$(DAL_ESW_DIR)/dal_esw_stat.o \
+	$(DAL_ESW_DIR)/dal_esw_stp.o \
+	$(DAL_ESW_DIR)/dal_esw_switch.o \
+	$(DAL_ESW_DIR)/dal_esw_trap.o \
+	$(DAL_ESW_DIR)/dal_esw_trunk.o \
+	$(DAL_ESW_DIR)/dal_esw_vlan.o \
+	$(DAL_ESW_DIR)/dal_esw_led.o \
+	$(DAL_ESW_DIR)/dal_esw_diag.o
+endif
+ifeq ($(CONFIG_SDK_RTL8390),y)
+DAL_OBJ += \
+	$(DAL_DIR)/dal_waMon.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_mapper.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_eee.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_flowctrl.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_l2.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_l3.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_mirror.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_port.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_qos.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_stp.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_switch.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_time.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_trap.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_trunk.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_sec.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_vlan.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_stat.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_rate.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_acl.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_oam.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_mpls.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_diag.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_common.o \
+	$(DAL_CYPRESS_DIR)/dal_cypress_led.o
+endif
+ifeq ($(CONFIG_SDK_RTL8380),y)
+DAL_OBJ += \
+	$(DAL_DIR)/dal_waMon.o \
+	$(DAL_MAPLE_DIR)/dal_maple_mapper.o \
+	$(DAL_MAPLE_DIR)/dal_maple_eee.o \
+	$(DAL_MAPLE_DIR)/dal_maple_flowctrl.o \
+	$(DAL_MAPLE_DIR)/dal_maple_l2.o \
+	$(DAL_MAPLE_DIR)/dal_maple_l3.o \
+	$(DAL_MAPLE_DIR)/dal_maple_led.o \
+	$(DAL_MAPLE_DIR)/dal_maple_mirror.o \
+	$(DAL_MAPLE_DIR)/dal_maple_port.o \
+	$(DAL_MAPLE_DIR)/dal_maple_qos.o \
+	$(DAL_MAPLE_DIR)/dal_maple_stp.o \
+	$(DAL_MAPLE_DIR)/dal_maple_switch.o \
+	$(DAL_MAPLE_DIR)/dal_maple_trap.o \
+	$(DAL_MAPLE_DIR)/dal_maple_trunk.o \
+	$(DAL_MAPLE_DIR)/dal_maple_sec.o \
+	$(DAL_MAPLE_DIR)/dal_maple_vlan.o \
+	$(DAL_MAPLE_DIR)/dal_maple_stat.o \
+	$(DAL_MAPLE_DIR)/dal_maple_rate.o \
+	$(DAL_MAPLE_DIR)/dal_maple_acl.o \
+	$(DAL_MAPLE_DIR)/dal_maple_time.o \
+	$(DAL_MAPLE_DIR)/dal_maple_diag.o
+endif
+
+RTK_DIR := rtk
+RTK_OBJ := \
+	$(RTK_DIR)/init.o \
+	$(RTK_DIR)/dot1x.o \
+	$(RTK_DIR)/eee.o \
+	$(RTK_DIR)/filter.o \
+	$(RTK_DIR)/flowctrl.o \
+	$(RTK_DIR)/l2.o \
+	$(RTK_DIR)/l3.o \
+	$(RTK_DIR)/mirror.o \
+	$(RTK_DIR)/oam.o \
+	$(RTK_DIR)/port.o \
+	$(RTK_DIR)/pie.o \
+	$(RTK_DIR)/qos.o \
+	$(RTK_DIR)/rate.o \
+	$(RTK_DIR)/sec.o \
+	$(RTK_DIR)/stat.o \
+	$(RTK_DIR)/stp.o \
+	$(RTK_DIR)/svlan.o \
+	$(RTK_DIR)/switch.o \
+	$(RTK_DIR)/time.o \
+	$(RTK_DIR)/trap.o \
+	$(RTK_DIR)/vlan.o \
+	$(RTK_DIR)/trunk.o \
+	$(RTK_DIR)/led.o \
+	$(RTK_DIR)/acl.o \
+	$(RTK_DIR)/mpls.o \
+	$(RTK_DIR)/diag.o
+
+ifeq ($(CONFIG_SDK_DRIVER_RTK_CUSTOMER),y)
+RTK_OBJ += \
+	   $(CUSTOMER_RTK_API_SRC)
+endif
+
+ifeq ($(CONFIG_SDK_MODEL_MODE),y)
+EXTRA_CFLAGS += -I$(MODELDIR) -I$(MODELDIR)/common -I$(MODELDIR)/behavior_src/8390 -I$(MODELDIR)/testcase/8390
+endif
+
+ALL_OBJ := $(COMMON_OBJ) $(HAL_OBJ) $(DAL_OBJ) $(RTK_OBJ)
+
+ifeq ($(CONFIG_SDK_DRIVER_COMPILE),m)
+ALL_OBJ += $(MOD_OBJ)
+EXTRA_CFLAGS += -mlong-calls -fno-pic -mno-abicalls
+endif
+
+ifeq ($(CONFIG_SDK_DRIVER_COMPILE),y)
+ALL_OBJ += $(MOD_OBJ)
+EXTRA_CFLAGS += -mlong-calls -fno-pic -mno-abicalls
+endif
+
+obj-$(CONFIG_SDK_DRIVER_COMPILE) += $(TARGET).o
+$(TARGET)-objs := $(ALL_OBJ)
+
+clean:
+	@$(RM) $(ALL_OBJ)
+	@find \( -name '*.[oas]' -o -name '*.ko' -o -name '.*.cmd' \
+		-o -name '.*.d' -o -name '.*.tmp' -o -name '*.mod.c' \) \
+		-type f -print | xargs rm -f
+

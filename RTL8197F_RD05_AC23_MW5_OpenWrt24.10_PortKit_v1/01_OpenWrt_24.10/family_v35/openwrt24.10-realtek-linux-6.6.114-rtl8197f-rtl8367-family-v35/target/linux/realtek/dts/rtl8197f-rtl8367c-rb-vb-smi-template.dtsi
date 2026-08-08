@@ -1,0 +1,77 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+/*
+ * RTL8197F external RTL8367C / RTL8367RB-VB C-map switch template.
+ *
+ * C-map chip IDs accepted by the family driver:
+ *   0x0276, 0x0597 and 0x6367 (exact known 0x6367 revisions win).
+ *
+ * Typical RTL8197F topology:
+ *   RTL8197F physical P0/RGMII <-> RTL8367RB-VB physical port 6 / EXT0.
+ *
+ * The SDK enables external-interface SSC for RTL8197F designs and then uses
+ * TX0/RX5. Disable realtek,enable-ext-ssc and use RX2/600 ps only after board
+ * signal-integrity validation. GPIO and port labels are board examples.
+ */
+
+/ {
+	rtl8367c_smi: switch {
+		compatible = "realtek,rtl8367rb-vb";
+		pinctrl-names = "default";
+		pinctrl-0 = <&rtl8367c_smi_h0_g7_pins>;
+		mdc-gpios = <&gpio0 56 GPIO_ACTIVE_HIGH>;
+		mdio-gpios = <&gpio0 55 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpio0 58 GPIO_ACTIVE_LOW>;
+		realtek,enable-ext-ssc;
+		realtek,disable-leds;
+		status = "disabled";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 { reg = <0>; label = "lan1"; phy-handle = <&rbvb_phy0>; };
+			port@1 { reg = <1>; label = "lan2"; phy-handle = <&rbvb_phy1>; };
+			port@2 { reg = <2>; label = "wan";  phy-handle = <&rbvb_phy2>; };
+			port@3 { reg = <3>; label = "lan3"; phy-handle = <&rbvb_phy3>; };
+			port@4 { reg = <4>; label = "lan4"; phy-handle = <&rbvb_phy4>; };
+
+			/* C-map EXT0 is driver external-interface ID 1 / physical port 6. */
+			port@6 {
+				reg = <6>;
+				label = "cpu";
+				ethernet = <&ethernet0>;
+				phy-mode = "rgmii";
+				tx-internal-delay-ps = <0>;
+				rx-internal-delay-ps = <1500>;
+				fixed-link { speed = <1000>; full-duplex; pause; };
+			};
+		};
+
+		mdio {
+			compatible = "realtek,smi-mdio";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			rbvb_phy0: ethernet-phy@0 { reg = <0>; };
+			rbvb_phy1: ethernet-phy@1 { reg = <1>; };
+			rbvb_phy2: ethernet-phy@2 { reg = <2>; };
+			rbvb_phy3: ethernet-phy@3 { reg = <3>; };
+			rbvb_phy4: ethernet-phy@4 { reg = <4>; };
+		};
+	};
+};
+
+&ethernet0 {
+	realtek,rtl8367-dsa-master;
+	realtek,p0-rgmii-tx-delay = <0>;
+	realtek,p0-rgmii-rx-delay = <5>;
+	realtek,p0-rgtxc = <3>;
+	realtek,tx-port-mask = <0x1>;
+	realtek,tx-dp-ext = <0>;
+	realtek,tx-extspa = <0>;
+};
+
+&pinmux {
+	rtl8367c_smi_h0_g7_pins: rtl8367c-smi-h0-g7-pins {
+		pinctrl-single,bits = <0x34 0x03300000 0x0ff00000>;
+	};
+};

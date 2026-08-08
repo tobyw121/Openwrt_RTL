@@ -1,0 +1,30 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Minimal swconfig compatibility shim for RTL8367D DSA ports.
+# Supported forms:
+#   swconfig dev switch0 show
+#   swconfig dev switch0 vlan <VID> set ports "0 1 2 3 4t"
+#   swconfig dev switch0 port <N> get link
+set -eu
+usage(){ echo 'usage: swconfig dev switch0 show | vlan VID set ports "0 1 2 3 4t" | port N get link' >&2; exit 2; }
+[ "${1:-}" = dev ] || usage
+shift; dev="${1:-}"; shift || true
+case "${1:-}" in
+ show) exec rtl8367dctl swconfig-show ;;
+ vlan)
+   vid="${2:-}"; [ "${3:-}" = set ] && [ "${4:-}" = ports ] || usage
+   ports="${5:-}"; set --
+   for p in $ports; do
+     tag="u"; case "$p" in *t) tag=t; p="${p%t}";; esac
+     case "$p" in 0) name=lan1;; 1) name=lan2;; 2) name=wan;; 3) name=lan3;; 4) name=lan4;; *) continue;; esac
+     set -- "$@" "$name:$tag"
+   done
+   exec rtl8367dctl vlan-add "$vid" "$@"
+   ;;
+ port)
+   port="${2:-}"; [ "${3:-}" = get ] && [ "${4:-}" = link ] || usage
+   case "$port" in 0) name=lan1;; 1) name=lan2;; 2) name=wan;; 3) name=lan3;; 4) name=lan4;; *) usage;; esac
+   exec ethtool "$name"
+   ;;
+ *) usage ;;
+esac

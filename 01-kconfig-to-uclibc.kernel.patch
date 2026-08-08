@@ -1,0 +1,80 @@
+diff --git a/extra/config/gconf.glade b/extra/config/gconf.glade
+index aa483cb..d449d32 100644
+--- a/extra/config/gconf.glade
++++ b/extra/config/gconf.glade
+@@ -4,7 +4,7 @@
+ 
+ <widget class="GtkWindow" id="window1">
+   <property name="visible">True</property>
+-  <property name="title" translatable="yes">Gtk Kernel Configurator</property>
++  <property name="title" translatable="yes">Gtk uCLibc Configurator</property>
+   <property name="type">GTK_WINDOW_TOPLEVEL</property>
+   <property name="window_position">GTK_WIN_POS_NONE</property>
+   <property name="modal">False</property>
+diff --git a/extra/config/mconf.c b/extra/config/mconf.c
+index 6c9c45f..fcf6478 100644
+--- a/extra/config/mconf.c
++++ b/extra/config/mconf.c
+@@ -961,7 +961,7 @@ static int handle_exit(void)
+ 	if (conf_get_changed())
+ 		res = dialog_yesno(NULL,
+ 				   _("Do you wish to save your new configuration?\n"
+-				     "(Press <ESC><ESC> to continue kernel configuration.)"),
++				     "(Press <ESC><ESC> to continue configuration.)"),
+ 				   6, 60);
+ 	else
+ 		res = -1;
+diff --git a/extra/config/nconf.c b/extra/config/nconf.c
+index 7975d8d..4e416cf 100644
+--- a/extra/config/nconf.c
++++ b/extra/config/nconf.c
+@@ -27,8 +27,8 @@ static const char nconf_global_help[] = N_(
+ "\n"
+ "Menu entries\n"
+ "------------\n"
+-"This interface lets you select features and parameters for the kernel\n"
+-"build.  Kernel features can either be built-in, modularized, or removed.\n"
++"This interface lets you select features and parameters for the \n"
++"build.  Features can either be built-in, modularized, or removed.\n"
+ "Parameters must be entered as text or decimal or hexadecimal numbers.\n"
+ "\n"
+ "Menu entries beginning with following braces represent features that\n"
+diff --git a/extra/config/qconf.cc b/extra/config/qconf.cc
+index 1500c38..8db89b8 100644
+--- a/extra/config/qconf.cc
++++ b/extra/config/qconf.cc
+@@ -1680,7 +1680,7 @@ void ConfigMainWindow::showIntro(void)
+ void ConfigMainWindow::showAbout(void)
+ {
+ 	static const QString str = _("qconf is Copyright (C) 2002 Roman Zippel <zippel@linux-m68k.org>.\n\n"
+-		"Bug reports and feature request can also be entered at http://bugzilla.kernel.org/\n");
++		"Bug reports and feature request can also be entered at http://bugs.uClibc.org/\n");
+ 
+ 	QMessageBox::information(this, "qconf", str);
+ }
+diff --git a/extra/config/zconf.tab.c_shipped b/extra/config/zconf.tab.c_shipped
+index f636141..208f200 100644
+--- a/extra/config/zconf.tab.c_shipped
++++ b/extra/config/zconf.tab.c_shipped
+@@ -2259,7 +2259,7 @@ void conf_parse(const char *name)
+ 	modules_sym = sym_lookup(NULL, 0);
+ 	modules_sym->type = S_BOOLEAN;
+ 	modules_sym->flags |= SYMBOL_AUTO;
+-	rootmenu.prompt = menu_add_prompt(P_MENU, "Linux Kernel Configuration", NULL);
++	rootmenu.prompt = menu_add_prompt(P_MENU, "uClibc Configuration", NULL);
+ 
+ 	if (getenv("ZCONF_DEBUG"))
+ 		zconfdebug = 1;
+diff --git a/extra/config/zconf.y b/extra/config/zconf.y
+index 864da07..2cfcfba 100644
+--- a/extra/config/zconf.y
++++ b/extra/config/zconf.y
+@@ -496,7 +496,7 @@ void conf_parse(const char *name)
+ 	modules_sym = sym_lookup(NULL, 0);
+ 	modules_sym->type = S_BOOLEAN;
+ 	modules_sym->flags |= SYMBOL_AUTO;
+-	rootmenu.prompt = menu_add_prompt(P_MENU, "Linux Kernel Configuration", NULL);
++	rootmenu.prompt = menu_add_prompt(P_MENU, "uClibc Configuration", NULL);
+ 
+ 	if (getenv("ZCONF_DEBUG"))
+ 		zconfdebug = 1;

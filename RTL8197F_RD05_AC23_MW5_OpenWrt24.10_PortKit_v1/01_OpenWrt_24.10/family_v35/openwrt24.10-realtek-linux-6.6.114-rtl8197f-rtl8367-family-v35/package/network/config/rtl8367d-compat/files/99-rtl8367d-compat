@@ -1,0 +1,7 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# OpenWrt firstboot defaults for the RTL8367D compatibility layer.
+uci -q get firewall.@defaults[0].flow_offloading >/dev/null || uci set firewall.@defaults[0].flow_offloading='0'
+uci -q get firewall.@defaults[0].flow_offloading_hw >/dev/null || uci set firewall.@defaults[0].flow_offloading_hw='0'
+uci -q commit firewall
+exit 0

@@ -1,0 +1,609 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 27613 $
+// $Date: 2012-03-30 17:33:46 +0800 (Fri, 30 Mar 2012) $
+//
+// Purpose : Define diag shell commands for flow control
+//
+// Feature : The file includes the following module and sub-modules
+//           1) flow control commands.
+//
+
+#ifdef CMD_FLOWCTRL_GET_INGRESS_SYSTEM_FC_OFF_THRESH_FC_ON_THRESH_HIGH_OFF_HIGH_ON_LOW_OFF_LOW_ON
+//flowctrl configuration
+//get configuration
+//ingress configuration
+//system configuration
+//flowctrl off threshold
+//flowctrl on threshold
+//high threshold off
+//high threshold on
+//low threshold off
+//low threshold on
+flowctrl get ingress system ( fc-off-thresh | fc-on-thresh ) ( high-off | high-on | low-off | low-on )
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_INGRESS_PORT_PORTS_ALL_FC_OFF_THRESH_HIGH_OFF_HIGH_ON_LOW_OFF_LOW_ON
+//flowctrl configuration
+//get configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//flowctrl off threshold
+//high threshold off
+//high threshold on
+//low threshold off
+//low threshold on
+flowctrl get ingress port ( <PORT_LIST:ports> | all ) fc-off-thresh ( high-off | high-on | low-off | low-on )
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_INGRESS_PORT_PORTS_ALL_FC_ON_THRESH_HIGH_OFF_HIGH_ON_LOW_OFF_LOW_ON
+//flowctrl configuration
+//get configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//flowctrl on threshold
+//high threshold off
+//high threshold on
+//low threshold off
+//low threshold on
+flowctrl get ingress port ( <PORT_LIST:ports> | all ) fc-on-thresh ( high-off | high-on | low-off | low-on )
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_INGRESS_THRESH_GROUP_GRP_IDX_FC_OFF_THRESH_FC_ON_THRESH_HIGH_OFF_HIGH_ON_LOW
+//flowctrl configuration
+//get configuration
+//ingress configuration
+//threshold group configuration
+//group index
+//flowctrl off threshold
+//flowctrl on threshold
+//high threshold off
+//high threshold on
+//low threshold
+flowctrl get ingress thresh-group <UINT:grp_idx> ( fc-off-thresh | fc-on-thresh ) ( high-off | high-on | low )
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_INGRESS_PORT_PORTS_ALL_THRESH_GROUP
+//flowctrl configuration
+//get configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//threshold group configuration
+flowctrl get ingress port ( <PORT_LIST:ports> | all ) thresh-group
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_INGRESS_PORT_PORTS_ALL_STATE
+//flowctrl configuration
+//get configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//flowctrl enable state
+flowctrl get ingress port ( <PORT_LIST:ports> | all ) state
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_INGRESS_PORT_PORTS_ALL_MODE
+//flowctrl configuration
+//get configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//flowctrl mode
+flowctrl get ingress port ( <PORT_LIST:ports> | all ) mode
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_INGRESS_PORT_PORTS_ALL_PAUSE_ON_ACTION
+//flowctrl configuration
+//get configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//packet action while pause on
+flowctrl get ingress port ( <PORT_LIST:ports> | all ) pause-on-action
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_INGRESS_PORT_PORTS_ALL_PAUSE_ON_ALLOWED_NUM_PAGE_PKT
+//flowctrl configuration
+//get configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//allowed number after pause on
+//count by page
+//count by packet
+flowctrl get ingress port ( <PORT_LIST:ports> | all ) pause-on-allowed-num ( page | pkt )
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_INGRESS_PORT_PORTS_ALL_PAUSE_ON_ALLOWED_NUM_PKT
+//flowctrl configuration
+//get configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//allowed number after pause on
+//count by packet
+flowctrl get ingress port ( <PORT_LIST:ports> | all ) pause-on-allowed-num pkt
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_INGRESS_PORT_PORTS_ALL_PAUSE_ON_ALLOWED_LEN
+//flowctrl configuration
+//get configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//allowed total packet length after pause on
+flowctrl get ingress port ( <PORT_LIST:ports> | all ) pause-on-allowed-len
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_EGRESS_SYSTEM_DROP_THRESH_HIGH_LOW
+//flowctrl configuration
+//get configuration
+//egress configuration
+//system configuration
+//drop threshold 
+//high threshold
+//low threshold
+flowctrl get egress system drop-thresh ( high | low )
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_EGRESS_SYSTEM_DROP_THRESH
+//flowctrl configuration
+//get configuration
+//egress configuration
+//system configuration
+//drop threshold 
+flowctrl get egress system drop-thresh
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_EGRESS_PORT_PORTS_ALL_DROP_THRESH_HIGH_LOW
+//flowctrl configuration
+//get configuration
+//egress configuration
+//port configuration
+//port list
+//all ports
+//drop threshold 
+//high threshold
+//low threshold
+flowctrl get egress port ( <PORT_LIST:ports> | all ) drop-thresh ( high | low )
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_EGRESS_PORT_PORTS_ALL_DROP_THRESH
+//flowctrl configuration
+//get configuration
+//egress configuration
+//port configuration
+//port list
+//all ports
+//drop threshold 
+flowctrl get egress port ( <PORT_LIST:ports> | all ) drop-thresh
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_EGRESS_PORT_PORTS_ALL_QUEUE_DROP_STATE
+//flowctrl configuration
+//get configuration
+//egress configuration
+//port configuration
+//port list
+//all ports
+//queue drop ability
+//state configuration
+flowctrl get egress port ( <PORT_LIST:ports> | all ) queue-drop state
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_EGRESS_PORT_PORTS_ALL_QUEUE_QUEUES_ALL_DROP_THRESH_HIGH_LOW
+//flowctrl configuration
+//get configuration
+//egress configuration
+//port configuration
+//port list
+//all ports
+//queue configuration
+//queue list
+//all queues
+//drop threshold 
+//high threshold
+//low threshold
+flowctrl get egress port ( <PORT_LIST:ports> | all ) queue ( <MASK_LIST:queues> | all ) drop-thresh ( high | low )
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_EGRESS_PORT_PORTS_ALL_IGR_CONGEST_CHECK
+//flowctrl configuration
+//get configuration
+//egress configuration
+//port configuration
+//port list
+//all ports
+//ingress congestion check enable status 
+flowctrl get egress port ( <PORT_LIST:ports> | all ) igr-congest-check
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_EGRESS_PORT_PORTS_ALL_DROP_MODE
+//flowctrl configuration
+//get configuration
+//egress configuration
+//port configuration
+//port list
+//all ports
+//flowctrl drop mode
+flowctrl get egress port ( <PORT_LIST:ports> | all ) drop-mode
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_EGRESS_PORT_PORTS_ALL_DROP_PATH
+//flowctrl configuration
+//get configuration
+//egress configuration
+//port configuration
+//port list
+//all ports
+//packet drop path
+flowctrl get egress port ( <PORT_LIST:ports> | all ) drop-path
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_EGRESS_QUEUE_QUEUES_ALL_DROP_THRESH_HIGH_LOW
+//flowctrl configuration
+//get configuration
+//egress configuration
+//queue configuration
+//queue list
+//all queues
+//drop threshold 
+//high threshold
+//low threshold
+flowctrl get egress queue ( <MASK_LIST:queues> | all ) drop-thresh ( high | low )
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_EGRESS_QUEUE_QUEUES_ALL_DROP_THRESH
+//flowctrl configuration
+//get configuration
+//egress configuration
+//queue configuration
+//queue list
+//all queues
+//drop threshold 
+flowctrl get egress queue ( <MASK_LIST:queues> | all ) drop-thresh
+#endif
+
+#ifdef CMD_FLOWCTRL_GET_EGRESS_CPU_QUEUE_QUEUES_ALL_DROP_THRESH
+//flowctrl configuration
+//get configuration
+//egress configuration
+//CPU port
+//queue configuration
+//queue list
+//all queues
+//drop threshold 
+flowctrl get egress cpu queue ( <MASK_LIST:queues> | all ) drop-thresh
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_INGRESS_SYSTEM_FC_OFF_THRESH_FC_ON_THRESH_HIGH_OFF_HIGH_ON_LOW_OFF_LOW_ON_THRESH
+//flowctrl configuration
+//set configuration
+//ingress configuration
+//system configuration
+//flowctrl off threshold
+//flowctrl on threshold
+//high threshold off
+//high threshold on
+//low threshold off
+//low threshold on
+//threshold
+flowctrl set ingress system ( fc-off-thresh | fc-on-thresh ) ( high-off | high-on | low-off | low-on ) <UINT:thresh>
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_INGRESS_PORT_PORTS_ALL_FC_OFF_THRESH_HIGH_OFF_HIGH_ON_LOW_OFF_LOW_ON_THRESH
+//flowctrl configuration
+//set configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//flowctrl off threshold
+//high threshold off
+//high threshold on
+//low threshold off
+//low threshold on
+//threshold
+flowctrl set ingress port ( <PORT_LIST:ports> | all ) fc-off-thresh ( high-off | high-on | low-off | low-on ) <UINT:thresh>
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_INGRESS_PORT_PORTS_ALL_FC_ON_THRESH_HIGH_OFF_HIGH_ON_LOW_OFF_LOW_ON_THRESH
+//flowctrl configuration
+//set configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//flowctrl on threshold
+//high threshold off
+//high threshold on
+//low threshold off
+//low threshold on
+//threshold
+flowctrl set ingress port ( <PORT_LIST:ports> | all ) fc-on-thresh ( high-off | high-on | low-off | low-on ) <UINT:thresh>
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_INGRESS_THRESH_GROUP_GRP_IDX_FC_OFF_THRESH_FC_ON_THRESH_HIGH_OFF_HIGH_ON_LOW_THRESH
+//flowctrl configuration
+//set configuration
+//ingress configuration
+//threshold group configuration
+//group index
+//flowctrl off threshold
+//flowctrl on threshold
+//high threshold off
+//high threshold on
+//low threshold
+flowctrl set ingress thresh-group <UINT:grp_idx> ( fc-off-thresh | fc-on-thresh ) ( high-off | high-on | low ) <UINT:thresh>
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_INGRESS_PORT_PORTS_ALL_THRESH_GROUP_GRP_IDX
+//flowctrl configuration
+//set configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//threshold group configuration
+//group index
+flowctrl set ingress port ( <PORT_LIST:ports> | all ) thresh-group <UINT:grp_idx>
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_INGRESS_PORT_PORTS_ALL_STATE_DISABLE_ENABLE
+//flowctrl configuration
+//set configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//state configuration
+//disable function
+//enable function
+flowctrl set ingress port ( <PORT_LIST:ports> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_INGRESS_PORT_PORTS_ALL_MODE_FORCE_N_WAY
+//flowctrl configuration
+//set configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//flowctrl mode
+//force mode
+//N-way mode
+flowctrl set ingress port ( <PORT_LIST:ports> | all ) mode ( force | n-way )
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_INGRESS_PORT_PORTS_ALL_PAUSE_ON_ACTION_DROP_RECEIVE
+//flowctrl configuration
+//set configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//packet action while pause on
+//drop packet
+//receive packet
+flowctrl set ingress port ( <PORT_LIST:ports> | all ) pause-on-action ( drop | receive )
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_INGRESS_PORT_PORTS_ALL_PAUSE_ON_ALLOWED_NUM_PAGE_PKT_NUMBER
+//flowctrl configuration
+//set configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//allowed number after pause on
+//count by page
+//count by packet
+//allowed number
+flowctrl set ingress port ( <PORT_LIST:ports> | all ) pause-on-allowed-num ( page | pkt ) <UINT:number>
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_INGRESS_PORT_PORTS_ALL_PAUSE_ON_ALLOWED_NUM_PKT_NUMBER
+//flowctrl configuration
+//set configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//allowed number after pause on
+//count by packet
+//allowed number
+flowctrl set ingress port ( <PORT_LIST:ports> | all ) pause-on-allowed-num pkt <UINT:number>
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_INGRESS_PORT_PORTS_ALL_PAUSE_ON_ALLOWED_LEN_LENGTH
+//flowctrl configuration
+//set configuration
+//ingress configuration
+//port configuration
+//port list
+//all ports
+//allowed total packet length after pause on
+//allowed packet length
+flowctrl set ingress port ( <PORT_LIST:ports> | all ) pause-on-allowed-len <UINT:length>
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_EGRESS_SYSTEM_DROP_THRESH_HIGH_LOW_THRESH
+//flowctrl configuration
+//set configuration
+//egress configuration
+//system configuration
+//drop threshold 
+//high threshold
+//low threshold
+//threshold
+flowctrl set egress system drop-thresh ( high | low ) <UINT:thresh>
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_EGRESS_SYSTEM_DROP_THRESH_THRESH
+//flowctrl configuration
+//set configuration
+//egress configuration
+//system configuration
+//drop threshold 
+//threshold
+flowctrl set egress system drop-thresh <UINT:thresh>
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_EGRESS_PORT_PORTS_ALL_DROP_THRESH_HIGH_LOW_THRESH
+//flowctrl configuration
+//set configuration
+//egress configuration
+//port configuration
+//port list
+//all ports
+//drop threshold 
+//high threshold
+//low threshold
+//threshold
+flowctrl set egress port ( <PORT_LIST:ports> | all ) drop-thresh ( high | low ) <UINT:thresh>
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_EGRESS_PORT_PORTS_ALL_DROP_THRESH_THRESH
+//flowctrl configuration
+//set configuration
+//egress configuration
+//port configuration
+//port list
+//all ports
+//drop threshold 
+//threshold
+flowctrl set egress port ( <PORT_LIST:ports> | all ) drop-thresh <UINT:thresh>
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_EGRESS_PORT_PORTS_ALL_QUEUE_DROP_STATE_DISABLE_ENABLE
+//flowctrl configuration
+//set configuration
+//egress configuration
+//port configuration
+//port list
+//all ports
+//queue drop ability
+//state configuration
+//disable function
+//enable function
+flowctrl set egress port ( <PORT_LIST:ports> | all ) queue-drop state ( disable | enable )
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_EGRESS_PORT_PORTS_ALL_QUEUE_QUEUES_ALL_DROP_THRESH_HIGH_LOW_THRESH
+//flowctrl configuration
+//set configuration
+//egress configuration
+//port configuration
+//port list
+//all ports
+//queue configuration
+//queue list
+//all queues
+//drop threshold 
+//high threshold
+//low threshold
+//threshold
+flowctrl set egress port ( <PORT_LIST:ports> | all ) queue ( <MASK_LIST:queues> | all ) drop-thresh ( high | low ) <UINT:thresh>
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_EGRESS_PORT_PORTS_ALL_IGR_CONGEST_CHECK_STATE_DISABLE_ENABLE
+//flowctrl configuration
+//set configuration
+//egress configuration
+//port configuration
+//port list
+//all ports
+//ingress congestion check enable status 
+//state configuration
+//disable function
+//enable function
+flowctrl set egress port ( <PORT_LIST:ports> | all ) igr-congest-check state ( disable | enable )
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_EGRESS_PORT_PORTS_ALL_DROP_MODE_FORCE_N_WAY
+//flowctrl configuration
+//set configuration
+//egress configuration
+//port configuration
+//port list
+//all ports
+//flowctrl drop mode
+//force mode
+//N-way mode
+flowctrl set egress port ( <PORT_LIST:ports> | all ) drop-mode ( force | n-way )
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_EGRESS_PORT_PORTS_ALL_DROP_PATH_BOTH_DISABLE_RX_TX
+//flowctrl configuration
+//set configuration
+//egress configuration
+//port configuration
+//port list
+//all ports
+//packet drop path
+//both rx and tx
+//disable function
+//rx
+//tx
+flowctrl set egress port ( <PORT_LIST:ports> | all ) drop-path ( both | disable | rx | tx )
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_EGRESS_QUEUE_QUEUES_ALL_DROP_THRESH_HIGH_LOW_THRESH
+//flowctrl configuration
+//set configuration
+//egress configuration
+//queue configuration
+//queue list
+//all queues
+//drop threshold 
+//high threshold
+//low threshold
+//threshold
+flowctrl set egress queue ( <MASK_LIST:queues> | all ) drop-thresh ( high | low ) <UINT:thresh>
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_EGRESS_QUEUE_QUEUES_ALL_DROP_THRESH_THRESH
+//flowctrl configuration
+//set configuration
+//egress configuration
+//queue configuration
+//queue list
+//all queues
+//drop threshold 
+//threshold
+flowctrl set egress queue ( <MASK_LIST:queues> | all ) drop-thresh <UINT:thresh>
+#endif
+
+#ifdef CMD_FLOWCTRL_SET_EGRESS_CPU_QUEUE_QUEUES_ALL_DROP_THRESH_THRESH
+//flowctrl configuration
+//set configuration
+//CPU port
+//egress configuration
+//queue configuration
+//queue list
+//all queues
+//drop threshold 
+//threshold
+flowctrl set egress cpu queue ( <MASK_LIST:queues> | all ) drop-thresh <UINT:thresh>
+#endif

@@ -1,0 +1,9 @@
+source_files=2300
+source_dirs=590
+source_symlinks=3
+zip_entries=2893
+tar_entries=2893
+zip_differences=0
+tar_differences=0
+unsafe_paths=0
+PASS: ZIP and TAR.ZST reproduce all contents, modes and symlinks exactly

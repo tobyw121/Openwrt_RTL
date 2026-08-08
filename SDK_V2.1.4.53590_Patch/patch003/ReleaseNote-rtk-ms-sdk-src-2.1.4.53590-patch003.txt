@@ -1,0 +1,9 @@
+[RTL839x/5xM][OAM]Dying gasp packet free opertion is uncompleted.
+Purpose:
+		Fix Dying gasp packet free operation.
+
+Modified Files: (svn r59512 r59513 and r59521, Mantis 0017910)
+*     /sdk/src/dal/cypress/dal_cypress_oam.c
+
+Release Files:
+	rtk-ms-sdk-src-2.1.4.53590-patch003.tar.gz

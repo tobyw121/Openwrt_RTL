@@ -1,0 +1,36 @@
+RTL8197F / Tenda Nova MW5 v43.5 validation
+==========================================
+
+Implemented
+-----------
+- Kept verified mapping: LAN=P1, WAN=P3, CPU=P6.
+- Added RTL8197F ndo_set_mac_address wrapper.
+- Re-seeds RTL865x L2/VLAN/netif/ACL tables after a live Factory-MAC change.
+- Records current and last seeded MAC in readable /proc/rd05-rtknet.
+- Enabled MW5 raw pre-DSA RX tracing.
+- Added bounded rtl4_9 TX/RX and malformed-tag logs with encapsulated EtherType.
+- Preserves the Linux 6.6 EtherType-tag strip path and explicit protocol value.
+- Added mw5-netdiag direct lan, direct wan and direct auto.
+- Removed unconditional odhcpd calls and unsupported BusyBox ip -d usage.
+- Kept all diagnostics embedded in target/linux/realtek/base-files.
+
+Static regression results
+-------------------------
+- CHECK_MW5_V43.5.sh: 17 PASS, 0 FAIL.
+- CHECK_MW5_DIAG_BUILTIN_V43.4.sh: 43 PASS, 0 FAIL.
+- CHECK_MW5_WANLAN_V43.sh: 54 PASS, 0 FAIL.
+- CHECK_SOURCE_TREE_V42.sh: PASS.
+- tag_rtl4_9.c strict checkpatch: 0 errors, 0 warnings, 0 checks.
+- MW5 diagnostic shell syntax: PASS.
+
+Still required outside this environment
+---------------------------------------
+- Complete OpenWrt MIPS cross-build with the user's .config and toolchain.
+- Flash/boot test on the Tenda Nova MW5.
+- Hardware confirmation of ARP, ping, DHCP server on LAN and DHCP client on WAN.
+
+Patch reproducibility
+---------------------
+- v43.4 -> v43.5 patch dry-run with --fuzz=0: PASS.
+- Patch applied to a fresh v43.4 copy: PASS.
+- Replayed tree compared with v43.5 source tree: byte-identical.

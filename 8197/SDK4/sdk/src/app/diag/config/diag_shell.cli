@@ -1,0 +1,82 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 25501 $
+// $Date: 2011-11-25 19:49:08 +0800 (Fri, 25 Nov 2011) $
+//
+// Purpose : Define diag shell commands.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) All diag shell commands.
+//
+
+
+//exit diag shell
+exit
+
+//chip configure
+//chip id
+chip <UINT:id>
+
+#include "./debug.cli"
+#include "./dot1x.cli"
+#include "./eee.cli"
+#include "./filter.cli"
+#include "./flowctrl.cli"
+#include "./l2.cli"
+#include "./l3.cli"
+#include "./led.cli"
+#include "./counter.cli"
+
+#ifdef CONFIG_SDK_APP_DIAG_EXT
+#ifdef CONFIG_SDK_DIAG_EXT_RTL8390
+#include "./ext/ext_8390.cli"
+#endif
+#ifdef CONFIG_SDK_DIAG_EXT_RTL8380
+#include "./ext/ext_8380.cli"
+#endif
+#endif
+
+#include "./mirror.cli"
+
+#ifdef CONFIG_SDK_DRIVER_NIC
+#include "./nic.cli"
+#endif
+
+#include "./oam.cli"
+#include "./pie.cli"
+#include "./port.cli"
+#include "./qos.cli"
+#include "./rate.cli"
+#include "./reg.cli"
+#include "./vlan.cli"
+
+#ifdef CONFIG_SDK_DRIVER_TEST
+#include "./sdk.cli"
+#endif
+
+#include "./sec.cli"
+#include "./stp.cli"
+#include "./switch.cli"
+#include "./svlan.cli"
+#include "./time.cli"
+#include "./trap.cli"
+#include "./trunk.cli"
+#include "./acl.cli"
+#include "./mpls.cli"
+#include "./diag.cli"
+
+#ifdef CONFIG_SDK_RTL8231
+#include "./rtl8231.cli"
+#endif
+
+#include "./gpio.cli"
+#include "./smi.cli"

@@ -1,0 +1,292 @@
+.TH rlwrap 1 "October 4, 2007"
+.SH NAME
+rlwrap \- readline wrapper
+.de OP
+.ie \\n(.$-1 .RI "[\ \fB\\$1\fP " "\\$2" "\ ]"
+.el .RB "[\ " "\\$1" "\ ]"
+..
+.de CW
+.ie '@HAVE_PROC_PID_CWD@'yes'  When doing this, rlwrap keeps track \
+of \fIcommand\fPs working directory.
+.el This is not always useful, as rlwrap doesn't keep track of \
+\fIcommand\fP's working directory is.
+..
+.de OA
+.ie '@HAVE_OPTIONAL_ARGS@'yes' The argument is optional; if given, it has to \
+directly follow the option  without an
+intervening space.
+.el On this system, you must give an argument.
+..
+.de OL
+.ie '@HAVE_LONG_OPTS@'yes' .B \\$1, \\$2  \\$3
+.el  .B \\$1 \\$3
+..
+.SH SYNOPSIS
+.B rlwrap
+.I [rlwrap-options]
+.I command \.\.\.
+.SH DESCRIPTION
+\fBrlwrap\fP runs the specified \fIcommand\fP, intercepting user input in order to
+provide  \fBreadline\fP's line editing, persistent history and
+completion.
+\fBrlwrap\fP tries to be as transparent as possible,
+keeping track of \fIcommand\fP's terminal
+settings, so that it can do the right thing when \fIcommand\fP asks for
+single keypresses or for a password. 
+.SH OPTIONS
+.TP
+.OL \-a \-\-always-readline [\fI<password_prompt>\fP] 
+Always use readline, regardless of \fIcommand\fP's terminal settings.
+Use this option you want to use rlwrap with \fIcommand\fPs that already
+use readline, e.g. to get \fBrlwrap\fP's history and completion.
+\fBNB\fP: With this
+option, rlwrap will echo (and save) passwords, unless you give \fIcommand\fP's
+password prompt as an argument.
+.OA \-a \-\-always-readline Password:
+.TP
+.OL \-A \-\-ansi-colour-aware
+Prompts that use colour will confuse rlwrap, especially at the end of
+long input lines. This option will make rlwrap behave in such cases.
+If the prompt contains anything fancier than ANSI color codes, this option
+may actually make things worse.
+.TP
+.OL  \-b \-\-break-chars  \fI<list_of_characters>\fP
+Consider the specified characters word-breaking (whitespace is
+always word-breaking). This determines what is considered a "word",
+both when completing and when building a completion word list from
+files specified by \fB\-f\fP options following (not preceding!) it.
+Default list (){}[],+-=&^%$#@"";|\\ Unless -c is specified, \" twice " to keep emacs happy :-(
+/ and \. (period) are included in the default list.
+.TP
+.OL \-c \-\-complete-filenames
+Complete filenames (filename completion is always case-sensitive, even with the
+\-i option)
+.CW
+.TP
+.OL \-C \-\-command-name \fI<command_name>|<N>\fP
+Use \fIcommand_name\fP instead of \fIcommand\fP to determine the names of
+history and completion files, and to initialise readline (as specified in
+~/.inputrc). A numeric argument N means: use the Nth argument counting
+backwards from the end of the argument list
+.TP
+.OL \-D \-\-history-no-dupes \fIn\fP
+How agressively to weed out duplicate entries from the input history.
+If \fIn\fP = \fB0\fP, all inputs are kept in the history list, if
+\fIn\fP = \fB1\fP (this is the default) consecutive duplicates are dropped
+from the list, while \fIn\fP = \fB2\fP will make \fBrlwrap\fP drop all
+previous occurrences of the current input from the list.
+.TP
+.OL \-f \-\-file \fIfile\fP
+Split \fIfile\fP into words and feed them into the completion word list. This
+option can be given more than once, and \fIadds\fP to the default
+completion list in  $RLWRAP_HOME or @DATADIR@/rlwrap.
+.TP
+.OL \-F \-\-history-format \fIformat\fP
+Append \fIformat\fP to each history entry, replacing the following printf-style 
+conversion specifiers: \fB%D\fP by \fIcommand\fPs working 
+directory, \fB%P\fP by the current prompt, \fB%C\fP by the \fIcommand\fP name, 
+and all remaining format specifiers recognised by \fBstrftime (3)\fP
+
+\fIformat\fP should start with one or more non-space characters, 
+which will be used to recognise and strip off the appended \fIformat\fP 
+from recalled history items.
+.TP
+.OL \-h \-\-help
+Print a short help message.
+.TP
+.OL \-H \-\-history-filename  \fIfile\fP
+Read command history  from \fIfile\fP (and write it back there if
+\-\-histsize >= 0)  
+.TP
+.OL \-i \-\-case-insensitive
+Ignore case when completing (filename completion remains case-sensitive). This option has to come before any -f options.
+.TP
+.OL \-l \-\-logfile \fIfile\fP
+Append \fIcommand\fP's output (including echo'ed user input) to
+\fIfile\fP (creating \fIfile\fP when it doesn't exist).
+.TP
+.OL \-n \-\-no-warnings
+Don't print warnings.
+.TP
+.OL \-m \-\-multi-line [\fI<newline_substitute>\fP]
+Enable multi-line input using a "newline substitute" character
+sequence (" \\ ", [space-backslash-space] by default). Newline
+substitutes are translated to newlines before sending the input to
+\fIcommand\fP.  With this option, you can call an external editor
+$RLWRAP_EDITOR on the (expanded) current input with the
+\fIrlwrap_call_editor\fP key (CTRL-^ by default)
+.OA \-m \-\-multi-line ';;'
+.TP
+.OL \-p \-\-prompt-colour [\fI<colour_spec>\fP]
+Use ANSI-conformant <colour_spec> to colour any prompt displayed by
+\fIcommand\fP. All output that doesn't end in a newline is considered
+a "prompt" by \fBrlwrap\fP (but only if \fIcommand\fPs terminal is in cooked mode) - this
+may not be what you want. Prompts that are too long, or contain
+(colour) escape sequences, are not coloured. This option implies \-\-ansi-colour-aware.
+
+\fI<colour spec>\fP has the form
+<attr>;<fg>[;<bg>] Example: \-p'0;31' will give a red prompt on the
+current background (this is the default when no argument is
+given). Google for 'ANSI color' to learn more about colour codes.
+.OA \-p \-\-prompt-colour '0;31' 
+.TP
+.OL \-P \-\-pre-given \fItext\fP
+Start \fBrlwrap\fP with  \fItext\fP in edit buffer (this will automatically
+set the \-\-always-readline option). Use this for default user input in "one-shot" situations like   
+the following replacement for the \fIread\fP shell command:
+.nf
+
+    rlwrap -H past_dinners -f toppings -P "pizza"\\
+      sh -c 'echo -n "please order: "; head -n 1 > dinner'
+    prepare $(dinner)
+.fi
+.TP
+.OL \-q \-\-quote-characters \fI<list_of_characters>\fP
+Assume that the given characters act as quotes, e.g. when matching
+parentheses. Take care to escape the list properly, or else your shell
+will become confused (for example: \-q "\\"'", which happens to be the
+default) 
+.TP
+.OL \-r \-\-remember
+Put all words seen on in- and output on the completion list.  
+.TP
+.OL \-s \-\-histsize \fI<N>\fP
+Limit the history list to N entries, truncating the history file
+(default: 300). A negative size -N means the same as N, but treats the history file as read-only.
+.TP
+.OL \-v \-\-version
+Print rlwrap version.
+.SH SPECIAL KEYS
+.TP
+.B Control + O
+Accept the current line, but don't put it in the history list. This action
+has a \fBreadline\fP command name  \fIrlwrap_accept_line_and_forget\fP
+.TP
+.B Control + ^
+Use an external editor to edit the current input (this will only work if the \-m
+option is set). This action
+has a \fBreadline\fP command name  \fIrlwrap_call_editor\fP
+.PP
+If you don't like these keybindings, \fBrlwrap\fPs special keys (all
+keys, in fact) kan be re-bound by including a line like the following
+in \fB~/.inputrc\fP:
+.IP ""
+"\eM\-\eC\-m":rlwrap_accept_line_and_forget # ESC-ENTER 
+.TP
+c.f. the \fBreadline(3)\fP manpage for more about re-binding keys
+.SH ENVIRONMENT 
+.TP
+\fBRLWRAP_HOME\fP: directory in which the history and completion files
+are kept.
+.TP
+\fBRLWRAP_EDITOR\fP (or else \fBEDITOR\fP, or else \fBVISUAL\fP): editor to use for multi-line input. Example:
+.PP
+.nf
+    export RLWRAP_EDITOR="emacs -nw"
+    export RLWRAP_EDITOR="vi +%L"
+.fi
+.PP
+The last example is the default; %L and %C are replaced by
+line and column numbers corresponding to the cursor position in
+\fBrlwrap\fPs edit buffer
+.SH SIGNALS
+.PP
+A number of signals are forwarded to \fIcommand\fP:
+HUP INT QUIT USR1 USR2 TERM and (by way of resizing 
+\fIcommand\fPs terminal) WINCH. Some care is taken to handle
+TSTP (usually a result of a CTRL-Z from the terminal) sensibly.
+
+If \fIcommand\fP changes the keystrokes that send a particular signal
+from the keyboard (like emacs, which uses CTRL-G instead of CTRL-C)
+\fBrlwrap\fP will do the same.
+
+When \fIcommand\fP is killed by a signal, \fBrlwrap\fP will clean up,
+reset its signal handlers an then commit suicide by sending the same
+signal to itself.  This means that your shell will see the same exit status as it 
+would have seen without \fBrlwrap\fP.
+
+.SH REDIRECTION
+When the standard input is not a terminal, editing input doesn't make
+sense, so \fBrlwrap\fP will ignore all options and simply
+execute \fIcommand\fP. When stdout (or stderr) is not a terminal, rlwrap will re-open
+it to /dev/tty (the users terminal) after it has started
+\fIcommand\fP,  so that \fIcommand\fPs output is redirected as
+expected, but keyboard input and \fBrlwrap\fP error messages are still visible.
+
+The upshot of this is that \fBrlwrap\fP \fIcommand\fP behaves more or
+less like \fIcommand\fP when redirecting. 
+
+.SH EXIT STATUS
+non-zero after a \fBrlwrap\fP error, or else \fIcommand\fP's exit
+status. \fBrlwrap\fP will always leave the terminal in a tidy state,
+even after a crash. 
+.SH FILES
+\fBrlwrap\fP expects its history and completion files in $RLWRAP_HOME, but uses .dotfiles in the users
+home directory if this variable is not set. This will quickly become messy if you use \fBrlwrap\fP a lot. 
+.TP
+$RLWRAP_HOME/\fIcommand\fP_history, ~/.\fIcommand\fP_history
+History for \fIcommand\fP 
+.TP
+$RLWRAP_HOME/\fIcommand\fP_completions, ~/.\fIcommand\fP_completions
+Per-user completion word list for \fIcommand\fP. \fBrlwrap\fP never
+writes into this list, but one can combine \fB\-l\fP and \fB\-f\fP
+options to to simulate the effect of a \fB\-r\fP option that works
+across invocations.
+.TP
+@DATADIR@/rlwrap/\fIcommand\fP  
+System-wide completion word list for \fIcommand\fP. This file is only
+consulted if the per-user completion word list is not found.
+.TP
+$INPUTRC, ~/.inputrc
+Individual \fBreadline\fP initialisation file (See \fBreadline\fP (3) for
+its format). \fBrlwrap\fP sets its \fIapplication name\fP to
+\fIcommand\fP (unless you use the \fB\-C\fP option), enabling different behaviours for different commands.
+One could e.g. put the following lines in \fB~/.inputrc\fP:  
+.RS
+.nf
+.if t .ft CW
+
+   $if coqtop
+       set show-all-if-ambiguous On
+   $endif
+
+.if t .ft P
+.fi
+making \fBrlwrap\fP show all completions whenever it runs \fIcoqtop\fP
+.SH BUGS 
+\fBrlwrap\fP can try, but often fails to, handle prompts that contain
+control characters.  A client that uses anything more than simple ANSI
+color codes will confuse rlwrap. The first thing you will notice in
+such cases is the cursor wrapping back on the same line before it has
+reached the right margin.
+
+Prompt colouring (using the \-p option) is not very robust. This is
+why long prompts are never colourised.
+
+vi mode doesn't work well with terminals that cannot move the cursor
+up (A warning will be printed at startup)
+
+Pasting large amounts of text into \fBrlwrap\fP will mess up the
+screen. However, \fIcommand\fP should receive the pasted text correctly.
+
+.SH VERSION
+This manpage documents rlwrap version @VERSION@
+.SH AUTHORS
+The readline library (written by Chet Ramey) does all the hard work
+behind the scenes, the pty-handling code has been taken practically
+unchanged from rxvt-2.7.10 (currently maintained by Geoff C. Wing),
+and completion word lists are managed by Damian Ivereighs libredblack
+library. The few remaining lines of code were written by Hans Lub
+(hlub@knoware.nl).
+.SH SEE ALSO
+
+.TP
+.B readline(3)
+
+\" Local variables:
+\" mode:nroff
+\" End:
+
+
+
+

@@ -1,0 +1,6 @@
+exit_code=124
+result=stopped_after_external_kernel_download_failed
+requested_file=linux-6.6.114.tar.xz
+requested_sha256=ca4175a03ce2943ae192d77ad91e37ee292f1f1bb7b2954b062b0ef7eb0cb97c
+failure=curl could not resolve cdn.kernel.org or mirrors.mit.edu
+driver_compile_started=no

@@ -1,0 +1,28 @@
+#!/bin/sh /etc/rc.common
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+START=99
+STOP=10
+
+is_mw5()
+{
+	ident="$(cat /tmp/sysinfo/board_name 2>/dev/null) $(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)"
+	case "$ident" in
+		*tenda,nova-mw5*|*nova-mw5*) return 0 ;;
+	esac
+	return 1
+}
+
+start()
+{
+	is_mw5 || return 0
+	mkdir -p /tmp/mw5-diag
+
+
+	[ -e /tmp/mw5-diag/boot-capture-started ] && return 0
+	touch /tmp/mw5-diag/boot-capture-started
+	(
+		MW5_DIAG_CAPTURED=1 MW5_DIAG_BOOT_DELAY=8 \
+			/usr/sbin/mw5-netdiag boot > /tmp/mw5-diag/boot-latest.txt 2>&1
+	) &
+}

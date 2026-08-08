@@ -1,0 +1,11 @@
+RTL8197F v42.22 source-tree validation
+PASS - rootfs builder preserves SquashFS bytes_used
+PASS - OEM checksum remains at the next 4 KiB boundary
+PASS - OEM boot-length marker still covers checksum_end
+PASS - synthetic build/check round trip
+PASS - stock MW5 template accepted with normal SquashFS bytes_used
+PASS - MW5 fullflash parser derives checksum padding from bytes_used directly
+PASS - AC23/Lynx fullflash parser derives checksum padding from bytes_used directly
+PASS - board profile version 42.22-development
+NOT RUN - complete OpenWrt world build from v42.22 tree
+NOT RUN - physical MW5 v42.22 SquashFS mount and userspace boot

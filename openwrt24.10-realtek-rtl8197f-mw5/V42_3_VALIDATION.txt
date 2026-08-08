@@ -1,0 +1,49 @@
+RTL8197F RD05/MW5/AC23 v42.3 validation record
+Date: 2026-07-31
+Kernel target: Linux 6.6.114
+OpenWrt target: 24.10
+
+INPUT BUILD RESULT
+- The MW5 board-specific rtl8192cd variant compiled every listed source and
+  reached LD of rtl8192cd.o.
+- Linux modpost then reported exactly one unresolved module reference:
+  sha256_prf.
+
+ROOT CAUSE
+- src/Makefile already linked sha256.o into rtl8192cd-objs.
+- 8192cd_psk.c sees CONFIG_IEEE80211W through the vendor 8192cd_cfg.h graph.
+- The deliberately self-contained sha256.c does not include that graph.
+- Its legacy feature guard therefore compiled sha256.o as an empty object,
+  while 8192cd_psk.o still called sha256_prf.
+
+CORRECTION
+- Compile the module-local SHA-256/HMAC/PRF implementation unconditionally.
+- Keep sha256.c independent of the private vendor header graph.
+- Use u1Byte/u2Byte in the isolated implementation to match the existing
+  public declarations and permit standalone compiler validation.
+- Package release increased to 6.
+
+PASSED
+- sha256.c compiles with the host C compiler without warnings.
+- The resulting object defines sha256_vector, hmac_sha256_vector,
+  hmac_sha256, sha256_prf_bits and sha256_prf.
+- SHA-256 known-answer test: SHA256("abc") matches the standard digest.
+- 48-byte IEEE-style SHA256 PRF known-answer output matches an independent
+  Python HMAC-SHA256 implementation byte-for-byte.
+- CHECK_SOURCE_TREE_V42.sh passes.
+- All Realtek patch hunk checks pass.
+- MW5/RD05/AC23 WLAN variant and source checks pass.
+- RD05, MW5 and AC23 private SPI template, header, checksum and board-profile
+  checks pass unchanged.
+
+NOT EXECUTED HERE
+- The complete OpenWrt MIPS package build and final Linux 6.6 modpost were not
+  rerun in this environment because the user's prepared OpenWrt target
+  toolchain/build_dir is not included in the source archive.
+- Physical module loading, WLAN initialization and RF transmission remain
+  hardware validation tasks.
+
+EXPECTED NEXT RESULT
+- The former sha256_prf modpost failure should be resolved.
+- A later compiler, linker or modpost error may expose the next independent
+  Linux 6.6 vendor-driver porting issue.

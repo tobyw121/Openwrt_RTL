@@ -1,0 +1,1 @@
+cmd_/tmp/include/linux/sunrpc/.install := perl scripts/headers_install.pl /opt/cadpc4/tonywu/repo/rlxlinux-2.6.32/linux-2.6.32/include/linux/sunrpc /tmp/include/linux/sunrpc mips debug.h; perl scripts/headers_install.pl /opt/cadpc4/tonywu/repo/rlxlinux-2.6.32/linux-2.6.32/include/linux/sunrpc /tmp/include/linux/sunrpc mips ; touch /tmp/include/linux/sunrpc/.install

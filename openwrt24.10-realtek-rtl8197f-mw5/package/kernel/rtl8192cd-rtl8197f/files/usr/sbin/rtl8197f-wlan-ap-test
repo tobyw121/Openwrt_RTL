@@ -1,0 +1,222 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Manual, staged AP bring-up for the recovered rtl8192cd WEXT/private-MIB ABI.
+# Nothing is changed unless --apply is supplied.
+set -u
+
+usage() {
+	cat <<'USAGE'
+Usage:
+  rtl8197f-wlan-ap-test --profile mw5|rd05|ac23 --band 2g|5g \
+    --ssid NAME --regdomain N [--interface IFACE] [--channel N] \
+    [--width 20|40|80] [--rfe N] (--open | --key PASSPHRASE) \
+    [--bridge BRIDGE] [--apply] [--dry-run]
+
+Defaults documented from the MW5 OEM runtime:
+  MW5 2.4 GHz: wlan1, RTL8197FS, RFE 5, channel 6, HT20
+  MW5 5 GHz:   wlan0, RTL8822B,  RFE 6, channel 40, HT80
+
+Without --apply the complete private-MIB sequence is printed only. RD05 and
+AC23 require an explicit interface and RFE value because those assignments are
+not yet proven on hardware. This is a serial-console lab tool, not production
+wireless configuration.
+USAGE
+}
+
+profile=""
+band=""
+iface=""
+ssid=""
+channel=""
+width=""
+rfe=""
+regdomain=""
+bridge=""
+key=""
+security=""
+apply=0
+dry_run=0
+
+while [ "$#" -gt 0 ]; do
+	case "$1" in
+		--profile) profile=${2:?missing profile}; shift 2 ;;
+		--band) band=${2:?missing band}; shift 2 ;;
+		--interface) iface=${2:?missing interface}; shift 2 ;;
+		--ssid) ssid=${2:?missing SSID}; shift 2 ;;
+		--channel) channel=${2:?missing channel}; shift 2 ;;
+		--width) width=${2:?missing width}; shift 2 ;;
+		--rfe) rfe=${2:?missing RFE}; shift 2 ;;
+		--regdomain) regdomain=${2:?missing regdomain}; shift 2 ;;
+		--bridge) bridge=${2:?missing bridge}; shift 2 ;;
+		--key) key=${2:?missing passphrase}; security=psk; shift 2 ;;
+		--open) security=open; shift ;;
+		--apply) apply=1; shift ;;
+		--dry-run) dry_run=1; shift ;;
+		-h|--help) usage; exit 0 ;;
+		*) echo "Unknown option: $1" >&2; usage >&2; exit 2 ;;
+	esac
+done
+
+case "$profile" in mw5|rd05|ac23) ;; *) echo 'A valid --profile is required.' >&2; exit 2 ;; esac
+case "$band" in 2g|5g) ;; *) echo '--band must be 2g or 5g.' >&2; exit 2 ;; esac
+case "$security" in open|psk) ;; *) echo 'Choose exactly one of --open or --key.' >&2; exit 2 ;; esac
+[ -n "$ssid" ] || { echo '--ssid is required.' >&2; exit 2; }
+[ "${#ssid}" -le 32 ] || { echo 'SSID must be at most 32 bytes.' >&2; exit 2; }
+case "$regdomain" in ''|*[!0-9]*) echo '--regdomain must be an explicit numeric rtl8192cd domain.' >&2; exit 2 ;; esac
+if [ "$security" = psk ]; then
+	[ "${#key}" -ge 8 ] && [ "${#key}" -le 63 ] || {
+		echo 'Passphrase must contain 8 to 63 characters.' >&2; exit 2;
+	}
+fi
+
+if [ "$profile" = mw5 ]; then
+	if [ "$band" = 2g ]; then
+		: "${iface:=wlan1}"; : "${rfe:=5}"; : "${channel:=6}"; : "${width:=20}"
+	else
+		: "${iface:=wlan0}"; : "${rfe:=6}"; : "${channel:=40}"; : "${width:=80}"
+	fi
+else
+	[ -n "$iface" ] || { echo 'RD05/AC23 require --interface until probe order is confirmed.' >&2; exit 2; }
+	[ -n "$rfe" ] || { echo 'RD05/AC23 require --rfe until board calibration is confirmed.' >&2; exit 2; }
+	if [ "$band" = 2g ]; then
+		: "${channel:=6}"; : "${width:=20}"
+	else
+		: "${channel:=36}"; : "${width:=80}"
+	fi
+fi
+
+case "$width" in
+	20) use40=0 ;;
+	40) use40=1 ;;
+	80) [ "$band" = 5g ] || { echo '80 MHz is only valid for the 5 GHz test path.' >&2; exit 2; }; use40=2 ;;
+	*) echo '--width must be 20, 40 or 80.' >&2; exit 2 ;;
+esac
+case "$channel" in ''|*[!0-9]*) echo '--channel must be numeric.' >&2; exit 2 ;; esac
+case "$rfe" in ''|*[!0-9]*) echo '--rfe must be numeric.' >&2; exit 2 ;; esac
+
+if [ "$band" = 2g ]; then
+	band_mib=11       # WIRELESS_11B|11G|11N
+	shortgi80=0
+else
+	band_mib=76       # WIRELESS_11A|11N|11AC
+	shortgi80=1
+fi
+
+phase_file=/tmp/rtl8197f-wlan-ap-test.phase
+log_file=/tmp/rtl8197f-wlan-ap-test.log
+: >"$log_file"
+phase() {
+	printf '%s %s\n' "$1" "$2" | tee "$phase_file" >>"$log_file"
+	logger -t rtl8197f-wlan "ap-test phase=$1 name=$2 profile=$profile iface=$iface" 2>/dev/null || true
+}
+run() {
+	printf '+ ' | tee -a "$log_file"
+	printf '%s ' "$@" | tee -a "$log_file"
+	printf '\n' | tee -a "$log_file"
+	[ "$apply" -eq 1 ] && [ "$dry_run" -eq 0 ] || return 0
+	"$@" >>"$log_file" 2>&1
+}
+set_mib_req() {
+	name=$1; value=$2
+	phase "$3" "set-$name"
+	if ! run iwpriv "$iface" set_mib "$name=$value"; then
+		echo "Required MIB failed: $name" >&2
+		phase 999 "required-mib-failed-$name"
+		exit 1
+	fi
+}
+set_mib_opt() {
+	name=$1; value=$2
+	if ! run iwpriv "$iface" set_mib "$name=$value"; then
+		echo "Optional MIB unsupported: $name" | tee -a "$log_file" >&2
+	fi
+}
+
+cat <<EOF_SUMMARY
+profile=$profile interface=$iface band=$band channel=$channel width=$width rfe=$rfe
+ssid=$ssid security=$security regdomain=$regdomain apply=$apply dry_run=$dry_run
+EOF_SUMMARY
+
+if [ "$apply" -eq 1 ] && [ "$dry_run" -eq 0 ]; then
+	command -v iwpriv >/dev/null 2>&1 || { echo 'iwpriv is required.' >&2; exit 1; }
+	command -v ip >/dev/null 2>&1 || { echo 'ip is required.' >&2; exit 1; }
+	grep -q '^rtl8192cd ' /proc/modules 2>/dev/null || { echo 'rtl8192cd is not loaded.' >&2; exit 1; }
+	[ -d "/sys/class/net/$iface" ] || { echo "Interface $iface does not exist." >&2; exit 1; }
+	mod_phase=$(cat /sys/module/rtl8192cd/parameters/init_phase 2>/dev/null || echo 0)
+	case "$mod_phase" in ''|*[!0-9]*) mod_phase=0 ;; esac
+	[ "$mod_phase" -ge 90 ] || { echo "Module phase is only $mod_phase; refusing RF setup." >&2; exit 1; }
+fi
+
+phase 400 'userspace-preflight'
+run ip link set dev "$iface" down
+phase 410 'radio-disabled-for-mib-programming'
+set_mib_req func_off 1 411
+set_mib_req opmode 16 420
+set_mib_req rfe_type "$rfe" 421
+set_mib_req band "$band_mib" 430
+set_mib_req use40M "$use40" 431
+if [ "$width" = 40 ]; then
+	set_mib_opt 2ndchoffset 1
+else
+	set_mib_opt 2ndchoffset 0
+fi
+set_mib_req channel "$channel" 432
+set_mib_req ssid "$ssid" 440
+set_mib_req bcnint 100 441
+set_mib_req dtimperiod 3 442
+set_mib_req regdomain "$regdomain" 443
+set_mib_opt hiddenAP 0
+set_mib_opt qos_enable 1
+set_mib_opt shortGI20M 1
+set_mib_opt shortGI40M 1
+set_mib_opt shortGI80M "$shortgi80"
+set_mib_opt stbc 1
+set_mib_opt ldpc 1
+set_mib_opt ampdu 1
+set_mib_opt 802_1x 0
+
+phase 450 'security-configuration'
+if [ "$security" = open ]; then
+	set_mib_req authtype 0 451
+	set_mib_req encmode 0 452
+	set_mib_req psk_enable 0 453
+else
+	# Exact values observed in the MW5 OEM runtime. This enables mixed WPA/WPA2
+	# PSK compatibility for bring-up; it is not a production security policy.
+	set_mib_req authtype 2 451
+	set_mib_req encmode 2 452
+	set_mib_req psk_enable 3 453
+	set_mib_req wpa_cipher 8 454
+	set_mib_req wpa2_cipher 8 455
+	set_mib_req passphrase "$key" 456
+fi
+
+phase 460 'radio-enable'
+set_mib_req func_off 0 461
+run ip link set dev "$iface" up
+if [ -n "$bridge" ]; then
+	phase 470 'bridge-attach'
+	if command -v ip >/dev/null 2>&1; then
+		run ip link set dev "$iface" master "$bridge"
+	elif command -v brctl >/dev/null 2>&1; then
+		run brctl addif "$bridge" "$iface"
+	fi
+fi
+phase 490 'ap-test-sequence-complete'
+
+if [ "$apply" -eq 1 ] && [ "$dry_run" -eq 0 ]; then
+	sleep 2
+	{
+		echo '=== interface ==='
+		ip -details link show dev "$iface" 2>&1 || true
+		iwconfig "$iface" 2>&1 || true
+		echo '=== MIB ==='
+		for p in "/proc/$iface/mib_all" "/proc/$iface/mib_rf" "/proc/$iface/mib_operation"; do
+			[ -r "$p" ] && { echo "--- $p"; cat "$p"; }
+		done
+		echo '=== recent driver log ==='
+		dmesg | grep -Ei 'rtl8197f-wlan|rtl8192cd|firmware|efuse|phydm|halrf|iqk|lck|dpk|beacon|wlan' | tail -n 300
+	} >>"$log_file" 2>&1
+fi
+
+cat "$log_file"

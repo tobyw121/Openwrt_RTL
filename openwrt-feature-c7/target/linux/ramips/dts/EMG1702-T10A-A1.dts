@@ -1,0 +1,49 @@
+/dts-v1/;
+
+#include "tbs.dtsi"
+
+/ {
+	compatible = "zyxel,emg1702-t10a-a1", "ralink,mt7620a-soc";
+	model = "ZyXEL EMG1702-T10A A1";
+};
+
+&spi0 {
+	status = "okay";
+
+	m25p80@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <10000000>;
+
+		uboot: partition@0 {
+			label = "u-boot";
+			reg = <0x0 0x30000>;
+			read-only;
+		};
+
+		partition@30000 {
+			label = "kernel";
+			reg = <0x30000 0x1d1000>;
+		};
+
+		partition@201000 {
+			label = "rootfs";
+			reg = <0x201000 0x5ff000>;
+		};
+
+		partition {
+			label = "firmware";
+			reg = <0x30000 0x7d0000>;
+		};
+	};
+};
+
+&pcie0 {
+	mt76@0,0 {
+		mediatek,mtd-eeprom = <&uboot 0x10220>;
+		mtd-mac-address = <&uboot 0x10498>;
+		mtd-mac-address-increment = <3>;
+	};
+};

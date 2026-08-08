@@ -1,0 +1,12 @@
+package_path	origin	purpose
+01_OpenWrt_24.10/current_v38.3	OpenWrt 24.10 Linux 6.6.114 RD05 native DSA v38.3	aktuellster RD05-Portierungsstand
+01_OpenWrt_24.10/family_v35	OpenWrt 24.10 RTL8197F/RTL8367 family v35	breitere Familienreferenz für D/RB/R
+02_RTL8197F_SoC_NIC/combined_vendor_reference	8197_all_SDKs / kuratiertes Gesamtpaket	SoC, NIC, Boot, Switch und Boardprofile
+02_RTL8197F_SoC_NIC/linux-3.10-v3.4.11C	rtl819x SDK v3.4.11C	RLX-Architektur und RTL865x/RTL819x-NIC
+02_RTL8197F_SoC_NIC/openwrt-sdk-v2.5-rtl8197f-target	Realtek OpenWrt SDK v2.5	historisches RTL8197F-Target
+03_Switches	8197_all_SDKs	Register, DAL/API, SMI und DSA-Referenzen
+04_WLAN_INIC/rtl8192fe-backports-5.2.8	8197_all_SDKs	RTL8812F/FE, RTL8814B, HALMAC, PHYDM und Blobs
+04_WLAN_INIC/rtl8192cd-linux-3.10-v3.4.11C	rtl819x SDK v3.4.11C	älterer integrierter WLAN-Zweig
+05_Boot_Board_ImageTools	OpenWrt SDK v2.5 + rtl819x SDK v3.4.11C	Boot, Defconfigs und Imagewerkzeuge
+06_Toolchain_Changes_Only	Realtek OpenWrt SDK v2.5	nur Toolchainrezepte und Patches
+07_Device_Evidence_Sanitized	RD05/AC23/MW5 Dumps und Laufzeitdaten	bereinigte Hardwarebelege, keine privaten Rohdaten

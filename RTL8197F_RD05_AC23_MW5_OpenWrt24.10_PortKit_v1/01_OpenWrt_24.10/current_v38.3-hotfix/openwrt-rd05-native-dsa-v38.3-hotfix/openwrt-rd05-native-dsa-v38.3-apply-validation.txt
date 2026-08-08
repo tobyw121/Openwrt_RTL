@@ -1,0 +1,7 @@
+Applied RD05 native DSA v38.3 calibration-safety update.
+Rebuild with:
+  make target/linux/clean
+  make -j1 target/linux/compile V=s
+RD05 v38.3 is already applied.
+differences=0
+PASS: apply script is idempotent and reproduces v38.3 exactly

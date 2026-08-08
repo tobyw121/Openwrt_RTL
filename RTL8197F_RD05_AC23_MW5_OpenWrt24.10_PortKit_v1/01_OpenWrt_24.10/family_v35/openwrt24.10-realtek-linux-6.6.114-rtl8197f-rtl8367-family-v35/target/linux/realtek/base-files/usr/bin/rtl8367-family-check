@@ -1,0 +1,34 @@
+#!/bin/sh
+# Read-only RTL8197F/RTL8367 v35 diagnostics.
+set -u
+
+echo 'RTL8197F / RTL8367 family v35 diagnostic'
+echo "kernel: $(uname -a 2>/dev/null)"
+echo
+
+echo '== driver detection and timing =='
+dmesg 2>/dev/null | grep -E 'RTL8367|rtl8367|rtl8365mb|p0 rgmii v35|master v35|rtl8_4' | tail -n 120 || true
+
+echo
+echo '== links =='
+ip -d link show 2>/dev/null || true
+
+echo
+echo '== bridge membership =='
+bridge -d link show 2>/dev/null || true
+bridge vlan show 2>/dev/null || true
+
+echo
+echo '== master counters =='
+for dev in eth0 lan1 lan2 lan3 lan4 wan; do
+	[ -d "/sys/class/net/$dev" ] || continue
+	echo "-- $dev --"
+	ip -s link show dev "$dev" 2>/dev/null || true
+	ethtool -S "$dev" 2>/dev/null | grep -E 'octet|packet|drop|error|crc|fcs|mib' | head -n 100 || true
+done
+
+echo
+echo 'Interpretation:'
+echo '  exact D/RB-VC: id=0x6642 ver=0x0030, CPU7/EXT1'
+echo '  exact C/RB-VB: id=0x6367 ver=0x0020, normally CPU6/EXT0'
+echo '  family-profile warnings require board-specific hardware validation.'

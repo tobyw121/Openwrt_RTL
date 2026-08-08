@@ -1,0 +1,20 @@
+[RTL839x/5xM,RTL838x/3xM] Fix EEE and Diag(RTCT) modules' semaphore issue.
+Symptom:
+		(1) EEE uses MAC polling PHY and PHY functions, that will be conflict with PORT module.
+		(2) Diag's RTCT function uses PHY function, that will be conflict with PORT module.
+		These operations lack for protection when the multiple modules access the same low layer resource.
+Solution:
+		Port, EEE and Diag modules use PORT semaphore.
+
+Modified files
+*     sdk/include/dal/cypress/dal_cypress_port.h
+*     sdk/include/dal/maple/dal_maple_port.h
+*     sdk/src/dal/cypress/dal_cypress_port.c
+*     sdk/src/dal/cypress/dal_cypress_eee.c
+*     sdk/src/dal/cypress/dal_cypress_diag.c
+*     sdk/src/dal/maple/dal_maple_port.c
+*     sdk/src/dal/maple/dal_maple_eee.c
+*     sdk/src/dal/maple/dal_maple_diag.c
+
+Release Files: (Mantis 0018102, r61343, r61344, r61357, r61381, r61382 and r61462)
+rtk-ms-sdk-src-2.1.4.53590-patch005.tar.gz

@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: GPL-2.0-only
+config WLAN_VENDOR_REALTEK
+	bool "Realtek devices"
+	default y
+	---help---
+	  If you have a wireless card belonging to this class, say Y.
+
+	  Note that the answer to this question doesn't directly affect the
+	  kernel: saying N will just cause the configurator to skip all the
+	  questions about these cards. If you say Y, you will be asked for
+	  your specific card in the following questions.
+
+config WLAN_8192FE
+	bool "WLAN_8192FE support"
+	default n
+
+if WLAN_VENDOR_REALTEK
+
+config THER_CTRL
+	tristate "Realtek thermal control support"
+	default n
+	depends on RTL8852AE || WLAN_8192FE
+	---help---
+	Realtek thermal control support.
+
+source "drivers/net/wireless/realtek/rtl818x/Kconfig"
+source "drivers/net/wireless/realtek/rtlwifi/Kconfig"
+source "drivers/net/wireless/realtek/rtl8xxxu/Kconfig"
+source "drivers/net/wireless/realtek/rtw88/Kconfig"
+source "drivers/net/wireless/realtek/g6_wifi_driver/Kconfig"
+if WLAN_8192FE
+source "drivers/net/wireless/realtek/rtl8192fe/Kconfig"
+source "drivers/net/wireless/realtek/rtl8197g/Kconfig.usdk120h"
+endif
+
+endif # WLAN_VENDOR_REALTEK

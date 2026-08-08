@@ -1,0 +1,59 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Read-only bring-up report shared by RD05, MW5 and AC23.
+OUT="${1:-/tmp/rtl8197f-board-check.txt}"
+{
+	echo 'RTL8197F v42 board diagnostics'
+	date
+	uname -a
+	echo
+	echo '=== identity ==='
+	cat /tmp/sysinfo/board_name 2>/dev/null || true
+	cat /tmp/sysinfo/model 2>/dev/null || true
+	tr '\0' '\n' </proc/device-tree/compatible 2>/dev/null || true
+	echo
+	echo '=== command line / memory ==='
+	cat /proc/cmdline 2>/dev/null || true
+	cat /proc/meminfo 2>/dev/null | head -20
+	echo
+	echo '=== MTD ==='
+	cat /proc/mtd 2>/dev/null || true
+	for m in /sys/class/mtd/mtd*; do
+		[ -d "$m" ] || continue
+		printf '%s name=' "$(basename "$m")"
+		cat "$m/name" 2>/dev/null || true
+		printf ' size='; cat "$m/size" 2>/dev/null || true
+	done
+	echo
+	echo '=== network / DSA ==='
+	ip -details link show 2>&1
+	bridge link show 2>&1 || true
+	bridge vlan show 2>&1 || true
+	for n in /sys/class/net/*; do
+		[ -e "$n" ] || continue
+		printf '%s carrier=' "$(basename "$n")"; cat "$n/carrier" 2>/dev/null || true
+	done
+	echo
+	echo '=== PCI ==='
+	cat /proc/bus/pci/devices 2>/dev/null || true
+	command -v lspci >/dev/null 2>&1 && lspci -nnk 2>&1 || true
+	echo
+	echo '=== GPIO / LEDs / input ==='
+	cat /sys/kernel/debug/gpio 2>/dev/null || true
+	find /sys/class/leds -maxdepth 2 -type f 2>/dev/null | sort || true
+	cat /proc/bus/input/devices 2>/dev/null || true
+	echo
+	echo '=== WLAN stage ==='
+	for p in /sys/module/rtl8192cd/parameters/*; do
+		[ -e "$p" ] || continue
+		printf '%s=' "$(basename "$p")"; cat "$p" 2>/dev/null || true
+	done
+	cat /proc/net/wireless 2>/dev/null || true
+	echo
+	echo '=== interrupts ==='
+	cat /proc/interrupts 2>/dev/null || true
+	echo
+	echo '=== RTL8197F log ==='
+	dmesg | grep -Ei 'rtl8197f|rtl8192cd|rtl836|rtknet|dsa|smi|pcie|spi|firmware|efuse|phydm|halmac' | tail -n 800
+} >"$OUT" 2>&1
+cat "$OUT"

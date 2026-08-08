@@ -1,0 +1,24 @@
+[RTL839x/5xM][RTL8214FC/18FB] Fiber signal tuning for compatibility.
+Root Cause:
+		For some fiber modules/fiber interface ICs with lower Rx ability, 
+		In some case, it may have link/performance problem with RTL8214FC.
+Solution:
+		We fine tune the Tx signal for better compatibility.
+===================================================================================================
+(1) Fix PHY runtime recover process.
+(2) Modify RTL82184FC/18FB initial process.
+Modified files
+*     sdk/src/hal/phy/phy_8218b_patch.c
+*     sdk/src/hal/phy/phy_8218b.c
+
+Release Files: (MAET-52, SS-27, Mantis 0018066, r60899 and r60900)
+	rtk-ms-sdk-src-2.1.4.53590-patch004.tar.gz
+
+===================================================================================================
+(1) Modify parameter initial process.
+Modified files
+*     u-boot-2011.12/board/Realtek/switch/rtk/phy/conf/conf_rtl8214fc.c
+*     u-boot-2011.12/board/Realtek/switch/rtk/phy/conf/conf_rtl8218b.c
+
+Release Files: (MAET-52, SS-27, Mantis 0018066, r60886 and r60898)
+rtk-ms-uboot-2011.12-src-svn53590-patch-004.tar.gz

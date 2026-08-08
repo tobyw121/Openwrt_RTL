@@ -1,0 +1,14 @@
+[RTL839xM/5xM][NIC] Lower TFTP/FTP download performance of RTL839xM.
+Enhancement:
+	Improve the NIC driver performance.
+
+Modified Files: (SS-50)
+*     /sdk/system/incude/osal/wait.h
+*     /sdk/system/drv/nic/r8390.c
+*     /sdk/system/linux/rtnic/rtnic_drv.c
+
+Note:
+	CONFIG_SDK_NIC_RX_CB_IN_THREAD flag could be added in nic.h for enable.
+
+Release Files:
+	rtk-ms-sdk-src-2.1.4.53590-patch014.tar.gz

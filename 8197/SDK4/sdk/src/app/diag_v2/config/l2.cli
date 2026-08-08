@@ -1,0 +1,2032 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 38009 $
+// $Date: 2013-03-21 15:49:37 +0800 (Thu, 21 Mar 2013) $
+//
+// Purpose : Define diag shell commands for layer2.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) layer2 commands.
+//
+
+#ifdef CMD_L2_TABLE_ADD_IP6_MCAST_SIP_DIP_VID_VLAN_ID_PORT_ALL
+//l2 table configuration
+//add configuration
+//IPv6 multicast entry
+//source IP
+//destination IP
+//vid configuration
+//vid value, <0-4095>
+//port list
+//all
+l2-table add ip6-mcast <IPV6ADDR:sip> <IPV6ADDR:dip> vid <UINT:vlan_id> ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_ADD_IP_MCAST_SIP_DIP_PORT_PORT_ALL_CROSS_VLAN
+//l2 table configuration
+//add configuration
+//IP multicast entry
+//source IP
+//destination IP
+//port configuration
+//port list
+//all
+//cross VLAN
+l2-table add ip-mcast <IPV4ADDR:sip> <IPV4ADDR:dip> port ( <PORT_LIST:port> | all ) { cross-vlan }
+#endif
+
+#ifdef CMD_L2_TABLE_ADD_IP_MCAST_SIP_DIP_VLAN_ID_PORT_ALL
+//l2 table configuration
+//add configuration
+//IP multicast entry
+//source IP
+//destination IP
+//vid value, <0-4095>
+//port list
+//all
+l2-table add ip-mcast <IPV4ADDR:sip> <IPV4ADDR:dip> <UINT:vlan_id> ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_ADD_IP_MCAST_SIP_DIP_VID_VLAN_ID_PORT_ALL_CROSS_VLAN
+//l2 table configuration
+//add configuration
+//IP multicast entry
+//source IP
+//destination IP
+//vid configuration
+//vid value, <0-4095>
+//port list
+//all
+//cross VLAN
+l2-table add ip-mcast <IPV4ADDR:sip> <IPV4ADDR:dip> vid <UINT:vlan_id> ( <PORT_LIST:port> | all ) { cross-vlan }
+#endif
+
+#ifdef CMD_L2_TABLE_ADD_MAC_MCAST_VID_MAC_PORT_ALL
+//l2 table configuration
+//add configuration
+//multicast MAC entry
+//vid value, <0-4095>
+//multicast MAC address, A:B:C:D:E:F
+//port list
+//all
+l2-table add mac-mcast <UINT:vid> <MACADDR:mac> ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_ADD_MAC_MCAST_VID_MAC_PORT_ALL_CROSS_VLAN
+//l2 table configuration
+//add configuration
+//multicast MAC entry
+//vid value, <0-4095>
+//multicast MAC address, A:B:C:D:E:F
+//port list
+//all
+//cross VLAN
+l2-table add mac-mcast <UINT:vid> <MACADDR:mac> ( <PORT_LIST:port> | all )  cross-vlan
+#endif
+
+#ifdef CMD_L2_TABLE_ADD_MAC_UCAST_VID_MAC_PORT_PORT_AUTH_SA_BLOCK_DA_BLOCK_STATIC_NEXTHOP_SUSPEND
+//l2 table configuration
+//add configuration
+//unicast MAC entry
+//vid value, <0-4095>
+//unicast MAC address, A:B:C:D:E:F
+//port configuration
+//port id value
+//dot1x authed entry
+//source MAC blocking entry
+//destination MAC blocking entry
+//static entry
+//nexthop entry
+//suspend entry
+l2-table add mac-ucast <UINT:vid> <MACADDR:mac> port <UINT:port> auth { sa-block  } { da-block  } { static } { nexthop } { suspend }
+#endif
+
+#ifdef CMD_L2_TABLE_ADD_MAC_UCAST_VID_MAC_PORT_PORT_AGG_VID_SA_BLOCK_DA_BLOCK_STATIC_NEXTHOP_SUSPEND
+//l2 table configuration
+//add configuration
+//unicast MAC entry
+//vid value, <0-4095>
+//unicast MAC address, A:B:C:D:E:F
+//port configuration
+//port id value
+//aggregate vid value, <0-4095>
+//source MAC blocking entry
+//destination MAC blocking entry
+//static entry
+//nexthop entry
+//suspend entry
+l2-table add mac-ucast <UINT:vid> <MACADDR:mac> port <UINT:port> <UINT:agg_vid> { sa-block } { da-block } { static } { nexthop } { suspend }
+#endif
+
+#ifdef CMD_L2_TABLE_ADD_MAC_UCAST_VID_MAC_TRUNK_TRUNK_ID_AUTH_SA_BLOCK_DA_BLOCK_STATIC_NEXTHOP_SUSPEND
+//l2 table configuration
+//add configuration
+//unicast MAC entry
+//vid value, <0-4095>
+//unicast MAC address, A:B:C:D:E:F
+//trunk configuration
+//trunk id, value <0-7>
+//dot1x authed entry
+//source MAC blocking entry
+//destination MAC blocking entry
+//static entry
+//nexthop entry
+//suspend entry
+l2-table add mac-ucast <UINT:vid> <MACADDR:mac> trunk <UINT:trunk_id> { auth } { sa-block  } { da-block  } { static } { nexthop } { suspend }
+#endif
+
+#ifdef CMD_L2_TABLE_ADD_MAC_UCAST_VID_MAC_PORT_PORT_SA_BLOCK_DA_BLOCK_STATIC_NEXTHOP_SUSPEND_AGED
+//l2 table configuration
+//add configuration
+//unicast MAC entry
+//vid value, <0-4095>
+//unicast MAC address, A:B:C:D:E:F
+//port configuration
+//port id value
+//source MAC blocking entry
+//destination MAC blocking entry
+//static entry
+//nexthop entry
+//suspend entry
+//aged for nexthop entry
+l2-table add mac-ucast <UINT:vid> <MACADDR:mac> port <UINT:port> { sa-block } { da-block } { static } { nexthop } { suspend } { aged }
+#endif
+
+#ifdef CMD_L2_TABLE_ADD_MAC_UCAST_VID_MAC_PORT_AUTH_SA_BLOCK_DA_BLOCK_STATIC_NEXTHOP_SUSPEND
+//l2 table configuration
+//add configuration
+//unicast MAC entry
+//vid value, <0-4095>
+//unicast MAC address, A:B:C:D:E:F
+//port id value
+//dot1x authed entry
+//source MAC blocking entry
+//destination MAC blocking entry
+//static entry
+//nexthop entry
+//suspend entry
+l2-table add mac-ucast <UINT:vid> <MACADDR:mac> <UINT:port> { auth } { sa-block  } { da-block  } { static } { nexthop } { suspend }
+#endif
+
+#ifdef CMD_L2_TABLE_DEL_ALL_INCLUDE_STATIC
+//l2 table configuration
+//delete configuration
+//all unicast MAC entries
+//include static entries
+l2-table del all { include-static }
+#endif
+
+#ifdef CMD_L2_TABLE_DEL_IP_MCAST_SIP_DIP
+//l2 table configuration
+//delete configuration
+//IP multicast entry
+//source IP address, A.B.C.D
+//destination IP address, A.B.C.D
+l2-table del ip-mcast <IPV4ADDR:sip> <IPV4ADDR:dip>
+#endif
+
+#ifdef CMD_L2_TABLE_DEL_IP_MCAST_SIP_DIP_VLAN_ID
+//l2 table configuration
+//delete configuration
+//IP multicast entry
+//source IP address, A.B.C.D
+//destination IP address, A.B.C.D
+//vid value, <0-4095>
+l2-table del ip-mcast <IPV4ADDR:sip> <IPV4ADDR:dip> <UINT:vlan_id>
+#endif
+
+#ifdef CMD_L2_TABLE_DEL_IP6_MCAST_SIP_DIP
+//l2 table configuration
+//delete configuration
+//IPv6 multicast entry
+//source IPv6 address
+//destination IPv6 address
+l2-table del ip6-mcast <IPV6ADDR:sip> <IPV6ADDR:dip>
+#endif
+
+#ifdef CMD_L2_TABLE_DEL_IP6_MCAST_SIP_DIP_VLAN_ID
+//l2 table configuration
+//delete configuration
+//IPv6 multicast entry
+//source IPv6 address
+//destination IPv6 address
+//vid value, <0-4095>
+l2-table del ip6-mcast <IPV6ADDR:sip> <IPV6ADDR:dip> <UINT:vlan_id>
+#endif
+
+#ifdef CMD_L2_TABLE_DEL_MAC_MCAST_VID_MAC
+//l2 table configuration
+//delete configuration
+//multicast MAC entry
+//vid value, <0-4095>
+//multicast MAC address, A:B:C:D:E:F
+l2-table del mac-mcast <UINT:vid> <MACADDR:mac>
+#endif
+
+#ifdef CMD_L2_TABLE_DEL_MAC_UCAST_VID_MAC
+//l2 table configuration
+//delete configuration
+//unicast MAC entry
+//vid value, <0-4095>
+//unicast MAC address, A:B:C:D:E:F
+l2-table del mac-ucast <UINT:vid> <MACADDR:mac>
+#endif
+
+#ifdef CMD_L2_TABLE_ADD_DEL_CPU_MAC_VID_MAC
+//l2 table configuration
+//add configuration
+//delete configuration
+//CPU MAC configuration
+//vid value, <0-4095>
+//unicast MAC address, A:B:C:D:E:F
+l2-table ( add | del ) cpu-mac <UINT:vid> <MACADDR:mac>
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP
+//l2 table configuration
+//dump configuration
+l2-table dump
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_PORT_ALL
+//l2 table configuration
+//dump configuration
+//port list
+//all
+l2-table dump ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_FWD_TABLE
+//l2 table configuration
+//dump configuration
+//forwarding table configuration
+l2-table dump fwd-table
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_FWD_TABLE_LOW_IDX_HIGH_IDX
+//l2 table configuration
+//dump configuration
+//forwarding table configuration
+//low index value
+//high index value
+l2-table dump fwd-table <UINT:low_idx> <UINT:high_idx>
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_IP6_MCAST
+//l2 table configuration
+//dump configuration
+//IPv6 multicast entry
+l2-table dump ip6-mcast
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_IP6_MCAST_SIP_DIP_VID
+//l2 table configuration
+//dump configuration
+//IPv6 multicast entry
+//source IPv6 address
+//destination IPv6 address
+l2-table dump ip6-mcast <IPV6ADDR:sip> <IPV6ADDR:dip> <UINT:vid>
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_IP_MCAST
+//l2 table configuration
+//dump configuration
+//IP multicast entry
+l2-table dump ip-mcast
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_IP_MCAST_SIP_DIP_VID
+//l2 table configuration
+//dump configuration
+//IP multicast entry
+//source IPv4 address, A.B.C.D
+//destination IPv4 address, A.B.C.D
+l2-table dump ip-mcast <IPV4ADDR:sip> <IPV4ADDR:dip> <UINT:vid>
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_IP_MCAST_SIP_DIP
+//l2 table configuration
+//dump configuration
+//IP multicast entry
+//source IPv4 address, A.B.C.D
+//destination IPv4 address, A.B.C.D
+l2-table dump ip-mcast <IPV4ADDR:sip> <IPV4ADDR:dip>
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_MAC_MCAST
+//l2 table configuration
+//dump configuration
+//multicast MAC entry
+l2-table dump mac-mcast
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_MAC_MCAST_VID_MAC
+//l2 table configuration
+//dump configuration
+//multicast MAC entry
+//vid value, <0-4095>
+//multicast MAC address, A:B:C:D:E:F
+l2-table dump mac-mcast <UINT:vid> <MACADDR:mac>
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_MAC_UCAST
+//l2 table configuration
+//dump configuration
+//unicast MAC entry
+l2-table dump mac-ucast
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_MAC_UCAST_DYNAMIC
+//l2 table configuration
+//dump configuration
+//unicast MAC entry
+//dynamic entries
+l2-table dump mac-ucast dynamic
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_MAC_UCAST_STATIC
+//l2 table configuration
+//dump configuration
+//unicast MAC entry
+//static entries
+l2-table dump mac-ucast static
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_MAC_UCAST_VID_MAC
+//l2 table configuration
+//dump configuration
+//unicast MAC entry
+//vid value, <0-4095>
+//unicast MAC address, A:B:C:D:E:F
+l2-table dump mac-ucast <UINT:vid> <MACADDR:mac>
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_MAC_UCAST_PORT_ALL
+//l2 table configuration
+//dump configuration
+//unicast MAC entry
+//port list
+//all
+l2-table dump mac-ucast ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_GET_AGING_OUT_PORT_ALL
+//l2 table configuration
+//get configuration
+//l2 table entry aging out configuration
+//port list
+//all ports
+l2-table get aging-out ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_GET_AGING_TIME
+//l2 table configuration
+//get configuration
+//l2 table aging time configuration
+l2-table get aging-time
+#endif
+
+#ifdef CMD_L2_TABLE_GET_DYNAMIC_PORT_MOVE_PORT_ALL
+//l2 table configuration
+//get configuration
+//dynamic port move configuration
+l2-table get dynamic-port-move ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_GET_DYNAMIC_PORT_MOVE_FLUSH_PORT_ALL_STATE
+//l2 table configuration
+//get configuration
+//dynamic port move flush configuration
+//port list
+//all ports
+//state configuration
+l2-table get dynamic-port-move-flush ( <PORT_LIST:port> | all ) state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_DYNAMIC_PORT_MOVE_FORBID_PORT_ALL_STATE
+//l2 table configuration
+//get configuration
+//dynamic port move forbid configuration
+//port list
+//all ports
+//state configuration
+l2-table get dynamic-port-move-forbid ( <PORT_LIST:port> | all ) state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_CAM_STATE
+//l2 table configuration
+//get configuration
+//address cam table configuration
+//state configuration
+l2-table get cam state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_CAM_L2_TABLE_LRU_IPMC_STATE
+//l2 table configuration
+//get configuration
+//address cam table configuration
+//layer2 table lru configuration
+//IP multicast asic lookup configuration
+//state configuration
+l2-table get ( cam | l2-table-lru | ipmc ) state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_EXCEPT_SMAC
+//l2 table configuration
+//get configuration
+//exception smac configuration
+l2-table get except-smac
+#endif
+
+#ifdef CMD_L2_TABLE_GET_IP_MCAST_DIP_CHECK
+//l2 table configuration
+//get configuration
+//IP multicast entry
+//check if belongs to DIP Class-D scope and DIP[22:0] = DMAC[22:0]
+l2-table get ip-mcast dip-check
+#endif
+
+#ifdef CMD_L2_TABLE_GET_IP_MCAST_VLAN_COMPARE
+//l2 table configuration
+//get configuration
+//IP multicast entry
+//use vlan id as one of the hit criteria when determining whether an entry hits
+l2-table get ip-mcast vlan-compare
+#endif
+
+#ifdef CMD_L2_TABLE_GET_EXCEPT_SMAC_BCAST_SA
+//l2 table configuration
+//get configuration
+//exception smac configuration
+//broadcast smac
+l2-table get except-smac bcast-sa
+#endif
+
+#ifdef CMD_L2_TABLE_GET_EXCEPT_SMAC_MCAST_BCAST_SA
+//l2 table configuration
+//get configuration
+//exception smac configuration
+//multicast smac or broadcast smac
+l2-table get except-smac mcast-bcast-sa
+#endif
+
+#ifdef CMD_L2_TABLE_GET_EXCEPT_SMAC_MCAST_SA
+//l2 table configuration
+//get configuration
+//exception smac configuration
+//multicast smac
+l2-table get except-smac mcast-sa
+#endif
+
+#ifdef CMD_L2_TABLE_GET_EXCEPT_SMAC_ZERO_SA_LEARNING
+//l2 table configuration
+//get configuration
+//exception smac configuration
+//zero smac learning behavior
+l2-table get except-smac zero-sa-learning
+#endif
+
+#ifdef CMD_L2_TABLE_GET_EXCEPT_SMAC_ZERO_SA
+//l2 table configuration
+//get configuration
+//exception smac configuration
+//zero smac
+l2-table get except-smac zero-sa
+#endif
+
+#ifdef CMD_L2_TABLE_GET_FWD_TABLE_LOW_IDX_HIGH_IDX
+//l2 table configuration
+//get configuration
+//forwarding table configuration
+//low index value
+//high index value
+l2-table get fwd-table <UINT:low_idx> <UINT:high_idx>
+#endif
+
+#ifdef CMD_L2_TABLE_GET_ADDR_ENTRY_ANY_MAC_UCAST_MAC_MCAST_IP_MCAST_LOW_IDX_HIGH_IDX_FILTER_INVALID
+//l2 table configuration
+//get configuration
+//L2 hash and L2 CAM table entry
+//any type (unicast, multicast, IP multicast)
+//unicast MAC entry
+//multicast MAC entry
+//IP multicast entry
+//low index value, <0-16447>
+//high index value, <0-16447>
+//filter invalid entry
+l2-table get addr-entry ( any | mac-ucast | mac-mcast | ip-mcast ) <UINT:low_idx> <UINT:high_idx> { filter-invalid }
+#endif
+
+#ifdef CMD_L2_TABLE_GET_CONFLICT_ENTRY_MAC_UCAST_VID_MAC
+//l2 table configuration
+//get configuration
+//L2 hash table conflict entry
+//unicast MAC entry
+//vid value, <0-4095>
+//unicast MAC address, A:B:C:D:E:F
+l2-table get conflict-entry mac-ucast <UINT:vid> <MACADDR:mac>
+#endif
+
+#ifdef CMD_L2_TABLE_GET_HASH_ALGORITHM
+//l2 table configuration
+//get configuration
+//l2 table hash algorithm
+l2-table get hash-algorithm
+#endif
+
+#ifdef CMD_L2_TABLE_GET_IP6_DIP_CARE_BYTE
+//l2 table configuration
+//get configuration
+//IPv6 hash DIP care-byte
+l2-table get ip6-dip-care-byte
+#endif
+
+#ifdef CMD_L2_TABLE_GET_IP6_SIP_CARE_BYTE
+//l2 table configuration
+//get configuration
+//IPv6 hash SIP care-byte
+l2-table get ip6-sip-care-byte
+#endif
+
+#ifdef CMD_L2_TABLE_GET_IPMC_MISMATCH_WRONG_MCAST_ADDRESS_IPMC_WITH_UCAST_MAC
+//l2 table configuration
+//get configuration
+//IP multicast packet mismatch configuration
+//wrong multicast dmac
+//IP multicast with unicast dmac
+l2-table get ipmc-mismatch ( wrong-mcast-address | ipmc-with-ucast-mac )
+#endif
+
+#ifdef CMD_L2_TABLE_GET_IPMC_MISMATCH_WRONG_MCAST_ADDRESS_IPMC_WITH_UCAST_MAC_DROP_PRECEDENCE_STATE
+//l2 table configuration
+//get configuration
+//IP multicast packet mismatch configuration
+//wrong multicast dmac
+//IP multicast with unicast dmac
+//trap drop precedence configuration
+//state configuration
+l2-table get ipmc-mismatch  ( wrong-mcast-address | ipmc-with-ucast-mac ) drop-precedence state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_IPMC_MISMATCH_WRONG_MCAST_ADDRESS_IPMC_WITH_UCAST_MAC_INSERT_CPUTAG_STATE
+//l2 table configuration
+//get configuration
+//IP multicast packet mismatch configuration
+//wrong multicast dmac
+//IP multicast with unicast dmac
+//insert CPU tag configuration
+//state configuration
+l2-table get ipmc-mismatch  ( wrong-mcast-address | ipmc-with-ucast-mac ) insert-cputag state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_IPMC_MISMATCH_WRONG_MCAST_ADDRESS_IPMC_WITH_UCAST_MAC_PRIORITY_STATE
+//l2 table configuration
+//get configuration
+//IP multicast packet mismatch configuration
+//wrong multicast dmac
+//IP multicast with unicast dmac
+//trap priority configuration
+//state configuration
+l2-table get ipmc-mismatch  ( wrong-mcast-address | ipmc-with-ucast-mac ) priority state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_IP6MC_MODE
+//l2 table configuration
+//get configuration
+//IPv6 multicast lookup key configuration
+l2-table get ip6mc-mode
+#endif
+
+#ifdef CMD_L2_TABLE_GET_IPMC_MODE
+//l2 table configuration
+//get configuration
+//IP multicast lookup key configuration
+l2-table get ipmc-mode
+#endif
+
+#ifdef CMD_L2_TABLE_GET_L2_TRAP_INSERT_CPUTAG_STATE
+//l2 table configuration
+//get configuration
+//l2 trap configuration
+//insert CPU tag configuration
+//state configuration
+l2-table get l2-trap insert-cputag state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_L2_TRAP_PRIORITY_STATE
+//l2 table configuration
+//get configuration
+//l2 trap configuration
+//trap priority configuration
+//state configuration
+l2-table get l2-trap priority state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LEGAL_MOVE_SRC_PORT_ALL
+//l2 table configuration
+//get configuration
+//legal port moving configuration
+//port moving soure port list
+//all
+l2-table get legal-move ( <PORT_LIST:src_port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LIMIT_LEARNING
+//l2 table configuration
+//get configuration
+//limit learning configuration
+l2-table get limit-learning
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LIMIT_LEARNING_ACTION
+//l2 table configuration
+//get configuration
+//limit learning configuration
+//limit learning action
+l2-table get limit-learning action
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LIMIT_LEARNING_FID_INDEX_INDEX_STATE
+//l2 table configuration
+//get configuration
+//limit learning configuration
+//VLAN configuration
+//entry index, <0-31>
+//state
+l2-table get limit-learning fid-index <UINT:index> state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LIMIT_LEARNING_FID_INDEX_INDEX_FID
+//l2 table configuration
+//get configuration
+//limit learning configuration
+//VLAN configuration
+//entry index, <0-31>
+//vid/fid value
+l2-table get limit-learning fid-index <UINT:index> fid
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LIMIT_LEARNING_FID_INDEX_INDEX_ACTION
+//l2 table configuration
+//get configuration
+//limit learning configuration
+//VLAN configuration
+//entry index, <0-31>
+//exceed max count action
+l2-table get limit-learning fid-index <UINT:index> action
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LIMIT_LEARNING_PORT_PORT_ALL
+//l2 table configuration
+//get configuration
+//limit learning configuration
+//port configuration
+//port list
+//all ports
+l2-table get limit-learning port ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LIMIT_LEARNING_VLAN_BASED
+//l2 table configuration
+//get configuration
+//limit learning configuration
+//limit learning on VLAN configuration
+l2-table get limit-learning vlan-based
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LIMIT_LEARNING_VLAN_BASED_INDEX
+//l2 table configuration
+//get configuration
+//limit learning configuration
+//limit learning on VLAN configuration
+//index
+l2-table get limit-learning vlan-based <UINT:index>
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LIMIT_LEARNING_FID_INDEX
+//l2 table configuration
+//get configuration
+//limit learning configuration
+//FID/VID entry index configuration
+l2-table get limit-learning fid-index
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LIMIT_LEARNING_FID_INDEX_INDEX
+//l2 table configuration
+//get configuration
+//limit learning configuration
+//FID/VID entry index configuration
+//entry index
+l2-table get limit-learning fid-index <UINT:index> 
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LIMIT_LEARNING_DROP_PRECEDENCE_STATE
+//l2 table configuration
+//get configuration
+//limit learning configuration
+//drop-precedence configuration
+//state configuration
+l2-table get limit-learning drop-precedence state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LIMIT_LEARNING_INSERT_CPUTAG_STATE
+//l2 table configuration
+//get configuration
+//limit learning configuration
+//insert CPU tag configuration
+//state configuration
+l2-table get limit-learning insert-cputag state 
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LIMIT_LEARNING_PRIORITY_STATE
+//l2 table configuration
+//get configuration
+//limit learning configuration
+//trap priority configuration
+//state configuration
+l2-table get limit-learning priority state 
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LINK_DOWN_FLUSH_STATE
+//l2 table configuration
+//get configuration
+//link down auto flush MAC table configuration
+//state configuration
+l2-table get link-down-flush state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LOOKUP_MISS
+//l2 table configuration
+//get configuration
+//lookup miss configuration
+l2-table get lookup-miss
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LOOKUP_MISS_PORT_ALL
+//l2 table configuration
+//get configuration
+//lookup miss configuration
+//port list
+//all
+l2-table get lookup-miss ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LOOKUP_MISS_BCAST_UNICAST_FWD_TBL_IDX
+//l2 table configuration
+//get configuration
+//lookup miss configuration
+//broadcast
+//unicast
+//forwarding table index
+l2-table get lookup-miss ( bcast | unicast ) fwd-tbl-idx
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LOOKUP_MISS_DROP_PRECEDENCE_STATE
+//l2 table configuration
+//get configuration
+//lookup miss configuration
+//drop precedence value
+//state configuration
+l2-table get lookup-miss drop-precedence state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LOOKUP_MISS_INSERT_CPUTAG_STATE
+//l2 table configuration
+//get configuration
+//lookup miss configuration
+//insert CPU tag configuration
+//state configuration
+l2-table get lookup-miss insert-cputag state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_LOOKUP_MISS_PRIORITY_STATE
+//l2 table configuration
+//get configuration
+//lookup miss configuration
+//trap priority configuration
+//state configuration
+l2-table get lookup-miss priority state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_NOTIFICATION
+//l2 table configuration
+//get configuration
+//notification for table modification
+l2-table get notification
+#endif
+
+#ifdef CMD_L2_TABLE_GET_NOTIFICATION_BACK_PRESSURE_THRESHOLD
+//l2 table configuration
+//get configuration
+//notification for table modification
+//back-pressure mechanism
+//threshold
+l2-table get notification back-pressure threshold
+#endif
+
+#ifdef CMD_L2_TABLE_GET_NOTIFICATION_TYPE_LINK_DOWN_FLUSH_SUSPEND_STATE
+//l2 table configuration
+//get configuration
+//notification for table modification
+//notification type configuration
+//link-down flush
+//suspend learn
+//enable state configuration
+l2-table get notification type ( link-down-flush | suspend ) state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_STTC_PORT_MOVE_PORT_ALL
+//l2 table configuration
+//get configuration
+//static entry port move configuration
+//port list
+//all
+l2-table get sttc-port-move ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_GET_MCAST_BLOCK_PORT
+//l2 table configuration
+//get configuration
+//l2 multicast blocking port configuration
+l2-table get mcast-block-port
+#endif
+
+#ifdef CMD_L2_TABLE_GET_MCAST_MODE
+//l2 table configuration
+//get configuration
+//multicast lookup mode configuration
+l2-table get mcast-mode
+#endif
+
+#ifdef CMD_L2_TABLE_GET_PORT_MOVE_PORT_ALL
+//l2 table configuration
+//get configuration
+//port moving configuration
+//port list
+//all
+l2-table get port-move ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_GET_PORT_MOVE_ILLEGAL_PORT_ALL_ACTION
+//l2 table configuration
+//get configuration
+//port moving configuration
+//illegal port move
+//port moving soure port list
+//all
+//move action
+l2-table get port-move illegal ( <PORT_LIST:port> | all ) action
+#endif
+
+#ifdef CMD_L2_TABLE_GET_PORT_MOVE_LEGAL_PORT_ALL_ACTION
+//l2 table configuration
+//get configuration
+//port moving configuration
+//legal port move
+//port moving soure port list
+//all
+//move action
+l2-table get port-move legal ( <PORT_LIST:port> | all ) action
+#endif
+
+#ifdef CMD_L2_TABLE_GET_ROUTER_PORT
+//l2 table configuration
+//get configuration
+//router port configuration
+l2-table get router-port
+#endif
+
+#ifdef CMD_L2_TABLE_GET_SECURE_MAC_MODE
+//l2 table configuration
+//get configuration
+//secure MAC mode configuration
+l2-table get secure-mac-mode
+#endif
+
+#ifdef CMD_L2_TABLE_GET_SRC_MAC_PORT_ALL
+//l2 table configuration
+//get configuration
+//new source MAC learning configuration
+//port list
+//all
+l2-table get src-mac ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_GET_SRC_MAC_LEARNING_PORT_ALL_STATE
+//l2 table configuration
+//get configuration
+//source MAC learning configuration
+//port list
+//all
+//state configuration
+l2-table get src-mac-learning ( <PORT_LIST:port> | all ) state
+#endif
+
+#ifdef CMD_L2_TABLE_GET_SRC_PORT_EGRESS_FILTER
+//l2 table configuration
+//get configuration
+//source port egress filter configuration
+l2-table get src-port-egress-filter
+#endif
+
+#ifdef CMD_L2_TABLE_GET_VLAN_FWD_MODE_PORT_ALL
+//l2 table configuration
+//get configuration
+//VLAN forward mode configuration
+//port list
+//all
+l2-table get vlan-fwd-mode ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_GET_VLAN_LEANING_METHOD
+//l2 table configuration
+//get configuration
+//VLAN learning mode configuration
+l2-table get vlan-leaning-method
+#endif
+
+#ifdef CMD_L2_TABLE_RESET_LIMIT_LEARNING_CURRENT_COUNT_INDEX
+//l2 table configuration
+//reset configuration
+//limit learning configuration
+//current MAC counter
+//VLAN limit learning entry index, <0-31>
+l2-table reset limit-learning current-count <UINT:index>  
+#endif
+
+#ifdef CMD_L2_TABLE_SET_AGING_OUT_PORT_ALL_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//l2 table entry aging out configuration
+//port list
+//all ports
+//disable function
+//enable function
+l2-table set aging-out ( <PORT_LIST:port> | all ) ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_AGING_TIME_TIME
+//l2 table configuration
+//set configuration
+//l2 table aging time configuration
+//time value(second), 0 means disable aging
+l2-table set aging-time <UINT:time>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_DYNAMIC_PORT_MOVE_PORT_ALL_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//l2 table configuration
+//set configuration
+//dynamic port move configuration
+//port list
+//all
+//copy to CPU
+//drop
+//forward
+//trap to CPU
+l2-table set dynamic-port-move ( <PORT_LIST:port> | all ) ( copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_CAM_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//address cam table configuration
+//state configuration
+//disable function
+//enable function
+l2-table set cam state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_CAM_L2_TABLE_LRU_IPMC_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//address cam table configuration
+//layer2 table lru configuration
+//IP multicast asic lookup configuration
+//state configuration
+//disable function
+//enable function
+l2-table set ( cam | l2-table-lru | ipmc ) state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_EXCEPT_SMAC_BCAST_SA_MCAST_SA_DROP_FORWARD
+//l2 table configuration
+//set configuration
+//exception smac configuration
+//broadcast smac
+//multicast smac
+//drop
+//forward
+l2-table set except-smac  ( bcast-sa | mcast-sa )  ( drop | forward )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_EXCEPT_SMAC_BCAST_MCAST_SA_DROP_FORWARD
+//l2 table configuration
+//set configuration
+//exception smac configuration
+//broadcast and multicast smac
+//drop
+//forward
+l2-table set except-smac bcast-mcast-sa ( drop | forward )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_EXCEPT_SMAC_ZERO_SA_DROP_FORWARD
+//l2 table configuration
+//set configuration
+//exception smac configuration
+//zero smac
+//drop
+//forward
+l2-table set except-smac zero-sa ( drop | forward )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_EXCEPT_SMAC_ZERO_SA_LEARNING_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//exception smac configuration
+//zero smac learning behavior
+//disable function
+//enable function
+l2-table set except-smac zero-sa-learning  ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_FLUSH_MAC_UCAST_ALL_INCLUDE_STATIC
+//l2 table configuration
+//set configuration
+//MAC flush configuration
+//unicast MAC entry
+//all entries
+//include static entries
+l2-table set flush mac-ucast all { include-static }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_FLUSH_MAC_UCAST_MAC_INCLUDE_STATIC
+//l2 table configuration
+//set configuration
+//MAC flush configuration
+//unicast MAC entry
+//unicast MAC address
+//include static entries
+l2-table set flush mac-ucast <MACADDR:mac> { include-static }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_FLUSH_MAC_UCAST_PORT_PORT_ID_INCLUDE_STATIC
+//l2 table configuration
+//set configuration
+//MAC flush configuration
+//unicast MAC entry
+//port configuration
+//port id
+//include static entries
+l2-table set flush mac-ucast port <UINT:port_id> { include-static }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_FLUSH_MAC_UCAST_TRUNK_TRUNK_ID_INCLUDE_STATIC
+//l2 table configuration
+//set configuration
+//MAC flush configuration
+//unicast MAC entry
+//trunk configuration
+//trunk id, <0-7>
+//include static entries
+l2-table set flush mac-ucast trunk <UINT:trunk_id> { include-static }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_FLUSH_MAC_UCAST_PORT_PORT_ID_VID_VLAN_ID_INCLUDE_STATIC
+//l2 table configuration
+//set configuration
+//MAC flush configuration
+//unicast MAC entry
+//port configuration
+//port id
+//VLAN id configuration
+//VLAN id, <0-4095>
+//include static entries
+l2-table set flush mac-ucast port <UINT:port_id> vid <UINT:vlan_id> { include-static }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_FLUSH_MAC_UCAST_TRUNK_TRUNK_ID_VID_VLAN_ID_INCLUDE_STATIC
+//l2 table configuration
+//set configuration
+//MAC flush configuration
+//unicast MAC entry
+//trunk configuration
+//trunk id, <0-7>
+//VLAN id configuration
+//VLAN id, <0-4095>
+//include static entries
+l2-table set flush mac-ucast trunk <UINT:trunk_id> vid <UINT:vlan_id> { include-static }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_FLUSH_MAC_UCAST_PORT_PORT_ID_MAC_INCLUDE_STATIC
+//l2 table configuration
+//set configuration
+//MAC flush configuration
+//unicast MAC entry
+//port configuration
+//port id
+//unicast MAC address
+//include static entries
+l2-table set flush mac-ucast port <UINT:port_id> <MACADDR:mac> { include-static }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_FLUSH_MAC_UCAST_TRUNK_TRUNK_ID_MAC_INCLUDE_STATIC
+//l2 table configuration
+//set configuration
+//MAC flush configuration
+//unicast MAC entry
+//trunk configuration
+//trunk id, <0-7>
+//unicast MAC address
+//include static entries
+l2-table set flush mac-ucast trunk <UINT:trunk_id> <MACADDR:mac> { include-static }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_FLUSH_MAC_UCAST_PORT_PORT_ID_VID_VLAN_ID_MAC_INCLUDE_STATIC
+//l2 table configuration
+//set configuration
+//MAC flush configuration
+//unicast MAC entry
+//port configuration
+//port id
+//VLAN id configuration
+//VLAN id, <0-4095>
+//unicast MAC address
+//include static entries
+l2-table set flush mac-ucast port <UINT:port_id> vid <UINT:vlan_id> <MACADDR:mac> { include-static }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_FLUSH_MAC_UCAST_TRUNK_TRUNK_ID_VID_VLAN_ID_MAC_INCLUDE_STATIC
+//l2 table configuration
+//set configuration
+//MAC flush configuration
+//unicast MAC entry
+//trunk configuration
+//trunk id, <0-7>
+//VLAN id configuration
+//VLAN id, <0-4095>
+//unicast MAC address
+//include static entries
+l2-table set flush mac-ucast trunk <UINT:trunk_id> vid <UINT:vlan_id> <MACADDR:mac> { include-static }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_FLUSH_MAC_UCAST_VID_VLAN_ID_INCLUDE_STATIC
+//l2 table configuration
+//set configuration
+//MAC flush configuration
+//unicast MAC entry
+//VLAN id configuration
+//VLAN id, <0-4095>
+//include static entries
+l2-table set flush mac-ucast vid <UINT:vlan_id> { include-static }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_FLUSH_MAC_UCAST_VID_VLAN_ID_MAC_INCLUDE_STATIC
+//l2 table configuration
+//set configuration
+//MAC flush configuration
+//unicast MAC entry
+//VLAN id configuration
+//VLAN id, <0-4095>
+//unicast MAC address
+//include static entries
+l2-table set flush mac-ucast vid <UINT:vlan_id> <MACADDR:mac> { include-static }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_DYNAMIC_PORT_MOVE_FORBID_PORT_ALL_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//dynamic port move forbid configuration
+//port list
+//all ports
+//state configuration
+//disable function
+//enable function
+l2-table set dynamic-port-move-forbid ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_DYNAMIC_PORT_MOVE_FLUSH_PORT_ALL_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//dynamic port move flush configuration
+//port list
+//all ports
+//state configuration
+//disable function
+//enable function
+l2-table set dynamic-port-move-flush ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_FWD_TABLE_INDEX_PORT_ALL_CROSS_VLAN
+//l2 table configuration
+//set configuration
+//forwarding table configuration
+//index value
+//port list
+//all
+//cross VLAN
+l2-table set fwd-table <UINT:index> ( <PORT_LIST:port> | all ) { cross-vlan }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_HASH_ALGORITHM_ALGO0_ALGO1
+//l2 table configuration
+//set configuration
+//l2 table hash algorithm
+//hash algorithm 0
+//hash algorithm 1
+l2-table set hash-algorithm ( algo0 | algo1 )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_IP_MCAST_DIP_CHECK_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//IP multicast entry
+//check if belongs to DIP Class-D scope and DIP[22:0] = DMAC[22:0]
+//disable function
+//enable function
+l2-table set ip-mcast dip-check ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_IP_MCAST_VLAN_COMPARE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//IP multicast entry
+//use vlan id as one of the hit criteria when determining whether an entry hits
+//disable function
+//enable function
+l2-table set ip-mcast vlan-compare ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_IP6_DIP_CARE_BYTE_CARE_BYTE
+//l2 table configuration
+//set configuration
+//IPv6 dip hash key care-byte
+//care-byte
+l2-table set ip6-dip-care-byte <HEX:care_byte>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_IP6_SIP_CARE_BYTE_CARE_BYTE
+//l2 table configuration
+//set configuration
+//IPv6 sip hash key care-byte
+//care-byte
+l2-table set ip6-sip-care-byte <HEX:care_byte>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_IP6MC_MODE_DIP_AND_SIP_DIP_AND_VID_VID_AND_MAC
+//l2 table configuration
+//set configuration
+//IPv6 multicast mode
+//hash by dip and sip
+//hash by dip and vid
+//hash by vid and mac
+l2-table set ip6mc-mode ( dip-and-sip | dip-and-vid | vid-and-mac )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_IPMC_MODE_DIP_AND_SIP_DIP_AND_VID_VID_AND_MAC
+//l2 table configuration
+//set configuration
+//IP multicast mode
+//hash by dip and sip
+//hash by dip and vid
+//hash by vid and mac
+l2-table set ipmc-mode ( dip-and-sip | dip-and-vid | vid-and-mac )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_IPMC_MISMATCH_WRONG_MCAST_ADDRESS_IPMC_WITH_UCAST_MAC_DROP_FWD_AS_IPMC_FWD_AS_L2_TRAP_TO_CPU
+//l2 table configuration
+//set configuration
+//IP multicast packet mismatch configuration
+//wrong multicast dmac
+//IP multicast with unicast dmac
+//drop
+//forward as normal l2 packet
+//forward as normal IP multicast
+//trap to CPU
+l2-table set ipmc-mismatch ( wrong-mcast-address | ipmc-with-ucast-mac )  ( drop | fwd-as-ipmc | fwd-as-l2 | trap-to-cpu )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_IPMC_MISMATCH_WRONG_MCAST_ADDRESS_IPMC_WITH_UCAST_MAC_DROP_PRECEDENCE_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//IP multicast packet mismatch configuration
+//wrong multicast dmac
+//IP multicast with unicast dmac
+//trap drop precedence configuration
+//drop precedence value
+//state configuration
+//disable function
+//enable function
+l2-table set ipmc-mismatch  ( wrong-mcast-address | ipmc-with-ucast-mac ) drop-precedence state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_IPMC_MISMATCH_WRONG_MCAST_ADDRESS_IPMC_WITH_UCAST_MAC_DROP_PRECEDENCE_DP
+//l2 table configuration
+//set configuration
+//IP multicast packet mismatch configuration
+//wrong multicast dmac
+//IP multicast with unicast dmac
+//trap drop precedence configuration
+//drop precedence value
+l2-table set ipmc-mismatch  ( wrong-mcast-address | ipmc-with-ucast-mac ) drop-precedence <UINT:dp>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_IPMC_MISMATCH_WRONG_MCAST_ADDRESS_IPMC_WITH_UCAST_MAC_INSERT_CPUTAG_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//IP multicast packet mismatch configuration
+//wrong multicast dmac
+//IP multicast with unicast dmac
+//insert CPU tag configuration
+//state configuration
+//disable function
+//enable function
+l2-table set ipmc-mismatch  ( wrong-mcast-address | ipmc-with-ucast-mac ) insert-cputag state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_IPMC_MISMATCH_WRONG_MCAST_ADDRESS_IPMC_WITH_UCAST_MAC_PRIORITY_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//IP multicast packet mismatch configuration
+//wrong multicast dmac
+//IP multicast with unicast dmac
+//trap priority configuration
+//state configuration
+//disable function
+//enable function
+l2-table set ipmc-mismatch  ( wrong-mcast-address | ipmc-with-ucast-mac ) priority state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_IPMC_MISMATCH_WRONG_MCAST_ADDRESS_IPMC_WITH_UCAST_MAC_PRIORITY_PRI
+//l2 table configuration
+//set configuration
+//IP multicast packet mismatch configuration
+//wrong multicast dmac
+//IP multicast with unicast dmac
+//trap priority configuration
+//value
+l2-table set ipmc-mismatch  ( wrong-mcast-address | ipmc-with-ucast-mac ) priority <UINT:pri>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_IPMC_MODE_DIP_ONLY_DIP_SIP
+//l2 table configuration
+//set configuration
+//IP multicast lookup key configuration
+//only use dip to lookup
+//use dip & sip to lookup
+l2-table set ipmc-mode ( dip-only | dip-sip )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_L2_TRAP_INSERT_CPUTAG_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//l2 trap configuration
+//insert CPU tag configuration
+//state configuration
+//disable function
+//enable function
+l2-table set l2-trap insert-cputag state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_L2_TRAP_PRIORITY_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//l2 trap configuration
+//trap priority configuration
+//state configuration
+//disable function
+//enable function
+l2-table set l2-trap priority state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_L2_TRAP_PRIORITY_PRI
+//l2 table configuration
+//set configuration
+//l2 trap configuration
+//trap priority configuration
+//priority value, <0-7>
+l2-table set l2-trap priority <UINT:pri>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LEGAL_MOVE_SRC_PORT_ALL_DST_PORT_ALL
+//l2 table configuration
+//set configuration
+//legal port moving configuration
+//port moving soure port list
+//all
+//port moving destination port list
+//all
+l2-table set legal-move ( <PORT_LIST:src_port> | all ) ( <PORT_LIST:dst_port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_DROP_PRECEDENCE_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//trap drop precedence configuration
+//state configuration
+//disable function
+//enable function
+l2-table set limit-learning drop-precedence state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_DROP_PRECEDENCE_DP
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//trap drop precedence configuration
+//drop precedence value, <0-3>
+l2-table set limit-learning drop-precedence <UINT:dp>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_ACTION_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//limit learning action
+//copy to CPU
+//drop
+//forward
+//trap to CPU
+l2-table set limit-learning action ( copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_TBL_INDEX_INDEX_VID_MAX_COUNT_PORT_ID
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//limit learning on VLAN configuration
+//index
+//VLAN id
+//max MAC count can be learned
+//port id
+l2-table set limit-learning tbl-index <UINT:index> <UINT:vid> <UINT:max_count> { <UINT:port_id> }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_VLAN_BASED_INDEX_VID_MAX_COUNT_PORT_ID
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//VLAN-based limit learning configuration
+//index
+//VLAN id
+//max MAC count can be learned
+//port id
+l2-table set limit-learning vlan-based <UINT:index> <UINT:vid> <UINT:max_count> { <UINT:port_id> }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_VLAN_BASED_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//VLAN-based limit learning configuration
+//copy to CPU
+//drop
+//forward
+//trap to CPU
+l2-table set limit-learning vlan-based ( copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_MAX_COUNT
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//max MAC count can be learned
+l2-table set limit-learning <UINT:max_count>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_FID_INDEX_INDEX_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//VLAN configuration
+//entry index, <0-31>
+//state configuration
+//disable function
+//enable function
+l2-table set limit-learning fid-index <UINT:index> state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_FID_INDEX_INDEX_FID_MAX_COUNT_PORT_ALL
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//VLAN configuration
+//entry index, <0-31>
+//vid/fid value
+//max MAC count
+//port list 
+l2-table set limit-learning fid-index <UINT:index> <UINT:fid> <UINT:max_count> ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_FID_INDEX_INDEX_DROP_FORWARD_TRAP_TO_CPU
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//VLAN configuration
+//entry index, <0-31>
+//drop
+//forward
+//trap to CPU
+l2-table set limit-learning fid-index <UINT:index> ( drop | forward |  trap-to-cpu )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_INSERT_CPUTAG_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//insert CPU tag configuration
+//state configuration
+//disable function
+//enable function
+l2-table set limit-learning insert-cputag state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_PORT_PORT_ALL_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//port configuration
+//port list
+//all
+//state configuration
+//disable function
+//enable function
+l2-table set limit-learning port ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_PORT_PORT_ALL_MAX_COUNT
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//port configuration
+//port list
+//all
+//max MAC count can be learned
+l2-table set limit-learning port ( <PORT_LIST:port> | all ) <UINT:max_count>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_PORT_PORT_ALL_DROP_FORWARD_TRAP_TO_CPU
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//port configuration
+//port list
+//all
+//drop
+//forward
+//trap to CPU
+l2-table set limit-learning port ( <PORT_LIST:port> | all ) ( drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_PORT_PORT_ALL_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//port configuration
+//port list
+//all
+//copy to CPU
+//drop
+//forward
+//trap to CPU
+l2-table set limit-learning port ( <PORT_LIST:port> | all ) ( copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_PRIORITY_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//trap priority configuration
+//state configuration
+//disable function
+//enable function
+l2-table set limit-learning priority state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LIMIT_LEARNING_PRIORITY_PRI
+//l2 table configuration
+//set configuration
+//limit learning configuration
+//trap priority configuration
+//priority value, <0-7>
+l2-table set limit-learning priority <UINT:pri>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LINK_DOWN_FLUSH_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//link down auto flush MAC table configuration
+//state configuration
+//disable function
+//enable function
+l2-table set link-down-flush state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LOOKUP_MISS_BCAST_UNICAST_FWD_TBL_IDX_INDEX
+//l2 table configuration
+//set configuration
+//lookup miss configuration
+//broadcast lookup
+//unicast MAC lookup
+//forwarding table index
+//specified forwarding table index
+l2-table set lookup-miss ( bcast | unicast ) fwd-tbl-idx <UINT:index>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LOOKUP_MISS_BCAST_UNICAST_FLOOD_PORT_ALL
+//l2 table configuration
+//set configuration
+//lookup miss configuration
+//broadcast lookup
+//unicast MAC lookup
+//flood port list
+//all ports
+l2-table set lookup-miss ( bcast | unicast ) ( <PORT_LIST:flood_port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LOOKUP_MISS_BCAST_L2MC_IPMC_UNICAST_DROP_FLOOD_IN_VLAN_FLOOD_TO_ALL_PORT_FLOOD_TO_ROUTER_PORT_TRAP_TO_CPU
+//l2 table configuration
+//set configuration
+//lookup miss configuration
+//broadcast lookup
+//layer2 multicast lookup
+//IP muticast lookup
+//unicast MAC lookup
+//drop
+//flood in VLAN
+//flood to all ports
+//flood to router ports
+//trap to CPU
+l2-table set lookup-miss  ( bcast | l2mc | ipmc | unicast )  ( drop | flood-in-vlan | flood-to-all-port | flood-to-router-port | trap-to-cpu )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LOOKUP_MISS_DROP_PRECEDENCE_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//lookup miss configuration
+//trap drop precedence configuration
+//state configuration
+//disable function
+//enable function
+l2-table set lookup-miss  drop-precedence state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LOOKUP_MISS_DROP_PRECEDENCE_DP
+//l2 table configuration
+//set configuration
+//lookup miss configuration
+//trap drop precedence configuration
+//drop precedence value
+l2-table set lookup-miss  drop-precedence <UINT:dp>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LOOKUP_MISS_INSERT_CPUTAG_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//lookup miss configuration
+//insert CPU tag configuration
+//state configuration
+//disable function
+//enable function
+l2-table set lookup-miss insert-cputag state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LOOKUP_MISS_PORT_ALL_L2MC_IPMC_IP6MC_UNICAST_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//l2 table configuration
+//set configuration
+//lookup miss configuration
+//port list
+//all
+//layer2 multicast lookup
+//IP muticast lookup
+//IPv6 muticast lookup
+//unicast MAC lookup
+//copy to CPU
+//drop
+//flood in VLAN
+//trap to CPU
+l2-table set lookup-miss ( <PORT_LIST:port> | all ) ( l2mc | ipmc | ip6mc | unicast )  ( copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LOOKUP_MISS_PRIORITY_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//lookup miss configuration
+//trap priority configuration
+//state configuration
+//disable function
+//enable function
+l2-table set lookup-miss priority state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LOOKUP_MISS_PRIORITY_PRI
+//l2 table configuration
+//set configuration
+//lookup miss configuration
+//trap priority configuration
+//priority value, <0-7>
+l2-table set lookup-miss priority <UINT:pri>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_LOOKUP_MISS_FLOOD_PORT_ALL
+//l2 table configuration
+//set configuration
+//lookup miss configuration
+//flood port list
+//all ports
+l2-table set lookup-miss ( <PORT_LIST:flood_port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_MCAST_BLOCK_PORT_PORT
+//l2 table configuration
+//set configuration
+//l2 multicast blocking port configuration
+//port list
+l2-table set mcast-block-port <PORT_LIST:port>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_MCAST_MODE_FIX_FID_FID
+//l2 table configuration
+//set configuration
+//multicast lookup mode configuration
+//fixed fid mode
+//fixed fid value
+l2-table set mcast-mode fix-fid <UINT:fid>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_MCAST_MODE_FID_VID
+//l2 table configuration
+//set configuration
+//multicast lookup mode configuration
+//fid mode
+//vid mode
+l2-table set mcast-mode ( fid | vid )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_NOTIFICATION_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//notification for table modification
+//disable function
+//enable function
+l2-table set notification ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_NOTIFICATION_BACK_PRESSURE_THRESHOLD_THRESHOLD
+//l2 table configuration
+//set configuration
+//notification for table modification
+//back-pressure mechanism
+//threshold
+//threshold value
+l2-table set notification back-pressure threshold <UINT:threshold>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_NOTIFICATION_TYPE_LINK_DOWN_FLUSH_SUSPEND_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//notification for table modification
+//notification type configuration
+//link-down flush
+//suspend learn
+//enable state configuration
+//disable function
+//enable function
+l2-table set notification type ( link-down-flush | suspend ) state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_PORT_MOVE_ILLEGAL_LEGAL_PORT_ALL_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//l2 table configuration
+//set configuration
+//port moving configuration
+//illegal port move
+//legal port move
+//port moving soure port list
+//all
+//copy to CPU
+//drop
+//forward
+//trap to CPU
+l2-table set port-move ( illegal | legal ) ( <PORT_LIST:port> | all ) ( copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_REPLACE_PORT_PORT_ID_REPLACING_PORT_ID
+//l2 table configuration
+//set configuration
+//Replace the SLP in L2 table
+//port configuration
+//the port id to be replaced
+//the replacing port id
+l2-table set replace port <UINT:port_id> <UINT:replacing_port_id>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_REPLACE_PORT_PORT_ID_REPLACING_PORT_ID_INCLUDE_STATIC
+//l2 table configuration
+//set configuration
+//Replace the SLP in L2 table
+//port configuration
+//the port id to be replaced
+//the replacing port id
+//include static entries
+l2-table set replace port <UINT:port_id> <UINT:replacing_port_id> include-static
+#endif
+
+#ifdef CMD_L2_TABLE_SET_REPLACE_PORT_PORT_ID_REPLACING_PORT_ID_VID_VLAN_ID_INCLUDE_STATIC
+//l2 table configuration
+//set configuration
+//Replace the SLP in L2 table
+//port configuration
+//the port id to be replaced
+//the replacing port id
+//vid configuration
+//vid value, <0-4095>
+//include static entries
+l2-table set replace port <UINT:port_id> <UINT:replacing_port_id> vid <UINT:vlan_id> { include-static }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_REPLACE_VID_VLAN_ID_REPLACING_PORT_ID_INCLUDE_STATIC
+//l2 table configuration
+//set configuration
+//Replace the SLP in L2 table
+//vid configuration
+//vid value, <0-4095>
+//the port id to be replaced
+//include static entries
+l2-table set replace vid <UINT:vlan_id> <UINT:replacing_port_id> { include-static }
+#endif
+
+#ifdef CMD_L2_TABLE_SET_ROUTER_PORT_PORT_ALL
+//l2 table configuration
+//set configuration
+//router port configuration
+//port list
+//all
+l2-table set router-port ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_SECURE_MAC_MODE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//secure MAC mode configuration
+//disable function
+//enable function
+l2-table set secure-mac-mode ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_SRC_MAC_PORT_ALL_ASIC_LEARN_SOFTWARE_LEARN_NOT_LEARN_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//l2 table configuration
+//set configuration
+//new source MAC learning configuration
+//port list
+//all
+//asic auto learn
+//software learn, learn as suspend entry
+//not do any learning action
+//copy to CPU
+//drop
+//forward
+//trap to CPU
+l2-table set src-mac ( <PORT_LIST:port> | all ) ( asic-learn | software-learn | not-learn )  (  copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_SRC_MAC_LEARNING_PORT_ALL_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//source MAC learning configuration
+//port list
+//all
+//state configuration
+//disable function
+//enable function
+l2-table set src-mac-learning ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_SRC_PORT_EGRESS_FILTER_PORT_ALL_STATE_DISABLE_ENABLE
+//l2 table configuration
+//set configuration
+//source port egress filter configuration
+//port list
+//all
+//state configuration
+//disable function
+//enable function
+l2-table set src-port-egress-filter ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_STTC_PORT_MOVE_PORT_ALL_COPY_TO_CPU_DROP_FORWARD_TRAP_TO_CPU
+//l2 table configuration
+//set configuration
+//static entry port move configuration
+//port list
+//all
+//copy to CPU
+//drop
+//forward
+//trap to CPU
+l2-table set sttc-port-move ( <PORT_LIST:port> | all ) ( copy-to-cpu | drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_VLAN_FWD_MODE_PORT_ALL_INNER_VID_BASED_OUTER_VID_BASED
+//l2 table configuration
+//set configuration
+//VLAN forward mode configuration
+//port list
+//all
+//inner vid based
+//outer vid based
+l2-table set vlan-fwd-mode ( <PORT_LIST:port> | all ) ( inner-vid-based | outer-vid-based )
+#endif
+
+#ifdef CMD_L2_TABLE_DUMP_IP6_MCAST_SIP_DIP
+//l2 table configuration
+//dump configuration
+//IPv6 multicast entry
+//source IPv6 address
+//destination IPv6 address
+l2-table dump ip6-mcast <IPV6ADDR:sip> <IPV6ADDR:dip>
+#endif
+
+#ifdef CMD_L2_TABLE_SET_EXCEPT_SMAC_MCAST_BCAST_SA_ZERO_SA_DROP_FORWARD_TRAP_TO_CPU
+//l2 table configuration
+//set configuration
+//exception smac configuration
+//multicast SA and broadcast SA
+//zero SA
+//drop
+//forward
+//trap to CPU
+l2-table set except-smac ( mcast-bcast-sa | zero-sa ) ( drop | forward | trap-to-cpu )
+#endif
+
+#ifdef CMD_L2_TABLE_SET_SA_BLOCK_DA_BLOCK_PORT_PORTS_ALL_STATE_ENABLE_DISABLE
+//l2 table configuration
+//set configuration
+//source MAC blocking configuration
+//destination MAC blocking configuration
+//port configuration
+//port list
+//all port
+//state
+//disable function
+//enable function
+l2-table set ( sa-block | da-block ) port ( <PORT_LIST:ports> | all ) state ( enable | disable )
+#endif
+
+#ifdef CMD_L2_TABLE_GET_SA_BLOCK_DA_BLOCK_PORT_PORTS_ALL_STATE
+//l2 table configuration
+//get configuration
+//source MAC blocking configuration
+//destination MAC blocking configuration
+//port configuration
+//port list
+//all port
+//state
+l2-table get ( sa-block | da-block ) port ( <PORT_LIST:ports> | all ) state
+#endif
+
+#ifdef CMD_L2_TABLE_ADD_MAC_UCAST_VID_MAC_ROUTE_TARGET_VLAN_INNER_OUTER
+//l2 table configuration
+//add configuration
+//unicast MAC entry
+//vid value, <0-4095>
+//unicast MAC address, A:B:C:D:E:F
+//routing target VLAN selection
+//inner VLAN
+//outer VLAN
+l2-table add mac-ucast <UINT:vid> <MACADDR:mac> route-target-vlan ( inner | outer )
+#endif
+
+#ifdef CMD_L2_TABLE_ADD_MAC_UCAST_VID_MAC_ROUTE_TABLE_INDEX_INDEX
+//l2 table configuration
+//add configuration
+//unicast MAC entry
+//vid value, <0-4095>
+//unicast MAC address, A:B:C:D:E:F
+//routing table index
+//index
+l2-table add mac-ucast <UINT:vid> <MACADDR:mac> route-table-index <UINT:index>
+#endif
+
+#ifdef CMD_L2_TABLE_GET_NEXT_VALID_ENTRY_TYPE_CURRENT_ENTRY_DYNAMIC_UCAST_DYNAMIC_UCAST_AND_MCAST_UCAST_AND_MCAST_START_INDEX_INDEX
+//l2 table configuration
+//get configuration
+//get next-valid-entry
+//search method
+//current entry 
+//next dynamic unicast entry
+//next dynamic unicast entry or multicast entry
+//next unicast or multicast entry
+//start index
+//index
+l2-table get next-valid-entry type ( current-entry | dynamic-ucast | dynamic-ucast-and-mcast | ucast-and-mcast ) start-index <UINT:index>
+#endif
+

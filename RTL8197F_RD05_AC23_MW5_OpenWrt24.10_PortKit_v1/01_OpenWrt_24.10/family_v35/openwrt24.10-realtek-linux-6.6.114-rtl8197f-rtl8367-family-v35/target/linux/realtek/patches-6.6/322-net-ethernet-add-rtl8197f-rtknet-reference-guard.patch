@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenWrt RTL8197F bringup <noreply@example.invalid>
+Date: Sun, 31 May 2026 00:00:00 +0000
+Subject: [PATCH] net: ethernet: document staged RTL8197F rtl865x/rtknet source
+
+The Realtek GPL SDK contains a large Linux-4.4-era rtl865x/rtknet Ethernet
+stack. The code is useful as a register and board reference for RTL8197F,
+but it is not a drop-in Linux-6.6 driver. Add an explicit Kconfig guard so
+OpenWrt configurations can record that the source is present as a porting
+reference while keeping it out of the default build.
+
+---
+--- a/drivers/net/ethernet/Kconfig
++++ b/drivers/net/ethernet/Kconfig
+@@ -15,6 +15,22 @@
+ config MDIO
+ 	tristate
+ 
++config RTL8197F_RTKNET_REFERENCE
++	bool "Realtek RTL8197F rtl865x/rtknet vendor source reference"
++	depends on RTL8197F
++	depends on BROKEN
++	help
++	  The OpenWrt target overlay stages the Realtek GPL SDK rtl865x/rtknet
++	  Ethernet source under:
++
++	    drivers/net/ethernet/realtek/rtknet-vendor-4.4/
++
++	  This is a Linux-4.4-era vendor stack with legacy Realtek fastpath,
++	  swconfig, global BSP Kconfig symbols and direct MMIO assumptions. It is
++	  intentionally not linked into the Linux 6.6 build. Use it as a register
++	  map and porting reference while implementing a modern netdev/NAPI/phylink
++	  RTL8197F MAC driver.
++
+ config SUNGEM_PHY
+ 	tristate
+ 

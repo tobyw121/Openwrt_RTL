@@ -1,0 +1,140 @@
+#!/bin/sh
+# Non-destructive verification for Xiaomi RD05 v34 fixes.
+
+fail=0
+warn=0
+
+section() {
+	echo
+	echo "===== $* ====="
+}
+
+num() {
+	case "$1" in ''|*[!0-9]*) echo 0 ;; *) echo "$1" ;; esac
+}
+
+statv() {
+	dev="$1"; key="$2"
+	ethtool -S "$dev" 2>/dev/null | awk -v k="$key" '$1 == k":" { print $2; exit }'
+}
+
+section "bring up LAN and wait for v34 post-start"
+if command -v ifup >/dev/null 2>&1; then
+	ifup lan >/dev/null 2>&1 || true
+fi
+if command -v ubus >/dev/null 2>&1; then
+	ubus call network.interface.lan up >/dev/null 2>&1 || true
+fi
+waited=0
+while [ "$waited" -lt 30 ]; do
+	if dmesg 2>/dev/null | grep -q 'rd05 poststart v34:.*cpuicr1=.*rxbase=.*txbase='; then
+		break
+	fi
+	sleep 1
+	waited=$((waited + 1))
+done
+echo "waited ${waited}s; eth0=$(cat /sys/class/net/eth0/operstate 2>/dev/null || echo missing)"
+
+section "kernel markers"
+if dmesg 2>/dev/null | grep -q 'RD05 DSA master v34:'; then
+	echo "PASS: v34 DSA master is loaded"
+else
+	echo "FAIL: expected v34 DSA master marker not found"
+	fail=1
+fi
+
+if dmesg 2>/dev/null | grep -q 'rd05 p0 rgmii v34:.*cputag-rx=1.*preserve-tag=1'; then
+	echo "PASS: RTL8197F P0 CPU-tag RX recognition is enabled and tag removal is disabled"
+else
+	echo "FAIL: expected RTL8197F v34 P0 marker not found after LAN bring-up"
+	fail=1
+fi
+
+post="$(dmesg 2>/dev/null | grep 'rd05 poststart v34:' | tail -1)"
+if printf '%s\n' "$post" | grep -q 'cpuicr1=0x002081d3.*rxbase=.*txbase='; then
+	echo "PASS: 8-dword descriptor format and ring pointers were accepted"
+	printf '%s\n' "$post"
+else
+	echo "FAIL: expected v34 post-start ring readback not found"
+	[ -n "$post" ] && printf '%s\n' "$post"
+	fail=1
+fi
+
+if dmesg 2>/dev/null | grep -q 'rd05 poststart v34: CPUICR1 stride write rejected'; then
+	echo "FAIL: CPUICR1 rejected the 8-dword descriptor stride"
+	fail=1
+fi
+
+if dmesg 2>/dev/null | grep -q 'RTL8197F SPI auto-map MTD registered with calibrated bounded rootfs_data writes'; then
+	echo "PASS: calibrated bounded rootfs_data write/erase path registered"
+else
+	echo "FAIL: calibrated rootfs_data MTD marker not found"
+	fail=1
+fi
+
+cal="$(dmesg 2>/dev/null | grep 'calibrated SPI-NOR WEL:' | tail -1)"
+if [ -n "$cal" ]; then
+	echo "PASS: SPI-NOR WEL command/status mapping was calibrated"
+	printf '%s\n' "$cal"
+elif dmesg 2>/dev/null | grep -q 'unable to calibrate SPI-NOR WEL'; then
+	echo "FAIL: SPI-NOR WEL calibration failed"
+	dmesg 2>/dev/null | grep 'unable to calibrate SPI-NOR WEL' | tail -1
+	fail=1
+else
+	echo "INFO: WEL calibration has not been triggered yet; it runs before the first erase/program"
+fi
+
+if dmesg 2>/dev/null | grep -Eqi 'write-enable latch did not set after calibrated|JFFS2.*Erase at .* failed immediately'; then
+	echo "FAIL: a calibrated flash write/erase still failed"
+	fail=1
+fi
+
+section "MTD and overlay"
+cat /proc/mtd 2>/dev/null || true
+mtddev="$(awk -F: '/"rootfs_data"/ { print $1; exit }' /proc/mtd 2>/dev/null)"
+if [ -n "$mtddev" ] && [ -c "/dev/$mtddev" ]; then
+	echo "PASS: /dev/$mtddev exists for rootfs_data"
+else
+	echo "FAIL: rootfs_data character device is missing"
+	fail=1
+fi
+
+if mount 2>/dev/null | grep -q ' on /overlay '; then
+	mount 2>/dev/null | grep ' on /overlay '
+	if mount 2>/dev/null | grep ' on /overlay ' | grep -Eq 'tmpfs|loop|ext4'; then
+		echo "FAIL: overlay uses a temporary/loop fallback"
+		fail=1
+	else
+		echo "PASS: persistent overlay is mounted"
+	fi
+else
+	echo "FAIL: /overlay is not mounted"
+	fail=1
+fi
+
+section "CPU port, RGMII and DSA counters"
+ip -s link show eth0 2>/dev/null || true
+ip -s link show lan2 2>/dev/null || true
+ethtool -S eth0 2>/dev/null | grep -E 'rd05_rx_external|rd05_rx_arp|rd05_rx_ipv4|rd05_rx_ipv6|rd05_rxtrace_frames|rx_bad_desc|rx_dma_errors|rx_desc0_opts1|p07_if(In|Out)Octets|p07_dot3StatsFCSErrors|p07_etherStatsDropEvents' || true
+
+fcs="$(num "$(statv eth0 p07_dot3StatsFCSErrors)")"
+drops="$(num "$(statv eth0 p07_etherStatsDropEvents)")"
+if [ "$fcs" -gt 0 ]; then
+	echo "WARN: CPU7 still reports $fcs FCS errors (drop events=$drops); EXT1 RX timing needs another hardware measurement"
+	warn=1
+else
+	echo "PASS: CPU7 reports no FCS errors in the current snapshot"
+fi
+
+if command -v rd05-raw >/dev/null 2>&1; then
+	echo "PASS: rd05-raw is installed for bounded PCAP/Magic tests"
+else
+	echo "WARN: rd05-raw is missing; rebuild/install rtl8367d-compat release 6"
+	warn=1
+fi
+
+echo
+echo "For an RX verdict, run rd05-netdiag full together with rd05-pc-netdiag.py on a host connected to LAN2."
+echo "A zero RX count without peer-generated traffic is inconclusive."
+[ "$warn" -ne 0 ] && echo "Completed with warnings."
+exit "$fail"

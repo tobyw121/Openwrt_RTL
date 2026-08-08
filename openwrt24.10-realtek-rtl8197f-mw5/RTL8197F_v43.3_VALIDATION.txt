@@ -1,0 +1,43 @@
+RTL8197F / Tenda Nova MW5 WAN/LAN v43.3 validation
+==================================================
+
+Runtime evidence analyzed
+-------------------------
+- v43.2 builds and boots.
+- RTL8367/RTL8363 protocol-9 four-byte tag mode is selected.
+- RX/TX descriptor geometry is accepted:
+  DMA_CR1=0x000005e8, TXRINGCR=0x00000003, descriptor stride=24.
+- eth0 and lan RX counters increase, proving switch-to-CPU traffic reaches DSA.
+- br-lan TX increases while lan TX remains zero.
+- preinit reports LAN Link Up, then closes it before procd with no later reopen.
+- v43.2 P0 still reports cputag-rx=1 and cputag-tx=1.
+
+v43.3 source changes
+--------------------
+- MW5: enable P0 hardware CPU-tag RX parsing only.
+- MW5: disable P0 hardware TX CPU-tag generation.
+- RD05 behavior is unchanged.
+- tag_rtl4_9 sets protocol 0x9, disable-learning bit 9 and destination mask.
+- 99-mw5-dsa-network explicitly creates br-lan with port lan.
+- WAN remains a routed DSA port using DHCP; wan6 uses DHCPv6.
+- LAN DHCP service is enabled.
+
+Static/replay validation
+------------------------
+- CHECK_MW5_WANLAN_V43.sh: 54 PASS, 0 FAIL.
+- CHECK_SOURCE_TREE_V42.sh: PASS.
+- tag_rtl4_9.c checkpatch: 0 errors, 0 warnings.
+- 99-mw5-dsa-network shell syntax: PASS.
+- temporary v43.2 runtime test script shell syntax: PASS.
+- v43.2 -> v43.3 source patch dry-run with --fuzz=0: PASS.
+- v43.2 -> v43.3 complete patch dry-run with --fuzz=0: PASS.
+- v42.27 -> v43.3 complete patch dry-run with --fuzz=0: PASS.
+
+Not performed in this environment
+---------------------------------
+- complete OpenWrt cross-build with the user's populated toolchain/build_dir;
+- hardware verification of ARP, DHCP, DNS, LAN TX and WAN DHCP after v43.3.
+
+Expected v43.3 runtime marker
+-----------------------------
+mw5 p0 rgmii sdk: ... cputag-rx=1 cputag-tx=0 ... tag=rtl4_9/4byte

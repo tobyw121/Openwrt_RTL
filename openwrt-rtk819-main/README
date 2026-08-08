@@ -1,0 +1,15 @@
+# OpenWrt for rtk819xd 
+============================
+
+This is a porting OpenWrt for realtek - the firmware used by all realtek 819x routers. 
+
+Build system setup: Ubuntu 16.04 (32-bit), Ubuntu 18.04.6 LTS.
+
+At this time, the supported devices are:
+
+- Beeline SmartBox ONE
+- МТС S1010
+- Дом.ru S1010.ER
+- WIFIRE S1010.NBN 
+
+Download OpenWRT firmware for MTS S1010, SmartBox ONE:  https://bit.ly/3AGMn0t

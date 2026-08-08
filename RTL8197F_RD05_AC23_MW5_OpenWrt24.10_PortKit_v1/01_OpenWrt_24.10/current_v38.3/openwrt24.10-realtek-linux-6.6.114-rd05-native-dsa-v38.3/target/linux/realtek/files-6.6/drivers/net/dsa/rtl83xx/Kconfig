@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: GPL-2.0-only
+config NET_DSA_RTL83XX
+	tristate "Realtek RTL838x/RTL839x switch support"
+	depends on MACH_REALTEK_RTL
+	depends on RTL838X || RTL839X || RTL930X || RTL931X
+	select NET_DSA_TAG_TRAILER
+	help
+	  This driver adds support for Realtek RTL83xx series switching.

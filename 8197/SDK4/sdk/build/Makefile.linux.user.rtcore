@@ -1,0 +1,120 @@
+#
+# Copyright (C) 2009 Realtek Semiconductor Corp. 
+#
+# Makefile for SDK Linux Rtcore User Library 
+#
+
+TARGET := $(SDK_LIBDIR)/librtcore.a
+
+SYS_DIR := ../system
+DBG_DIR := $(SYS_DIR)/common/debug/user
+DBG_OBJ := \
+	$(DBG_DIR)/rt_log.o \
+	$(DBG_DIR)/mem.o
+
+DRV_DIR := $(SYS_DIR)/drv
+NIC_KRN_DIR := $(DRV_DIR)/nic
+NIC_USR_DIR := $(NIC_KRN_DIR)/user
+SWCORE_DIR := $(DRV_DIR)/swcore/user
+GPIO_DIR := $(DRV_DIR)/gpio
+SMI_DIR := $(DRV_DIR)/smi
+INTR_DIR := $(DRV_DIR)/intr
+WATCHDOG_DIR := $(DRV_DIR)/watchdog
+DRV_OBJ := \
+	$(SWCORE_DIR)/chip.o \
+	$(SWCORE_DIR)/l2notification_usr.o \
+	$(WATCHDOG_DIR)/user/watchdog.o \
+	$(WATCHDOG_DIR)/probe.o \
+	$(INTR_DIR)/intr.o
+ifeq ($(CONFIG_SDK_BSP_SMI),y)
+DRV_OBJ += \
+	$(GPIO_DIR)/user/gpio.o \
+	$(GPIO_DIR)/user/generalCtrl_gpio.o \
+	$(SMI_DIR)/user/smi.o
+endif
+
+ifeq ($(CONFIG_SDK_RTL8231),y)
+DRV_OBJ +=  $(GPIO_DIR)/user/ext_gpio.o \
+			$(SMI_DIR)/user/ext_smi.o \
+			$(DRV_DIR)/rtl8231/user/rtl8231.o
+endif
+
+ifeq ($(CONFIG_SDK_DRIVER_NIC_KERNEL_MODE),y)
+DRV_OBJ += \
+	$(NIC_USR_DIR)/nic.o \
+	$(NIC_USR_DIR)/diag.o
+endif
+
+ifeq ($(CONFIG_SDK_DRIVER_NIC_USER_MODE),y)
+DRV_OBJ += \
+	$(NIC_KRN_DIR)/probe.o \
+	$(NIC_KRN_DIR)/diag.o \
+	$(NIC_KRN_DIR)/nic.o
+ifneq ($(CONFIG_SDK_DRIVER_NIC_R8389),)
+DRV_OBJ += \
+	$(NIC_USR_DIR)/r8389.o
+endif
+ifneq ($(CONFIG_SDK_DRIVER_NIC_R8328),)
+DRV_OBJ += \
+	$(NIC_USR_DIR)/r8328.o
+endif	
+ifneq ($(CONFIG_SDK_DRIVER_NIC_R8390),)
+DRV_OBJ += \
+	$(NIC_USR_DIR)/r8390.o
+endif
+ifneq ($(CONFIG_SDK_DRIVER_NIC_R8380),)
+DRV_OBJ += \
+	$(NIC_USR_DIR)/r8380.o
+endif	
+DRV_OBJ += \
+	$(NIC_KRN_DIR)/nic_rx.o
+endif
+
+ifeq ($(CONFIG_SDK_UART1),y)
+DRV_OBJ += \
+	$(DRV_DIR)/uart/user/uart.o
+endif
+
+IOAL_DIR := $(SYS_DIR)/ioal
+IOAL_OBJ := \
+	$(IOAL_DIR)/user/ioal_init.o \
+	$(IOAL_DIR)/user/mem32.o 
+
+OSAL_LINUX_DIR := $(SYS_DIR)/osal/linux/user
+OSAL_OBJ := \
+	$(OSAL_LINUX_DIR)/sem.o \
+	$(OSAL_LINUX_DIR)/memory.o \
+	$(OSAL_LINUX_DIR)/cache.o \
+	$(OSAL_LINUX_DIR)/time.o \
+	$(OSAL_LINUX_DIR)/lib.o \
+	$(OSAL_LINUX_DIR)/thread.o
+
+ifeq ($(CONFIG_SDK_DRIVER_NIC_USER_MODE),y)
+RTCORE_USR_DIR := $(SYS_DIR)/linux/rtcore/user
+RTCORE_USR_OBJ := \
+	$(RTCORE_USR_DIR)/rtcore_drv_usr.o
+endif
+
+ALL_OBJ := $(DBG_OBJ) $(DRV_OBJ) $(IOAL_OBJ) $(OSAL_OBJ)
+
+ifeq ($(CONFIG_SDK_DRIVER_NIC_USER_MODE),y)
+ALL_OBJ += $(RTCORE_USR_OBJ)
+endif
+
+EXTRA_CFLAGS += -Wall -Werror -Wuninitialized -Wstrict-prototypes
+EXTRA_CFLAGS += -I$(SDK_INCLUDE) -I$(SYS_INCLUDE) -I$(DRV_INCLUDE)
+
+.PHONY: $(TARGET)
+
+$(TARGET): $(ALL_OBJ)
+	$(AR) rcs $@ $(ALL_OBJ)
+	$(STRIP) --strip-debug -R .note -R .comment $@
+
+%.o: %.c
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c -o $@ $<
+
+romfs:
+
+clean:
+	rm -rf $(TARGET) $(ALL_OBJ)
+

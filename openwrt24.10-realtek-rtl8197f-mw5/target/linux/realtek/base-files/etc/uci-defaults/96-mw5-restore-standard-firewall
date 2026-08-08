@@ -1,0 +1,30 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Tenda Nova MW5 v43.8: migrate v43.7 diagnostic no-firewall images back to
+# the normal OpenWrt firewall4 configuration and service state.
+
+case "$(board_name 2>/dev/null) $(cat /tmp/sysinfo/board_name 2>/dev/null) $(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)" in
+	*tenda,nova-mw5*|*nova-mw5*) ;;
+	*) exit 0 ;;
+esac
+
+restore_needed=0
+if grep -q 'v43.7 diagnostic image' /etc/config/firewall 2>/dev/null; then
+	restore_needed=1
+elif ! uci -q get firewall.@defaults[0] >/dev/null 2>&1; then
+	restore_needed=1
+fi
+
+if [ "$restore_needed" = 1 ]; then
+	if [ -s /etc/config/firewall.mw5-disabled-backup ]; then
+		cp -f /etc/config/firewall.mw5-disabled-backup /etc/config/firewall
+	elif [ -s /rom/etc/config/firewall ]; then
+		cp -f /rom/etc/config/firewall /etc/config/firewall
+	fi
+fi
+
+if [ -x /etc/init.d/firewall ]; then
+	/etc/init.d/firewall enable >/dev/null 2>&1 || true
+fi
+
+exit 0

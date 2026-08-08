@@ -1,0 +1,1221 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 22097 $
+// $Date: 2011-09-06 21:37:14 +0800 (Tue, 06 Sep 2011) $
+//
+// Purpose : Define diag shell commands for PIE.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) PIE commands.
+//           2) field selector commands.
+//           3) pattern match commands.
+//           4) range check commands.
+//
+ 
+#ifdef CMD_PIE_SET_ENTRY_PHASE_ENTRY_FIELD_CFI_EXIST_COPY2CPU_CPU_CTRL_PKT_DA_TYPE_DEI_EXIST_DIP_DMAC_DP_DPM_DPN_ETHERTYPE_EXTRA_TAG_FIELD_SELECTOR1_FIELD_SELECTOR1_0_FIELD_SELECTOR1_1_FIELD_SELECTOR1_2_FIELD_SELECTOR1_3_FIELD_SELECTOR2_FIELD_SELECTOR2_0_FIELD_SELECTOR2_1_FIELD_SELECTOR2_2_FIELD_SELECTOR2_3_FLOW_LABEL_FWD_ITAG_PRI_FWD_ITAG_VID_FWD_OTAG_CPU_TAG_FWD_OTAG_PRI_FWD_OTAG_VID_FWD_VID_IVID_OR_OVID_FWD_VID_PRI_ICMP_CODE_ICMP_TYPE_IGMP_TYPE_IP_DF_IP_MCAST_IP_MF_IP_NONZERO_IP_RANGE0_IP_RANGE1_IP_RANGE2_IP_RANGE3_IP_UCAST_IPV6_DIP_IPV6_SIP_ITAG_PRI_ITAG_VID_KEEP_ORG_VID_L4_DST_PORT_L4_SRC_PORT_LOOKUP_PHASE_OTAG_PRI_OTAG_VID_PAYLOAD0_PAYLOAD0_VALID_PAYLOAD1_PAYLOAD1_VALID_PATTERN_MATCH0_PATTERN_MATCH1_PORT_RANGE_PPPOE_PROTO_NH_REDIRECT_RTK_PROTO_SIP_SMAC_SPM_SPSM_SRC_PHY_PORT_TCP_FLAG_TGL2_FORMAT_TGL23_FORMAT_TGL4_FORMAT_TO_GUEST_VLAN_TOS_DS_TTL_TTL_TYPE_VID_RANGE_VID_RANGE_HIT_EVT_DITAG_PRI_EVT_DITAG_VID_EVT_DMAC_INDEX_EVT_DOTAG_PRI_EVT_DOTAG_VID_EVT_DP_EVT_DPN_EVT_DSCP_EVT_DSCP_RMK_EVT_EXTRA_TAG_EVT_IP_MCAST_EVT_IP_UCAST_EVT_ITAG_EXIST_EVT_L2_FORMAT_EVT_L34_FORMAT_EVT_LOOKUP_PHASE_EVT_OTAG_EXIST_EVT_PRI_EVT_RRCP_EVT_RRCP_TYPE_EVT_RX_CPU_TAG_EVT_RX_RSPAN_EVT_SRC_TRUNK_PORT_VALID_DATA_MASK
+//PIE configuration
+//set configuration
+//entry configuration
+//lookup phase, 0:lookup phase 1, 1:lookup phase 2, 2:lookup phase 3, 3:lookup phase 4
+//entry index
+pie set entry <UINT:phase> <UINT:entry> field ( cfi-exist | copy2cpu | cpu | ctrl-pkt | da-type | dei-exist | dip | dmac | dp | dpm | dpn | ethertype | extra-tag | field-selector1 | field-selector1_0 | field-selector1_1 | field-selector1_2 | field-selector1_3 | field-selector2 | field-selector2_0 | field-selector2_1 | field-selector2_2 | field-selector2_3 | flow-label | fwd-itag-pri | fwd-itag-vid | fwd-otag-cpu-tag | fwd-otag-pri | fwd-otag-vid | fwd-vid-ivid-or-ovid | fwd-vid-pri | icmp-code | icmp-type | igmp-type | ip-df | ip-mcast | ip-mf | ip-nonzero | ip-range0 | ip-range1 | ip-range2 | ip-range3 | ip-ucast | ipv6-dip | ipv6-sip | itag-pri | itag-vid | keep-org-vid | l4-dst-port | l4-src-port | lookup-phase | otag-pri | otag-vid | payload0 | payload0-valid | payload1 | payload1-valid | pattern-match0 | pattern-match1 | port-range | pppoe | proto-nh | redirect | rtk-proto | sip | smac | spm | spsm | src-phy-port | tcp-flag | tgl2-format | tgl23-format | tgl4-format | to-guest-vlan | tos-ds | ttl | ttl-type | vid-range | vid-range-hit | evt-ditag-pri | evt-ditag-vid | evt-dmac-index | evt-dotag-pri | evt-dotag-vid | evt-dp | evt-dpn | evt-dscp | evt-dscp-rmk | evt-extra-tag | evt-ip-mcast | evt-ip-ucast | evt-itag-exist | evt-l2-format | evt-l34-format | evt-lookup-phase | evt-otag-exist | evt-pri | evt-rrcp | evt-rrcp-type | evt-rx-cpu-tag | evt-rx-rspan | evt-src-trunk-port | valid ) <STRING:data> <STRING:mask>
+#endif
+
+#ifdef CMD_PIE_GET_ENTRY_PHASE_ENTRY
+//PIE configuration
+//get configuration
+//entry configuration
+//lookup phase, 0:lookup phase 1, 1:lookup phase 2, 2:lookup phase 3, 3:lookup phase 4
+//entry index
+pie get entry <UINT:phase> <UINT:entry>
+#endif
+
+#ifdef CMD_PIE_SET_ENTRY_PRE_DEFINE_INDEX_FIELD_DST_VID_EXTRA_TAG_LOOK_PHASE_PPPOE_SRC_PHY_PORT_SRC_VID_TGL2_FORMAT_TTL_TYPE_VALID_DATA_MASK
+//PIE configuration
+//set configuration
+//entry configuration
+//predefined template
+//entry index
+//entry field
+//destination VID
+//extra tag
+//lookup phase
+//PPPoE
+//source physical port
+//source VID
+//TGL2FMT
+//TTL type
+//valid bit 
+pie set entry pre-define <UINT:index> field ( dst-vid | extra-tag | look-phase | pppoe | src-phy-port | src-vid | tgl2-format | ttl-type | valid ) <UINT:data> <UINT:mask>
+#endif
+
+#ifdef CMD_PIE_SET_ENTRY_PRE_DEFINE_INDEX_FIELD_ARP_DIP_SIP_DATA_MASK
+//PIE configuration
+//set configuration
+//entry configuration
+//predefined template
+//entry index
+//entry field
+//ARP
+//source IP
+//destination IP
+//data
+//mask
+pie set entry pre-define <UINT:index> field arp ( dip | sip ) <UINT:data> <UINT:mask>
+#endif
+
+#ifdef CMD_PIE_SET_ENTRY_PRE_DEFINE_INDEX_FIELD_IPV4_DIP_PROTOCOL_SIP_TOS_TTL_DATA_MASK
+//PIE configuration
+//set configuration
+//entry configuration
+//predefined template
+//entry index
+//entry field
+//IPv4
+//destination IP
+//protocol
+//source IP
+//ToS
+//TTL
+//data
+//mask
+pie set entry pre-define <UINT:index> field ipv4 ( dip | protocol | sip | tos | ttl ) <UINT:data> <UINT:mask>
+#endif
+
+#ifdef CMD_PIE_SET_ENTRY_PRE_DEFINE_INDEX_FIELD_IPV4_ICMP_DIP_ICMP_CODE_ICMP_TYPE_SIP_DATA_MASK
+//PIE configuration
+//set configuration
+//entry configuration
+//predefined template
+//entry index
+//entry field
+//IPv4 ICMP
+//destination IP
+//ICMP code
+//ICMP type
+//source IP
+//data
+//mask
+pie set entry pre-define <UINT:index> field ipv4-icmp ( dip | icmp-code | icmp-type | sip ) <UINT:data> <UINT:mask>
+#endif
+
+#ifdef CMD_PIE_SET_ENTRY_PRE_DEFINE_INDEX_FIELD_IPV4_IGMP_DIP_GROUP_IP_IGMP_TYPE_SIP_DATA_MASK
+//PIE configuration
+//set configuration
+//entry configuration
+//predefined template
+//entry index
+//entry field
+//IPv4 IGMP
+//destination IP
+//group IP
+//IGMP type
+//source IP
+//data
+//mask
+pie set entry pre-define <UINT:index> field ipv4-igmp ( dip | group-ip | igmp-type | sip ) <UINT:data> <UINT:mask>
+#endif
+
+#ifdef CMD_PIE_SET_ENTRY_PRE_DEFINE_INDEX_FIELD_IPV4_TCP_DIP_DST_PORT_SIP_SRC_PORT_TCP_FLAG_DATA_MASK
+//PIE configuration
+//set configuration
+//entry configuration
+//predefined template
+//entry index
+//entry field
+//IPv4 TCP
+//destination IP
+//destination L4 port
+//source IP
+//source L4 port
+//TCP flag
+//data
+//mask
+pie set entry pre-define <UINT:index> field ipv4-tcp ( dip | dst-port | sip | src-port | tcp-flag ) <UINT:data> <UINT:mask>
+#endif
+
+#ifdef CMD_PIE_SET_ENTRY_PRE_DEFINE_INDEX_FIELD_IPV4_UDP_DIP_DST_PORT_SIP_SRC_PORT_DATA_MASK
+//PIE configuration
+//set configuration
+//entry configuration
+//predefined template
+//entry index
+//entry field
+//IPv4 UDP
+//destination IP
+//destination L4 port
+//source IP
+//source L4 port
+//data
+//mask
+pie set entry pre-define <UINT:index> field ipv4-udp ( dip | dst-port | sip | src-port ) <UINT:data> <UINT:mask>
+#endif
+
+#ifdef CMD_PIE_SET_ENTRY_PRE_DEFINE_INDEX_FIELD_IPV6_DIP127_96_DIP95_64_DSCP_FLOW_LABEL_NEXT_HEADER_DATA_MASK
+//PIE configuration
+//set configuration
+//entry configuration
+//predefined template
+//entry index
+//entry field
+//IPv6
+//destination IPv6 bits 127-96
+//destination IPv6 bits 95-64
+//DSCP
+//flow label
+//next header
+//data
+//mask
+pie set entry pre-define <UINT:index> field ipv6 ( dip127-96 | dip95-64 | dscp | flow-label | next-header ) <UINT:data> <UINT:mask>
+#endif
+
+#ifdef CMD_PIE_SET_ENTRY_PRE_DEFINE_INDEX_FIELD_IPV6_ICMPV6_DIP127_96_DIP95_64_ICMP_CODE_ICMP_TYPE_DATA_MASK
+//PIE configuration
+//set configuration
+//entry configuration
+//predefined template
+//entry index
+//entry field
+//IPv6 ICMPv6
+//destination IPv6 bits 127-96
+//destination IPv6 bits 95-64
+//ICMP code
+//ICMP type
+//data
+//mask
+pie set entry pre-define <UINT:index> field ipv6-icmpv6 ( dip127-96 | dip95-64 | icmp-code | icmp-type ) <UINT:data> <UINT:mask>
+#endif
+
+#ifdef CMD_PIE_SET_ENTRY_PRE_DEFINE_INDEX_FIELD_IPV6_TCP_DIP127_96_DIP95_64_DST_PORT_SRC_PORT_TCP_FLAG_DATA_MASK
+//PIE configuration
+//set configuration
+//entry configuration
+//predefined template
+//entry index
+//entry field
+//IPv6 TCP
+//destination IPv6 bits 127-96
+//destination IPv6 bits 95-64
+//destination L4 port
+//source L4 port
+//TCP flag
+//data
+//mask
+pie set entry pre-define <UINT:index> field ipv6-tcp ( dip127-96 | dip95-64 | dst-port | src-port | tcp-flag ) <UINT:data> <UINT:mask>
+#endif
+
+#ifdef CMD_PIE_SET_ENTRY_PRE_DEFINE_INDEX_FIELD_IPV6_UDP_DIP127_96_DIP95_64_DST_PORT_SRC_PORT_DATA_MASK
+//PIE configuration
+//set configuration
+//entry configuration
+//predefined template
+//entry index
+//entry field
+//IPv6 UDP
+//destination IPv6 bits 127-96
+//destination IPv6 bits 95-64
+//destination L4 port
+//source L4 port
+//data
+//mask
+pie set entry pre-define <UINT:index> field ipv6-udp ( dip127-96 | dip95-64 | dst-port | src-port ) <UINT:data> <UINT:mask>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_STATISTIC_BYTE32_BYTE64_NONE_PKT
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//statistic action
+//count pkts number in the unit of byte, 32-bit counter mode
+//count pkts length in the unit of byte, 64-bit counter mode
+//don't count in this entry
+//count pkts number, 32-bit counter mode
+pie set action <UINT:index> statistic ( byte32 | byte64 | none | pkt ) 
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_DROP_MODE_DROP_PERMIT_WITHDRAW_DROP
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//drop action
+//drop
+//permit
+//withdraw drop
+pie set action <UINT:index> drop-mode ( drop | permit | withdraw-drop )
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_INNER_TAG_OUTER_TAG_WITHDRAW_STATE_DISABLE_ENABLE
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//inner VLAN tag operation
+//outer VLAN tag operation
+//withdraw VLAN tag operation
+//state configuration
+//disable action
+//enable action
+pie set action <UINT:index> ( inner-tag | outer-tag ) withdraw state ( disable | enable )
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_INNER_TAG_OUTER_TAG_AS_VID_INFO_MINUS_VID_INFO_PLUS_VID_INFO_VID_INFO_KEEP_FORMAT_NOP_WITH_TAG_WITHOUT_TAG
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//inner VLAN tag operation
+//outer VLAN tag operation
+//vid_info provide new inner VID
+//packet's new inner VID = packet's tag VID - vid_info
+//packet's new inner VID = packet's tag VID + vid_info.
+//VID information
+//keep VLAN tag and VID
+//no operation
+//packet sent with VLAN tag
+//packet sent without VLAN tag
+pie set action <UINT:index> ( inner-tag | outer-tag ) ( as-vid-info | minus-vid-info | plus-vid-info ) <UINT:vid_info> ( keep-format | nop | with-tag | without-tag )
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_REDIRECT_WITHDRAW_STATE_DISABLE_ENABLE
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//redirect action
+//withdraw redirect
+//state configuration
+//disable action
+//enable action
+pie set action <UINT:index> redirect withdraw state ( disable | enable )
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_REDIRECT_MULTI_REDIRECT_FWD_INDEX
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//redirect action
+//multiple ports redirection
+//forwarding table index
+pie set action <UINT:index> redirect multi-redirect <UINT:fwd_index>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_REDIRECT_UNI_REDIRECT_WITH_CPU_TAG_WITHOUT_CPU_TAG_DPN
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//redirect action
+//single port redirection
+//with CPU tag when trap to CPU
+//without CPU tag when trap to CPU
+//destination port number (DPN 28 means normal forward to CPU port, DPN 29 means trap to CPU, DPN 30 means drop, DPN 31 means flood)
+pie set action <UINT:index> redirect uni-redirect ( with-cpu-tag | without-cpu-tag ) <UINT:dpn>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_REDIRECT_MULTI_ROUTE_UNI_ROUTE_TTL_KEEP_MINUS_ONE_LOOKUP_INDEX
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//redirect action
+//IP multicast routing
+//IP unicast routing
+//TTL decreases or not
+//keep TTL
+//TTL minus one
+//index to address lookup table
+pie set action <UINT:index> redirect ( multi-route | uni-route ) ttl ( keep | minus-one ) <UINT:lookup_index>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_PRIORITY_WITHDRAW_STATE_DISABLE_ENABLE
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//priority action
+//withdraw priority
+//state configuration
+//disable action
+//enable action
+pie set action <UINT:index> priority withdraw state ( disable | enable )
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_PRIORITY_SEL_PRI_DP
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//priority action
+//select priority and drop precedence - about definition check spec
+pie set action <UINT:index> priority <UINT:sel_pri_dp>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_PRIORITY_SEL_PRI_DP_PRIORITY_PRIORITY
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//priority action
+//select priority and drop precedence - about definition check spec
+//assign priority
+//value of priority
+pie set action <UINT:index> priority <UINT:sel_pri_dp> priority <UINT:priority> 
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_PRIORITY_SEL_PRI_DP_DP_DP
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//priority action
+//select priority and drop precedence - about definition check spec
+//assign drop precedence(or CFI in lookup phase 4)
+//value of drop precedence(or CFI)
+pie set action <UINT:index> priority <UINT:sel_pri_dp> dp <UINT:dp>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_PRIORITY_SEL_PRI_DP_PRIORITY_PRIORITY_DP_DP
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//priority action
+//select priority and drop precedence - about definition check spec
+//assign priority
+//value of priority
+//assign drop precedence(or CFI in lookup phase 4)
+//value of drop precedence(or CFI)
+pie set action <UINT:index> priority <UINT:sel_pri_dp> priority <UINT:priority> dp <UINT:dp>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_SPID_WITHDRAW_STATE_DISABLE_ENABLE
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//SPID translation action
+//withdraw SPID translation
+//state configuration
+//disable action
+//enable action 
+pie set action <UINT:index> spid withdraw state ( disable | enable )
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_SPID_SPID_INDEX
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//SPID translation action
+//SPID index of the SPID table, makes sense only in lookup phase 4
+pie set action <UINT:index> spid <UINT:spid_index>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_DSCP_REMARK_WITHDRAW_STATE_DISABLE_ENABLE
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//DSCP remarking action
+//withdraw DSCP remarking
+//state configuration
+//disable action
+//enable action 
+pie set action <UINT:index> dscp-remark withdraw state ( disable | enable )
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_DSCP_REMARK_DSCP_DSCP
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//DSCP remarking action
+//define ACL-based DSCP
+//DSCP value
+pie set action <UINT:index> dscp-remark dscp <UINT:dscp>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_DSCP_REMARK_IP_PRECEDENCE_PRECEDENCE
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//DSCP remarking action
+//modify IP precedence
+//IP precedence value
+pie set action <UINT:index> dscp-remark ip-precedence <UINT:precedence>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_DSCP_REMARK_DRT_BITES_DRT
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//DSCP remarking action
+//modify DTR bits
+//DTR bits value
+pie set action <UINT:index> dscp-remark drt-bites <UINT:drt>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_OUTER_PRI_REMARK_WITHDRAW_STATE_DISABLE_ENABLE
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//outer priority remarking action
+//withdraw outer priority remarking (only in lookup phase 4)
+//state configuration
+//disable action
+//enable action 
+pie set action <UINT:index> outer-pri-remark withdraw state ( disable | enable )
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_OUTER_PRI_REMARK_PRIORITY_PRIORITY
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//outer priority remarking action (only in lookup phase 4)
+//remark priority
+//priority value
+pie set action <UINT:index> outer-pri-remark priority <UINT:priority>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_OUTER_PRI_REMARK_DEI_DEI
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//outer priority remarking action (only in lookup phase 4)
+//remark DEI
+//DEI value
+pie set action <UINT:index> outer-pri-remark dei <UINT:dei>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_OUTER_PRI_REMARK_PRIORITY_PRIORITY_DEI_DEI
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//outer priority remarking action (only in lookup phase 4)
+//remark priority
+//priority value
+//remark DEI
+//DEI value
+pie set action <UINT:index> outer-pri-remark priority <UINT:priority> dei <UINT:dei>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_POLICE_WITHDRAW_STATE_DISABLE_ENABLE
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//police action
+//withdraw police
+//state configuration
+//disable action
+//enable action 
+pie set action <UINT:index> police withdraw state ( disable | enable )
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_POLICE_POLICE_INDEX
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//police action
+//policer table index
+pie set action <UINT:index> police <UINT:police_index>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_MIRROR_WITHDRAW_STATE_DISABLE_ENABLE
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//mirror action
+//withdraw mirror
+//state configuration
+//disable action
+//enable action 
+pie set action <UINT:index> mirror withdraw state ( disable | enable )
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_MIRROR_MIRROR_INDEX
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//mirror action
+//mirror table index
+pie set action <UINT:index> mirror <UINT:mirror_index>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_INDEX_COPY_TO_CPU_DSCP_SPID_HIT_INDICATION_INNER_TAG_MIRROR_OUTER_TAG_POLICE_OUTER_PRI_PRIORITY_REDIRECT_STATE_DISABLE_ENABLE
+//PIE configuration
+//set configuration
+//action configuration
+//action index
+//copy to CPU action
+//DSCP remarking or SPID translation action
+//hit indication action
+//inner VLAN tag action
+//mirror action
+//outer VLAN tag action
+//police or outer priority remarking action
+//priority action
+//redirect action
+//state configuration
+//disable action
+//enable action
+pie set action <UINT:index> ( copy-to-cpu | dscp-spid | hit-indication | inner-tag | mirror | outer-tag | police-outer-pri | priority | redirect ) state ( disable | enable ) 
+#endif
+
+#ifdef CMD_PIE_GET_ACTION_INDEX
+//PIE configuration
+//get configuration
+//action configuration
+//action index
+pie get action <UINT:index>
+#endif
+
+#ifdef CMD_PIE_DEL_ACTION_ENTRY_ACTION_AND_ENTRY_START
+//PIE configuration
+//delete configuration
+//action configuration
+//entry configuration
+//action and entry configuration
+//start from this index
+pie del ( action | entry | action_and_entry ) <UINT:start>
+#endif
+
+#ifdef CMD_PIE_DEL_ACTION_ENTRY_ACTION_AND_ENTRY_START_END
+//PIE configuration
+//delete configuration
+//action configuration
+//entry configuration
+//action and entry configuration
+//start from this index
+//end to this index
+pie del ( action | entry | action_and_entry ) <UINT:start> <UINT:end>
+#endif
+
+#ifdef CMD_PIE_SET_ACTION_ENTRY_ACTION_AND_ENTRY_MOVE_SWAP_FROM_TO_ENTRY_LEN_DECREASE_INCREASE
+//PIE configuration
+//set configuration
+//action configuration
+//entry configuration
+//action and entry configuration
+//move content
+//swap content
+//start from this index
+//end to this index
+//entry length
+//the address of unit operated next time will be one step decrease
+//the address of unit operated next time will be one step increase
+pie set ( action | entry | action_and_entry ) ( move | swap ) <UINT:from> <UINT:to> <UINT:entry_len> ( decrease | increase )
+#endif
+
+#ifdef CMD_PIE_SET_POLICE_INDEX_INVALID
+//PIE configuration
+//set configuration
+//police configuration
+//police index
+//invalid police entry
+pie set police <UINT:index> invalid
+#endif
+
+#ifdef CMD_PIE_SET_POLICE_INDEX_DLB_SRTCM_TRTCM_YELLOW_DP_RED_DP_PIR_CIR_PBS_CBS
+//PIE configuration
+//set configuration
+//police configuration
+//police index
+//dual leaky bucket
+//single rate three color marker
+//two rate three color marker
+//drop precedence to replace YELLOW packet drop precedence. If yellow_dp is 3, drop this packet
+//drop precedence to replace RED packet drop precedence. The most significant bit is always 1, this bit specify the last significant bit. If bit is 0, the RED drop precedence is 2. If bit is 1, the RED drop precedence is 3.
+//peak Information Rate in units of 16Kbps
+//committed Information Rate in units of 16Kbps
+//peak Burst Size (trTCM), Excess Burst Size (EBS) (unit: 128byte)
+//committed Burst Size in byte units (unit: 128byte)
+pie set police <UINT:index> ( dlb | srtcm | trtcm ) <UINT:yellow_dp> <UINT:red_dp> <UINT:pir> <UINT:cir> <UINT:pbs> <UINT:cbs>
+#endif
+
+#ifdef CMD_PIE_SET_POLICE_INDEX_DLB_SRTCM_TRTCM_COLOR_AWARE_YELLOW_DP_RED_DP_PIR_CIR_PBS_CBS
+//PIE configuration
+//set configuration
+//police configuration
+//police index
+//dual leaky bucket
+//single rate three color marker
+//two rate three color marker
+//policer is color aware. This bit takes effect when policer is RFC2697 or RFC2698.
+//drop precedence to replace YELLOW packet drop precedence. If yellow_dp=3, drop this packet
+//drop precedence to replace RED packet drop precedence. The most significant bit is always 1, this bit specify the last significant bit. If bit=0, the RED is 2. If bit=1, the RED is 3.
+//peak Information Rate in units of 16Kbps
+//committed Information Rate in units of 16Kbps
+//peak Burst Size (trTCM), Excess Burst Size (EBS) (unit: 128byte)
+//committed Burst Size in byte units (unit: 128byte)
+pie set police <UINT:index> ( dlb | srtcm | trtcm ) color-aware <UINT:yellow_dp> <UINT:red_dp> <UINT:pir> <UINT:cir> <UINT:pbs> <UINT:cbs>
+#endif
+
+#ifdef CMD_PIE_GET_POLICE_INDEX
+//PIE configuration
+//get configuration
+//police configuration
+//police index
+pie get police <UINT:index>
+#endif
+
+#ifdef CMD_PIE_SET_COUNTER_INDEX_BYTE_PACKET_COUNTER
+//PIE configuration
+//set configuration
+//counter configuration
+//counter index
+//byte count
+//packet count
+//counter value
+pie set counter <UINT:index> ( byte | packet ) <UINT64:counter>
+#endif
+
+#ifdef CMD_PIE_SET_COUNTER_CLEAR_ALL
+//PIE configuration
+//set configuration
+//counter configuration
+//clear all counters
+pie set counter clear-all
+#endif
+
+#ifdef CMD_PIE_GET_COUNTER_INDEX
+//PIE configuration
+//get configuration
+//counter configuration
+//counter index
+pie get counter <UINT:index>
+#endif
+
+#ifdef CMD_PIE_SET_SELECTOR_PBLOCK_PHASE_TEMPLATE_INDEX
+//PIE configuration
+//set configuration
+//selector configuration
+//physical block index
+//lookup phase, 0:lookup phase 1, 1:lookup phase 2, 2:lookup phase 3, 3:lookup phase 4
+//template index
+pie set selector <UINT:pblock> <UINT:phase> <UINT:template_index>
+#endif
+
+#ifdef CMD_PIE_GET_SELECTOR_PBLOCK_PHASE
+//PIE configuration
+//get configuration
+//selector configuration
+//physical block index
+//lookup phase, 0:lookup phase 1, 1:lookup phase 2, 2:lookup phase 3, 3:lookup phase 4
+pie get selector <UINT:pblock> <UINT:phase>
+#endif
+
+#ifdef CMD_PIE_SET_TEMPLATE_INDEX_FIELD_INDEX_DIP0_DIP1_DIP2_DIP3_DIP4_DIP5_DIP6_DIP7_DMAC0_DMAC1_RRCPINFO_DMAC2_DPM1_DPM2_DPN_ETHERTYPE_FIELD_SELECTOR1_0_FIELD_SELECTOR1_1_FIELD_SELECTOR1_2_FIELD_SELECTOR1_3_FIELD_SELECTOR2_0_FIELD_SELECTOR2_1_FIELD_SELECTOR2_2_FIELD_SELECTOR2_3_FMT_FWD_ITAG_FWD_OTAG_DPRI_FWD_VID_GUEST_VLAN_ICMP_CODE_TYPE_IGMP_TYPE_IP6_FLWH_IP_RANGE1_IP_RANGE2_IP_RANGE3_IP_RANGE4_ITAG_L4_DPORT_L4_SPORT_OTAG_PATTERN_MATCH0_PATTERN_MATCH1_PAYLOAD0_PAYLOAD1_PORT_RANGE_SIP0_SIP1_SIP2_SIP3_SIP4_SIP5_SIP6_SIP7_SMAC0_SMAC1_SMAC2_SPM1_SPM2_SPSM_TCP_FLAG_TOS_PROTO_TTL_FLAG_VID_RANGE
+//PIE configuration
+//set configuration
+//template configuration
+//template index
+//template field index
+//IPv6 DIP[15:0] or IPv4 DIP[15:0]
+//IPv6 DIP[31:16] or IPv4 DIP[31:16]
+//IPv6 DIP[47:32]
+//IPv6 DIP[63:48]
+//IPv6 DIP[79:64]
+//IPv6 DIP[95:80]
+//IPv6 DIP[111:96]
+//IPv6 DIP[127:112]
+//DMAC[15:0]
+//DMAC[31:16]
+//DMAC[47:32]
+//PPI.DPM[28:13]{15:0}
+//PPI.DPM[12:0]{15:3} + PPI.CPU{2} + PPI.COPYTOCPU{1} 
+//PPI.DPN{15:11} + payload0 valid{10} + payload1 valid{9}
+//ethernet type
+//HSB.FS1[15:0]{15:0}
+//HSB.FS1[31:16]{15:0}
+//HSB.FS1[47:32]{15:0}
+//HSB.FS1[63:48]{15:0}
+//HSB.FS2[15:0]{15:0}
+//HSB.FS2[31:16]{15:0}
+//HSB.FS2[47:32]{15:0}
+//HSB.FS2[63:48]{15:0}
+//LP{15:14}+PPI.SPH{13:9}+TGL2FMT{8:7}+HSB.EXTRATAG{6}+TGL23FMT{5:4}+TGL4FMT{3:1}+HSB.PPPoE{0}
+//PPI.PRI{15:13}+RESERVED{12}+PPI.IVID{11:0}
+//PPI.PRI{15:13}+HSB.CPUTAG{12}+PPI.OVID{11:0}
+//PPI.PRI{15:13}+ RESERVED{12}+ PPI.OVID{11:0} OR PPI.IVID{11:0}
+//PPI.toGVLAN{15} + PPI.orgVID{14:3}
+//ICMP Code{15:8} + Type{7:0}
+//IGMP Type{15:8}
+//FlowLabel[19:4]{15:0}
+//IPRC[15:0]
+//IPRC[31:16]
+//IPRC[47:32]
+//IPRC[63:48]
+//HSB.IPRI{15:13}+HSB.CFI{12}+HSB.IVID{11:0}
+//Layer4 Destination Port
+//Layer4 Sorce Port
+//HSB.OPRI{15:13}+HSB.DEI{12}+HSB.OVID{11:0}
+//HSB.PM[15:0]{15:0}
+//HSB.PM[31:16]{15:0}
+//Content0 of HSB.PAYLOAD
+//Content1 of HSB.PAYLOAD
+//PRC[15:0]
+//IPv6 SIP[15:0] or IPv4 SIP[15:0]
+//IPv6 SIP[31:16] or IPv4 SIP[31:16]
+//IPv6 SIP[47:32]
+//IPv6 SIP[63:48]
+//IPv6 SIP[79:64]
+//IPv6 SIP[95:80]
+//IPv6 SIP[111:96]
+//IPv6 SIP[127:112]
+//SMAC[15:0]
+//SMAC[31:16]
+//SMAC[47:32]
+//PPI.SPHY[28:13]{15:0}
+//PPI.SPHY[12:0]{15:3}+HSB.DATYPE{2:1}+CTLPKT{0}
+//PPI.SPM
+//TCP Flag(6-bit){15:10} + IPv6 FLowLabel[3:0]{9:6}+RESERVED{5:0}
+//IPv4 TOS{15:8} + Protocol{7:0}
+//TTL(8){15:8} + TTL(2){7:6} + DF{5} + MF{4} + NonzeroOffset{3} + PPI.REDIR{2} + PPI.IPUC{1} + PPI.IPMC{0}
+//VIDRCH {15} + VIDRC[4:0]{14:10} + HSB.FS1[64]{9}+HSB.FS2[64]{8} + HSB.RTKPRO{6:4} + PPI.DP{3:2}
+pie set template <UINT:index> <UINT:field_index> ( dip0 | dip1 | dip2 | dip3 | dip4 | dip5 | dip6 | dip7 | dmac0 | dmac1-rrcpinfo | dmac2 | dpm1 | dpm2 | dpn | ethertype | field-selector1_0 | field-selector1_1 | field-selector1_2 | field-selector1_3 | field-selector2_0 | field-selector2_1 | field-selector2_2 | field-selector2_3 | fmt | fwd-itag | fwd-otag-dpri | fwd-vid | guest-vlan | icmp-code-type | igmp-type | ip6-flwh | ip-range1 | ip-range2 | ip-range3 | ip-range4 | itag | l4-dport | l4-sport | otag | pattern-match0 | pattern-match1 | payload0 | payload1 | port-range | sip0 | sip1 | sip2 | sip3 | sip4 | sip5 | sip6 | sip7 | smac0 | smac1 | smac2 | spm1 | spm2 | spsm | tcp-flag | tos-proto | ttl-flag | vid-range )
+#endif
+
+#ifdef CMD_PIE_GET_TEMPLATE_INDEX
+//PIE configuration
+//get configuration
+//template configuration
+//template index
+pie get template <UINT:index>
+#endif
+
+#ifdef CMD_PIE_SET_L34_CHECKSUM_ERR_DOWNGRADE_PARSE_ANYWAY
+//PIE configuration
+//set configuration
+//layer3 or layer4 checksum error
+//downgrade
+//parse upper protocol anyway
+pie set l34-checksum-err ( downgrade | parse-anyway )
+#endif
+
+#ifdef CMD_PIE_GET_L34_CHECKSUM_ERR
+//PIE configuration
+//get configuration
+//layer3 or layer4 checksum error
+pie get l34-checksum-err
+#endif
+
+#ifdef CMD_PIE_SET_PAYLOAD_PBLOCK_INDEX_OFFSET
+//PIE configuration
+//set configuration
+//payload configuration
+//physical block index
+//payload offset index
+//offset value
+pie set payload <UINT:pblock> <UINT:index> <UINT:offset>
+#endif
+
+#ifdef CMD_PIE_GET_PAYLOAD_PBLOCK
+//PIE configuration
+//get configuration
+//payload configuration
+//physical block index
+pie get payload <UINT:pblock> 
+#endif
+
+#ifdef CMD_PIE_SET_RESULT_REVERSE_ENTRY_INDEX_KEEP_REVERSE
+//PIE configuration
+//set configuration
+//reverse PIE lookup result
+//PIE entry index
+//keep result
+//reverse result
+pie set result-reverse <UINT:entry_index> ( keep | reverse )
+#endif
+
+#ifdef CMD_PIE_GET_RESULT_REVERSE_ENTRY_INDEX
+//PIE configuration
+//get configuration
+//reverse PIE lookup result
+//PIE entry index
+pie get result-reverse <UINT:entry_index>
+#endif
+
+#ifdef CMD_PIE_SET_RESULT_AGGREGATOR_PBLOCK_RANGE_INDEX_ENTRY_INDEX_TYPE_A01_23M0_2_A01_23M0_3_A01_23M1_2_A01_23M1_3_A0123M0_A0123M1_A0123M2_A0123M3_A01M0_A01M1_A23M2_A23M3_NONE
+//PIE configuration
+//set configuration
+//aggregate PIE lookup result
+//0:block 0-3, 1:block 4-7 ... 7:block 28-31
+//block entry index (0-63)
+//aggregation operation type
+//0, 1 aggregate and 2, 3 aggregate. result in 0, 2
+//0, 1 aggregate and 2, 3 aggregate. result in 0, 3
+//0, 1 aggregate and 2, 3 aggregate. result in 1, 2
+//0, 1 aggregate and 2, 3 aggregate. result in 1, 3
+//0, 1, 2, 3 all aggregated. result in 0
+//0, 1, 2, 3 all aggregated. result in 1
+//0, 1, 2, 3 all aggregated. result in 2
+//0, 1, 2, 3 all aggregated. result in 3
+//0 and 1 aggregate, but 2, 3 do not aggregate. result in 0
+//0 and 1 aggregate, but 2, 3 do not aggregate. result in 1
+//0 and 1 do not aggregate, but 2, 3 aggregate. result in 2
+//0 and 1 do not aggregate, but 2, 3 aggregate. result in 3
+//not aggregation
+pie set result-aggregator <UINT:pblock_range_index> <UINT:entry_index> type ( a01_23m0_2 | a01_23m0_3 | a01_23m1_2 | a01_23m1_3 | a0123m0 | a0123m1 | a0123m2 | a0123m3 | a01m0 | a01m1 | a23m2 | a23m3 | none )
+#endif
+
+#ifdef CMD_PIE_GET_RESULT_AGGREGATOR_PBLOCK_RANGE_INDEX_ENTRY_INDEX
+//PIE configuration
+//get configuration
+//aggregate PIE lookup result
+//0:block 0-3, 1:block 4-7 ... 7:block 28-31
+//block entry index (0-63)
+pie get result-aggregator <UINT:pblock_range_index> <UINT:entry_index>
+#endif
+
+#ifdef CMD_PIE_SET_BLOCK_PRIORITY_BLOCK_INDEX_PRIORITY
+//PIE configuration
+//set configuration
+//priority of PIE logical block
+//logical block index
+//priority value
+pie set block-priority <UINT:block_index> <UINT:priority>
+#endif
+
+#ifdef CMD_PIE_GET_BLOCK_PRIORITY_BLOCK_INDEX
+//PIE configuration
+//get configuration
+//priority of PIE logical block
+//logical block index
+pie get block-priority <UINT:block_index>
+#endif
+
+#ifdef CMD_PIE_SET_GROUP_LBLOCK_RANGE_INDEX_OPERATION_GROUP01_GROUP012_GROUP0123_NONE
+//PIE configuration
+//set configuration
+//group of PIE logical block
+//0:block 0-3, 1:block 4-7, 2:block 8-11, 3:block 12-15
+//group operation type
+//m+0 and m+1 grouped
+//m+0, m+1 and m+2 grouped 
+//m+0, m+1, m+2 and m+3 grouped
+//no group
+pie set group <UINT:lblock_range_index> operation ( group01 | group012 | group0123 | none )
+#endif
+
+#ifdef CMD_PIE_GET_GROUP_LBLOCK_RANGE_INDEX
+//PIE configuration
+//get configuration
+//group of PIE logical block
+//0:block 0-3, 1:block 4-7, 2:block 8-11, 3:block 12-15
+pie get group <UINT:lblock_range_index>
+#endif
+
+#ifdef CMD_PIE_SET_EGRESS_ACL_LOOKUP_FLOOD_PKT_MISS_MCAST_PKT_MISS_ACTION_DROP_PERMIT
+//PIE configuration
+//set configuration
+//egress ACL lookup control
+//flood packets which miss egress ACL lookup
+//multicast packets which miss egress ACL lookup
+//default action on packets which miss egress ACL lookup
+//drop packet
+//permit packet
+pie set egress-acl-lookup ( flood-pkt-miss | mcast-pkt-miss ) action ( drop | permit )
+#endif
+
+#ifdef CMD_PIE_SET_EGRESS_ACL_LOOKUP_FLOOD_PKT_MISS_MCAST_PKT_MISS_OTHER_DROP_STATE_DISABLE_ENABLE
+//PIE configuration
+//set configuration
+//egress ACL lookup control
+//flood packets which miss egress ACL lookup
+//multicast packets which miss egress ACL lookup
+//packets dropped by other modules egress ACL lookup
+//state configuration
+//disable action
+//enable action
+pie set egress-acl-lookup ( flood-pkt-miss | mcast-pkt-miss | other-drop ) state ( disable | enable )
+#endif
+
+#ifdef CMD_PIE_GET_EGRESS_ACL_LOOKUP
+//PIE configuration
+//get configuration
+//egress ACL lookup control
+pie get egress-acl-lookup
+#endif
+
+#ifdef CMD_PIE_SET_PHASE_PHASE_INDEX_PORT_ALL_STATE_DISABLE_ENABLE
+//PIE configuration
+//set configuration
+//PIE lookup phase
+//phase index
+//port list
+//all ports
+//state configuration
+//disable action
+//enable action
+pie set phase <UINT:phase_index> ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_PIE_SET_PHASE_PHASE_INDEX_PORT_ALL_LOOKUP_MISS_DROP_PERMIT
+//PIE configuration
+//set configuration
+//PIE lookup phase
+//phase index
+//port list
+//all ports
+//default action for packet lookup miss
+//drop packet
+//permit packet
+pie set phase <UINT:phase_index> ( <PORT_LIST:port> | all ) lookup-miss ( drop | permit )
+#endif
+
+#ifdef CMD_PIE_GET_PHASE_PHASE_INDEX_PORT_ALL
+//PIE configuration
+//get configuration
+//PIE lookup phase
+//phase index
+//port list
+//all ports
+pie get phase <UINT:phase_index> ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_PIE_SET_COUNTER_INDICATION_MODE_LBLOCK_INDEX_ACTION_EXECUTION_RULE_MATCH
+//PIE configuration
+//set configuration
+//block counter and indication mode
+//logical block index
+//action execution mode
+//rule match mode
+pie set counter-indication-mode <UINT:lblock_index> ( action-execution | rule-match )
+#endif
+
+#ifdef CMD_PIE_GET_COUNTER_INDICATION_MODE_LBLOCK_INDEX
+//PIE configuration
+//get configuration
+//block counter and indication mode
+//logical block index
+pie get counter-indication-mode <UINT:lblock_index>
+#endif
+
+#ifdef CMD_PIE_GET_HIT_INDICATION_LBLOCK_INDEX
+//PIE configuration
+//get configuration
+//hit indication
+//logical block index
+pie get hit-indication <UINT:lblock_index>
+#endif
+
+#ifdef CMD_FIELD_SELECTOR_SET_PORT_ALL_INDEX_STATE_DISABLE_ENABLE
+//field selector configuration
+//set configuration
+//port list
+//all ports
+//field selector index
+//state configuration
+//disable action
+//enable action
+field-selector set ( <PORT_LIST:port> | all ) <UINT:index> state ( disable | enable ) 
+#endif
+
+#ifdef CMD_FIELD_SELECTOR_SET_PORT_ALL_INDEX_CONTENT_8021Q_ARP_IPV4_IPV6_L4_HEADER_LLC_RAW_TCP_UDP_PAYLOAD_OFFSET0_OFFSET1_OFFSET2_OFFSET3
+//field selector configuration
+//set configuration
+//port list
+//all ports
+//field selector index
+//field selector content
+//802.1Q packet (started after first ITAG ID (0x8100) or OTAG ID (0x88a8))
+//ARP Packet (started after Ethernet II EtherType 0x0806)
+//IPv4 Packet (started from start of IPv4 header)
+//IPv6 Packet (started from start of IPv6 header)
+//TCP/UDP/ICMP/IGMP/ICMPv6 Packet (Started from start of L4 header)
+//LLC packet
+//raw packet(Start after preamble,begin with DA)
+//TCP/UDP Payload (Started after TCP/UDP header)
+//offset from starting position of block 0
+//offset from starting position of block 1
+//offset from starting position of block 2
+//offset from starting position of block 3
+field-selector set ( <PORT_LIST:port> | all ) <UINT:index> content ( 8021q | arp | ipv4 | ipv6 | l4-header | llc | raw | tcp-udp-payload ) <UINT:offset0> <UINT:offset1> <UINT:offset2> <UINT:offset3>
+#endif
+
+#ifdef CMD_FIELD_SELECTOR_GET_PORT_ALL
+//field selector configuration
+//get configuration
+//port list
+//all ports
+field-selector get ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_PATTERN_MATCH_SET_PORT_ALL_STATE_DISABLE_ENABLE
+//pattern match configuration
+//set configuration
+//port list
+//all ports
+//state configuration
+//disable action
+//enable action
+pattern-match set ( <PORT_LIST:port> | all ) state ( disable | enable )
+#endif
+
+#ifdef CMD_PATTERN_MATCH_SET_PORT_ALL_INDEX_CHAR_DATA_START_LAST_CARE
+//pattern match configuration
+//set configuration
+//port list
+//all ports
+//character index
+//character
+//this character is the last character of string
+//this character is the first character of string
+//this character is care or not
+pattern-match set ( <PORT_LIST:port> | all ) <UINT:index> <STRING:char_data> { start } { last } { care }
+#endif
+
+#ifdef CMD_PATTERN_MATCH_GET_PORT_ALL
+//pattern match configuration
+//get configuration
+//port list
+//all ports
+pattern-match get ( <PORT_LIST:port> | all )
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_IP_CHECK_ENTRY_INDEX_IPV4_DIP_IPV4_SIP_IPV6_DIP_IPV6_SIP_IP1_IP2_IP3_IP4_LOWER_UPPER
+//range check configuration
+//set configuration
+//IP range check
+//entry index
+//IPv4 destination IP
+//IPv4 source IP
+//IPv6 destination IP
+//IPv6 source IP
+//IPv4 or IPv6 first 32bits
+//IPv4 or IPv6 second 32bits
+//IPv4 or IPv6 third 32bits
+//IPv4 or IPv6 fourth 32bits
+//lower bound
+//upper bound
+range-check set ip-check <UINT:entry_index> ( ipv4-dip | ipv4-sip | ipv6-dip | ipv6-sip ) ( ip1 | ip2 | ip3 | ip4 ) <UINT:lower> <UINT:upper>
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_IP_CHECK_ENTRY_INDEX_VALID_MASK_MASK
+//range check configuration
+//set configuration
+//IP range check
+//entry index
+//entry valid Mask
+//mask bites (4 bits)
+range-check set ip-check <UINT:entry_index> valid-mask <UINT:mask>
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_L4PORT_CHECK_ENTRY_INDEX_INVALID
+//range check configuration
+//set configuration
+//L4 port range check
+//entry index
+//entry invalid
+range-check set l4port-check <UINT:entry_index> invalid
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_L4PORT_CHECK_ENTRY_INDEX_BOTH_TCP_UDP_DST_PORT_SRC_PORT_LOWER_UPPER
+//range check configuration
+//set configuration
+//L4 port range check
+//entry index
+//compare TCP or UDP port range
+//compare TCP port range
+//compare UDP port range
+//compare destination port
+//compare source port
+//lower bound
+//upper bound
+range-check set l4port-check <UINT:entry_index> ( both | tcp | udp ) ( dst-port | src-port ) <UINT:lower> <UINT:upper>
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_PORT_CHECK_ENTRY_INDEX_PORT_INVALID
+//range check configuration
+//set configuration
+//source port range check
+//entry index
+//source port list
+//entry invalid
+range-check set port-check <UINT:entry_index> ( <PORT_LIST:port> | invalid )
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_VID_CHECK_ENTRY_INDEX_BOTH_SRC_PORT_INNER_VID_ILOWER_IUPPER_OUTER_VID_OLOWER_OUPPER
+//range check configuration
+//set configuration
+//VID range check
+//entry index
+//compare both inner VID and outer VID.
+//source physical port
+//inner VID range
+//lower bound
+//upper bound
+//outer VID range
+//lower bound
+//upper bound
+range-check set vid-check <UINT:entry_index> both <UINT:src_port> inner-vid <UINT:ilower> <UINT:iupper> outer-vid <UINT:olower> <UINT:oupper>
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_VID_CHECK_ENTRY_INDEX_INNER_SRC_PORT_INNER_VID_ILOWER_IUPPER
+//range check configuration
+//set configuration
+//VID range check
+//entry index
+//compare inner VID only
+//source physical port
+//inner VID range
+//lower bound
+//upper bound
+range-check set vid-check <UINT:entry_index> inner <UINT:src_port> inner-vid <UINT:ilower> <UINT:iupper>
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_VID_CHECK_ENTRY_INDEX_INVALID
+//range check configuration
+//set configuration
+//VID range check
+//entry index
+//entry invalid
+range-check set vid-check <UINT:entry_index> invalid
+#endif
+
+#ifdef CMD_RANGE_CHECK_SET_VID_CHECK_ENTRY_INDEX_OUTER_SRC_PORT_OUTER_VID_OLOWER_OUPPER
+//range check configuration
+//set configuration
+//VID range check
+//entry index
+//compare outer VID only
+//source physical port
+//outer VID range
+//lower bound
+//upper bound
+range-check set vid-check <UINT:entry_index> outer <UINT:src_port> outer-vid <UINT:olower> <UINT:oupper>
+#endif
+
+#ifdef CMD_RANGE_CHECK_GET_IP_CHECK_L4PORT_CHECK_PORT_CHECK_VID_CHECK_ENTRY_INDEX
+//range check configuration
+//get configuration
+//IP range check
+//L4 port range check
+//source port range check
+//VID range check
+//entry index
+range-check get ( ip-check | l4port-check | port-check | vid-check ) <UINT:entry_index>
+#endif
+

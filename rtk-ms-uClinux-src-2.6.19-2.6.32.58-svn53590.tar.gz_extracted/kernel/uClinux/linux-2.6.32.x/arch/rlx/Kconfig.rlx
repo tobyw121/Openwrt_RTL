@@ -1,0 +1,135 @@
+#
+# Realtek Semiconductor Corp.
+#
+# RLX Linux Kernel Configuration
+#
+# Tony Wu (tonywu@realtek.com)
+# Dec. 07, 2008
+#
+
+source "../target/selection/config.cpu"
+source "../target/selection/config.in"
+
+#
+# RLX
+#
+config RLX
+	bool
+	default y
+	select BOOT_ELF32
+	select DMA_NONCOHERENT
+	select SYS_SUPPORTS_ARBIT_HZ
+	select SYS_HAS_EARLY_PRINTK
+
+config MACH_RLX
+	bool
+	default y
+	select CPU_SUPPORTS_32BIT_KERNEL
+	select SYS_SUPPORTS_32BIT_KERNEL
+	select SYS_SUPPORTS_LITTLE_ENDIAN if ARCH_CPU_EL
+	select SYS_SUPPORTS_BIG_ENDIAN if ARCH_CPU_EB
+	select IRQ_CPU if ARCH_IRQ_CPU
+	select IRQ_VEC if ARCH_IRQ_VEC
+	select IRQ_GIC if ARCH_IRQ_GIC
+	select HW_HAS_PCI if (ARCH_BUS_PCI && BSP_ENABLE_PCI)
+	select HW_HAS_USB if (ARCH_BUS_USB && BSP_ENABLE_USB)
+	select ARCH_SUPPORTS_MSI if (ARCH_BUS_PCI_MSI && BSP_ENABLE_PCI)
+	select CPU_HAS_WMPU if (ARCH_CPU_WMPU && BSP_ENABLE_WMPU)
+	select CPU_HAS_SYNC if ARCH_CPU_SYNC
+
+#
+# CPU
+#
+config CPU_RLX4181
+	bool
+	default y if ARCH_CPU_RLX4181
+
+config CPU_RLX5181
+	bool
+	default y if ARCH_CPU_RLX5181
+
+config CPU_RLX5280
+	bool
+	default y if ARCH_CPU_RLX5280
+
+config CPU_RLX4281
+	bool
+	select CPU_HAS_BUS_ERROR
+	default y if ARCH_CPU_RLX4281
+
+config CPU_RLX5281
+	bool
+	select CPU_HAS_BUS_ERROR
+	default y if ARCH_CPU_RLX5281
+
+config CPU_HAS_RADIAX
+	bool
+	default y if ARCH_CPU_RADIAX
+
+config CPU_HAS_SLEEP
+	bool
+	default y if ARCH_CPU_SLEEP
+
+config CPU_HAS_ULS
+	bool
+	default y if ARCH_CPU_ULS
+
+config CPU_HAS_TLS
+	bool
+	default y if ARCH_CPU_TLS && BSP_ENABLE_TLS
+
+config CPU_HAS_LLSC
+	bool
+	default y if ARCH_CPU_LLSC
+
+config CPU_HAS_BUS_ERROR
+	bool
+
+config CPU_HAS_WMPU
+	bool
+	select HARDWARE_WATCHPOINTS
+
+#
+# IRQ
+#
+config IRQ_VEC
+	bool
+
+#
+# Timer
+#
+config CEVT_EXT
+	bool
+	default y if ARCH_CEVT_EXT
+	default y if !CPU_RLX4281 && !CPU_RLX5281
+
+config CEVT_RLX
+	bool
+	default y if ARCH_CEVT_RLX
+	default n if !CPU_RLX4281 && !CPU_RLX5281
+
+config CSRC_RLX
+	bool
+	default y if ARCH_CEVT_RLX
+	default n if !CPU_RLX4281 && !CPU_RLX5281
+
+#
+# CACHE
+#
+config CPU_HAS_WBC
+	bool
+	default y if ARCH_CACHE_WBC
+
+config CPU_HAS_L2C
+	bool
+	default y if ARCH_CACHE_L2C
+
+config CPU_HAS_WBIC
+	bool
+	default y if ARCH_CACHE_WBIC
+
+#
+# BUS
+#
+config HW_HAS_USB
+	bool

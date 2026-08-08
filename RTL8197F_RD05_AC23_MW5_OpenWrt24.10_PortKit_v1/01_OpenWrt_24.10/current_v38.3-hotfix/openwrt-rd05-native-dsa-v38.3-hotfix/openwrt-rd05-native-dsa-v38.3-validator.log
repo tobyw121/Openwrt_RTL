@@ -1,0 +1,238 @@
+Realtek Linux 6.6.114 driver-port validation
+root: /mnt/data/rd05-v38_3-work
+
+PASS  target kernel patch line is 6.6
+PASS  kernel release is exactly 6.6.114
+PASS  all five Realtek subtargets are enabled
+PASS  OpenWrt target remains Realtek
+PASS  selected build remains rtl8197f
+PASS  selected device remains Xiaomi RD05
+PASS  OpenWrt configuration selects Linux 6.6
+PASS  directory exists: target/linux/realtek/rtl8197f
+PASS  file exists: target/linux/realtek/rtl8197f/config-6.6
+PASS  directory exists: target/linux/realtek/rtl838x
+PASS  file exists: target/linux/realtek/rtl838x/config-6.6
+PASS  directory exists: target/linux/realtek/rtl839x
+PASS  file exists: target/linux/realtek/rtl839x/config-6.6
+PASS  directory exists: target/linux/realtek/rtl930x
+PASS  file exists: target/linux/realtek/rtl930x/config-6.6
+PASS  directory exists: target/linux/realtek/rtl931x
+PASS  file exists: target/linux/realtek/rtl931x/config-6.6
+PASS  active patch count is 40
+PASS  patch has unified-diff structure: 300-mips-add-rtl838x-platform.patch
+PASS  patch has unified-diff structure: 301-mips-add-rtl8197f-platform-kconfig.patch
+PASS  patch has unified-diff structure: 302-clocksource-add-otto-driver.patch
+PASS  patch has unified-diff structure: 303-mips-realtek-rtl8197f-force-little-endian.patch
+PASS  patch has unified-diff structure: 304-timer-otto-fix-stall-after-restart.patch
+PASS  patch has unified-diff structure: 305-gpio-add-rtl8197f-gpio-driver.patch
+PASS  patch has unified-diff structure: 306-spi-add-rtl8197f-sheipa-driver.patch
+PASS  patch has unified-diff structure: 307-mips-rtl8197f-force-r4k-timer-selection.patch
+PASS  patch has unified-diff structure: 308-mtd-add-rtl8197f-spirom-automap.patch
+PASS  patch has unified-diff structure: 309-net-ethernet-add-rtl8197f-ethdiag.patch
+PASS  patch has unified-diff structure: 310-add-i2c-rtl9300-support.patch
+PASS  patch has unified-diff structure: 311-add-i2c-mux-rtl9300-support.patch
+PASS  patch has unified-diff structure: 312-pci-controller-add-rtl8197f-host.patch
+PASS  patch has unified-diff structure: 314-irqchip-irq-realtek-rtl-add-VPE-support.patch
+PASS  patch has unified-diff structure: 315-irqchip-realtek-rtl8197f-fix-parent-routing.patch
+PASS  patch has unified-diff structure: 317-usb-host-add-rtl8197f-glue.patch
+PASS  patch has unified-diff structure: 318-add-rtl83xx-clk-support.patch
+PASS  patch has unified-diff structure: 320-harden-fw_init_cmdline.patch
+PASS  patch has unified-diff structure: 323-net-ethernet-add-rtl8197f-rtknet-native.patch
+PASS  patch has unified-diff structure: 324-net-ethernet-add-rd05-oem-switch-preinit.patch
+PASS  patch has unified-diff structure: 325-net-dsa-realtek-rtl8365mb-add-native-rtl8367d.patch
+PASS  patch has unified-diff structure: 326-rtl8197f-rtl8367d-mainstream-offload-notes.patch
+PASS  patch has unified-diff structure: 327-net-dsa-realtek-rd05-add-bootstage-markers.patch
+PASS  patch has unified-diff structure: 700-net-dsa-increase-dsa-max-ports-for-rtl838x.patch
+PASS  patch has unified-diff structure: 702-include-linux-add-phy-hsgmii-mode.patch
+PASS  patch has unified-diff structure: 704-include-linux-phy-increase-phy-address-number-for-rtl839x.patch
+PASS  patch has unified-diff structure: 706-include-linux-add-phy-ops-for-rtl838x.patch
+PASS  patch has unified-diff structure: 708-drivers-net-phy-eee-support-for-rtl838x.patch
+PASS  patch has unified-diff structure: 710-net-phy-sfp-re-probe-modules-on-DEV_UP-event.patch
+PASS  patch has unified-diff structure: 712-net-phy-add-an-MDIO-SMBus-library.patch
+PASS  patch has unified-diff structure: 714-net-phy-sfp-add-support-for-SMBus.patch
+PASS  patch has unified-diff structure: 716-net-ethernet-add-support-for-rtl838x-ethernet.patch
+PASS  patch has unified-diff structure: 718-net-dsa-add-support-for-rtl838x-switch.patch
+PASS  patch has unified-diff structure: 720-add-rtl-phy.patch
+PASS  patch has unified-diff structure: 722-net-dsa-add-rtl838x-support-for-tag-trailer.patch
+PASS  patch has unified-diff structure: 723-net-mdio-Add-Realtek-Otto-auxiliary-controller.patch
+PASS  patch has unified-diff structure: 800-gpio-regmap-Bypass-cache-for-shadowed-outputs.patch
+PASS  patch has unified-diff structure: 802-mfd-Add-RTL8231-core-device.patch
+PASS  patch has unified-diff structure: 803-pinctrl-Add-RTL8231-pin-control-and-GPIO-support.patch
+PASS  patch has unified-diff structure: 804-leds-Add-support-for-RTL8231-LED-scan-matrix.patch
+PASS  all active patches pass strict git unified-diff parsing
+PASS  all active patches pass GNU patch syntax parsing
+PASS  no disabled patch directory remains
+PASS  RD05 U-Boot environment NVMEM parser is enabled
+PASS  RD05 declares RTL8367D explicitly with upstream fallback
+PASS  RD05 Ethernet MAC is sourced through NVMEM
+PASS  native RTL8197F PCIe host is enabled
+PASS  RTL8197F DTSI describes a generic PCI host bridge
+PASS  RD05 selects the OEM 40 MHz PCIe reference clock
+PASS  RD05 selects RTL8197FH/VG PCIe PHY tuning
+PASS  PCIe driver reports the enumerated endpoint identity
+PASS  PCIe driver ports the BSP command-register enable sequence
+PASS  PCIe driver implements the SDK endpoint config-window selector
+PASS  RTL8197F enables both SDK CPU-tag gates on P0
+PASS  RTL8197F RX path implements SDK current-descriptor-pointer logic
+PASS  RTL8197F exposes bounded P0 RGMII timing controls
+PASS  RTL8367D DSA port clears the SDK EXT1 bypass-line-rate bit
+PASS  RTL8367D family-D 0x13f9 fine TX-clock register is defined
+PASS  RTL8367D exposes the family-D EXT1 fine TX-clock tap
+PASS  RTL8367D reports synchronizer FIFO TX/RX error state
+PASS  RTL8367D reports CPU7 CRC-skip state without masking errors
+PASS  RTL8367D emits v38 fine-calibratable CPU-link marker
+PASS  RTL8367D runtime calibration logs register readback
+PASS  RTL8197F interrupt routing uses actual MIPS parent values
+PASS  unverified RTL8197F second IRQ bank patch is not active on RD05
+PASS  RD05 uses the boot-proven bank-0 interrupt-controller window
+PASS  RTL8197F USB2 host glue is wired into Kconfig
+PASS  RTL8197F USB2 glue reports BSP clock/PHY initialization
+PASS  RTL8197F UART0 remains at the proven 0x18147000 register block
+PASS  RD05 board keeps UART0 recovery console in polling mode
+PASS  UART1 register block remains described but disabled
+PASS  UART2 register block remains described but disabled
+PASS  RTL8197F reserves three 8250 UART slots
+PASS  RTL8197F permits three runtime UARTs
+PASS  RTL8197F programs the VG EXTPCR0 TX-IPG field
+PASS  RTL8197F defers P0 programming to the boot-proven ndo_open sequence
+PASS  RTL8367 legacy family ID 0x0276 is covered
+PASS  RTL8367 legacy family ID 0x0597 is covered
+PASS  RTL8367C/R/RB/S family ID 0x6367 is covered
+PASS  RTL8367D/RB-VC family ID 0x6642 is covered
+PASS  RTL8367D detection emits a pre-SMI bootstage marker
+PASS  inactive Linux 4.4 vendor rtknet source removed from native tree
+PASS  file exists: target/linux/realtek/files-6.6/arch/mips/rtl838x/prom.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/clk/realtek/clk-rtl83xx.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/clocksource/timer-rtl-otto.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/gpio/gpio-rtl8197f.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/i2c/busses/i2c-rtl9300.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/i2c/muxes/i2c-mux-rtl9300.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/mtd/maps/rtl8197f-spirom.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/pci/controller/pcie-rtl8197f.c
+PASS  file exists: target/linux/realtek/files-6.6/Documentation/devicetree/bindings/pci/realtek,rtl8197f-pcie.yaml
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/dsa/rtl83xx/common.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/dsa/rtl83xx/rtl838x.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/dsa/rtl83xx/rtl839x.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/dsa/rtl83xx/rtl930x.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/dsa/rtl83xx/rtl931x.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/ethernet/rtl8197f_rtknet.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/ethernet/rtl8197f_rd05_oem_switch_preinit.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/ethernet/rtl838x_eth.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/net/phy/rtl83xx-phy.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/spi/spi-rtl8197f-sheipa.c
+PASS  file exists: target/linux/realtek/files-6.6/drivers/usb/host/rtl8197f-usb-host.c
+PASS  rtl838x enables CONFIG_NET_RTL838X
+PASS  rtl838x enables CONFIG_NET_DSA_RTL83XX
+PASS  rtl838x enables CONFIG_REALTEK_SOC_PHY
+PASS  rtl838x enables CONFIG_MDIO_REALTEK_OTTO_AUX
+PASS  rtl838x enables CONFIG_MFD_RTL8231
+PASS  rtl838x enables CONFIG_PINCTRL_RTL8231
+PASS  rtl838x enables CONFIG_LEDS_RTL8231
+PASS  rtl838x enables CONFIG_GPIO_REALTEK_OTTO
+PASS  rtl838x enables CONFIG_REALTEK_OTTO_TIMER
+PASS  rtl838x enables CONFIG_REALTEK_OTTO_WDT
+PASS  rtl839x enables CONFIG_NET_RTL838X
+PASS  rtl839x enables CONFIG_NET_DSA_RTL83XX
+PASS  rtl839x enables CONFIG_REALTEK_SOC_PHY
+PASS  rtl839x enables CONFIG_MDIO_REALTEK_OTTO_AUX
+PASS  rtl839x enables CONFIG_MFD_RTL8231
+PASS  rtl839x enables CONFIG_PINCTRL_RTL8231
+PASS  rtl839x enables CONFIG_LEDS_RTL8231
+PASS  rtl839x enables CONFIG_GPIO_REALTEK_OTTO
+PASS  rtl839x enables CONFIG_REALTEK_OTTO_TIMER
+PASS  rtl839x enables CONFIG_REALTEK_OTTO_WDT
+PASS  rtl930x enables CONFIG_NET_RTL838X
+PASS  rtl930x enables CONFIG_NET_DSA_RTL83XX
+PASS  rtl930x enables CONFIG_REALTEK_SOC_PHY
+PASS  rtl930x enables CONFIG_I2C_RTL9300
+PASS  rtl930x enables CONFIG_I2C_MUX_RTL9300
+PASS  rtl930x enables CONFIG_GPIO_REALTEK_OTTO
+PASS  rtl930x enables CONFIG_REALTEK_OTTO_WDT
+PASS  rtl931x enables CONFIG_NET_RTL838X
+PASS  rtl931x enables CONFIG_NET_DSA_RTL83XX
+PASS  rtl931x enables CONFIG_REALTEK_SOC_PHY
+PASS  rtl931x enables CONFIG_I2C_RTL9300
+PASS  rtl931x enables CONFIG_I2C_MUX_RTL9300
+PASS  rtl931x enables CONFIG_GPIO_REALTEK_OTTO
+PASS  rtl931x enables CONFIG_REALTEK_OTTO_WDT
+PASS  rtl8197f enables CONFIG_RTL8197F
+PASS  rtl8197f enables CONFIG_GPIO_RTL8197F
+PASS  rtl8197f enables CONFIG_MTD_RTL8197F_SPIROM
+PASS  rtl8197f enables CONFIG_RTL8197F_RTKNET
+PASS  rtl8197f enables CONFIG_PCI
+PASS  rtl8197f enables CONFIG_PCIE_RTL8197F
+PASS  rtl8197f enables CONFIG_USB_RTL8197F_HOST
+PASS  rtl8197f enables CONFIG_REALTEK_OTTO_TIMER
+PASS  rtl8197f enables CONFIG_REALTEK_OTTO_WDT
+PASS  rtl8197f enables CONFIG_SERIAL_8250
+PASS  RD05 enables RTL8197F P0 CPU-tag RX pass-through
+PASS  RD05 writable flash window starts at rootfs_data
+PASS  RD05 writable flash window is limited to rootfs_data
+PASS  RTL8197F driver programs CPU-tag RX recognition
+PASS  RTL8197F driver preserves the DSA CPU tag
+PASS  SPI auto-map MTD implements bounded page programming
+PASS  SPI auto-map MTD enforces its writable range
+PASS  RTL8197F re-arms descriptor stride and ring pointers after CPU DMA start
+PASS  SPI auto-map MTD flushes stale SHEIPA FIFO state
+PASS  SPI auto-map MTD verifies WREN through RDSR
+PASS  SPI-NOR calibration tests command FIFO widths
+PASS  SPI-NOR calibration includes GPL SDK high-byte command mode
+PASS  RTL8197F emits v38.2 post-start ring marker
+PASS  RTL8197F waits for SWCORE reset defaults before table seeding
+PASS  SPI-NOR avoids early SHEIPA user-mode commands and calibrates lazily
+PASS  SPI-NOR probe does not execute WREN/WRDI calibration
+PASS  RD05 diagnostic script is v38
+PASS  RD05 diagnostics start LAN before evaluating markers
+PASS  RD05 diagnostics expose SDK current-descriptor-pointer counters
+PASS  file exists: target/linux/realtek/base-files/usr/bin/rd05-v38-check
+PASS  file exists: target/linux/realtek/base-files/etc/rd05-v38-notes
+PASS  file exists: RD05_SDK_NATIVE_PORT_V35.md
+PASS  file exists: RD05_WLAN_NATIVE_STATUS_V35.md
+PASS  file exists: RD05_SDK_SOURCE_MAP.tsv
+PASS  file exists: RD05_SDK_COMPONENT_INVENTORY.tsv
+PASS  file exists: tools/rd05-pc-netdiag.py
+PASS  file exists: RD05_NATIVE_DSA_V38.md
+PASS  file exists: RD05_NATIVE_DSA_V38_3.md
+PASS  file exists: package/network/config/rtl8367d-compat/files/rd05-rgmii-calibrate
+PASS  file exists: package/network/config/rtl8367d-compat/files/rd05-rgmii.conf
+PASS  file exists: package/network/config/rtl8367d-compat/files/rd05-rgmii.init
+PASS  PC companion uses the exact rd05-raw protocol token
+PASS  PC companion separates locally transmitted AF_PACKET frames
+PASS  RD05 compatibility package release contains v38.3 calibration safety fixes
+PASS  persistent RGMII profile stores the RTL8367D fine TX-clock tap
+PASS  persistent RGMII profile is versioned for v38
+PASS  v38 default uses the RTL8367D SDK RX tap 5
+PASS  v38 default enables the RTL8367D SDK SSC sequence
+PASS  v38 calibration accepts all six independent timing parameters
+PASS  RX calibration sweeps all eight family-D fine TX-clock taps
+PASS  RX calibration documents the complete 128-profile matrix
+PASS  RGMII calibration uses portable integer-millisecond settling
+PASS  RGMII calibration restores the pre-sweep profile on errors and signals
+PASS  RGMII calibration verifies sysfs readback after apply
+PASS  RGMII calibration contains no unsupported fractional BusyBox sleep
+PASS  RD05 checker detects the failed-v38.2 all-zero profile
+PASS  RTL8231 LED nodes are present in 11 DTS/DTSI files
+PASS  embedded legacy switch SDK removed from native OpenWrt target
+PASS  stale vendor-target configuration dump removed from native OpenWrt target
+PASS  inactive rtknet reference guard patch removed
+PASS  source map records RTL8197F CPU-DMA references
+PASS  source map records RTL8367D DSA references
+PASS  source map records SHEIPA/SPI-NOR references
+PASS  source map records RTL8197F PCIe references
+PASS  source map records RTL8812FE vendor sources
+PASS  port report records the OEM-proven PCI endpoint identity
+PASS  WLAN status report records the proven external radio identity
+PASS  port report documents native Linux DSA conversion
+PASS  no merge-conflict markers in active port files
+PASS  no zero-byte C/header files in active kernel overlay
+PASS  v34 check compatibility wrapper targets v38
+PASS  v35 check compatibility wrapper targets v38
+PASS  v36 check compatibility wrapper targets v38
+PASS  v37 check compatibility wrapper targets v38
+WARN  OEM identity is proven as RTL8812FE (PCI 10ec:f812), but the supplied rtl8192cd/fullmac source is not a native Linux-6.6/mac80211 driver and is intentionally not enabled
+WARN  CPU7 RGMII timing and switch-to-SoC RX/DSA delivery require a new native-v38 on-device traffic test
+WARN  the native RTL8197F PCIe host is compile-checked against available headers but still requires RD05 enumeration testing
+WARN  full OpenWrt world compilation was not completed unless a later validation step reports it explicitly
+WARN  hardware boot, flash endurance, VLAN offload and multi-port forwarding tests remain required
+
+Summary: PASS=228 WARN=5 FAIL=0

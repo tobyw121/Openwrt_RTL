@@ -1,0 +1,377 @@
+Sanitized hardware/driver excerpts. MAC/IP/secret-like values removed.
+
+Booting...miwifi_get_factory_mode:74 normal modemiwifi_set_bootargs:169 miwifi_bootargs=factory_mode=0 uart_en=1Check firmware partition ret#1 at 0x00060000.
+root@XiaoQiang:/# echo "===== BASIC ====="===== BASIC =====root@XiaoQiang:/# uname -acat /proc/cmdlinecat /proc/cpuinfocat /proc/mtdcat /proc/partitions
+echo "===== INTERRUPTS / IO ====="cat /proc/interruptscat /proc/iomemcat /proc/ioports 2>/dev/nconsole=ttyS0,115200n8 rootfstype=squashfs root=/dev/mtdblock6  factory_mode=0 uart_en=1ull
+echo "root@XiaoQiang:/# cat /proc/cpuinfo===== REALTEK PROC NODES ====="find /proc -maxdepth 3 -type f 2>/dev/null | grep -Ei 'rtl|rtk|865|8367|836|switch|vlan|phy|mdio|mii|eth|port|gpio|led|button'find /proc -masystem type               : RTL8197Fmachine                 : Unknownprocessor               : 0cpu model               : MIPS 24Kc V8.5BogoMIPS                : 666.41wait instruction        : yesmicrosecond timers      : yestlb_entries             : 64extra interrupt vector  : yeshardware watchpoint     : yes, count: 4, address/irw mask: [0x0ffc, 0x0ffc, 0x0ffb, 0x0ffb]isa                     : mips1 mips2 mips32r2ASEs implemented        : mips16shadow register sets    : 4kscratch registers      : 0package                 : 0core                    : 1VCED exceptions         : not availableVCEI exceptions         : not available
+xdeptroot@XiaoQiang:/# cat /proc/mtdh 3 -type d 2>/dev/null | grep -Ei 'rtl|rtk|865|8367|836|switch|vlan|phy|mdio|mii|eth|port|gpio|led|button'
+echo "===== SYSFS NODES ====="find /sys -maxdepth 4 2>/dev/null | dev:    size   erasesize  namemtd0: 00020000 00010000 "boot"mtd1: 00010000 00010000 "nvram"mtd2: 00010000 00010000 "bdata"mtd3: 00010000 00010000 "factory"mtd4: 00010000 00010000 "crash"mtd5: 002f0000 00010000 "kernel"mtd6: 00b10000 00010000 "rootfs"mtd7: 001a0000 00010000 "overlay"grep -Eiroot@XiaoQiang:/# cat /proc/partitions'rtl|rtk|865|8367|836|switch|vlan|phy|mdio|mii|eth|port|gpio|led|button|spi|pci'
+echo "===== DMESG FILTER ====="dmesg | grep -iE 'mdio|mii|8367|836|865|switch|swcore|re8major minor  #blocks  name
+31        0        128 mtdblock031        1         64 mtdblock131        2         64 mtdblock231        3         64 mtdblock331        4         64 mtdblock431        5       3008 mtdblock531        6      11328 mtdblock631        7       1664 mtdblock765|rtl|froot@XiaoQiang:/#root@XiaoQiang:/# echo "===== NETWORK ====="===== NETWORK =====root@XiaoQiang:/# ifconfig -aastpath|gpio|pin|mux|port|vlan|phy|pcie|pci|8812|8192|sheipa|spi'br-lan    Link encap  HWaddr A4:BA:70:1B:D4:10inet addr:<IP_REDACTED>  Bcast:<IP_REDACTED>  Mask:255.255.255.0inet6 addr: fd00:6969:6969::1/128 Scopeinet6 addr: fe80::a6ba:70ff:fe1b/64 ScopeUP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1RX packets:46 errors:0 dropped:42 overruns:0 frame:0TX packets:42 errors:0 dropped:0 overruns:0 carrier:0collisions:0 txqueuelen:1RX bytes:2116 (2.0 KiB)  TX bytes:4924 (4.8 KiB)
+lo        Link encap Loopbackinet addr:<IP_REDACTED>  Mask:255.0.0.0inet6 addr: ::1/128 ScopeUP LOOPBACK RUNNING  MTU:65536  Metric:1RX packets:44122 errors:0 dropped:0 overruns:0 frame:0TX packets:44122 errors:0 dropped:0 overruns:0 carrier:0collisions:0 txqueuelen:1RX bytes:3122772 (2.9 MiB)  TX bytes:3122772 (2.9 MiB)
+echo "===== possible debug nodes content names ====="for d in /proc/rtl* /proc/rtk* /proc/re* /proc/switch* /proc/net/rtl* /proc/net/rtk* /proc/net/re*; do[ -e "$d" ] && echo "### $d" && ls -la "$d"donedr-xr-xr-x    2 root     root             0 Jul 11 19:15 eth0dr-xr-xr-x    2 root     root             0 Jul 11 19:15 eth1dr-xr-xr-x    2 root     root             0 Jul 11 19:15 eth2dr-xr-xr-x    2 root     root             0 Jul 11 19:15 eth3dr-xr-xr-x    2 root     root             0 Jul 11 19:15 eth4dr-xr-xr-x    2 root     root             0 Jul 11 19:15 eth9-r--r--r--    1 root     root             0 Jul 11 19:15 ext_port-r--r--r--    1 root     root             0 Jul 11 19:15 ext_service_ports-r--r--r--    1 root     root             0 Jul 11 19:15 ioports-r--r--r--    1 root     root             0 Jul 11 19:15 mCastVlanLeakyInfo-r--r--r--    1 root     root             0 Jul 11 19:15 phyPower-r--r--r--    1 root     root             0 Jul 11 19:15 phyRegTest-r--r--r--    1 root     root             0 Jul 11 19:15 reInitSwitchCoredr-xr-xr-x    2 root     root             0 Jul 11 19:15 rtl865x-r--r--r--    1 root     root             0 Jul 11 19:15 rtl_8367_chip_type-r--r--r--    1 root     root             0 Jul 11 19:15 rtl_8367r_vlan-r--r--r--    1 root     root             0 Jul 11 19:15 rtl_83xx_hw_acl-r--r--r--    1 root     root             0 Jul 11 19:15 rtl_83xx_share_meter-r--r--r--    1 root     root             0 Jul 11 19:15 rtl_83xx_storm_ctrl-r--r--r--    1 root     root             0 Jul 11 19:15 rtl_83xx_sw_acl-r--r--r--    1 root     root             0 Jul 11 19:15 rtl_lan_bind_br_wan-r--r--r--    1 root     root             0 Jul 11 19:15 rtl_op_layer-r--r--r--    1 root     root             0 Jul 11 19:15 rtl_rtcache6-r--r--r--    1 root     root             0 Jul 11 19:15 rtl_vlan_passthroughdr-xr-xr-x    2 root     root             0 Jul 11 19:15 veth9-r--r--r--    1 root     root             0 Jul 11 19:15 vlan_passthru-r--r--r--    1 roo ...<TRUNCATED>
+/proc/rtl865x
+dr-xr-xr-x    2 root     root             0 Jul 11 19:15 .dr-xr-xr-x  102 root     root             0 Jan  1  1970 ..-r--r--r--    1 root     root             0 Jul 11 19:15 acl-r--r--r--    1 root     root             0 Jul 11 19:15 arp-r--r--r--    1 root     root             0 Jul 11 19:15 asicCounter-r--r--r--    1 root     root             0 Jul 11 19:15 brsc-r--r--r--    1 root     root             0 Jul 11 19:15 diagnostic-r--r--r--    1 root     root             0 Jul 11 19:15 eventMgr-r--r--r--    1 root     root             0 Jul 11 19:15 fc_threshold-r--r--r--    1 root     root             0 Jul 11 19:15 hs-r--r--r--    1 root     root             0 Jul 11 19:15 hwMCast-r--r--r--    1 root     root             0 Jul 11 19:15 igmp-r--r--r--    1 root     root             0 Jul 11 19:15 ip-r--r--r--    1 root     root             0 Jul 11 19:15 l2-r--r--r--    1 root     root             0 Jul 11 19:15 l3-r--r--r--    1 root     root             0 Jul 11 19:15 mac-r--r--r--    1 root     root             0 Jul 11 19:15 mbufRing-r--r--r--    1 root     root             0 Jul 11 19:15 memory-r--r--r--    1 root     root             0 Jul 11 19:15 mirrorPort-r--r--r--    1 root     root             0 Jul 11 19:15 mmd-r--r--r--    1 root     root             0 Jul 11 19:15 napt-r--r--r--    1 root     root             0 Jul 11 19:15 netif-r--r--r--    1 root     root             0 Jul 11 19:15 nexthop-r--r--r--    1 root     root             0 Jul 11 19:15 phyReg-r--r--r--    1 root     root             0 Jul 11 19:15 port_bandwidth-r--r--r--    1 root     root             0 Jul 11 19:15 port_status-r--r--r--    1 root     root             0 Jul 11 19:15 pppoe-r--r--r--    1 root     root             0 Jul 11 19:15 priority_decision-r--r--r--    1 root     root             0 Jul 11 19:15 privSkbInfo-r--r--r--    1 root     root             0 Jul 11 19:15 pvid-r--r--r--    1 root     root             0 Jul 11 19:15 queue_bandwidth-r--r--r--    1 root     root   ...<TRUNCATED>
+/proc/rtl_8367r_vlan
+-r--r--r--    1 root     root             0 Jul 11 19:15 /proc/rtl_8367r_vlan
+/proc/rtl_vlan_passthrough
+-r--r--r--    1 root     root             0 Jul 11 19:15 /proc/rtl_vlan_passthrough
+devmem 0x1b800000 32 2>/dev/nulldevmem 0x1b80/sbin/devmem4004root@XiaoQiang:/# which devmem232 2>/dev/nulldevmem 0x1b804008 32 2>/dev/nulldevmem 0x1b806000 32 2>/dev/nulldevmem 0x1b806004 32 2>/dev/nulldevmem 0x1b806100 32 2>/dev/nullroot@XiaoQiang:/#root@XiaoQiang:/# devmem 0x18000000 32 2>/dev/nullroot@XiaoQiang:/# devmem 0x18000008 32 2>/dev/nullroot@XiaoQiang:/# devmem 0x18000834 32 2>/dev/nullroot@XiaoQiang:/# devmem 0x18000838 32 2>/dev/nullroot@XiaoQiang:/# devmem 0x18003500 32 2>/dev/nullroot@XiaoQiang:/# devmem 0x1800351c 32 2>/dev/nullroot@XiaoQiang:/#root@XiaoQiang:/# devmem 0x1b800000 32 2>/dev/nullroot@XiaoQiang:/# devmem 0x1b804004 32 2>/dev/nullroot@XiaoQiang:/# devmem 0x1b804008 32 2>/dev/nullroot@XiaoQiang:/# devmem 0x1b806000 32 2>/dev/nullroot@XiaoQiang:/# devmem 0x1b806004 32 2>/dev/nullroot@XiaoQiang:/# devmem 0x1b806100 32 2>/dev/nullroot@XiaoQiang:/# echo "===== OEM COMMANDS ====="===== OEM COMMANDS =====root@XiaoQiang:/# for c in 8367read 8367write 8367init rtk switch phy mii_mgr mii_mgr_cl45 ethctl port vlan re865x swconfig devmem devmem2; doe>   echo "### $c"w>   which "$c" 2>/dev/null">   "$c" 2>&1 | head -40on> done
+phy
+/bin/ash: phy: not found
+/usr/sbin/ethctlUsage:addsmux protocol real_dev smux_dev [napt] [brpppoe] [vlan vid]protocol: bridge/ipoe/pppoereal_dev: smux device namesmux_dev: real dev nameremsmux protocol real_dev smux_dev [vlan vid]protocol: bridge/ipoe/pppoereal_dev: smux device namesmux_dev: real dev namemirror <wan_dev> <lan_dev> Mirror <wan_dev> traffic to <lan_dev>.action = 0: off, 1: mirror tx, 2: mirror rx, 3: mirror both
+vlan
+/bin/ash: vlan: not found
+Read/write from physical address
+root@XiaoQiang:/# echo "===== RTL8367 CORE ====="===== RTL8367 CORE =====root@XiaoQiang:/# cat /proc/rtl_8367_chip_type 2>&1at /proc/rtl_8367r_vlan 2>&1cat /proc/reInitSwitchCore 2>&1cat /proc/ext_port 2>&1cat /proc/ext_service_ports 2>&1cat /proc/phyPower switchChip = 8367D2>&1cat /proot@XiaoQiang:/# cat /proc/rtl_8367r_vlan 2>&1roc/phyRegTest 2>&1cat /proc/wan_port_change 2>&1
+echo "===== ETH PORTMASKS ====="for i in eth0 eth1 eth2 eth3 eth4 eth9 veth9; doecho "### $i"cat /proc/$i/portmask 2>&1cat /proc/$i/link_status 2>&1cat /proc/$i/phy_config 2>&1done
+echo "===== RTL865X TABLES ====="for f in port_status vlan netif pvid phyReg mmd asicCounter diagnostic sw_netif tr181_eth_link tr181_eth_stats; doecho "### /proc/rtl865x/$f"cat /proc/rtl865x/$f 2>&1 | head -120done
+echo "===== RTL8367 GPIO SYSFS ====="for g in 55 56 58; doecho "### gpio$g"cat /sys/class/gpio/gpio$g/direction 2>&1cat /sys/class/gpio/gpio$g/value 2>&1cat /sys/class/gpio/gpio$g/active_low 2>&1done
+echo "===== RTL8367 PLATFORM DEVICES ====="for d in /sys/devices/platform/rtl819x_8367r_i2c_pin.1 /sys/devices/platform/rtl819x_8367r_i2c_pin.2 /sys/devices/platform/rtl819x_8367r_reset_pin.0; doecho "### $d"cat "$d/modalias" 2>&1cat "$d/uevent" 2>&1ls -la "$d" 2>&1donevlan:vid 1 Mbrmsk 0x2001f Untagmsk 0x2001f fid 0vid 2 Mbrmsk 0x2001f Untagmsk 0x2001f fid 0vid 8 Mbrmsk 0x2001f Untagmsk 0x2001f fid 0vid 9 Mbrmsk 0x2001f Untagmsk 0x2001f fid 0vid 100 Mbrmsk 0x2001f Untagmsk 0x0 fid 0vid 200 Mbrmsk 0x2001f Untagmsk 0x0 fid 0vid 300 Mbrmsk 0x2001f Untagmsk 0x0 fid 0vid 400 Mbrmsk 0x2001f Untagmsk 0x0 fid 0vid 500 Mbrmsk 0x2001f Untagmsk 0x0 fid 0vid 600 Mbrmsk 0x2001f Untagmsk 0x0 fid 0vid 700 Mbrmsk 0x2001f Untagmsk 0x0 fid 0vid 800 Mbrmsk 0x2001f Untagmsk 0x0 fid 0vid 900 Mbrmsk 0x2001f Untagmsk 0x0 fid 0vid 1000 Mbrmsk 0x2001f Untagmsk 0x0 fid 0
+pvid:port 0 pvid 9 pri 0port 1 pvid 9 pri 0port 2 pvid 8 pri 0port 3 pvid 9 pri 0port 4 pvid 9 pri 0port 6 pvid 1 pri 0port 7 pvid 1 pri 0
+port isolation:port 0 portmask 0x2001bport 1 portmask 0x2001bport 2 portmask 0x20000port 3 portmask 0x2001bport 4 portmask 0x2001bport 6 portmask 0x3001fport 7 portmask 0x3001f
+l2:944 <MAC_REDACTED> 20000    2    x    x     Static 6952 <MAC_REDACTED> 20000    2    x    x     Static 6976 <MAC_REDACTED> 20000    1    x    x     Static 6984 <MAC_REDACTED> 20000    1    x    x     Static 61220 A4:BA:70:29:36 20000    1    x    x     Static 6l2 entry count: 5root@XiaoQiang:/# cat /proc/reInitSwitchCore 2>&1root@XiaoQiang:/# cat /proc/ext_port 2>&11root@XiaoQiang:/# cat /proc/ext_service_ports 2>&1root@XiaoQiang:/# cat /proc/phyPower 2>&1port[0] phy is power onport[1] phy is power onport[2] phy is power onport[3] phy is power offport[4] phy is power offroot@XiaoQiang:/# cat /proc/phyRegTest 2>&1root@XiaoQiang:/# cat /proc/wan_port_change 2>&1wan dev name : eth2, rtl_wanport_mask:4ifname, isWan:0, mask:0x1, vid:0x9ifname, isWan:0, mask:0x2, vid:0x9ifname, isWan:1, mask:0x4, vid:0x8ifname, isWan:0, mask:0x8, vid:0x9ifname, isWan:0, mask:0x10, vid:0x9ifname, isWan:0, mask:0x0, vid:0x9ifname, isWan:0, mask:0x0, vid:0x9ifname:veip0_, isWan:1, mask:0x10, vid:0x0ifname:veip0_, isWan:1, mask:0x10, vid:0x0ifname:veip0_, isWan:1, mask:0x10, vid:0x0ifname:veip0_, isWan:1, mask:0x10, vid:0x0ifname:veip0_, isWan:1, mask:0x10, vid:0x0ifname:veip0_, isWan:1, mask:0x10, vid:0x0ifname:veip0_, isWan:1, mask:0x10, vid:0x0ifname:veip0_, isWan:1, mask:0x10, vid:0x0ifname, isWan:1, mask:0x10, vid:0x8root@XiaoQiang:/#root@XiaoQiang:/# echo "===== ETH PORTMASKS ====="===== ETH PORTMASKS =====root@XiaoQiang:/# for i in eth0 eth1 eth2 eth3 eth4 eth9 veth9; do
+echo "### $i"cat /proc/$i/portmask 2>&1cat /proc/$i/link_status 2>&1cat /proc/$i/phy_config 2>&1done
+0x10Port: 0  PhyConfig:AutoNegotiation: 1Half 10M: 1Full 10M: 1Half 100M: 1Full 100M: 1Full 1000M: 1FC: 1AsyFC: 0PHY Control Register: 0x1140Power: OnLink Status: 0Speed: 10Duplex: 0
+0x20Port: 1  PhyConfig:AutoNegotiation: 1Half 10M: 1Full 10M: 1Half 100M: 1Full 100M: 1Full 1000M: 1FC: 1AsyFC: 0PHY Control Register: 0x1140Power: OnLink Status: 0Speed: 10Duplex: 0
+0x41Port: 2  PhyConfig:AutoNegotiation: 1
+|vlan|rtk|rtl"                                                                                 
+root@XiaoQiang:/# cat /proc/rtl865x/vlan                                                       
+ASIC VLAN Table:                                                                               
+    local vlan_type last_vlan_type                                                             
+    # # vlan type changed, must reconfig network                                               
+    vlan_type=$(pm_config_get settings vlan_type)                                              
+    last_vlan_type=$(pm_config_get settings last_vlan_type)                                    
+    [ "$vlan_type" != "$last_vlan_type" ] && {                                                 
+        pm_clean_network "$vlan_type"                                                          
+        pm_build_network "$vlan_type"                                                          
+        pm_config_set settings last_vlan_type "$vlan_type"                                     
+    local port ports ifname phy_id                                                             
+        phy_id=$(pm_config_get "$port" phy_id)                                                 
+        [ -z "$phy_id" ] && continue                                                           
+        if [ "8021q" = "$vlan_type" ]; then                                                    
+            [ -n "$ifname" ] &&  util_portmap_set "$phy_id" "$ifname"                          
+            util_portmap_clear "$phy_id"                                                       
+arch_pm_config_switch_vlan()      { return 1; }                                                
+pm_config_switch_vlan() {                                                                      
+    arch_pm_config_switch_vlan "$switch" "$ports" "$vid" && return                             
+    section_name="vlan${vid}"                                                                  
+                set network."$section_name"="switch_vlan"                                      
+                set network."$section_name".vlan="$vid"                                        
+    local vlan_type="$1"                                                                       
+    arch_pm_clean_network "$vlan_type" && return                                               
+    # clean switch vlan                                                                        
+    sections=$(uci show network | grep '=switch_vlan' | grep -sE "vlan" | cut -d '=' -f 1)     
+    local switch cpu_port phy_id list_switch                                                   
+    [ -z "$vlan_type" ] && return                                                              
+    if [ "portbase" = "$vlan_type" ]; then                                                     
+            phy_id=$(pm_config_get "$port" phy_id)                                             
+            [ -z "$switch" ] || [ -z "$phy_id" ] || [ -z "$cpu_port" ] && continue             
+                # rely on switch and cpu port to group                                         
+            list_contains "${switch}_${cpu_port}" "$phy_id" || append "${switch}_${cpu_port}" "
+$phy_id"                                                                                       
+            switch_vlan_ports=$(eval echo \$"${group}")                                        
+            switch_vlan_ports="${switch_vlan_ports} ${cpu_port}"                               
+            pm_config_switch_vlan "$switch" "$switch_vlan_ports" "$vid"                        
+    elif [ "8021q" = "$vlan_type" ]; then                                                      
+            [ -z "$switch" ] || [ -z "$phy_id" ] || [ -z "$cpu_port" ] && {                    
+                [ -n "$phy_id" ] && util_portmap_clear "$phy_id"                               
+            switch_vlan_ports="$phy_id ${cpu_port}t"                                           
+            util_portmap_set "$phy_id" "${base_iface}.${vid}"                                  
+        option switch 'rtl865x'                                                                
+        option phy_id '0'                                                                      
+        option phy_id '1'                                                                      
+        option phy_id '2'                                                                      
+|vlan|rtk|rtl"
+root@XiaoQiang:/# cat /proc/rtl865x/vlan
+ASIC VLAN Table:
+    local vlan_type last_vlan_type
+    # # vlan type changed, must reconfig network
+    vlan_type=$(pm_config_get settings vlan_type)
+    last_vlan_type=$(pm_config_get settings last_vlan_type)
+    [ "$vlan_type" != "$last_vlan_type" ] && {
+        pm_clean_network "$vlan_type"
+        pm_build_network "$vlan_type"
+        pm_config_set settings last_vlan_type "$vlan_type"
+    local port ports ifname phy_id
+        phy_id=$(pm_config_get "$port" phy_id)
+        [ -z "$phy_id" ] && continue
+        if [ "8021q" = "$vlan_type" ]; then
+            [ -n "$ifname" ] &&  util_portmap_set "$phy_id" "$ifname"
+            util_portmap_clear "$phy_id"
+arch_pm_config_switch_vlan()      { return 1; }
+pm_config_switch_vlan() {
+    arch_pm_config_switch_vlan "$switch" "$ports" "$vid" && return
+    section_name="vlan${vid}"
+                set network."$section_name"="switch_vlan"
+                set network."$section_name".vlan="$vid"
+    local vlan_type="$1"
+    arch_pm_clean_network "$vlan_type" && return
+    # clean switch vlan
+    sections=$(uci show network | grep '=switch_vlan' | grep -sE "vlan" | cut -d '=' -f 1)
+    local switch cpu_port phy_id list_switch
+    [ -z "$vlan_type" ] && return
+    if [ "portbase" = "$vlan_type" ]; then
+            phy_id=$(pm_config_get "$port" phy_id)
+            [ -z "$switch" ] || [ -z "$phy_id" ] || [ -z "$cpu_port" ] && continue
+                # rely on switch and cpu port to group
+            list_contains "${switch}_${cpu_port}" "$phy_id" || append "${switch}_${cpu_port}" "$phy_id"
+            switch_vlan_ports=$(eval echo \$"${group}")
+            switch_vlan_ports="${switch_vlan_ports} ${cpu_port}"
+            pm_config_switch_vlan "$switch" "$switch_vlan_ports" "$vid"
+    elif [ "8021q" = "$vlan_type" ]; then
+            [ -z "$switch" ] || [ -z "$phy_id" ] || [ -z "$cpu_port" ] && {
+                [ -n "$phy_id" ] && util_portmap_clear "$phy_id"
+            switch_vlan_ports="$phy_id ${cpu_port}t"
+            util_portmap_set "$phy_id" "${base_iface}.${vid}"
+        option switch 'rtl865x'
+        option phy_id '0'
+        option phy_id '1'
+        option phy_id '2'
+root@XiaoQiang:/# /tmp/strace -f -e trace=ioctl $(which iwpriv) wl0 get_mib all
+ioctl(3, SIOCGIW[ 8601.615686] wl0-ioctl-err: invalid mib name [all] !
+get_mib (89F2): Operation not permitted
+[pid 11166] execve("/bin/cat", ["cat", "/sys/class/net/wl0/phy80211/name"], 0x55ee5ecc /* 7 vars */) = 0
+[pid 11166] open("/sys/class/net/wl0/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 11168] execve("/bin/cat", ["cat", "/sys/class/net/wl01/phy80211/nam"...], 0x55ee5ecc /* 7 vars */) = 0
+[pid 11168] open("/sys/class/net/wl01/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 11173] execve("/bin/cat", ["cat", "/sys/class/net/wl02/phy80211/nam"...], 0x55ee5ecc /* 7 vars */) = 0
+[pid 11173] open("/sys/class/net/wl02/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 11175] execve("/bin/cat", ["cat", "/sys/class/net/wl1/phy80211/name"], 0x55ee5ecc /* 7 vars */) = 0
+[pid 11175] open("/sys/class/net/wl1/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 11418] execve("/bin/cat", ["cat", "/sys/class/net/wl11/phy80211/nam"...], 0x55ee5ecc /* 7 vars */) = 0
+[pid 11418] open("/sys/class/net/wl11/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 11433] execve("/bin/cat", ["cat", "/sys/class/net/wl12/phy80211/nam"...], 0x55ee5ecc /* 7 vars */) = 0
+[pid 11433] open("/sys/class/net/wl12/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 11446] execve("/bin/cat", ["cat", "/sys/class/net/wl13/phy80211/nam"...], 0x55ee5ecc /* 7 vars */) = 0
+[pid 11446] open("/sys/class/net/wl13/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 11683] execve("/bin/cat", ["cat", "/sys/class/net/wl14/phy80211/nam"...], 0x55ee5ecc /* 7 vars */) = 0
+[pid 11683] open("/sys/class/net/wl14/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 11697] execve("/bin/cat", ["cat", "/sys/class/net/wl15/phy80211/nam"...], 0x55ee5ecc /* 7 vars */) = 0
+[pid 11697] open("/sys/class/net/wl15/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 11701] execve("/bin/cat", ["cat", "/sys/class/net/wl16/phy80211/nam"...], 0x55ee5ecc /* 7 vars */) = 0
+[pid 11701] open("/sys/class/net/wl16/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 11735] execve("/bin/cat", ["cat", "/sys/class/net/wl0/phy80211/name"], 0x55ee5fec /* 7 vars */) = 0
+[pid 11735] open("/sys/class/net/wl0/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 13230] execve("/bin/cat", ["cat", "/sys/class/net/wl01/phy80211/nam"...], 0x55ee5fec /* 7 vars */) = 0
+[pid 13230] open("/sys/class/net/wl01/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 13245] execve("/bin/cat", ["cat", "/sys/class/net/wl02/phy80211/nam"...], 0x55ee5fec /* 7 vars */) = 0
+[pid 13245] open("/sys/class/net/wl02/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 13259] execve("/bin/cat", ["cat", "/sys/class/net/wl1/phy80211/name"], 0x55ee5fec /* 7 vars */) = 0
+[pid 13259] open("/sys/class/net/wl1/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 13261] execve("/bin/cat", ["cat", "/sys/class/net/wl11/phy80211/nam"...], 0x55ee5fec /* 7 vars */) = 0
+[pid 13261] open("/sys/class/net/wl11/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 13263] execve("/bin/cat", ["cat", "/sys/class/net/wl12/phy80211/nam"...], 0x55ee5fec /* 7 vars */) = 0
+[pid 13263] open("/sys/class/net/wl12/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 13266] execve("/bin/cat", ["cat", "/sys/class/net/wl13/phy80211/nam"...], 0x55ee5fec /* 7 vars */) = 0
+[pid 13266] open("/sys/class/net/wl13/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 13270] execve("/bin/cat", ["cat", "/sys/class/net/wl14/phy80211/nam"...], 0x55ee5fec /* 7 vars */) = 0
+[pid 13270] open("/sys/class/net/wl14/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 13272] execve("/bin/cat", ["cat", "/sys/class/net/wl15/phy80211/nam"...], 0x55ee5fec /* 7 vars */) = 0
+[pid 13272] open("/sys/class/net/wl15/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 13287] execve("/bin/cat", ["cat", "/sys/class/net/wl16/phy80211/nam"...], 0x55ee5fec /* 7 vars */) = 0
+[pid 13287] open("/sys/class/net/wl16/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 14983] execve("/usr/sbin/iw", ["/usr/sbin/iw", "phy", "phy1", "interface", "add", "wl1", "type", "__ap"], 0x55f43cbc /* 8 vars */) = 0
+[pid 14997] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "regdomain=13"], 0x55f43ca4 /* 8 vars */) = 0
+[pid 15000] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "countrystr=CN"], 0x55f43ca4 /* 8 vars */) = 0
+[pid 15002] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "disable_txpwrlmt=1"], 0x55f43cac /* 8 vars */) = 0
+[pid 15061] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "ther=24"], 0x55ee83b4 /* 8 vars */) = 0
+[pid 15089] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "thermal1=24"], 0x55ee83c4 /* 8 vars */) = 0
+[pid 15118] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "thermal2=25"], 0x55ee83c4 /* 8 vars */) = 0
+[pid 15148] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "xcap=32"], 0x55ee83b4 /* 8 vars */) = 0
+[pid 15194] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevelCCK_A=686868646464646464"...], 0x55ee83fc /* 8 vars */) = 0
+[pid 15234] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevelCCK_B=6c6c6c696969696969"...], 0x55ee83fc /* 8 vars */) = 0
+[pid 15268] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevel_TSSICCK_A=0303030303030"...], 0x55ee8404 /* 8 vars */) = 0
+[pid 15296] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevel_TSSICCK_B=0707070505050"...], 0x55ee8404 /* 8 vars */) = 0
+[pid 15324] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevelHT40_1S_A=55555552525252"...], 0x55ee8404 /* 8 vars */) = 0
+[pid 15355] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevelHT40_1S_B=5a5a5a58585858"...], 0x55ee8404 /* 8 vars */) = 0
+[pid 15388] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevel_TSSIHT40_1S_A=000000020"...], 0x55ee8414 /* 8 vars */) = 0
+[pid 15424] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevel_TSSIHT40_1S_B=050505040"...], 0x55ee8414 /* 8 vars */) = 0
+[pid 15452] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrdiffOFDM=00000000000000000000"...], 0x55ee83fc /* 8 vars */) = 0
+[pid 15481] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "tssi_enable=1"], 0x55ee83c4 /* 8 vars */) = 0
+[pid 15510] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "tssi1=0"], 0x55ee83b4 /* 8 vars */) = 0
+[pid 15541] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "tssi2=0"], 0x55ee83b4 /* 8 vars */) = 0
+[pid 15617] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "powerpercent=100"], 0x55f43c44 /* 8 vars */) = 0
+[pid 15618] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "coexist=1"], 0x55f43c34 /* 8 vars */) = 0
+[pid 15671] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "rm_activated=1"], 0x55f43cdc /* 8 vars */) = 0
+[ 8667.316935] [97G] RFE type 0 PHY paratemters: DEFAULT
+[ 8667.472352] [GetHwReg88XX][PHY_REG_PG_8197Gmp_Type0 start ] 808a3c88 
+[ 8678.144300] [97G] RFE type 0 PHY paratemters: DEFAULT
+[ 8678.299620] [GetHwReg88XX][PHY_REG_PG_8197Gmp_Type0 start ] 808a3c88 
+[pid 17909] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "func_off=0"], 0x55f43c34 /* 8 vars */) = 0
+[pid 18189] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "regdomain=13"], 0x55f43c9c /* 8 vars */) = 0
+[pid 18191] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "countrystr=CN"], 0x55f43c9c /* 8 vars */) = 0
+[pid 18193] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "disable_txpwrlmt=1"], 0x55f43ca4 /* 8 vars */) = 0
+[pid 18365] execve("/usr/sbin/iw", ["/usr/sbin/iw", "phy", "phy1", "interface", "add", "wl13", "type", "__ap"], 0x55f43cbc /* 8 vars */) = 0
+[pid 18428] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl13", "set_mib", "powerpercent=100"], 0x55f43c44 /* 8 vars */) = 0
+[pid 18430] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl13", "set_mib", "coexist=1"], 0x55f43c34 /* 8 vars */) = 0
+[pid 19565] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl13", "set_mib", "func_off=0"], 0x55f43c3c /* 8 vars */) = 0
+[pid 19807] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl13", "set_mib", "regdomain=13"], 0x55f43c9c /* 8 vars */) = 0
+[pid 19809] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl13", "set_mib", "countrystr=CN"], 0x55f43c9c /* 8 vars */) = 0
+[pid 19811] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl13", "set_mib", "disable_txpwrlmt=1"], 0x55f43cac /* 8 vars */) = 0
+[pid 19984] execve("/usr/sbin/iw", ["/usr/sbin/iw", "phy", "phy0", "interface", "add", "wl0", "type", "__ap"], 0x55f43cbc /* 8 vars */) = 0
+[pid 19998] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "regdomain=13"], 0x55f43ca4 /* 8 vars */) = 0
+[pid 20002] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "countrystr=CN"], 0x55f43ca4 /* 8 vars */) = 0
+[pid 20004] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "disable_txpwrlmt=1"], 0x55f43cac /* 8 vars */) = 0
+[pid 20036] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "ther=28"], 0x55ee799c /* 8 vars */) = 0
+[pid 20063] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "thermal1=28"], 0x55ee79ac /* 8 vars */) = 0
+[pid 20093] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "thermal2=28"], 0x55ee79ac /* 8 vars */) = 0
+[pid 20122] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "xcap=56"], 0x55ee799c /* 8 vars */) = 0
+[pid 20150] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "pwrlevel5GHT40_1S_A=000000000000"...], 0x55ee83d4 /* 8 vars */) = 0
+[pid 20182] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "pwrlevel5GHT40_1S_B=000000000000"...], 0x55ee8394 /* 8 vars */) = 0
+[pid 20209] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "pwrlevel_TSSI5GHT40_1S_A=0000000"...], 0x55ee83e4 /* 8 vars */) = 0
+[pid 20238] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "pwrlevel_TSSI5GHT40_1S_B=0000000"...], 0x55ee8374 /* 8 vars */) = 0
+[pid 20266] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "pwrdiff5GOFDM=000000000000000000"...], 0x55ee83ac /* 8 vars */) = 0
+[pid 20296] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "tssi_enable=1"], 0x55ee79ac /* 8 vars */) = 0
+[pid 20324] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "tssi1=0"], 0x55ee799c /* 8 vars */) = 0
+[pid 20353] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "tssi2=0"], 0x55ee799c /* 8 vars */) = 0
+[pid 20430] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "powerpercent=100"], 0x55f43c44 /* 8 vars */) = 0
+[pid 20431] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "coexist=0"], 0x55f43c34 /* 8 vars */) = 0
+[pid 20488] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "rm_activated=1"], 0x55f43cdc /* 8 vars */) = 0
+[ 8696.117051] [GetHwReg88XX][size PHY_REG_PG_8812Fmp_Type0]
+[ 8696.122425] [GetHwReg88XX][PHY_REG_PG_8812Fmp_Type0]
+[ 8696.658464] [set_8812F_trx_regs] +++ 
+[ 8701.055929] [GetHwReg88XX][size PHY_REG_PG_8812Fmp_Type0]
+[ 8701.061300] [GetHwReg88XX][PHY_REG_PG_8812Fmp_Type0]
+[ 8701.597024] [set_8812F_trx_regs] +++ 
+[pid 21292] execve("/usr/sbin/iwpriv", ["/usr/sb[ 8701.937913] wl0-ioctl-err: invalid mib name [twt_enable=0] !
+in/iwpriv", "wl0", "set_mib", "twt_enable=0"], 0x55f43c3c /* 8 vars */) = 0
+[pid 21294] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "func_off=0"], 0x55f43c34 /* 8 vars */) = 0
+[pid 21500] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "regdomain=13"], 0x55f43c9c /* 8 vars */) = 0
+[pid 21503] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "countrystr=CN"], 0x55f43c9c /* 8 vars */) = 0
+usr/sbin/iwpriv", "wl0", "set_mib", "disable_txpwrlmt=1"], 0x55f43ca4 /* 8 vars */) = 0
+[pid 21620] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl5", "set_mib", "powerpercent=100"], 0x55f43c44 /* 8 vars */) = 0
+[pid 21623] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl5", "set_mib", "coexist=0"], 0x55f43c34 /* 8 vars */) = 0
+[pid 21776] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl5[ 8706.326430] wl5-ioctl-err: invalid mib name [twt_enable=0] !
+", "set_mib", "twt_enable=0"], 0x55f43c3c /* 8 vars */) = 0
+[pid 21782] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl5", "set_mib", "func_off=0"], 0x55f43c34 /* 8 vars */) = 0
+[pid 22043] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl5", "set_mib", "regdomain=13"], 0x55f43c9c /* 8 vars */) = 0
+[pid 22045] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl5", "set_mib", "countrystr=CN"], 0x55f43c9c /* 8 vars */) = 0
+[pid 22047] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl5", "set_mib", "disable_txpwrlmt=1"], 0x55f43ca4 /* 8 vars */) = 0
+[ 8907.928507] [97G] RFE type 0 PHY paratemters: DEFAULT
+[ 8908.085605] [GetHwReg88XX][PHY_REG_PG_8197Gmp_Type0 start ] 808a3c88 
+[ 8918.797563] [97G] RFE type 0 PHY paratemters: DEFAULT
+[ 8918.954546] [GetHwReg88XX][PHY_REG_PG_8197Gmp_Type0 start ] 808a3c88 
+[ 8923.959612] [GetHwReg88XX][size PHY_REG_PG_8812Fmp_Type0]
+[ 8923.965040] [GetHwReg88XX][PHY_REG_PG_8812Fmp_Type0]
+[ 8924.501899] [set_8812F_trx_regs] +++ 
+[ 8928.919745] [GetHwReg88XX][size PHY_REG_PG_8812Fmp_Type0]
+[ 8928.925213] [GetHwReg88XX][PHY_REG_PG_8812Fmp_Type0]
+[ 8929.461153] [set_8812F_trx_regs] +++ 
+[pid 30913] execve("/bin/cat", ["cat", "/sys/class/net/wl0/phy80211/name"], 0x566a707c /* 7 vars */) = 0
+[pid 30913] open("/sys/class/net/wl0/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 30917] execve("/bin/cat", ["cat", "/sys/class/net/wl01/phy80211/nam"...], 0x566a707c /* 7 vars */) = 0
+[pid 30917] open("/sys/class/net/wl01/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 30923] execve("/bin/cat", ["cat", "/sys/class/net/wl02/phy80211/nam"...], 0x566a707c /* 7 vars */) = 0
+[pid 30923] open("/sys/class/net/wl02/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 30931] execve("/bin/cat", ["cat", "/sys/class/net/wl1/phy80211/name"], 0x566a707c /* 7 vars */) = 0
+[pid 30931] open("/sys/class/net/wl1/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 31265] execve("/bin/cat", ["cat", "/sys/class/net/wl11/phy80211/nam"...], 0x566a707c /* 7 vars */) = 0
+[pid 31265] open("/sys/class/net/wl11/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 31279] execve("/bin/cat", ["cat", "/sys/class/net/wl12/phy80211/nam"...], 0x566a707c /* 7 vars */) = 0
+[pid 31279] open("/sys/class/net/wl12/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 31294] execve("/bin/cat", ["cat", "/sys/class/net/wl13/phy80211/nam"...], 0x566a707c /* 7 vars */) = 0
+[pid 31294] open("/sys/class/net/wl13/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 31557] execve("/bin/cat", ["cat", "/sys/class/net/wl14/phy80211/nam"...], 0x566a707c /* 7 vars */) = 0
+[pid 31557] open("/sys/class/net/wl14/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 31570] execve("/bin/cat", ["cat", "/sys/class/net/wl15/phy80211/nam"...], 0x566a707c /* 7 vars */) = 0
+[pid 31570] open("/sys/class/net/wl15/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 31573] execve("/bin/cat", ["cat", "/sys/class/net/wl16/phy80211/nam"...], 0x566a707c /* 7 vars */) = 0
+[pid 31573] open("/sys/class/net/wl16/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid 31607] execve("/bin/cat", ["cat", "/sys/class/net/wl0/phy80211/name"], 0x566a717c /* 7 vars */) = 0
+[pid 31607] open("/sys/class/net/wl0/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid   752] execve("/bin/cat", ["cat", "/sys/class/net/wl01/phy80211/nam"...], 0x566a717c /* 7 vars */) = 0
+[pid   752] open("/sys/class/net/wl01/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid   769] execve("/bin/cat", ["cat", "/sys/class/net/wl02/phy80211/nam"...], 0x566a717c /* 7 vars */) = 0
+[pid   769] open("/sys/class/net/wl02/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid   786] execve("/bin/cat", ["cat", "/sys/class/net/wl1/phy80211/name"], 0x566a717c /* 7 vars */) = 0
+[pid   786] open("/sys/class/net/wl1/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid   791] execve("/bin/cat", ["cat", "/sys/class/net/wl11/phy80211/nam"...], 0x566a717c /* 7 vars */) = 0
+[pid   791] open("/sys/class/net/wl11/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid   793] execve("/bin/cat", ["cat", "/sys/class/net/wl12/phy80211/nam"...], 0x566a717c /* 7 vars */) = 0
+[pid   793] open("/sys/class/net/wl12/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid   798] execve("/bin/cat", ["cat", "/sys/class/net/wl13/phy80211/nam"...], 0x566a717c /* 7 vars */) = 0
+[pid   798] open("/sys/class/net/wl13/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid   803] execve("/bin/cat", ["cat", "/sys/class/net/wl14/phy80211/nam"...], 0x566a717c /* 7 vars */) = 0
+[pid   803] open("/sys/class/net/wl14/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid   807] execve("/bin/cat", ["cat", "/sys/class/net/wl15/phy80211/nam"...], 0x566a717c /* 7 vars */) = 0
+[pid   807] open("/sys/class/net/wl15/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid   820] execve("/bin/cat", ["cat", "/sys/class/net/wl16/phy80211/nam"...], 0x566a717c /* 7 vars */) = 0
+[pid   820] open("/sys/class/net/wl16/phy80211/name", O_RDONLY|O_LARGEFILE) = 3
+[pid  2670] execve("/usr/sbin/iw", ["/usr/sbin/iw", "phy", "phy1", "interface", "add", "wl1", "type", "__ap"], 0x5670512c /* 8 vars */) = 0
+[pid  2687] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "regdomain=13"], 0x56705114 /* 8 vars */) = 0
+[pid  2700] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "countrystr=CN"], 0x56705114 /* 8 vars */) = 0
+[pid  2702] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "disable_txpwrlmt=1"], 0x5670511c /* 8 vars */) = 0
+[pid  2765] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "ther=24"], 0x566a9504 /* 8 vars */) = 0
+[pid  2796] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "thermal1=24"], 0x566a9514 /* 8 vars */) = 0
+[pid  2826] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "thermal2=25"], 0x566a9514 /* 8 vars */) = 0
+[pid  2854] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "xcap=32"], 0x566a9504 /* 8 vars */) = 0
+[pid  2886] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevelCCK_A=686868646464646464"...], 0x566a954c /* 8 vars */) = 0
+[pid  2917] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevelCCK_B=6c6c6c696969696969"...], 0x566a954c /* 8 vars */) = 0
+[pid  2946] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevel_TSSICCK_A=0303030303030"...], 0x566a9554 /* 8 vars */) = 0
+[pid  2978] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevel_TSSICCK_B=0707070505050"...], 0x566a9554 /* 8 vars */) = 0
+[pid  3014] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevelHT40_1S_A=55555552525252"...], 0x566a9554 /* 8 vars */) = 0
+[pid  3044] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevelHT40_1S_B=5a5a5a58585858"...], 0x566a9554 /* 8 vars */) = 0
+[pid  3075] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevel_TSSIHT40_1S_A=000000020"...], 0x566a9564 /* 8 vars */) = 0
+[pid  3104] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrlevel_TSSIHT40_1S_B=050505040"...], 0x566a9564 /* 8 vars */) = 0
+[pid  3135] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "pwrdiffOFDM=00000000000000000000"...], 0x566a954c /* 8 vars */) = 0
+[pid  3165] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "tssi_enable=1"], 0x566a9514 /* 8 vars */) = 0
+[pid  3195] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "tssi1=0"], 0x566a9504 /* 8 vars */) = 0
+[pid  3224] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "tssi2=0"], 0x566a9504 /* 8 vars */) = 0
+[pid  3299] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "powerpercent=100"], 0x567050b4 /* 8 vars */) = 0
+[pid  3300] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "coexist=1"], 0x567050a4 /* 8 vars */) = 0
+[pid  3357] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "rm_activated=1"], 0x5670514c /* 8 vars */) = 0
+[ 9110.960555] [97G] RFE type 0 PHY paratemters: DEFAULT
+[ 9111.116348] [GetHwReg88XX][PHY_REG_PG_8197Gmp_Type0 start ] 808a3c88 
+[ 9122.634041] [97G] RFE type 0 PHY paratemters: DEFAULT
+[ 9122.789373] [GetHwReg88XX][PHY_REG_PG_8197Gmp_Type0 start ] 808a3c88 
+[pid  5718] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "func_off=0"], 0x567050a4 /* 8 vars */) = 0
+[pid  5933] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "regdomain=13"], 0x5670510c /* 8 vars */) = 0
+[pid  5936] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "countrystr=CN"], 0x5670510c /* 8 vars */) = 0
+[pid  5938] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl1", "set_mib", "disable_txpwrlmt=1"], 0x56705114 /* 8 vars */) = 0
+[pid  6153] execve("/usr/sbin/iw", ["/usr/sbin/iw", "phy", "phy1", "interface", "add", "wl13", "type", "__ap"], 0x5670512c /* 8 vars */) = 0
+[pid  6214] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl13", "set_mib", "powerpercent=100"], 0x567050b4 /* 8 vars */) = 0
+[pid  6216] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl13", "set_mib", "coexist=1"], 0x567050a4 /* 8 vars */) = 0
+[pid  6372] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl13", "set_mib", "func_off=0"], 0x567050ac /* 8 vars */) = 0
+[pid  6651] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl13", "set_mib", "regdomain=13"], 0x5670510c /* 8 vars */) = 0
+[pid  6653] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl13", "set_mib", "countrystr=CN"], 0x5670510c /* 8 vars */) = 0
+[pid  6655] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl13", "set_mib", "disable_txpwrlmt=1"], 0x5670511c /* 8 vars */) = 0
+[pid  6856] execve("/usr/sbin/iw", ["/usr/sbin/iw", "phy", "phy0", "interface", "add", "wl0", "type", "__ap"], 0x56704b9c /* 8 vars */) = 0
+[pid  6870] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "regdomain=13"], 0x56704b84 /* 8 vars */) = 0
+[pid  6873] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "countrystr=CN"], 0x56704b84 /* 8 vars */) = 0
+[pid  6875] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "disable_txpwrlmt=1"], 0x56704b8c /* 8 vars */) = 0
+[pid  6909] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "ther=28"], 0x566a8b0c /* 8 vars */) = 0
+[pid  6937] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "thermal1=28"], 0x566a8b1c /* 8 vars */) = 0
+[pid  6964] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "thermal2=28"], 0x566a8b1c /* 8 vars */) = 0
+[pid  7002] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "xcap=56"], 0x566a8b0c /* 8 vars */) = 0
+[pid  7034] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "pwrlevel5GHT40_1S_A=000000000000"...], 0x566a9544 /* 8 vars */) = 0
+[pid  7062] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "pwrlevel5GHT40_1S_B=000000000000"...], 0x566a9504 /* 8 vars */) = 0
+[pid  7092] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "pwrlevel_TSSI5GHT40_1S_A=0000000"...], 0x566a9554 /* 8 vars */) = 0
+[pid  7120] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "pwrlevel_TSSI5GHT40_1S_B=0000000"...], 0x566a94e4 /* 8 vars */) = 0
+[pid  7150] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "pwrdiff5GOFDM=000000000000000000"...], 0x566a951c /* 8 vars */) = 0
+[pid  7179] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "tssi_enable=1"], 0x566a8b1c /* 8 vars */) = 0
+[pid  7211] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "tssi1=0"], 0x566a8b0c /* 8 vars */) = 0
+[pid  7238] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "tssi2=0"], 0x566a8b0c /* 8 vars */) = 0
+[pid  7312] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "powerpercent=100"], 0x56704b24 /* 8 vars */) = 0
+[pid  7315] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "coexist=0"], 0x56704b14 /* 8 vars */) = 0
+[pid  7384] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "rm_activated=1"], 0x56704bbc /* 8 vars */) = 0
+[ 9136.745955] [GetHwReg88XX][size PHY_REG_PG_8812Fmp_Type0]
+[ 9136.751540] [GetHwReg88XX][PHY_REG_PG_8812Fmp_Type0]
+[ 9137.288901] [set_8812F_trx_regs] +++ 
+[ 9141.687193] [GetHwReg88XX][size PHY_REG_PG_8812Fmp_Type0]
+[ 9141.692564] [GetHwReg88XX][PHY_REG_PG_8812Fmp_Type0]
+[ 9142.228593] [set_8812F_trx_regs] +++ 
+[pid  8163] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "twt_enable=0"], 0x56704b1c /* 8 vars */) = 0
+[pid  8163] ioctl(3, SIOCGIWPRIV, 0[ 9142.583857] wl0-ioctl-err: invalid mib name [twt_enable=0] !
+[pid  8168] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "func_off=0"], 0x56704b14 /* 8 vars */) = 0
+[pid  8408] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "regdomain=13"], 0x56704b7c /* 8 vars */) = 0
+[pid  8410] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "countrystr=CN"], 0x56704b7c /* 8 vars */) = 0
+[pid  8414] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl0", "set_mib", "disable_txpwrlmt=1"], 0x56704b84 /* 8 vars */) = 0
+[pid  8527] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl5", "set_mib", "powerpercent=100"], 0x56704b24 /* 8 vars */) = 0
+[pid  8531] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl5", "set_mib", "coexist=0"], 0x56704b14 /* 8 vars */) = 0
+[pid  8694] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl5", "set_mib", "twt_enable=0"], 0x56704b1c /* 8 vars */) = 0
+[pid  8694] ioct[ 9147.194637] wl5-ioctl-err: invalid mib name [twt_enable=0] !
+[pid  8704] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl5", "set_mib", "func_off=0"], 0x56704b14 /* 8 vars */) = 0
+[pid  8969] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl5", "set_mib", "regdomain=13"], 0x56704b7c /* 8 vars */) = 0
+[pid  8971] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl5", "set_mib", "countrystr=CN"], 0x56704b7c /* 8 vars */) = 0
+[pid  8973] execve("/usr/sbin/iwpriv", ["/usr/sbin/iwpriv", "wl5", "set_mib", "disable_txpwrlmt=1"], 0x56704b84 /* 8 vars */) = 0

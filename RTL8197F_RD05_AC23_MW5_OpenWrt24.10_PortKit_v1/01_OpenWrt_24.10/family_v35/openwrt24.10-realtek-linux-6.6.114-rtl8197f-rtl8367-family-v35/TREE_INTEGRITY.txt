@@ -1,0 +1,8 @@
+OpenWrt 24.10 RTL8197F/RTL8367 family v35 tree
+Regular files: 4112
+Symbolic links: 17
+Directories: 836
+Register definitions indexed: 42708
+RTL8197F NIC symbols indexed: 276
+Kernel patches: 638 total (398 backport, 151 pending, 51 hack, 38 Realtek)
+Project validator: 186 PASS, 7 WARN, 0 FAIL

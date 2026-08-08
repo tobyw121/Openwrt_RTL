@@ -1,0 +1,18 @@
+
+. /lib/functions/leds.sh
+. /lib/functions/uci-defaults.sh
+
+board=$(board_name)
+
+board_config_update
+
+case $board in
+xiaomi,r4-rd05)
+        # RTL8197F/RD05 GPIO LED assignments are not validated yet.
+        # Keep first-boot defaults empty to avoid driving unknown pins.
+        ;;
+esac
+
+board_config_flush
+
+exit 0

@@ -1,0 +1,236 @@
+//
+// Copyright (C) 2009 Realtek Semiconductor Corp.
+// All Rights Reserved.
+//
+// This program is the proprietary software of Realtek Semiconductor
+// Corporation and/or its licensors, and only be used, duplicated,
+// modified or distributed under the authorized license from Realtek.
+//
+// ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+// THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+//
+// $Revision: 22114 $
+// $Date: 2011-09-07 12:05:29 +0800 (Wed, 07 Sep 2011) $
+//
+// Purpose : Define diag shell commands for trunk.
+//
+// Feature : The file have include the following module and sub-modules
+//           1) trunk commands.
+//
+
+
+#ifdef CMD_TRUNK_DUMP_TRUNK_ID
+//trunk configuration
+//dump configuration
+//trunk group id
+trunk dump { <UINT:trunk_id> }
+#endif
+
+#ifdef CMD_TRUNK_GET_MODE
+//trunk configuration
+//get configuration
+//trunk mode
+trunk get mode
+#endif
+
+#ifdef CMD_TRUNK_GET_DISTRIBUTE_ALGORITHM_TRUNK_ID
+//trunk configuration
+//get configuration
+//distribute algorithm
+//trunk group id
+trunk get distribute-algorithm <UINT:trunk_id>
+#endif
+
+#ifdef CMD_TRUNK_GET_FLOOD_MODE_TRUNK_ID
+//trunk configuration
+//get configuration
+//flood mode configuration
+//trunk group id
+trunk get flood-mode <UINT:trunk_id> 
+#endif
+
+#ifdef CMD_TRUNK_GET_HASH_MAPPING_TRUNK_ID
+//trunk configuration
+//get configuration
+//hash mapping
+//trunk group id
+trunk get hash-mapping <UINT:trunk_id> 
+#endif
+
+#ifdef CMD_TRUNK_GET_MEMBER_PORT_TRUNK_ID
+//trunk configuration
+//get configuration
+//member port
+//trunk group id
+trunk get member-port <UINT:trunk_id>
+#endif
+
+#ifdef CMD_TRUNK_GET_REPRESENT_PORT_TRUNK_ID
+//trunk configuration
+//get configuration
+//flood config port
+//trunk represent port
+//trunk group id
+trunk get represent-port <UINT:trunk_id>
+#endif
+
+#ifdef CMD_TRUNK_GET_FLOOD_CONFIG_PORT_TRUNK_ID
+//trunk configuration
+//get configuration
+//flood config port
+//trunk flood-config port
+//trunk group id
+trunk get flood-config-port <UINT:trunk_id>
+#endif
+
+#ifdef CMD_TRUNK_SET_DISTRIBUTE_ALGORITHM_TRUNK_ID_SRC_PORT_SRC_MAC_DST_MAC_SRC_IP_DST_IP_SRC_L4_PORT_DST_L4_PORT
+//trunk configuration
+//set configuration
+//distribute algorithm
+//trunk group id
+//source port
+//source MAC
+//destination MAC
+//source IP
+//destination IP
+//source layer4 port
+//destination layer4 port
+trunk set distribute-algorithm <UINT:trunk_id> { src-port } { src-mac } { dst-mac } { src-ip } { dst-ip } { src-l4-port } { dst-l4-port }
+#endif
+
+#ifdef CMD_TRUNK_SET_FLOOD_MODE_TRUNK_ID_BY_CONFIG_BY_HASH
+//trunk configuration
+//set configuration
+//flood mode configuration
+//trunk group id
+//by config
+//by hash value mapping
+trunk set flood-mode <UINT:trunk_id> ( by-config | by-hash )
+#endif
+
+#ifdef CMD_TRUNK_SET_HASH_MAPPING_TRUNK_ID_HASH_VALUE_PORT
+//trunk configuration
+//set configuration
+//hash mapping
+//trunk group id
+//hash value
+//port number
+trunk set hash-mapping <UINT:trunk_id> <UINT:hash_value> <UINT:port>
+#endif
+
+#ifdef CMD_TRUNK_SET_MEMBER_PORT_TRUNK_ID_PORT_NONE
+//trunk configuration
+//set configuration
+//member port
+//trunk group id
+//port list
+//none member
+trunk set member-port <UINT:trunk_id> ( <PORT_LIST:port> | none )
+#endif
+
+#ifdef CMD_TRUNK_SET_MODE_DUMB_NORMAL
+//trunk configuration
+//set configuration
+//trunk mode
+//dumb mode
+//normal mode
+trunk set mode ( dumb | normal )
+#endif
+
+#ifdef CMD_TRUNK_SET_FLOOD_CONFIG_PORT_REPRESENT_PORT_TRUNK_ID_PORT
+//trunk configuration
+//set configuration
+//flood config port
+//trunk represent port
+//trunk group id
+//port number
+trunk set ( flood-config-port | represent-port ) <UINT:trunk_id> <UINT:port>
+#endif
+
+#ifdef CMD_TRUNK_SET_DISTRIBUTE_ALGORITHM_BIND_TRUNK_ID_ALGO_ID
+//trunk configuration
+//set configuration
+//distribution algorithm
+//binding between a trunk and a distribution algorithm set
+//trunk group id
+//algorithm id
+trunk set distribute-algorithm bind <UINT:trunk_id> <UINT:algo_id> 
+#endif 
+ 
+#ifdef CMD_TRUNK_GET_DISTRIBUTE_ALGORITHM_BIND_TRUNK_ID
+//trunk configuration
+//get configuration
+//distribution algorithm binding
+//trunk group id
+trunk get distribute-algorithm bind <UINT:trunk_id>
+#endif
+
+#ifdef CMD_TRUNK_SET_DISTRIBUTE_ALGORITHM_PARAMETER_ALGO_ID_DST_IP_DST_L4_PORT_DST_MAC_SRC_IP_SRC_L4_PORT_SRC_MAC_SRC_PORT
+//trunk configuration
+//set configuration
+//distribute algorithm parameter
+//parameters
+//algorithm id <0-3>
+//destination IP
+//destination layer4 port
+//destination MAC
+//source IP
+//source layer4 port
+//source MAC
+//source port
+trunk set distribute-algorithm parameter <UINT:algo_id> { dst-ip } { dst-l4-port } { dst-mac } { src-ip } { src-l4-port } { src-mac } { src-port }    
+#endif
+ 
+#ifdef CMD_TRUNK_GET_DISTRIBUTE_ALGORITHM_PARAMETER_ALGO_ID
+//trunk configuration
+//get configuration
+//distribute algorithm
+//parameters
+//algorithm id
+trunk get distribute-algorithm parameter <UINT:algo_id> 
+#endif
+
+#ifdef CMD_TRUNK_SET_DISTRIBUTE_ALGORITHM_SHIFT_ALGO_ID_SRC_PORT_SHIFT_SRC_MAC_SHIFT_DST_MAC_SHIFT_SRC_IP_SHIFT_DST_IP_SHIFT_SRC_L4_PORT_SHIFT_DST_L4_PORT_SHIFT
+//trunk configuration
+//set configuration
+//distribute algorithm
+//parameter shift
+//algorithm id
+//source port shift
+//source MAC shift
+//destination MAC shift
+//source IP shift
+//destination IP shift
+//source layer4 port shift
+//destination layer4 port shift
+trunk set distribute-algorithm shift <UINT:algo_id> <UINT:src_port_shift> <UINT:src_mac_shift> <UINT:dst_mac_shift> <UINT:src_ip_shift> <UINT:dst_ip_shift> <UINT:src_l4_port_shift> <UINT:dst_l4_port_shift>
+#endif
+
+#ifdef CMD_TRUNK_GET_DISTRIBUTE_ALGORITHM_SHIFT_ALGO_ID
+//trunk configuration
+//get configuration
+//distribute algorithm
+//parameter shift
+trunk get distribute-algorithm shift <UINT:algo_id>
+#endif
+
+#ifdef CMD_TRUNK_SET_TRAFFIC_SEPARATION_TRUNK_ID_OFF_MCAST_FLOODING_MCAST_FLOODING
+//trunk configuration
+//set configuration
+//traffic separate
+//trunk group id
+//turn off the traffic separation function
+//known multicast traffic separate
+//flooding traffic separate 
+//known multicast and flooding traffic separate 
+trunk set traffic-separation <UINT:trunk_id> ( off | mcast | flooding | mcast-flooding )
+#endif 
+
+#ifdef CMD_TRUNK_GET_TRAFFIC_SEPARATION_TRUNK_ID
+//trunk configuration
+//get configuration
+//traffic separate
+//trunk group id
+trunk get traffic-separation <UINT:trunk_id>
+#endif
+          

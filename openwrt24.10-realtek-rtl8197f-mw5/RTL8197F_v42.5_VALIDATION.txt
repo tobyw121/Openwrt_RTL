@@ -1,0 +1,27 @@
+RTL8197F OpenWrt 24.10 v42.5 validation
+========================================
+
+Validated source properties:
+- MW5 uses a 16-byte Realtek IMG_HEADER_T.
+- MW5 does not enable length-includes-header-padding.
+- AC23 retains its separate 60-byte reconstructed format.
+- MW5 generated OpenWrt firmware is rejected if its payload begins with the
+  obsolete 40-byte OEM prefix.
+- Board-profile, patch, WLAN-variant, firmware-budget and private-template
+  validation remain enabled.
+
+Validated transformed user image:
+- full size: 0x800000
+- firmware window: 0x030000..0x5c0000
+- old payload length: 0x2b3110
+- new payload length: 0x2b30e8
+- loader moved from firmware+0x38 to firmware+0x10
+- rootfs moved from 0x2e3120 to 0x2e30f8
+- kernel additive checksum: 0x0000
+- rootfs additive checksum: 0x0000
+- ranges 0x000000..0x030000 and 0x5c0000..0x800000 unchanged
+
+Hardware status:
+- Exact image structure is verified offline.
+- UART boot on the physical MW5 is still required to confirm execution beyond
+  the LZMA loader and expose any subsequent platform issue.

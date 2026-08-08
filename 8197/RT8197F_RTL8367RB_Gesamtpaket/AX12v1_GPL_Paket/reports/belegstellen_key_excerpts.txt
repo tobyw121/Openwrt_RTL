@@ -1,0 +1,1260 @@
+===== build_install =====
+--- INSTALL.txt:1-80 ---
+00001: 0. Introduction
+00002:    This file will show you how to build the RTL8197H linux system.
+00003:    Besides, It will guide you how to download the built image to Realtek EV (Evaluation) board 
+00004:    for testing. PLEASE NOTE, the download image will overwrite the original image existed in the 
+00005:    flash memory of EV board.
+00006: 
+00007: 1. Build Environment
+00008: 	CentOS Linux release 7.6.1810 (Core)
+00009: 	Ubuntu 16.04
+00010: 
+00011: 2. Quick start
+00012:    - tar -jxvf rtl819x.tar.bz2
+00013:    - cd rtl819x/
+00014:    - make menuconfig:
+00015: 	--for SPINAND_RTL8197F_VG_8832BR_8367R_Kernel4.4_GW
+00016: 		Selected Target (rtl8197F)
+00017: 		Selected Kernel (linux-4.4)
+00018: 		Selected Busybox (busybox-1.24.1)
+00019: 		Selected toolchain (msdk-6.4.1-mips-EL-4.4-u0.9.33-m32ut-190619)
+00020: 		Selected Board Configuration (SPINAND RTL8197F_VG/8832BR+8367R Kernel4.4 GW)
+00021: 		Select Load default settings
+00022: 
+00023: 	--for SPINAND_RTL8197F_VG_8832BR_8367R_Kernel4.4_GW_EASYMESH
+00024: 		Selected Target (rtl8197F)
+00025: 		Selected Kernel (linux-4.4)
+00026: 		Selected Busybox (busybox-1.24.1)
+00027: 		Selected toolchain (msdk-6.4.1-mips-EL-4.4-u0.9.33-m32ut-190619)
+00028: 		Selected Board Configuration (SPINAND RTL8197F_VG/8832BR+8367R Kernel4.4 GW_EASYMESH)
+00029: 		Select Load default settings
+00030: 
+00031: 	
+00032:    - make
+00033: 	
+00034: 3. make image
+00035:    there are four steps for making image:
+00036:    - make users
+00037:      build the users applications
+00038:    - make linux
+00039:      build the kernel files
+00040:    - make romfs
+00041:      copy all the application binary files into romfs
+00042:    - make image
+00043:      compress the root.bin and linux.bin
+00044: 
+00045: 4. build bootloader
+00046:    - cd rtl819x-SDK-v3.6.0-full-package
+00047:    - tar jxvf rtl819x-SDK-v3.6.0-bootcode.tar.bz2
+00048:    - cd bootcode
+00049:    - ensure the source code of sdk is existent, do command "tar -jxvf rtl819x.tar.bz2" first, it include the toolchain.
+00050:    - add environment variable(assume you source code directory is /rtl819x-SDK-v3.6.0-full-package/bootcode):
+00051:        --for rtl8197F
+00052:                  "PATH=$PATH:../rtl819x/toolchain/msdk-4.4.7-mips-EL-3.10-u0.9.33-m32t-140827/bin"
+00053: 
+00054:    - cp def-rtl8197fh_vg_8367rb_vc-spi_nand-config .config (It will do the default setting for rtl8197F bootcode.)
+00055:    - make menuconfig:
+00056:    - Exit and Save	
+00057:    - make 
+00058:    - you will find boot.bin in ./btcode_vg
+00059:    - 'boot.bin' is the bootloader image
+00060: 
+00061: 5. binary file list
+00062:    - rtl819x/image/fw.bin                    : the image include root.bin,linux.bin and webpages-gw.bin
+00063:     	  
+00064: 6. Download image files to Realtek EV (evaluation) board for testing
+00065:    - Use a RS232 cable to connect COM port between a LINUX PC and EV board.
+00066:    - Connect LINUX PC Ethernet port to the LAN port of EV board. Set PC IP
+00067:      address to 192.168.1.x (e.g., type 'ifconfig eth0 192.168.1.1').
+00068:    - Start a COM port console (e.g., minicom), and set COM port setting to
+00069:      38400, 8N1 and no flow control.
+00070:    - Power on EV board, and press 'ESC' key in COM port console to escape the
+00071:      booting process. If ok, you may see "<RealTek>" prompt in the console.
+00072:    - Start a TFTP client in LINUX PC, and connect to 192.168.1.6. Set file
+00073:      type to binary mode to TFTP server of EV board, put root.bin if gw 
+00074:      platform to TFTP server, and put root image file(rtl819x/image/root.bin) to TFTP server,
+00075:      then put the webpages image file and  linux image files to TFTP server.
+00076:      After linux.bin file upload had finished, boot code will auto booting.
+00077:    - NOTE:you can do the same thing on Windos PC.
+00078: 
+00079: 7. Build ramdisk for MP using "root" user
+00080:    - modify /etc/fstab
+
+--- INSTALL.txt:51-58 ---
+00051:        --for rtl8197F
+00052:                  "PATH=$PATH:../rtl819x/toolchain/msdk-4.4.7-mips-EL-3.10-u0.9.33-m32t-140827/bin"
+00053: 
+00054:    - cp def-rtl8197fh_vg_8367rb_vc-spi_nand-config .config (It will do the default setting for rtl8197F bootcode.)
+00055:    - make menuconfig:
+00056:    - Exit and Save	
+00057:    - make 
+00058:    - you will find boot.bin in ./btcode_vg
+
+===== selected_preconfig =====
+--- boards/rtl8197F/preconfig_SPINAND_RTL8197F_VG_8832BR_8367R_Kernel4.4_GW:1-130 ---
+00001: #
+00002: # Automatically generated make config: don't edit
+00003: # RLX Linux builder
+00004: # Tue Oct 26 16:15:23 2021
+00005: #
+00006: 
+00007: #
+00008: # select components
+00009: #
+00010: # CONFIG_BOARD_rle0272_rlx5181 is not set
+00011: # CONFIG_BOARD_rle0272_rlx5281 is not set
+00012: # CONFIG_BOARD_rlxocp0 is not set
+00013: # CONFIG_BOARD_rtl8196b is not set
+00014: # CONFIG_BOARD_rtl8196c is not set
+00015: # CONFIG_BOARD_rtl8196cs is not set
+00016: # CONFIG_BOARD_rtl8196ct is not set
+00017: # CONFIG_BOARD_rtl8196e is not set
+00018: # CONFIG_BOARD_rtl8196eu is not set
+00019: # CONFIG_BOARD_rtl8197b is not set
+00020: CONFIG_BOARD_rtl8197F=y
+00021: # CONFIG_BOARD_rtl8198 is not set
+00022: # CONFIG_BOARD_rtl8198B is not set
+00023: # CONFIG_BOARD_rtl8198C_8954E is not set
+00024: # CONFIG_BOARD_rtl8198t is not set
+00025: # CONFIG_BOARD_rtl819xD is not set
+00026: # CONFIG_BOARD_rtl8881a is not set
+00027: # CONFIG_BOARD_rtl89xxC is not set
+00028: # CONFIG_BOARD_rtl89xxD is not set
+00029: # CONFIG_BOARD_rtl89xxE is not set
+00030: CONFIG_LINUX_4.4=y
+00031: # CONFIG_BZBOX_busybox-1.13 is not set
+00032: CONFIG_BZBOX_busybox-1.24.1=y
+00033: # CONFIG_RSDK_rsdk-1.5.5-4181-EB-2.6.30-0.9.30.3-110225 is not set
+00034: CONFIG_RSDK_msdk-6.4.1-mips-EL-4.4-u0.9.33-m32ut-190619=y
+00035: # CONFIG_RSDK_rsdk-1.3.6-4181-EB-2.6.30-0.9.30 is not set
+00036: # CONFIG_RSDK_rsdk-1.3.6-5281-EB-2.6.30-0.9.30 is not set
+00037: # CONFIG_RSDK_rsdk-1.5.5-5281-EB-2.6.30-0.9.30.3-110714 is not set
+00038: 
+00039: #
+00040: # rtl8197F
+00041: #
+00042: # CONFIG_MODEL_RTL8197F_VG_V355I_8814B_8367R_GW is not set
+00043: # CONFIG_MODEL_RTL8197F_VG_V632G-3_8814B_8367R_GW is not set
+00044: # CONFIG_MODEL_RTL8197F_VG_V632G-4_8814C_8367R_GW is not set
+00045: # CONFIG_MODEL_RTL8197F_VG_V612_8812F_GW is not set
+00046: # CONFIG_MODEL_RTL8197F_VG_V672_8812F_8367R_GW is not set
+00047: # CONFIG_MODEL_RTL8197F_VG_SPINAND_V672_8812F_8367R_GW is not set
+00048: # CONFIG_MODEL_RTL8197F_VG_V672_8812F_8367R_DUALSTACK_GW is not set
+00049: # CONFIG_MODEL_RTL8197F_VG_V622G_8812F_8367S_GW is not set
+00050: # CONFIG_MODEL_RTL8197F_VG_8812F_8367R_MP is not set
+00051: # CONFIG_MODEL_RTL8197F_VG_8812F_MP is not set
+00052: # CONFIG_MODEL_RTL8197F_VG_8814B_8367R_MP is not set
+00053: # CONFIG_MODEL_RTL8197F_VG_V632G-4_8814C_8367R_MP is not set
+00054: # CONFIG_MODEL_RTL8197F_8814B_8367R_GW is not set
+00055: # CONFIG_MODEL_RTL8197F_VG_8367R_MP is not set
+00056: # CONFIG_MODEL_RTL8197F_8812AR_GW is not set
+00057: # CONFIG_MODEL_RTL8197F_8812BR_GW is not set
+00058: # CONFIG_MODEL_RTL8197F_8812BR_DUALSTACK_GW is not set
+00059: # CONFIG_MODEL_RTL8197F_8812BR_8367R_GW is not set
+00060: # CONFIG_MODEL_RTL8197F_8812BR_8367R_GW_FF is not set
+00061: # CONFIG_MODEL_RTL8197F_8812F_GW is not set
+00062: # CONFIG_MODEL_RTL8197F_8812F_8367R_GW is not set
+00063: # CONFIG_MODEL_RTL8197F_v672_8812F_8367R_GW is not set
+00064: # CONFIG_MODEL_RTL8197F_NAND is not set
+00065: # CONFIG_MODEL_RTL8197F_NAND_MP is not set
+00066: # CONFIG_MODEL_RTL8197F_MP is not set
+00067: # CONFIG_MODEL_RTL8197F_8812AR_MP is not set
+00068: # CONFIG_MODEL_RTL8197F_8812BR_8367R_MP is not set
+00069: # CONFIG_MODEL_RTL8197F_8812F_8367R_MP is not set
+00070: # CONFIG_MODEL_RTL8197F_8814B_8367R_MP is not set
+00071: # CONFIG_MODEL_RTL8197F_Only_AP is not set
+00072: # CONFIG_MODEL_RTL8197F_8812AR_AP is not set
+00073: # CONFIG_MODEL_RTL8197F_8812BR_8367R_WAC is not set
+00074: # CONFIG_MODEL_RTL8197F_VG_V672_8812F_8367R_GW_Easymesh is not set
+00075: # CONFIG_MODEL_RTL8197F_VG_V672_8812F_8367R_GW_Easymesh_R2 is not set
+00076: # CONFIG_MODEL_RTL8197F_VG_V672_8812F_8367R_GW_RealSon is not set
+00077: # CONFIG_MODEL_RTL8197F_VG_V355I_8814B_8367R_GW_Easymesh is not set
+00078: # CONFIG_MODEL_RTL8197F_VG_V355I_8814B_8367R_GW_RealSon is not set
+00079: # CONFIG_MODEL_RTL8197F_VG_8832AR_8367R_KERN44_GW is not set
+00080: # CONFIG_MODEL_SPINAND_RTL8197F_VG_8832AR_8367R_KERN44_GW is not set
+00081: CONFIG_MODEL_SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW=y
+00082: # CONFIG_MODEL_SPINAND_RTL8197F_VG_8832AR_8367R_KERN44_GW_EASYMESH is not set
+00083: # CONFIG_MODEL_SPINAND_RTL8197F_VG_8832AR_8367R_KERN44_GW_EASYMESH_WFA is not set
+00084: # CONFIG_MODEL_RTL8197F_VG_8832AR_8367R_KERN44_DUALSTACK_GW is not set
+00085: # CONFIG_MODEL_SPINAND_RTL8197F_VG_8832AR_8367R_KERN44_DUALSTACK_GW is not set
+00086: # CONFIG_MODEL_RTL8197F_VG_V672_8812F_8367R_KERN44_GW is not set
+00087: # CONFIG_MODEL_RTL8197F_VG_V672_8812F_8367R_KERN510_GW is not set
+00088: CONFIG_ARCH_CPU_TYPE="mips"
+00089: CONFIG_ARCH_32BIT=y
+00090: CONFIG_ARCH_CPU_MIPS=y
+00091: CONFIG_ARCH_CPU_MIPS24K=y
+00092: # CONFIG_ARCH_CPU_FPU is not set
+00093: # CONFIG_ARCH_CPU_DSP is not set
+00094: # CONFIG_ARCH_CPU_EB is not set
+00095: CONFIG_ARCH_CPU_EL=y
+00096: CONFIG_ARCH_IRQ_CPU=y
+00097: # CONFIG_ARCH_IRQ_GIC is not set
+00098: # CONFIG_ARCH_IRQ_VI is not set
+00099: # CONFIG_ARCH_IRQ_EI is not set
+00100: # CONFIG_ARCH_CPU_SLEEP is not set
+00101: # CONFIG_ARCH_CACHE_SPRAM is not set
+00102: # CONFIG_ARCH_CACHE_L2C is not set
+00103: CONFIG_ARCH_CACHE_WBC=y
+00104: # CONFIG_ARCH_CACHE_IOCU is not set
+00105: CONFIG_ARCH_BUS_USB=y
+00106: CONFIG_ARCH_BUS_PCI=y
+00107: CONFIG_RTL_819X=y
+00108: CONFIG_RTL_8197F=y
+00109: # CONFIG_RTL_8197F_FPGA is not set
+00110: 
+00111: #
+00112: # config components
+00113: #
+00114: # CONFIG_MCONF_LINUX is not set
+00115: # CONFIG_MCONF_USERS is not set
+00116: # CONFIG_MCONF_BZBOX is not set
+00117: # CONFIG_MCONF_LOAD is not set
+00118: # CONFIG_MCONF_SAVE is not set
+00119: CONFIG_LINUXDIR=linux-4.4
+00120: CONFIG_BOARDDIR=boards/rtl8197F
+00121: CONFIG_BZBOXDIR=users/busybox-1.24.1
+00122: CONFIG_RSDKDIR=toolchain/msdk-6.4.1-mips-EL-4.4-u0.9.33-m32ut-190619
+00123: CONFIG_MODEL=SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW
+00124: CONFIG_ROUTER=
+
+===== kernel_switch_config =====
+--- boards/rtl8197F/config.linux-4.4.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW:56-110 ---
+00056: CONFIG_SOC_RTL8197F=y
+00057: CONFIG_ARCH_CPU_TYPE="mips"
+00058: CONFIG_ARCH_32BIT=y
+00059: CONFIG_ARCH_CPU_MIPS=y
+00060: CONFIG_ARCH_CPU_MIPS24K=y
+00061: # CONFIG_ARCH_CPU_FPU is not set
+00062: # CONFIG_ARCH_CPU_DSP is not set
+00063: # CONFIG_ARCH_CPU_EB is not set
+00064: CONFIG_ARCH_CPU_EL=y
+00065: CONFIG_ARCH_IRQ_CPU=y
+00066: # CONFIG_ARCH_IRQ_GIC is not set
+00067: # CONFIG_ARCH_IRQ_VI is not set
+00068: # CONFIG_ARCH_IRQ_EI is not set
+00069: # CONFIG_ARCH_CPU_SLEEP is not set
+00070: # CONFIG_ARCH_CACHE_SPRAM is not set
+00071: # CONFIG_ARCH_CACHE_L2C is not set
+00072: CONFIG_ARCH_CACHE_WBC=y
+00073: # CONFIG_ARCH_CACHE_IOCU is not set
+00074: CONFIG_ARCH_BUS_USB=y
+00075: CONFIG_ARCH_BUS_PCI=y
+00076: CONFIG_RTL_819X=y
+00077: CONFIG_RTL_8197F=y
+00078: # CONFIG_RTL_8197F_FPGA is not set
+00079: CONFIG_ARCH_PLATFORM="Sheipa2"
+00080: 
+00081: #
+00082: # System Configuration
+00083: #
+00084: CONFIG_RTL_8197F_GW=y
+00085: # CONFIG_RTL_8197F_AP is not set
+00086: # CONFIG_RTL_SHRINK_MEMORY_SIZE is not set
+00087: # CONFIG_RTL_KERNEL_USER_SHARE_STRUCTURE is not set
+00088: # CONFIG_RTL_NO_BR_SHORTCUT is not set
+00089: CONFIG_RTL_PCIE_SIMPLE_INIT=y
+00090: CONFIG_RTL_WTDOG=y
+00091: # CONFIG_RTL_USERSPACE_WTDOG is not set
+00092: # CONFIG_RTL_TIMER_ADJUSTMENT is not set
+00093: CONFIG_RTL_WEBPAGES_IN_ROOTFS=y
+00094: CONFIG_RTL_DEF_SETTING_IN_FW=y
+00095: # CONFIG_RTL819X_SPI_FLASH_SHEIPA is not set
+00096: CONFIG_AUTO_PCIE_PHY_SCAN=y
+00097: CONFIG_RTL_8197F_VG=y
+00098: # CONFIG_RTL_8197F_VG_V355I is not set
+00099: # CONFIG_RTL_8197F_VG_V612 is not set
+00100: CONFIG_RTL_8197F_VG_V672=y
+00101: # CONFIG_RTL_8197F_VG_V622G is not set
+00102: # CONFIG_RTL_8197F_V672 is not set
+00103: # CONFIG_PHY_EAT_40MHZ is not set
+00104: # CONFIG_RTL_FLASH_DUAL_IMAGE_ENABLE is not set
+00105: # CONFIG_USB3G_SUPPORT is not set
+00106: # CONFIG_RTL_USB_IP_HOST_SPEEDUP is not set
+00107: # CONFIG_APPLE_MFI_SUPPORT is not set
+00108: # CONFIG_HTTP_FILE_SERVER_SUPPORT is not set
+00109: CONFIG_RTL819X_GPIO=y
+00110: CONFIG_RTL_8197F_VG_GPIO_V672=y
+
+--- boards/rtl8197F/config.linux-4.4.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW:1490-1530 ---
+01490: CONFIG_RTL_HARDWARE_MULTICAST=y
+01491: # CONFIG_RTL_HARDWARE_MULTICAST_CAM is not set
+01492: CONFIG_RTL_HARDWARE_NAT=y
+01493: CONFIG_RTL_83XX_ACL_SUPPORT=y
+01494: CONFIG_RTL_PPPOE_HWACC=y
+01495: # CONFIG_RTL865X_HW_PPTPL2TP is not set
+01496: # CONFIG_RTL_HARDWARE_IPV6_SUPPORT is not set
+01497: CONFIG_RTL_PROC_DEBUG=y
+01498: # CONFIG_RTL_JUMBO_FRAME is not set
+01499: # CONFIG_RTL_ROMEPERF_24K is not set
+01500: # CONFIG_RTL_VLAN_PASSTHROUGH_SUPPORT is not set
+01501: # CONFIG_RTL_UNKOWN_UNICAST_CONTROL is not set
+01502: # CONFIG_RTL_MULTI_LAN_DEV is not set
+01503: CONFIG_RTL_EEE_DISABLED=y
+01504: # CONFIG_RTL_ETH_802DOT1X_SUPPORT is not set
+01505: CONFIG_RT_MULTIPLE_BR_SUPPORT=y
+01506: CONFIG_RTL_MULTICAST_PORT_MAPPING=y
+01507: # CONFIG_RTL_EXCHANGE_PORTMASK is not set
+01508: CONFIG_RTL_DISABLE_ETH_MIPS16=y
+01509: # CONFIG_RTL_ESW_NONE is not set
+01510: # CONFIG_RTL_8211F_SUPPORT is not set
+01511: # CONFIG_RTL_8367R_NEW_SUPPORT is not set
+01512: CONFIG_RTL_8367RB_VC=y
+01513: # CONFIG_RTL_8367S_SUPPORT is not set
+01514: # CONFIG_RTL_8366SC_SUPPORT is not set
+01515: # CONFIG_RTL_8363NB_SUPPORT is not set
+01516: # CONFIG_RTL_8365MB_SUPPORT is not set
+01517: # CONFIG_RTL_8364NB_SUPPORT is not set
+01518: # CONFIG_RTL_8367SB_SUPPORT is not set
+01519: CONFIG_RTL_83XX_SUPPORT=y
+01520: CONFIG_RTL_83XX_API_V1_4=y
+01521: # CONFIG_RTL_MDC_MDIO is not set
+01522: # CONFIG_RTL_MDC_D1_MDIO_D7 is not set
+01523: # CONFIG_RTL_MDC_D5_MDIO_D7 is not set
+01524: CONFIG_RTL_MDC_H0_MDIO_G7=y
+01525: CONFIG_RTW_BRSC=y
+01526: CONFIG_RTW_MEMPOOL=y
+01527: # CONFIG_ISDN is not set
+01528: # CONFIG_NVM is not set
+01529: 
+01530: #
+
+===== bootcode_switch_config =====
+--- bootcode/config.in:350-392 ---
+00350:                                                         " LAN_WAN
+00351: fi
+00352: 
+00353: choice 'External Switch/PHY support ' "NONE  CONFIG_ESW_NONE \
+00354: 							RTL8367RB-VB  CONFIG_SW_8367R \
+00355: 							RTL8367RB-VC/8367RB-VB  CONFIG_SW_8367RB_VC \
+00356: 							RTL8366SC/8364NB/8367S  CONFIG_SW_8366SC \
+00357: 							RTL8363NB/8365MB  CONFIG_SW_8363NB \
+00358: 							RTL8367SB  CONFIG_SW_8367SB \
+00359: 							RTL8211F  CONFIG_8211F_SUPPORT \
+00360: 						 " NONE
+00361: 
+00362: if [ "$CONFIG_SW_8366SC" == "y" ] || [ "$CONFIG_SW_8363NB" == "y" ] || [ "$CONFIG_SW_8367SB" == "y" ] || [ "$CONFIG_SW_8367RB_VC" == "y" ]; then
+00363: 	define_bool  CONFIG_SW_83XX y 
+00364: fi
+00365: 
+00366: if [ "$CONFIG_SW_8367RB_VC" == "y" ]; then
+00367: 	define_bool  CONFIG_RTL_83XX_API_V1_4 y 
+00368: fi
+00369: 
+00370: ## todo for the other Switch chips
+00371: ## if [ "$CONFIG_SW_8367R" == "y" ] || [ "$CONFIG_SW_8366SC" == "y" ] || [ "$CONFIG_SW_8363NB" == "y" ] || [ "$CONFIG_SW_8367SB" == "y" ]; then
+00372: #if [ "$CONFIG_SW_8367R" == "y" ]; then
+00373: #
+00374: #	choice 'External Switch control method (hardware dependent) ' "I2C  CONFIG_RTL_ESW_CTRL_I2C \
+00375: #							MDC_MDIO  CONFIG_RTL_ESW_CTRL_MDC_MDIO \
+00376: #						 " I2C
+00377: #fi
+00378: #
+00379: #if [ "$CONFIG_RTL_ESW_CTRL_MDC_MDIO" = "y" ] && [ "$CONFIG_SW_8367R" == "y" ]; then
+00380: #	int 'External Switch PHY ID (hardware dependent)' CONFIG_RTL_ESW_PHY_ID  29
+00381: #fi
+00382: 
+00383: if [ "$CONFIG_SW_8367R" == "y" ]; then
+00384: 	choice 'Use which RGMII for 8197F (hardware dependent) ' "RGMII_1  CONFIG_RTL_ESW_RG1_FOR_HOST \
+00385: 							RGMII_2  CONFIG_RTL_ESW_RG2_FOR_HOST \
+00386: 						 " RGMII_1
+00387: fi
+00388: 
+00389: if [ "$CONFIG_SW_8367R" == "y" ] || [ "$CONFIG_SW_83XX" == "y" ]; then
+00390: 	choice 'MDC/MDIO gpio pin usage' "Default  CONFIG_RTL_MDC_MDIO \
+00391: 							D1/D7  CONFIG_RTL_MDC_D1_MDIO_D7 \
+00392: 							D5/D7  CONFIG_RTL_MDC_D5_MDIO_D7 \
+
+--- bootcode/def-rtl8197fh_vg_8367rb_vc-spi_nand-config:1-85 ---
+00001: #
+00002: # Automatically generated by make menuconfig: don't edit
+00003: #
+00004: 
+00005: #
+00006: # Target Platform Selection
+00007: #
+00008: # CONFIG_RTL8197F_SOC is not set
+00009: CONFIG_RTL8197F_VG_SOC=y
+00010: CONFIG_RTL_8197F_VG=y
+00011: CONFIG_RTL8197F=y
+00012: CONFIG_RTL_SWITCH_NEW_DESCRIPTOR=y
+00013: RTL8198=y
+00014: CONFIG_RTL8198=y
+00015: # CONFIG_AUTO_DISCRET_DDR_SWITCH is not set
+00016: # CONFIG_DRAM_SIZE is not set
+00017: # CONFIG_SPI_FLASH is not set
+00018: # CONFIG_NONE_FLASH is not set
+00019: CONFIG_NAND_FLASH_BOOTING=y
+00020: CONFIG_NAND_FLASH=y
+00021: CONFIG_SPI_NAND_FLASH=y
+00022: # CONFIG_PARALLEL_NAND_FLASH is not set
+00023: CONFIG_RTK_REMAP_BBT=y
+00024: # CONFIG_RTK_NORMAL_BBT is not set
+00025: CONFIG_MTD_NAND_RTK_DIE_ON_ECC=y
+00026: CONFIG_NAND_SPI_USE_SIO=y
+00027: # CONFIG_NAND_SPI_USE_DIO is not set
+00028: # CONFIG_NAND_SPI_USE_DATA_IOx2 is not set
+00029: # CONFIG_NAND_SPI_USE_QIO is not set
+00030: # CONFIG_NAND_SPI_USE_DATA_IOx4 is not set
+00031: # CONFIG_TFTP_COMMAND is not set
+00032: # CONFIG_IRAM_IMAGE is not set
+00033: CONFIG_BOOT_IMAGE=y
+00034: # CONFIG_SPI_FLASH_NUMBER is not set
+00035: # CONFIG_CONFIG_UPGRADE_ENABLED is not set
+00036: CONFIG_RTL_FLASH_MAPPING_ENABLE=y
+00037: CONFIG_LINUX_IMAGE_OFFSET_START=800000
+00038: CONFIG_LINUX_IMAGE_OFFSET_END=900000
+00039: CONFIG_LINUX_IMAGE_OFFSET_STEP=20000
+00040: CONFIG_ROOT_IMAGE_OFFSET_START=e00000
+00041: CONFIG_ROOT_IMAGE_OFFSET_END=1000000
+00042: CONFIG_ROOT_IMAGE_OFFSET_STEP=20000
+00043: CONFIG_WEBPAGE_IMAGE_OFFSET_START=0x10000
+00044: CONFIG_WEBPAGE_IMAGE_OFFSET_END=0x40000
+00045: CONFIG_WEBPAGE_IMAGE_OFFSET_STEP=0x1000
+00046: # CONFIG_RTL_FLASH_DUAL_IMAGE is not set
+00047: # CONFIG_RTL_FAST_CHECKSUM_ENABLE is not set
+00048: # CONFIG_RTL_ECOS_8M is not set
+00049: CONFIG_GZIP_ENABLE=y
+00050: # CONFIG_LZMA_ENABLE is not set
+00051: # CONFIG_NONO_COMPRESS is not set
+00052: # CONFIG_RTK_BOOTINFO_DUALIMAGE is not set
+00053: # CONFIG_BOOT_FAIL_CHECK is not set
+00054: # CONFIG_DHCP_SERVER is not set
+00055: # CONFIG_HTTP_SERVER is not set
+00056: CONFIG_BOOT_DEBUG_ENABLE=y
+00057: # CONFIG_BOOT_RESET_ENABLE is not set
+00058: # CONFIG_USING_JTAG is not set
+00059: # CONFIG_DECREASE_BOOTSIZE is not set
+00060: # CONFIG_SUPPORT_TFTP_CLIENT is not set
+00061: # CONFIG_I2C_POLLING is not set
+00062: # CONFIG_DRAM_TEST is not set
+00063: # CONFIG_PORT_ISOLATION_SUPPORT is not set
+00064: # CONFIG_ESW_NONE is not set
+00065: # CONFIG_SW_8367R is not set
+00066: CONFIG_SW_8367RB_VC=y
+00067: # CONFIG_SW_8366SC is not set
+00068: # CONFIG_SW_8363NB is not set
+00069: # CONFIG_SW_8367SB is not set
+00070: # CONFIG_8211F_SUPPORT is not set
+00071: CONFIG_SW_83XX=y
+00072: CONFIG_RTL_83XX_API_V1_4=y
+00073: # CONFIG_RTL_MDC_MDIO is not set
+00074: # CONFIG_RTL_MDC_D1_MDIO_D7 is not set
+00075: # CONFIG_RTL_MDC_D5_MDIO_D7 is not set
+00076: CONFIG_RTL_MDC_H0_MDIO_G7=y
+00077: # CONFIG_PARAM_PASSING is not set
+00078: # CONFIG_CRYPTO_DEV_REALTEK is not set
+00079: # CONFIG_FS_JFFS2 is not set
+00080: # CONFIG_RTK_LINUX_SECURE is not set
+00081: # CONFIG_RTK_ROOTFS_SECURE is not set
+00082: # CONFIG_PCIE_INIT is not set
+
+===== boot_switch_init =====
+--- bootcode/boot/rtl8196x/swCore.c:1500-1708 ---
+01500: #define CONFIG_RTL_ESW_PHY_ID				5
+01501: #endif
+01502: 
+01503: #if defined(CONFIG_RTL8197F) && (defined(CONFIG_SW_8367R) || defined(CONFIG_SW_83XX))
+01504: #define GPIO_RESET				26		// GPIO_H2
+01505: #define GPIO_RESET_97FN			9		// GPIO_F1
+01506: 
+01507: typedef enum rtk_enable_e
+01508: {
+01509: 	DISABLED = 0,
+01510: 	ENABLED,
+01511: 	RTK_ENABLE_END
+01512: } rtk_enable_t;
+01513: 
+01514: /* note: initial 819x RGMII first, 83xx RGMII next. */
+01515: int init_97f_8367r(void)
+01516: {
+01517: 	int i, ret = -1, bond_id;
+01518: 	unsigned int reset_pin; // !! if reset_pin is in group ABCD, the following PEFGHCNR need to be changed
+01519: 
+01520: 	bond_id = rtl819x_bond_option();
+01521: 	
+01522: 	if ((bond_id == BSP_BOND_97FN) && (IS_8197F())) {
+01523: 		reset_pin = GPIO_RESET_97FN;
+01524: 		REG32(PIN_MUX_SEL18) = (REG32(PIN_MUX_SEL18) & ~(0xF<<28)) | (2<<28);
+01525: 	}
+01526: 	else {
+01527: 		reset_pin = GPIO_RESET;
+01528: 		// REG_PINMUX_14, BIT_REG_IOCFG_LED_P0
+01529: 		REG32(PIN_MUX_SEL14) = (REG32(PIN_MUX_SEL14) & ~(0xF<<28)) | (2<<28);
+01530: 	}
+01531: 	
+01532: 	REG32(PEFGHCNR) &= ~(1<<reset_pin);
+01533: 	REG32(PEFGHDIR) |= (1<<reset_pin);
+01534: 
+01535: 	/* ### important ### 
+01536: 		when use dedicated mdc/mdio for 8367RB control path,
+01537: 		need to set PITCR.Port0_TypeCfg and PCRP0.ExtPHYID before do RTL83XX_INIT(),
+01538: 		check point: in first line of RTL83XX_INIT(), read reg 0x1202=0x88a8 (correct),
+01539: 			if do not set PITCR and PCRP0 first, read reg 0x1202=0 (incorrect).
+01540: 	 */
+01541: 	// force mode
+01542: 	REG32(PCRP0) = (REG32(PCRP0) & ~((0x1f << ExtPHYID_OFFSET)|AutoNegoSts_MASK)) 
+01543: 			| ((CONFIG_RTL_ESW_PHY_ID << ExtPHYID_OFFSET) | MIIcfg_RXER |  EnablePHYIf | MacSwReset)
+01544: 			| (EnForceMode| ForceLink|ForceSpeed1000M |ForceDuplex);
+01545: 	REG32(PITCR) |= (1<<0);
+01546: 
+01547: 	REG32(MACCR) |= (1<<12);
+01548: 	REG32(P0GMIICR) = (REG32(P0GMIICR) & ~((1<<4)|(7<<0))) | (1<<4) | (5<<0);	
+01549: 	REG32(PIN_MUX_SEL) = 0; // TODO: need to find out
+01550: 	REG32(PIN_MUX_SEL1) = 0; // TODO: need to find out
+01551: 	REG32(P0GMIICR) |=(Conf_done);
+01552: 
+01553: 	for (i=0; i<3; i++) 
+01554: 	{
+01555: 		// for 8367r h/w reset pin	
+01556: 		REG32(PEFGHDAT) &= ~(1<<reset_pin);
+01557: 		__mdelay(1000);
+01558: 		REG32(PEFGHDAT) |= (1<<reset_pin);
+01559: 		__mdelay(1000);
+01560: 		
+01561: #ifdef CONFIG_RTL_ESW_CTRL_MDC_MDIO
+01562: 		REG32(PIN_MUX_SEL2) &= ~(0x00000FF0); // set BIT_REG_IOCFG_P0MDC and BIT_REG_IOCFG_P0MDIO to MII mode
+01563: #else
+01564: 
+01565: 		if (bond_id == BSP_BOND_97FN) {
+01566: 			if (IS_8197F()) {
+01567: 	#ifdef CONFIG_RTL_MDC_H0_MDIO_G7
+01568: 				REG32(PIN_MUX_SEL2) = 0;
+01569: 				// GPIO G7/H0
+01570: 				REG32(PIN_MUX_SEL13) = (REG32(PIN_MUX_SEL13) & ~(0x0FF00000)) | 0x03300000;
+01571: 				REG32(PEFGHCNR) &= ~(0x01800000);
+01572: 				REG32(PEFGHDIR) |= (0x01800000);
+01573: 
+01574: 				// MDC: H0, MDIO: G7
+01575: 				smi_init_83xx(GPIO_PORT_H, GPIO_PORT_G, 0, 7);
+01576: 	#else
+01577: 				// set to GPIO mode
+01578: 				// [7:4]    BIT_REG_IOCFG_P0MDIO, 0110:GPIO
+01579: 				REG32(PIN_MUX_SEL2) = 0x60; // TODO: need to find out
+01580: 				REG32(PABCDCNR) &= ~(0x00080000);    //set GPIO pin C3
+01581: 				REG32(PABCDDIR) |= (0x00080000);    //output pin
+01582: 
+01583: 				// [31:28]    BIT_REG_IOCFG_P0MDC, 0011:GPIO        
+01584: 				REG32(PIN_MUX_SEL13) = 0x30000000; // TODO: need to find out
+01585: 				REG32(PEFGHCNR) &= ~(0x00400000);    //set GPIO pin G6
+01586: 				REG32(PEFGHDIR) |= (0x00400000);    //output pin
+01587: 
+01588: 				// MDC: G6, MDIO: C3
+01589: 				smi_init_83xx(GPIO_PORT_G, GPIO_PORT_C, 6, 3);
+01590: 	#endif
+01591: 			}
+01592: 			else { // 8197FH-VG
+01593: 	#ifdef CONFIG_RTL_MDC_H0_MDIO_G7
+01594: 				REG32(PIN_MUX_SEL2) = 0;
+01595: 				// GPIO G7/H0
+01596: 				REG32(PIN_MUX_SEL13) = (REG32(PIN_MUX_SEL13) & ~(0x0FF00000)) | 0x03300000;
+01597: 				REG32(PEFGHCNR) &= ~(0x01800000);
+01598: 				REG32(PEFGHDIR) |= (0x01800000);
+01599: 
+01600: 				// MDC: H0, MDIO: G7
+01601: 				smi_init_83xx(GPIO_PORT_H, GPIO_PORT_G, 0, 7);
+01602: 	#else
+01603: 				// GPIO C3
+01604: 				REG32(PIN_MUX_SEL2) = 0x60;
+01605: 				REG32(PABCDCNR) &= ~(0x00080000);
+01606: 				REG32(PABCDDIR) |= (0x00080000);
+01607: 
+01608: 				// GPIO H0
+01609: 				REG32(PIN_MUX_SEL13) = (REG32(PIN_MUX_SEL13) & ~(0x00F00000)) | 0x00300000;
+01610: 				REG32(PEFGHCNR) &= ~(0x01000000);
+01611: 				REG32(PEFGHDIR) |= (0x01000000);
+01612: 			
+01613: 				// MDC: H0, MDIO: C3
+01614: 				smi_init_83xx(GPIO_PORT_H, GPIO_PORT_C, 0, 3);	
+01615: 	#endif	
+01616: 			}
+01617: 		} else {
+01618: 
+01619: 	#ifdef CONFIG_RTL_MDC_D1_MDIO_D7
+01620: 			// set to GPIO mode
+01621: 			// GPIO_D1: 0xb800083c [31:28]	BIT_REG_IOCFG_MMC_D0, 0101:GPIO
+01622: 			// GPIO_D7: 0xb800083c [7:4]	BIT_REG_IOCFG_MMC_D6, 0111:GPIO
+01623: 			REG32(PIN_MUX_SEL15) = (REG32(PIN_MUX_SEL15) & ~0xF00000F0) | 0x50000070;
+01624: 			REG32(PIN_MUX_SEL2) &= ~0x0FFFF000;
+01625: 			REG32(PABCDCNR) &= ~(0x82000000);	//set GPIO pin, D1 and D7
+01626: 			REG32(PABCDDIR) |= (0x82000000);	//output pin
+01627: 
+01628:             // MDC: D1, MDIO: D7
+01629: 			smi_init(GPIO_PORT_D, 1, 7);					
+01630: 	#elif defined(CONFIG_RTL_MDC_D5_MDIO_D7)
+01631:             // set to GPIO mode
+01632:             // GPIO_D5: 0xb800083c [15:12]  BIT_REG_IOCFG_MMC_D4, 0111:GPIO
+01633:             // GPIO_D7: 0xb800083c [7:4]    BIT_REG_IOCFG_MMC_D6, 0111:GPIO
+01634:             REG32(PIN_MUX_SEL15) = (REG32(PIN_MUX_SEL15) & ~0x0000F0F0) | 0x00007070;
+01635:             REG32(PIN_MUX_SEL2) &= ~0x0FFFF000;
+01636:             REG32(PABCDCNR) &= ~(0xA0000000);   //set GPIO pin, D5 and D7
+01637:             REG32(PABCDDIR) |= (0xA0000000);    //output pin
+01638: 
+01639:              // MDC: D5, MDIO: D7
+01640:              smi_init(GPIO_PORT_D, 5, 7);
+01641: 	#else
+01642: 			// set to GPIO mode
+01643: 			// [11:8]	BIT_REG_IOCFG_P0MDC, 0110:GPIO
+01644: 			// [7:4]	BIT_REG_IOCFG_P0MDIO, 0110:GPIO
+01645: 			REG32(PIN_MUX_SEL2) = 0x660; // TODO: need to find out
+01646: 			REG32(PABCDCNR) &= ~(0x000C0000);	//set GPIO pin, C2 and C3
+01647: 			REG32(PABCDDIR) |= (0x000C0000);	//output pin
+01648: 
+01649: 			// MDC: C2, MDIO: C3
+01650: 			smi_init(GPIO_PORT_C, 2, 3);				
+01651: 	#endif
+01652: 		}
+01653: 
+01654: 		__mdelay(1000);
+01655: #endif		
+01656: 		ret = RTL83XX_INIT();
+01657: 		if (ret == 0) 
+01658: 			break;
+01659: 	}
+01660: 	
+01661: #if defined(CONFIG_SW_83XX)
+01662: 	{ //enable PHY
+01663: 	extern int rtk_port_phyEnableAll_set(rtk_enable_t enable);
+01664: 	rtk_port_phyEnableAll_set(ENABLED);
+01665: 	}
+01666: #endif
+01667: 
+01668: 	return 0;
+01669: }
+01670: 
+01671: #elif 0 //defined(CONFIG_RTL8197F) && defined (CONFIG_SW_83XX)
+01672: 
+01673: 
+01674: #define GPIO_RESET				26		// GPIO_H2
+01675: #define GPIO_RESET_97FN				9		// GPIO_F1
+01676: 
+01677: typedef enum rtk_enable_e
+01678: {
+01679: 	DISABLED = 0,
+01680: 	ENABLED,
+01681: 	RTK_ENABLE_END
+01682: } rtk_enable_t;
+01683: 
+01684: int init_97f_83xx(void)
+01685: {
+01686: 	int i, ret = -1, bond_id;
+01687: 
+01688: 	bond_id = rtl819x_bond_option();
+01689: 	
+01690: 	// Reset 8367RB: REG_PINMUX_14, BIT_REG_IOCFG_LED_P0
+01691: 	REG32(PIN_MUX_SEL14) = (REG32(PIN_MUX_SEL14) & ~(0xF<<28)) | (2<<28);
+01692: 
+01693: 	/* ### important ### 
+01694: 		when use dedicated mdc/mdio for 8367RB control path,
+01695: 		need to set PITCR.Port0_TypeCfg and PCRP0.ExtPHYID before do RTL8367R_init(),
+01696: 		check point: in first line of RTL8367R_init(), read reg 0x1202=0x88a8 (correct),
+01697: 			if do not set PITCR and PCRP0 first, read reg 0x1202=0 (incorrect).
+01698: 	 */
+01699: 	// force mode
+01700: 	REG32(PCRP0) = (REG32(PCRP0) & ~((0x1f << ExtPHYID_OFFSET)|AutoNegoSts_MASK)) 
+01701: 			| ((CONFIG_RTL_ESW_PHY_ID << ExtPHYID_OFFSET) | MIIcfg_RXER |  EnablePHYIf | MacSwReset)
+01702: 			| (EnForceMode| ForceLink|ForceSpeed1000M |ForceDuplex);
+01703: 	REG32(PITCR) |= (1<<0);
+01704: 	
+01705: 	for (i=0; i<3; i++) 
+01706: 	{
+01707: 		if (bond_id == BSP_BOND_97FN) {
+01708: 			REG32(PEFGHCNR) &= ~(1<<GPIO_RESET_97FN);
+
+--- bootcode/boot/rtl8367r/rtk_api.c:3490-3575 ---
+03490:     if ((retVal = rtl8367b_getAsicPortIsolationPermittedPortmask(port, &pPortmask->bits[0])) != RT_ERR_OK)
+03491:         return retVal;
+03492: 
+03493:     return RT_ERR_OK;
+03494: }
+03495: #endif
+03496: 
+03497: #ifdef CONFIG_RTL_ESW_RG2_FOR_HOST
+03498: #define EXT_PORT_FOR_HOST			EXT_PORT_2
+03499: #define EXT_MAC_FOR_HOST			RTK_EXT_2_MAC
+03500: #else
+03501: #define EXT_PORT_FOR_HOST			EXT_PORT_1
+03502: #define EXT_MAC_FOR_HOST			RTK_EXT_1_MAC
+03503: #endif
+03504: 
+03505: int RTL8367R_init(void)
+03506: {
+03507:     rtk_portmask_t portmask;
+03508:     unsigned int ret, regData;
+03509:  
+03510:     /* Set external interface 0 to RGMII with Force mode, 1000M, Full-duple, enable TX&RX pause*/
+03511:     rtk_port_mac_ability_t mac_cfg;
+03512:     rtk_mode_ext_t mode ;
+03513:  
+03514:     /* Initial Chip */
+03515:     ret = rtk_switch_init();
+03516: 
+03517:     /* Enable LED Group 0&1 from P0 to P4 */
+03518:     portmask.bits[0]=0x1F;
+03519:     rtk_led_enable_set(LED_GROUP_0, portmask);
+03520:     rtk_led_enable_set(LED_GROUP_1, portmask);
+03521:  
+03522:     /* note: rtk_port_rgmiiDelayExt_set should be called before rtk_port_macForceLinkExt_set
+03523:              to avoid the rxc glitch */
+03524:     /* Set TX delay to 0 and RX delay to 2 */
+03525:     rtk_port_rgmiiDelayExt_set(EXT_PORT_FOR_HOST, 0, 2);
+03526:  
+03527:     mode = MODE_EXT_RGMII ;
+03528:     mac_cfg.forcemode = MAC_FORCE;
+03529:     mac_cfg.speed = SPD_1000M;
+03530:     mac_cfg.duplex = FULL_DUPLEX;
+03531:     mac_cfg.link = PORT_LINKUP;
+03532:     mac_cfg.nway = DISABLED;
+03533:     mac_cfg.txpause = ENABLED;
+03534:     mac_cfg.rxpause = ENABLED;
+03535:     rtk_port_macForceLinkExt_set(EXT_PORT_FOR_HOST,mode,&mac_cfg);
+03536:  
+03537:     /* set port 5 as CPU port */
+03538:     rtk_cpu_enable_set(ENABLE);
+03539:     rtk_cpu_tagPort_set(EXT_MAC_FOR_HOST, CPU_INSERT_TO_NONE);
+03540: 
+03541:     rtl8367b_setAsicReg(RTL8367B_REG_UNDA_FLOODING_PMSK, 0xff);
+03542:     rtl8367b_setAsicReg(RTL8367B_REG_UNMCAST_FLOADING_PMSK, 0xff);
+03543:     rtl8367b_setAsicReg(RTL8367B_REG_BCAST_FLOADING_PMSK, 0xff);
+03544: 
+03545: #if defined(CONFIG_SW_8367R)
+03546:     {
+03547: 	    rtk_portmask_t pm;
+03548: 
+03549: 	    pm.bits[0] = (0xff & ~(1<<4));
+03550: 	    rtk_port_isolation_set(0, pm);
+03551: 	    rtk_port_isolation_set(1, pm);
+03552: 	    rtk_port_isolation_set(2, pm);
+03553: 	    rtk_port_isolation_set(3, pm);
+03554: 	    pm.bits[0] = 0xf0;
+03555: 	    rtk_port_isolation_set(4, pm);
+03556:     }
+03557: #endif
+03558: 
+03559: 	rtk_switch_maxPktLen_set(MAXPKTLEN_16000B);
+03560: 	rtl8367b_setAsicReg(0x1B03, 0x0936);
+03561: 
+03562:     return ret; 
+03563: }
+03564: 
+03565: int init_rtl8367r(void)
+03566: {	
+03567: 	int i, ret = 0;
+03568: 	
+03569: #if defined(CONFIG_SW_8367R)&&defined(CONFIG_LAN_WAN_ISOLATION)
+03570: 	#define REG_IOCFG_GPIO		0x00000018
+03571: 	
+03572: 	/* define GPIO port */
+03573: 	enum GPIO_PORT
+03574: 	{
+03575: 	GPIO_PORT_A = 0,
+
+===== driver_makefiles =====
+--- rtknet/drivers/net/rtl819x/rtl865x/Makefile:1-95 ---
+00001: #
+00002: # Makefile for the Tulip ethernet driver
+00003: #
+00004: # Note! Dependencies are done automagically by 'make dep', which also
+00005: # removes any old dependencies. DON'T put your own dependencies here
+00006: # unless it's something special (ie not a .c file).
+00007: #
+00008: # Note 2! The CFLAGS definitions are now in the main makefile...
+00009: 
+00010: 
+00011: obj-y := ../common/built-in.o
+00012: subdir-y := ../common
+00013: 
+00014: obj-y += ../AsicDriver/built-in.o
+00015: subdir-y += ../AsicDriver
+00016: 
+00017: ifdef CONFIG_RTL_LAYERED_DRIVER
+00018: 	ifdef CONFIG_RTL_LAYERED_DRIVER_L2
+00019:                obj-y += ../l2Driver/built-in.o
+00020:                subdir-y += ../l2Driver
+00021: 	else
+00022: 		ifdef CONFIG_RTL_STP
+00023: 			obj-y += ../l2Driver/built-in.o
+00024: 			subdir-y += ../l2Driver
+00025: 		endif
+00026: 	endif
+00027: else
+00028: 	obj-y += ../l2Driver/built-in.o
+00029: 	subdir-y += ../l2Driver
+00030: endif
+00031: 
+00032: ifdef CONFIG_RTL_LAYERED_DRIVER
+00033: 	ifdef CONFIG_RTL_LAYERED_DRIVER_L3
+00034: 		obj-y += ../l3Driver/built-in.o
+00035: 		subdir-y += ../l3Driver
+00036: 	else
+00037: 		ifdef CONFIG_RTL_HARDWARE_MULTICAST
+00038: 			obj-y += ../l3Driver/built-in.o
+00039: 			subdir-y += ../l3Driver
+00040: 		endif
+00041: 	endif
+00042: else
+00043: 	obj-y += ../l3Driver/built-in.o
+00044: 	subdir-y += ../l3Driver
+00045: endif
+00046: 
+00047: ifdef CONFIG_RTL_LAYERED_DRIVER
+00048: 	ifdef CONFIG_RTL_LAYERED_DRIVER_L4
+00049: 		obj-y += ../l4Driver/built-in.o
+00050: 		subdir-y += ../l4Driver
+00051: 	endif
+00052: else
+00053: 	obj-y += ../l4Driver/built-in.o
+00054: 	subdir-y += ../l4Driver
+00055: endif
+00056: 
+00057: ifdef CONFIG_RTL_IGMP_SNOOPING
+00058: obj-y += ../igmpsnooping/built-in.o
+00059: subdir-y += ../igmpsnooping
+00060: endif
+00061: 
+00062: ifdef CONFIG_8198_PORT5_RGMII
+00063: 	obj-y += ../RTL8370_RTL8367_API/built-in.o
+00064: 	subdir-y += ../RTL8370_RTL8367_API
+00065: endif
+00066: 
+00067: ifdef CONFIG_RTL_8370_SUPPORT
+00068: 	obj-y += ../RTL8370_RTL8367_API/built-in.o
+00069: 	subdir-y += ../RTL8370_RTL8367_API
+00070: endif
+00071: 
+00072: ifdef CONFIG_RTL_83XX_API_V1_4
+00073: 	obj-y += ../rtl83xx_v1dot4/built-in.o
+00074: 	subdir-y += ../rtl83xx_v1dot4
+00075: else
+00076: 	ifdef CONFIG_RTL_8367R_SUPPORT
+00077: 		obj-y += ../rtl8367r/built-in.o
+00078: 		subdir-y += ../rtl8367r
+00079: 	endif
+00080: 
+00081: 	ifdef CONFIG_RTL_83XX_SUPPORT
+00082: 		obj-y += ../rtl83xx/built-in.o
+00083: 		subdir-y += ../rtl83xx
+00084: 	endif
+00085: endif
+00086: 
+00087: ifdef CONFIG_RTL_8325D_SUPPORT
+00088: 	obj-y += ../rtl8325d/built-in.o
+00089: 	subdir-y += ../rtl8325d
+00090: endif
+00091: 
+00092: ifdef CONFIG_RTL_8198C_8367RB
+00093: 	obj-y += ../rtl8367r/built-in.o
+00094: 	subdir-y += ../rtl8367r
+00095: endif
+
+--- rtknet/drivers/net/rtl819x/common/Makefile:1-60 ---
+00001: #
+00002: # Makefile for the Tulip ethernet driver
+00003: #
+00004: # Note! Dependencies are done automagically by 'make dep', which also
+00005: # removes any old dependencies. DON'T put your own dependencies here
+00006: # unless it's something special (ie not a .c file).
+00007: #
+00008: # Note 2! The CFLAGS definitions are now in the main makefile...
+00009: 
+00010: #Add mips16 Support
+00011: 
+00012: DIR_RTLASIC = $(DIR_LINUX)/drivers/net/rtl819x/
+00013: 
+00014: ifeq ($(CONFIG_RTK_IPTABLES_FAST_PATH),m)
+00015: EXTRA_CFLAGS += -DCONFIG_FAST_PATH_MODULE
+00016: endif
+00017: ifdef CONFIG_RTL865X_KERNEL_MIPS16_LAYERDRIVER
+00018: 	CFLAGS_rtl_utils.o		= -mips16
+00019: 	CFLAGS_rtl865xC_tblDrvPatch.o	= -mips16
+00020: 	CFLAGS_rtl865x_vlan.o		= -mips16
+00021: 	CFLAGS_rtl865x_netif.o		= -mips16
+00022: 	CFLAGS_rtl865x_eventMgr.o	= -mips16
+00023: endif
+00024: 	ifeq ($(CONFIG_RTL_LAYERED_ASIC_DRIVER),y)
+00025: 		obj-y := rtl865x_vlan.o rtl865x_netif.o rtl865x_eventMgr.o	
+00026: 	else
+00027: 		obj-y := rtl865xC_tblDrvPatch.o rtl865x_vlan.o rtl865x_netif.o rtl865x_eventMgr.o
+00028: 	endif
+00029: 
+00030: ifeq ($(CONFIG_RTL_PROC_DEBUG), y)
+00031: 	obj-y += rtl_utils.o
+00032: endif
+00033: 
+00034: ifeq ($(CONFIG_RTL_819XD), y)
+00035: 	obj-y += smi.o gpio.o
+00036: endif
+00037: 
+00038: ifeq ($(CONFIG_RTL_8197F), y)
+00039: 	ifeq (y, $(filter y, $(CONFIG_RTL_8367R_SUPPORT) $(CONFIG_RTL_83XX_SUPPORT)))
+00040: 		obj-y += smi.o gpio.o
+00041: 	endif
+00042: endif
+00043: 
+00044: ifeq ($(CONFIG_RTL_8198C_8367RB), y)
+00045: 	obj-y += smi.o gpio.o
+00046: endif
+00047: 
+00048: EXTRA_CFLAGS += -O1 -DRTL_TBLDRV -D__linux__  -mno-memcpy -DRTL865X_OVER_KERNEL -DRTL865X_OVER_LINUX -Werror
+00049: EXTRA_CFLAGS += -I$(DIR_RTLASIC)
+00050: 
+00051: ifeq ($(CONFIG_RTL865X_MODULE_ROMEDRV),y)
+00052: 	EXTRA_CFLAGS += -D__KERNEL__ 
+00053: 	EXTRA_CFLAGS += -G 0
+00054: 	EXTRA_CFLAGS += -DMODULE
+00055: 	EXTRA_CFLAGS += -mlong-calls
+00056: 	EXTRA_CFLAGS += -DEXPORT_SYMTAB 
+00057: 	EXTRA_CFLAGS += -DCONFIG_RTL865X_MODULE_INTERNAL
+00058: endif
+00059: 
+00060: EXTRA_AFLAGS += $(EXTRA_CFLAGS)
+
+--- rtknet/drivers/net/rtl819x/rtl83xx_v1dot4/Makefile:1-145 ---
+00001: #
+00002: # Makefile for the Tulip ethernet driver
+00003: #
+00004: # Note! Dependencies are done automagically by 'make dep', which also
+00005: # removes any old dependencies. DON'T put your own dependencies here
+00006: # unless it's something special (ie not a .c file).
+00007: #
+00008: # Note 2! The CFLAGS definitions are now in the main makefile...
+00009: #Add mips16 Support
+00010: 
+00011: DIR_RTLASIC = $(DIR_LINUX)/drivers/net/rtl819x
+00012: DIR_83XX = $(DIR_RTLASIC)/rtl83xx_v1dot4
+00013: 
+00014: # customer may need to support 8367d only for shrinking code size
+00015: #   please MARK "RTL8367C_SUPPORT = y" for supporting 8367d only
+00016: RTL8367C_SUPPORT = y
+00017: 
+00018: obj-y := \
+00019:     rtk_api.o \
+00020:     chip.o \
+00021:     cpu.o \
+00022:     l2.o \
+00023:     led.o \
+00024:     port.o \
+00025:     rtk_switch.o \
+00026:     acl.o \
+00027:     dot1x.o \
+00028:     eee.o \
+00029:     i2c.o \
+00030:     igmp.o \
+00031:     interrupt.o \
+00032:     leaky.o \
+00033:     mirror.o \
+00034:     oam.o \
+00035:     ptp.o \
+00036:     qos.o \
+00037:     rate.o \
+00038:     rldp.o \
+00039:     stat.o \
+00040:     storm.o \
+00041:     svlan.o \
+00042:     trap.o \
+00043:     trunk.o \
+00044:     vlan.o \
+00045:     dal/dal_mgmt.o \
+00046:     dal/rtl8367c/rtl8367c_asicdrv.o \
+00047:     dal/rtl8367c/rtl8367c_asicdrv_lut.o \
+00048:     dal/rtl8367c/rtl8367c_asicdrv_phy.o \
+00049:     dal/rtl8367d/rtl8367d_asicdrv.o \
+00050:     dal/rtl8367d/dal_rtl8367d_cpu.o \
+00051:     dal/rtl8367d/dal_rtl8367d_l2.o \
+00052:     dal/rtl8367d/dal_rtl8367d_led.o \
+00053:     dal/rtl8367d/dal_rtl8367d_mapper.o \
+00054:     dal/rtl8367d/dal_rtl8367d_port.o \
+00055:     dal/rtl8367d/dal_rtl8367d_switch.o \
+00056:     dal/rtl8367d/dal_rtl8367d_acl.o \
+00057:     dal/rtl8367d/dal_rtl8367d_dot1x.o \
+00058:     dal/rtl8367d/dal_rtl8367d_eee.o \
+00059:     dal/rtl8367d/dal_rtl8367d_igmp.o \
+00060:     dal/rtl8367d/dal_rtl8367d_interrupt.o \
+00061:     dal/rtl8367d/dal_rtl8367d_leaky.o \
+00062:     dal/rtl8367d/dal_rtl8367d_mirror.o \
+00063:     dal/rtl8367d/dal_rtl8367d_qos.o \
+00064:     dal/rtl8367d/dal_rtl8367d_rate.o \
+00065:     dal/rtl8367d/dal_rtl8367d_rldp.o \
+00066:     dal/rtl8367d/dal_rtl8367d_stat.o \
+00067:     dal/rtl8367d/dal_rtl8367d_storm.o \
+00068:     dal/rtl8367d/dal_rtl8367d_svlan.o \
+00069:     dal/rtl8367d/dal_rtl8367d_trap.o \
+00070:     dal/rtl8367d/dal_rtl8367d_trunk.o \
+00071:     dal/rtl8367d/dal_rtl8367d_vlan.o
+00072: 
+00073: obj-$(RTL8367C_SUPPORT) += \
+00074:     dal/rtl8367c/dal_rtl8367c_cpu.o \
+00075:     dal/rtl8367c/dal_rtl8367c_l2.o \
+00076:     dal/rtl8367c/dal_rtl8367c_led.o \
+00077:     dal/rtl8367c/dal_rtl8367c_mapper.o \
+00078:     dal/rtl8367c/dal_rtl8367c_port.o \
+00079:     dal/rtl8367c/dal_rtl8367c_switch.o \
+00080:     dal/rtl8367c/dal_rtl8367c_acl.o \
+00081:     dal/rtl8367c/dal_rtl8367c_dot1x.o \
+00082:     dal/rtl8367c/dal_rtl8367c_eee.o \
+00083:     dal/rtl8367c/dal_rtl8367c_i2c.o \
+00084:     dal/rtl8367c/dal_rtl8367c_igmp.o \
+00085:     dal/rtl8367c/dal_rtl8367c_interrupt.o \
+00086:     dal/rtl8367c/dal_rtl8367c_leaky.o \
+00087:     dal/rtl8367c/dal_rtl8367c_mirror.o \
+00088:     dal/rtl8367c/dal_rtl8367c_oam.o \
+00089:     dal/rtl8367c/dal_rtl8367c_ptp.o \
+00090:     dal/rtl8367c/dal_rtl8367c_qos.o \
+00091:     dal/rtl8367c/dal_rtl8367c_rate.o \
+00092:     dal/rtl8367c/dal_rtl8367c_rldp.o \
+00093:     dal/rtl8367c/dal_rtl8367c_stat.o \
+00094:     dal/rtl8367c/dal_rtl8367c_storm.o \
+00095:     dal/rtl8367c/dal_rtl8367c_svlan.o \
+00096:     dal/rtl8367c/dal_rtl8367c_trap.o \
+00097:     dal/rtl8367c/dal_rtl8367c_trunk.o \
+00098:     dal/rtl8367c/dal_rtl8367c_vlan.o \
+00099:     dal/rtl8367c/rtl8367c_asicdrv_cputag.o \
+00100:     dal/rtl8367c/rtl8367c_asicdrv_inbwctrl.o \
+00101:     dal/rtl8367c/rtl8367c_asicdrv_led.o \
+00102:     dal/rtl8367c/rtl8367c_asicdrv_mirror.o \
+00103:     dal/rtl8367c/rtl8367c_asicdrv_misc.o \
+00104:     dal/rtl8367c/rtl8367c_asicdrv_port.o \
+00105:     dal/rtl8367c/rtl8367c_asicdrv_rma.o \
+00106:     dal/rtl8367c/rtl8367c_asicdrv_scheduling.o \
+00107:     dal/rtl8367c/rtl8367c_asicdrv_portIsolation.o \
+00108:     dal/rtl8367c/rtl8367c_asicdrv_acl.o \
+00109:     dal/rtl8367c/rtl8367c_asicdrv_dot1x.o \
+00110:     dal/rtl8367c/rtl8367c_asicdrv_eav.o \
+00111:     dal/rtl8367c/rtl8367c_asicdrv_eee.o \
+00112:     dal/rtl8367c/rtl8367c_asicdrv_fc.o \
+00113:     dal/rtl8367c/rtl8367c_asicdrv_green.o \
+00114:     dal/rtl8367c/rtl8367c_asicdrv_hsb.o \
+00115:     dal/rtl8367c/rtl8367c_asicdrv_i2c.o \
+00116:     dal/rtl8367c/rtl8367c_asicdrv_igmp.o \
+00117:     dal/rtl8367c/rtl8367c_asicdrv_interrupt.o \
+00118:     dal/rtl8367c/rtl8367c_asicdrv_meter.o \
+00119:     dal/rtl8367c/rtl8367c_asicdrv_mib.o \
+00120:     dal/rtl8367c/rtl8367c_asicdrv_oam.o \
+00121:     dal/rtl8367c/rtl8367c_asicdrv_qos.o \
+00122:     dal/rtl8367c/rtl8367c_asicdrv_rldp.o \
+00123:     dal/rtl8367c/rtl8367c_asicdrv_storm.o \
+00124:     dal/rtl8367c/rtl8367c_asicdrv_svlan.o \
+00125:     dal/rtl8367c/rtl8367c_asicdrv_trunking.o \
+00126:     dal/rtl8367c/rtl8367c_asicdrv_unknownMulticast.o \
+00127:     dal/rtl8367c/rtl8367c_asicdrv_vlan.o
+00128: 
+00129: #EXTRA_CFLAGS += -O1 -DRTL_TBLDRV -D__linux__  -mno-memcpy -DRTL865X_OVER_KERNEL -DRTL865X_OVER_LINUX -Werror
+00130: EXTRA_CFLAGS += -O1 -DRTL_TBLDRV -D__linux__  -mno-memcpy -DRTL865X_OVER_KERNEL -DRTL865X_OVER_LINUX -Wno-implicit
+00131: EXTRA_CFLAGS += -I$(DIR_83XX) -I$(DIR_83XX)/dal/rtl8367c -I$(DIR_83XX)/dal/rtl8367d
+00132: 
+00133: ifeq ($(RTL8367C_SUPPORT),y)
+00134: else
+00135: EXTRA_CFLAGS += -DCONFIG_DAL_RTL8367D
+00136: endif
+00137: 
+00138: EXTRA_AFLAGS += $(EXTRA_CFLAGS)
+00139: 
+
+--- rtknet/drivers/net/rtl819x/rtl8367r/Makefile:1-70 ---
+00001: #
+00002: # Makefile for the Tulip ethernet driver
+00003: #
+00004: # Note! Dependencies are done automagically by 'make dep', which also
+00005: # removes any old dependencies. DON'T put your own dependencies here
+00006: # unless it's something special (ie not a .c file).
+00007: #
+00008: # Note 2! The CFLAGS definitions are now in the main makefile...
+00009: #Add mips16 Support
+00010: 
+00011: DIR_RTLASIC = $(DIR_LINUX)/drivers/net/rtl819x/
+00012: 
+00013: obj-y := \
+00014:     rtk_api.o \
+00015:     rtl8367b_asicdrv_acl.o \
+00016:     rtl8367b_asicdrv.o \
+00017:     rtl8367b_asicdrv_cputag.o \
+00018:     rtl8367b_asicdrv_dot1x.o \
+00019:     rtl8367b_asicdrv_eav.o \
+00020:     rtl8367b_asicdrv_eee.o \
+00021:     rtl8367b_asicdrv_fc.o \
+00022:     rtl8367b_asicdrv_green.o \
+00023:     rtl8367b_asicdrv_hsb.o \
+00024:     rtl8367b_asicdrv_igmp.o \
+00025:     rtl8367b_asicdrv_inbwctrl.o \
+00026:     rtl8367b_asicdrv_interrupt.o \
+00027:     rtl8367b_asicdrv_led.o \
+00028:     rtl8367b_asicdrv_lut.o \
+00029:     rtl8367b_asicdrv_meter.o \
+00030:     rtl8367b_asicdrv_mib.o \
+00031:     rtl8367b_asicdrv_mirror.o \
+00032:     rtl8367b_asicdrv_misc.o \
+00033:     rtl8367b_asicdrv_phy.o \
+00034:     rtl8367b_asicdrv_port.o \
+00035:     rtl8367b_asicdrv_portIsolation.o \
+00036:     rtl8367b_asicdrv_qos.o \
+00037:     rtl8367b_asicdrv_rma.o \
+00038:     rtl8367b_asicdrv_scheduling.o \
+00039:     rtl8367b_asicdrv_storm.o \
+00040:     rtl8367b_asicdrv_svlan.o \
+00041:     rtl8367b_asicdrv_trunking.o \
+00042:     rtl8367b_asicdrv_unknownMulticast.o \
+00043:     rtl8367b_asicdrv_vlan.o
+00044: 
+00045: #EXTRA_CFLAGS += -O1 -DRTL_TBLDRV -D__linux__  -mno-memcpy -DRTL865X_OVER_KERNEL -DRTL865X_OVER_LINUX -Werror
+00046: EXTRA_CFLAGS += -O1 -DRTL_TBLDRV -D__linux__  -mno-memcpy -DRTL865X_OVER_KERNEL -DRTL865X_OVER_LINUX -Wno-implicit
+00047: EXTRA_CFLAGS += -I$(DIR_RTLASIC)/rtl8367r
+00048: 
+00049: EXTRA_AFLAGS += $(EXTRA_CFLAGS)
+
+===== runtime_rcS =====
+--- boards/rtl8197F/etc.default/init.d/rcS_GW:1-130 ---
+00001: #!/bin/sh
+00002: 
+00003: ifconfig lo 127.0.0.1
+00004: 
+00005: CINIT=1
+00006: 
+00007: hostname rlx-linux
+00008: 
+00009: mount -t proc proc /proc
+00010: mount -t ramfs ramfs /var
+00011: if [ -d "/hw_setting" ];then
+00012:     mount -t yaffs2 -o tags-ecc-off -o inband-tags /dev/mtdblock1 /hw_setting
+00013: fi
+00014: 
+00015: mkdir /var/tmp
+00016: mkdir /var/web
+00017: mkdir /var/log
+00018: mkdir /var/run
+00019: mkdir /var/lock
+00020: mkdir /var/system
+00021: mkdir /var/dnrd
+00022: mkdir /var/avahi
+00023: mkdir /var/dbus-1
+00024: mkdir /var/run/dbus
+00025: mkdir /var/lib
+00026: mkdir /var/lib/misc
+00027: mkdir /var/home
+00028: mkdir /var/root
+00029: mkdir /var/tmp/net
+00030: ###for tr069
+00031: mkdir /var/cwmp_default
+00032: mkdir /var/cwmp_config
+00033: 
+00034: if [ ! -f /var/cwmp_default/DefaultCwmpNotify.txt ]; then
+00035: 	cp -p /etc/DefaultCwmpNotify.txt /var/cwmp_default/DefaultCwmpNotify.txt 2>/dev/null
+00036: fi
+00037: 
+00038: ##For miniigd
+00039: mkdir /var/linuxigd
+00040: cp /etc/tmp/pics* /var/linuxigd 2>/dev/null
+00041: 
+00042: ##For pptp
+00043: mkdir /var/ppp
+00044: mkdir /var/ppp/peers
+00045: 
+00046: #smbd
+00047: mkdir /var/config
+00048: mkdir /var/private
+00049: mkdir /var/tmp/usb
+00050: mkdir /var/tmp/mmc
+00051: 
+00052: #snmpd
+00053: mkdir /var/net-snmp
+00054: 
+00055: cp /bin/pppoe.sh /var/ppp/true
+00056: echo "#!/bin/sh" > /var/ppp/true
+00057: #echo "PASS"     >> /var/ppp/true
+00058: 
+00059: #for console login
+00060: cp /etc/shadow.sample /var/shadow
+00061: 
+00062: #for weave
+00063: cp /etc/avahi-daemon.conf /var/avahi
+00064: 
+00065: #extact web pages
+00066: cd /web
+00067: flash extr /web
+00068: cd /
+00069:  
+00070: mkdir -p /var/udhcpc
+00071: mkdir -p /var/udhcpd
+00072: cp /bin/init.sh /var/udhcpc/eth0.deconfig
+00073: echo " " > /var/udhcpc/eth0.deconfig
+00074: cp /bin/init.sh /var/udhcpc/eth1.deconfig
+00075: echo " " > /var/udhcpc/eth1.deconfig
+00076: cp /bin/init.sh /var/udhcpc/br0.deconfig
+00077: echo " " > /var/udhcpc/br0.deconfig
+00078: cp /bin/init.sh /var/udhcpc/wlan0.deconfig
+00079: echo " " > /var/udhcpc/wlan0.deconfig
+00080: 
+00081: if [ "$CINIT" = 1 ]; then
+00082: startup.sh
+00083: fi
+00084: 
+00085: # kick watchdog
+00086: ls /bin/watchdog > /dev/null && watchdog 1000&
+00087: 
+00088: # for wapi certs related
+00089: mkdir /var/myca
+00090: # wapi cert(must done before init.sh)
+00091: cp -rf /usr/local/ssl/* /var/myca/ 2>/dev/null
+00092: # loadWapiFiles >/dev/null 2>&1
+00093:  
+00094: # for wireless client mode 802.1x
+00095: mkdir /var/1x
+00096: cp -rf /usr/1x/* /var/1x/ 2>/dev/null
+00097: mkdir /var/openvpn
+00098: cp -rf /usr/share/openvpn/* /var/openvpn 2>/dev/null
+00099: 
+00100: #install wlan module
+00101: wlan_mod_utils.sh
+00102:  
+00103: # Start system script
+00104: init.sh gw all
+00105:  
+00106: # modify dst-cache setting
+00107: echo "24576" > /proc/sys/net/ipv4/route/max_size
+00108: echo "180" > /proc/sys/net/ipv4/route/gc_thresh
+00109: echo 20 > /proc/sys/net/ipv4/route/gc_elasticity
+00110: # echo 35 > /proc/sys/net/ipv4/route/gc_interval
+00111: # echo 60 > /proc/sys/net/ipv4/route/secret_interval
+00112: # echo 10 > /proc/sys/net/ipv4/route/gc_timeout
+00113:  
+00114: # echo "4096" > /proc/sys/net/nf_conntrack_max
+00115: echo "12288" > /proc/sys/net/netfilter/nf_conntrack_max
+00116: echo "600" > /proc/sys/net/ipv4/netfilter/ip_conntrack_tcp_timeout_established
+00117: echo "20" > /proc/sys/net/ipv4/netfilter/ip_conntrack_tcp_timeout_time_wait
+00118: echo "20" > /proc/sys/net/ipv4/netfilter/ip_conntrack_tcp_timeout_close
+00119: echo "90" > /proc/sys/net/ipv4/netfilter/ip_conntrack_udp_timeout
+00120: echo "120" > /proc/sys/net/ipv4/netfilter/ip_conntrack_udp_timeout_stream
+00121: echo "90" > /proc/sys/net/ipv4/netfilter/ip_conntrack_generic_timeout
+00122: # echo "1048576" > /proc/sys/net/ipv4/rt_cache_rebuild_count
+00123: echo "32" > /proc/sys/net/netfilter/nf_conntrack_expect_max
+00124: 
+00125: # disable bridge hook iptables to reduce CPU loading during BT test
+00126: echo 0 > /proc/sys/net/bridge/bridge-nf-call-iptables
+00127: echo 0 > /proc/sys/net/bridge/bridge-nf-call-ip6tables
+00128: 
+00129: # modify IRQ Affinity setting
+00130: echo "3" > /proc/irq/33/smp_affinity
+
+--- boards/rtl8197F/etc.RTL8197F_VG_8812F_8367R_MP/init.d/rcS:1-40 ---
+00001: #!/bin/sh
+00002: 
+00003: ifconfig lo 127.0.0.1
+00004: 
+00005: USE_SAMBA=0
+00006: CINIT=1
+00007: 
+00008: mount -t proc proc /proc
+00009: mount -t ramfs ramfs /var
+00010: 
+00011: mkdir /var/tmp
+00012: mkdir /var/log
+00013: mkdir /var/run
+00014: mkdir /var/lock
+00015: mkdir /var/system
+00016: mkdir /var/lib
+00017: mkdir /var/lib/misc
+00018: 
+00019: # Start system script
+00020: /bin/sh /bin/mp.sh
+00021: UDPserver &
+00022: post_startup.sh
+

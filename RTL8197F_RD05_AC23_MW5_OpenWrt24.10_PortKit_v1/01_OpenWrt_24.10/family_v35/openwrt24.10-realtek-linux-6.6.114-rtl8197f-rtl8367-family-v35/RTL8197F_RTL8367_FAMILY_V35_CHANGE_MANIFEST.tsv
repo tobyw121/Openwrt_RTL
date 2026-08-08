@@ -1,0 +1,39 @@
+status	path	old_type	old_mode	old_size_or_target	old_sha256	new_type	new_mode	new_size_or_target	new_sha256
+modified	.config	file	0644	264422	6d7379288044ed5dc01a20f2ee229b40f8a9cd85ced8823c8ab84d016240035d	file	0644	264378	713269a64b81f377c876cfbc6bc56e831d7bfb99b59957d6064e47c88baa7d9b
+added	RTL8197F_RTL8367_FAMILY_V35_REPORT.md					file	0644	3737	03c95bc669dcc09fe870f1eb017ec50662000b08a80fcee6f3b1af209b73a4e7
+added	RTL8197F_RTL8367_FAMILY_V35_VALIDATION.md					file	0644	3433	0ffee9e29d02d6121ac2e54e7bce5ac6f189363ff010bc4a1ddd1a15e3e8a0ed
+modified	configs/rtl8197f_rd05_defconfig	file	0644	1522	5c0f51dc8c6ef52ee1ff2e2c439acfd904aedbee83f19d6cc59834062707f918	file	0644	1750	1026a1287272ad610ef39cd60b17d57d89c1f842d99c90fcfd17978a7693cb86
+added	scripts/generate-rtl8367-register-maps.py					file	0755	4778	38546bfe8287b439e0bed4f4da76fe345a17feb99e8632d973afdea5fd5217c9
+modified	scripts/validate-realtek-driver-port.sh	file	0755	14081	c360ee48d7ac34dd55e6699f8b532588b71e871d6649a3a184d3d6e26a27c796	file	0755	18288	f1bdfe500839960df431db1d7e25c2b29cd73661ce6129c05316ef4c225a5920
+added	target/linux/realtek/base-files/etc/rtl8367-family-v35-notes					file	0644	621	58fdec060d05a668ec5b63ce2945a3edecbe6078bfe37e09b12c2d1603ff433d
+added	target/linux/realtek/base-files/usr/bin/rtl8367-family-check					file	0755	1003	4c5ec0818612aa04e498d6ce04c2aa156158ce398cc31f34f3b23e9236a81131
+added	target/linux/realtek/docs/rtl8197f-rtl8367/README.md					file	0644	1705	e10b2e847591e105aab79e6ee47277976b4447d11340fc87e65bc575aae8db60
+added	target/linux/realtek/docs/rtl8197f-rtl8367/RTL8197F_NIC_REGISTER_MAP.tsv					file	0644	10976	35c4727c0fc0a2e057de761e539965143b75f981db6fccfc75867ea7abdb0d0d
+added	target/linux/realtek/docs/rtl8197f-rtl8367/RTL8197_SOC_AND_NIC_SUMMARY.md					file	0644	5073	f0b02335a95bb932e9126ef815462f783c11dbdc3f96a83e401db42481b66225
+added	target/linux/realtek/docs/rtl8197f-rtl8367/RTL8367_DRIVER_SOURCE_INVENTORY.tsv					file	0644	26915	d0cb07046984adfc2f49602ea9b03c0bbea6c638b60e042d077d5e31119ee936
+added	target/linux/realtek/docs/rtl8197f-rtl8367/RTL8367_REGISTER_MAP_SUMMARY.md					file	0644	6632	63a5ea8bd55095389b161369f9e1d5981b4ea4fed2a5bf060cf2d8aae887cb4b
+added	target/linux/realtek/docs/rtl8197f-rtl8367/RTL8367_SUPPORT_STATUS.md					file	0644	2748	45e61f7e4681815b12724cd9bb770051fe9080ff93029f79cb6026f5c4b0a220
+added	target/linux/realtek/docs/rtl8197f-rtl8367/RTL8367_VARIANT_MATRIX.tsv					file	0644	2669	d10c1665217ac033d31f2d2071d13ffeef0a5a93d169264547bcbe05b0973005
+added	target/linux/realtek/docs/rtl8197f-rtl8367/register-maps/REGISTER_MAP_SOURCES.tsv					file	0644	756	de0d70fe47b23f84cb860b6ab979c969265f1cdad30306cde704a4286d251562
+added	target/linux/realtek/docs/rtl8197f-rtl8367/register-maps/rtl8367b-register-map.tsv					file	0644	866555	3b46dcd1ca7c1271ad05981c00274c7eb9bd7fce90883267a726f7f72c39fbf1
+added	target/linux/realtek/docs/rtl8197f-rtl8367/register-maps/rtl8367c-register-map.tsv					file	0644	1191183	7e45e8b82b273a0a4e86864ce8b669360d6f860ed186f7a1e355ee38a2148b90
+added	target/linux/realtek/docs/rtl8197f-rtl8367/register-maps/rtl8367d-register-map.tsv					file	0644	628055	934e882c5381a0f43822b1a0cca4e0a4363c333eb93ef07a3f8d9b881ad9db5c
+modified	target/linux/realtek/dts/rtl8197f-rtl8367-smi-template.dtsi	file	0644	2199	42107a8eab08a85adf317b08935b01f64e233da647fb001ef9e4588501637a60	file	0644	2444	0ca24df48ab9b1e6fcb75381affaa880310d7cb5d2153b390aec64cd0665590e
+added	target/linux/realtek/dts/rtl8197f-rtl8367b-legacy-swconfig-template.dtsi					file	0644	1278	0ea8dc45650f07d48ffde7fe36048c97d837af870ed96eebd4476c348c30c275
+added	target/linux/realtek/dts/rtl8197f-rtl8367c-rb-vb-smi-template.dtsi					file	0644	2317	69ba46cfafdf619bed4e6f5df53ba8fa945d5558c3dab1bb2282f97ee457b249
+added	target/linux/realtek/dts/rtl8197f-rtl8367d-rb-vc-smi-template.dtsi					file	0644	2469	fb716874968073bc864210224f16cd34f73380fd2199209232d61c94270a0fb2
+modified	target/linux/realtek/dts/rtl8197f_xiaomi_r4-rd05.dts	file	0644	8706	de9c1235e93d2b429327fa781ee57d5b0dde3d87c0f9b9820bb96552f1beccec	file	0644	8840	9b545dd8b37514a59618f2e05b902e079dacafe90e93c6b07378420f8421f4c4
+modified	target/linux/realtek/files-6.6/Documentation/devicetree/bindings/net/realtek,rtl8197f-rtknet.yaml	file	0644	6250	2c94f6b9fa7baa4b9bdf90a7848236dcd43fbb156d2fdb2122abdc9d629c2035	file	0644	8840	af7e5c0aa4c4665ffc8458204419c6acf6ce32bf37999af0a394328f36650a1a
+modified	target/linux/realtek/files-6.6/drivers/net/ethernet/rtl8197f_rtknet.c	file	0644	148367	c93eefa6d3024d21135de7bd584bb33781f80476557d6d2efa39c06a144881ea	file	0644	149755	d4a9036e3a910a494492c739f8b94b9db1f886a5d17c9ec264061fd2d665884d
+modified	target/linux/realtek/patches-6.6/325-net-dsa-realtek-rtl8365mb-add-native-rtl8367d.patch	file	0644	38527	652ac1f5da9c11bb5a266ecd9178ef6f382f42179549d7accdb464eb7ebf9f5f	file	0644	39399	e34ee7e920cb3a417a088a6923173989d9233630e9660673c0e10c7de9e714d9
+modified	target/linux/realtek/patches-6.6/326-rtl8197f-rtl8367d-mainstream-offload-notes.patch	file	0644	1961	2df77955b8e48d6b01bbac5dc60a136ebeeba84f3ec2408cdd6c476e1c4c2771	file	0644	1887	590c3623f3501d5d0553ed75fdca7eca4a0f066ac01f4238dd82a7a63a5bc2cd
+added	target/linux/realtek/patches-6.6/327-net-dsa-realtek-rtl8367-family-profiles.patch					file	0644	23448	58837e6aa9010d92106018fd6e75fafa96cd272685ea6b3738995044102f2b20
+added	validation/checkpatch-325.log					file	0644	306	f3a43a91c9c1a2c47b1e9da46393c4f38c7e2fee40176d7160a0b469bf925271
+added	validation/checkpatch-326.log					file	0644	301	8f7e7c2d231c60e54473f0f51138816c6a77121e20c88cd50de383d1ea7de5f7
+added	validation/checkpatch-327.log					file	0644	673	c27fbe09dc800a783cd32eeb7a9a3dbfcd4bf0bcf8b45c44f4e5cba63b662f85
+added	validation/linux-6.6.114-patch-prepare.log					file	0644	715	72ea60c6e861afc6b47f4dd3e18799389cf47e992998994ba351faf1d43ce3ce
+added	validation/openwrt-defconfig-prerequisite-failure.log					file	0644	2569	67cf4ccc4b62ec005fabbf3077bc4a227b519a963188fbe1dfe5d493836a80f5
+added	validation/project-validator.log					file	0644	12736	afa435cf1a14ae119734877b27a7db00f22f32e9ce8e9c677c470b2f63f08842
+added	validation/realtek-rest-git-apply.log					file	0644	1674	2f85c5e06b32d9d7b7e56be2b43e3b6e6b3963ebb3c5becb0e414f9ac08fd181
+added	validation/rtl8197f-rtknet-host-compile.log					file	0644	224	ebb898b6c306401bc35b61901a3440752fd9955d2c22752d9a2ff3aad08777f7
+added	validation/rtl8365mb-host-compile.log					file	0644	218	81abf4d67ddc17d355ef2dbd48ac4111c17b76797ab9801ce8ab6b79441bcb40

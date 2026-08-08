@@ -1,0 +1,42 @@
+RTL8197F / Tenda Nova MW5 WAN-LAN v43.2 validation
+==================================================
+Date: 2026-08-01
+Base: OpenWrt 24.10 snapshot tree / Linux 6.6.114
+
+Compiler failure reproduced from supplied log
+---------------------------------------------
+FAIL  v43.1 used netdev_err_ratelimited() in net/dsa/tag_rtl4_9.c.
+FAIL  Linux compilation stopped with -Werror=implicit-function-declaration.
+
+v43.2 compile fix
+-----------------
+PASS  The unavailable netdev_err_ratelimited() call was removed.
+PASS  The replacement is netdev_err(), already used earlier in the same tagger.
+PASS  No additional include or kernel API dependency was introduced.
+PASS  The remaining MW5 RTL4 protocol-9 transmit/receive logic is unchanged.
+
+Static validation
+-----------------
+PASS  CHECK_MW5_WANLAN_V43.sh: 45 PASS, 0 FAIL.
+PASS  CHECK_SOURCE_TREE_V42.sh: exit code 0.
+PASS  tag_rtl4_9.c checkpatch: 0 errors, 0 warnings.
+PASS  patch 329 checkpatch: 0 errors, 0 warnings, 0 checks.
+PASS  patch 329 Linux-6.6 synthetic dry-run with --fuzz=0.
+PASS  Full MW5_WANLAN_V43.2.patch replay with --fuzz=0.
+PASS  Replayed tree matches the v43.2 source tree byte-for-byte by content,
+      excluding Python caches.
+
+Expected build/runtime markers
+------------------------------
+- The tag_rtl4_9.o compile no longer reports an implicit declaration.
+- Driver version: 1.4.4-sdk-mw5-wanlan-v43.2
+- MW5 SDK CPU tag: 4-byte protocol 0x9 after source MAC
+- MW5 DSA master: ... tag=rtl4_9/4byte
+- mw5 txring sdk v43.2: ... stride=24 dma_cr1=0x000005e8
+- rtl8197f poststart v43.2: ... desc=6/24 ... dma_cr1=0x000005e8
+
+Not performed in this environment
+---------------------------------
+- Complete OpenWrt cross-compilation with the user's populated build_dir,
+  staging_dir and downloaded Linux/toolchain sources.
+- Flashing and packet validation on physical Tenda Nova MW5 hardware.

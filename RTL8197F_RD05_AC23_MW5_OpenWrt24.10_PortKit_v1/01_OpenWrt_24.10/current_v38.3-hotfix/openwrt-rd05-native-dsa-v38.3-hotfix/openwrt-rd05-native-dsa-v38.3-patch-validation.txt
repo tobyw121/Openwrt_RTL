@@ -1,0 +1,4 @@
+work_entries=2893
+patchtest_entries=2893
+differences=0
+PASS: v38.2 -> v38.3 patch reproduces all contents, modes and symlinks exactly

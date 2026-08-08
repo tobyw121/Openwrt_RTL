@@ -1,0 +1,23 @@
+RD05 v5ah-rxmirror-cpu6
+========================
+
+Diagnostic follow-up to v5ag.
+
+v5ag proved that programming the RTL8367D monitor/mirror port as physical port 7
+still did not mirror PC ARP broadcasts from lan2 into the RTL8197F DMA RX path,
+even though lan2 MIB broadcast counters increased and dot1dTpPortInDiscards stayed
+zero.
+
+v5ah keeps the same v5af/v5ag RX trace and external RTL8367D VLAN/PVID setup, but
+changes the diagnostic mirror monitor port from physical port 7 to physical port 6.
+The DSA CPU path is intentionally left on the existing cpu_mask path; only the mirror
+monitor port is changed.
+
+Expected boot marker:
+  RTL8367D RD05 RX mirror v5ah: cpu=0x80 cpuport=7 mirrorport=6 users=0x1f rxmask=0x1f ...
+
+Interpretation:
+  - If rd05_rxtrace_arp*/bcast* rises during PC arping, monitor port 6 reaches the SoC path.
+  - If lan2 broadcasts rise but rd05_rxtrace stays unchanged, the mirror registers/host path are still not hitting the actual CPU ingress.
+
+Not full-kernel-compiled here; archive/patch were syntax and dry-run checked only.

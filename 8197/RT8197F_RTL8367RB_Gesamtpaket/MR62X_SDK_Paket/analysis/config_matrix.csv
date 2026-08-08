@@ -1,0 +1,15 @@
+file,SOC_RTL8197F,RTL_8197F,RTL_8197F_GW,RTL_8197F_VG,RTL_8197F_VG_V672,RTL_8197F_VG_GPIO_V672,SPI_NAND_FLASH,MTD_NAND_RTK,MTD_NAND_RTK_DIE_ON_ECC,RTL_8367R_NEW_SUPPORT,RTL_8367RB_VC,RTL_8367R_SUPPORT,RTL_83XX_SUPPORT,RTL_83XX_API_V1_4,RTL_83XX_ACL_SUPPORT,RTL_MDC_H0_MDIO_G7,RTL_MDC_D1_MDIO_D7,RTL_MDC_D5_MDIO_D7,RTL_MDC_MDIO,WLAN,RTL8852AE_BACKPORTS,RTL8832BR,WLAN_HAL_8197G,WLAN_HAL_8197F,CONFIG_MODEL,LINUXDIR,BOARDDIR,BZBOXDIR,RSDKDIR,BOARD_rtl8197F,LINUX_4.4,BZBOX_busybox-1.24.1,RSDK_msdk-6.4.1-mips-EL-4.4-u0.9.33-m32ut-190619
+target/linux/target/config.backports-5.2.8-1.RTL8197F_VG_8832BR_8367R_KERN44_GW,y,y,y,y,y,y,y,y,y,y,,,y,,y,y,,,,y,y,y,y,n,,,,,,,,,
+target/linux/target/config.backports-5.2.8-1.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_DUALSTACK_GW,y,y,y,y,y,y,y,y,y,y,,,y,,y,y,,,,y,y,y,y,n,,,,,,,,,
+target/linux/target/config.backports-5.2.8-1.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW,y,y,y,y,y,y,y,y,y,y,,,y,,y,y,,,,y,y,y,y,n,,,,,,,,,
+target/linux/target/config.backports-5.2.8-1.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW_EASYMESH,y,y,y,y,y,y,y,y,y,,y,,y,y,y,y,,,,y,y,y,y,n,,,,,,,,,
+target/linux/target/config.backports-5.2.8-1.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW_EASYMESH_R2_WFA,y,y,y,y,y,y,y,y,y,,y,,y,y,y,y,,,,y,y,y,y,n,,,,,,,,,
+target/linux/target/config.linux-4.4.RTL8197F_VG_8832BR_8367R_KERN44_GW,y,y,y,y,y,y,,,,n,y,,y,y,y,y,n,n,n,y,y,,,,,,,,,,,,
+target/linux/target/config.linux-4.4.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_DUALSTACK_GW,y,y,y,y,y,y,y,y,y,n,y,,y,y,y,y,n,n,n,y,y,,,,,,,,,,,,
+target/linux/target/config.linux-4.4.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW,y,y,y,y,y,y,y,y,y,n,y,,y,y,y,y,n,n,n,y,y,,,,,,,,,,,,
+target/linux/target/config.linux-4.4.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW_EASYMESH,y,y,y,y,y,y,y,y,y,n,y,,y,y,y,y,n,n,n,y,y,,,,,,,,,,,,
+target/linux/target/config.linux-4.4.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW_EASYMESH_R2_WFA,y,y,y,y,y,y,y,y,y,n,y,,y,y,y,y,n,n,n,y,y,,,,,,,,,,,,
+target/linux/target/preconfig_RTL8197F_VG_8832BR_8367R_Kernel4.4_GW,,y,,,,,,,,,,,,,,,,,,,,,,,,linux-4.4,boards/rtl8197F,users/busybox-1.24.1,toolchain/msdk-6.4.1-mips-EL-4.4-u0.9.33-m32ut-190619,y,y,y,y
+target/linux/target/preconfig_SPINAND_RTL8197F_VG_8832BR_8367R_Kernel4.4_DUALSTACK_GW,,y,,,,,,,,,,,,,,,,,,,,,,,,linux-4.4,boards/rtl8197F,users/busybox-1.24.1,toolchain/msdk-6.4.1-mips-EL-4.4-u0.9.33-m32ut-190619,y,y,y,y
+target/linux/target/preconfig_SPINAND_RTL8197F_VG_8832BR_8367R_Kernel4.4_GW,,y,,,,,,,,,,,,,,,,,,,,,,,,linux-4.4,boards/rtl8197F,users/busybox-1.24.1,toolchain/msdk-6.4.1-mips-EL-4.4-u0.9.33-m32ut-190619,y,y,y,y
+target/linux/target/preconfig_SPINAND_RTL8197F_VG_8832BR_8367R_Kernel4.4_GW_EASYMESH,,y,,,,,,,,,,,,,,,,,,,,,,,,linux-4.4,boards/rtl8197F,users/busybox-1.24.1,toolchain/msdk-6.4.1-mips-EL-4.4-u0.9.33-m32ut-190619,y,y,y,y

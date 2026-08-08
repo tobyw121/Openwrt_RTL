@@ -1,0 +1,12 @@
+#!/bin/sh
+
+echo "====Busybox Init===="
+
+echo "Mount /proc"
+mount -t proc proc /proc
+
+echo "Installing Busybox soft links"
+busybox --install -s
+
+#echo "Enter shell"
+#sh

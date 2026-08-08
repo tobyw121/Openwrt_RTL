@@ -1,0 +1,146 @@
+/*
+ * Copyright (C) 2009 Realtek Semiconductor Corp.
+ * All Rights Reserved.
+ *
+ * This program is the proprietary software of Realtek Semiconductor
+ * Corporation and/or its licensors, and only be used, duplicated,
+ * modified or distributed under the authorized license from Realtek.
+ *
+ * ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+ * THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+ *
+ * $Revision: 41809 $
+ * $Date: 2013-08-05 16:12:02 +0800 (Mon, 05 Aug 2013) $
+ *
+ * Purpose : Define diag shell main function.
+ *
+ * Feature : The file have include the following module and sub-modules
+ *           1) main function.
+ */
+
+/*  
+ * Include Files 
+ */
+#include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <unistd.h>
+#include <common/rt_autoconf.h>
+#include <diag_util.h>
+#include <diag_om.h>
+#include <diag_debug.h>
+#include <parser/cparser.h>
+#include <parser/cparser_priv.h>
+#include <parser/cparser_token.h>
+#include <parser/cparser_tree.h>
+#include <osal/memory.h>
+#if defined(CONFIG_X86_I2C)
+#include <io.h>
+#include <I2Clib.h>
+#include <rtk/init.h>
+#endif
+
+#define DIAG_HOSTNAME_DEFAULT        "RTK.0> "    /* Default hostname. */
+
+/* 
+ * Function Declaration 
+ */
+int
+diag_main(int argc,	char** argv)
+{
+    cparser_t *pParser;
+
+    /* Process diag options */
+    if (argc > 1)
+    {
+        /* -d: debug option to print all chip debug informations */
+        if (0 == strcmp(argv[1], "-d"))
+        {
+            diag_debug_dump();
+
+            return 0;
+        }
+    }
+
+    pParser = osal_alloc(sizeof(cparser_t));
+	memset(pParser, 0, sizeof(cparser_t));
+    if (NULL == pParser)
+    {
+        diag_util_printf("osal_alloc cparser_t structure failed!!\n");
+        return -1;
+    }
+
+
+#if defined(CONFIG_X86_I2C)
+
+    /*check if io.dll exists, set up x86 printport as i2c */
+    if(LoadIODLL())
+    {
+        printf(" - Load io.dll error");
+        return 0;
+    }
+    I2C_PIN_DEF(3,0,4,1,2);  
+    MDC_PIN_DEF(3,0,4,1,2);
+    PrintPortPinDefine(3,0,4,1,2,0);
+    
+    /*rtk driver init*/
+    diag_util_printf("Init RTK Driver ....");
+
+    if(RT_ERR_OK != rtk_init(DEFAULT_INIT_UNIT_ID))
+        diag_util_printf("FAIL\n");
+    else
+        diag_util_printf("OK\n");
+    
+
+#endif
+
+    pParser->cfg.root = &cparser_root;
+    pParser->cfg.ch_complete = '\t';
+    /* 
+     * Instead of making sure the terminal setting of the target and 
+     * the host are the same. ch_erase and ch_del both are treated
+     * as backspace.
+     */
+    pParser->cfg.ch_erase = '\b';
+    pParser->cfg.ch_del = 127;
+    pParser->cfg.ch_help = '?';
+    pParser->cfg.flags = 0;
+    strcpy(pParser->cfg.prompt, DIAG_HOSTNAME_DEFAULT);
+    diag_om_set_chip_id(DIAG_OM_CHIP_ID_DEFAULT);
+    if (diag_om_set_deviceInfo(DIAG_OM_CHIP_ID_DEFAULT) != RT_ERR_OK)
+    {
+        diag_util_printf("diag_main: set deviceInfo error.\n");
+        osal_free(pParser);
+        return -1;
+    }
+    
+    pParser->cfg.fd = STDOUT_FILENO;
+    
+    cparser_io_config(pParser);
+
+    /* Initialization */
+    if (CPARSER_OK != cparser_init(&(pParser->cfg), pParser)) {
+        diag_util_printf("Fail to initialize parser.\n");
+        osal_free(pParser);
+	    return -1;
+    }
+    
+    /* Main command loop */
+    cparser_run(pParser);
+
+	diag_util_printf("\n");
+    
+    osal_free(pParser);
+    
+	return 0;
+} /* end of diag_main */
+
+#if (defined(CONFIG_SDK_KERNEL_LINUX) && !defined(CONFIG_SDK_MODEL_MODE_USER) && !defined(CONFIG_SDK_KERNEL_LINUX_USER_MODE) || defined(CONFIG_X86_I2C))
+int
+main(int argc, char** argv)
+{
+    /* Ignore Ctrl+C  signal. */
+    signal(SIGINT, SIG_IGN);	
+    return diag_main(argc, argv);
+} /* end of main */
+#endif

@@ -1,0 +1,44 @@
+RD05 native DSA v37 hardware-feedback notes
+
+Topology
+--------
+RTL8197F physical P0/RGMII <-> RTL8367D CPU7/EXT1.
+Linux DSA owns the 8-byte rtl8_4 tag, bridge, VLAN, FDB and STP state.
+RTL8197F hardware tag insertion/removal stays disabled; both CPU-tag gates are
+enabled so the complete tag reaches the Linux DSA tagger.
+
+V37 evidence-based corrections
+------------------------------
+1. RTL8367D family-D register 0x13f9[5:3] is the EXT1 fine RGMII TX-clock tap.
+   It is now independently configurable as rd05_ext1_txc_tap=0..7.
+2. Register 0x13f7 synchronizer TX/RX error state and CPU7 CRC_SKIP are logged.
+   CRC_SKIP remains clear; physical errors are not hidden.
+3. RTL8197F irqchip parent numbering is offset for actual MIPS IRQ values.
+4. rtl865x table seeding waits for SWCORE reset defaults.
+5. SPI-NOR WEL calibration runs before rootfs_data partition registration.
+
+Calibration
+-----------
+Router -> switch:
+  rd05-rgmii-calibrate tx-auto save
+
+Switch -> router, with continuous PC traffic for at least 240 seconds:
+  PC:     sudo ./rd05-pc-netdiag.py --interface IFACE --configure-ip \
+            --calibration --duration 240
+  Router: rd05-rgmii-calibrate rx-auto save
+
+The RX sweep covers 2 coarse switch TX settings x 8 fine 0x13f9 taps x
+8 RTL8197F RX taps = 128 candidates. Failure restores the previous profile.
+
+Final test
+----------
+  rd05-v37-check
+  rd05-netdiag full
+
+Expected:
+- no new CPU7 FCS/drop errors;
+- eth0 interrupt count rises under traffic;
+- rx_cdp_advanced or eth0 RX rises;
+- rd05_rx_external or rd05_rx_arp rises;
+- ping 192.168.1.1 succeeds;
+- /overlay is JFFS2 from rootfs_data immediately after boot.

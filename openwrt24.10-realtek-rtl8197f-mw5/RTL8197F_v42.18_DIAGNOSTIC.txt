@@ -1,0 +1,92 @@
+RTL8197F / Tenda Nova MW5 v42.18 diagnostic report
+===================================================
+
+Physical input from v42.17
+--------------------------
+The target reached:
+
+  KSP
+  [rtl8197f] prom_init: enter
+  [rtl8197f] prom_init: cmdline ok
+  [rtl8197f] prom_init: leave
+  IFDW1723uwEdc
+
+Marker meaning:
+- I/F: kernel_init and kernel_init_freeable entered
+- D/d: do_initcalls entered and returned
+- W1723uwE: MW5 OEM switch preinit and safe watchdog handling completed
+- c: wait_for_initramfs returned and console_on_rootfs is about to run
+
+No R marker followed. Therefore kernel_init_freeable did not return. The
+remaining synchronous path is console_on_rootfs(), init_eaccess("/init") and,
+when /init is absent, prepare_namespace()/root mounting.
+
+Runtime console correction
+--------------------------
+The diagnostic byte output proved that RTL8197FS UART0 transmits using:
+
+  LSR: 0xb8147014, 8-bit access
+  TX : 0xb8147024, 8-bit access
+
+The regular MW5 DT previously inherited reg-io-width = <4> and the standard TX
+register at offset zero. v42.18 adds a DW-8250 TX alias property and overrides
+MW5 to byte I/O. The alias is used only for UART_TX while UART_LCR_DLAB is
+clear. DLL programming at offset zero is therefore preserved.
+
+Direct-image markers
+--------------------
+Expected namespace stream:
+
+  c O C N p i M U [n | b m g] a s d x [d x] [y V H R | !]
+
+Marker map:
+- c: wait_for_initramfs returned; enter console_on_rootfs
+- O: filp_open("/dev/console")
+- C: console_on_rootfs returned; test /init
+- N: no usable /init; enter prepare_namespace
+- p: wait_for_device_probe
+- i: device probing/root parsing returned; initrd_load
+- M: mount_root
+- U: OpenWrt ubi0:rootfs fallback attempt
+- n: ROOT_DEV is zero; mount_nodev_root path
+- b: block-root path; unlink /dev/root
+- m: create /dev/root
+- g: mount_root_generic
+- a: allocate mount helper page
+- s: parse rootfstype list squashfs,jffs2
+- d: one do_mount_root attempt
+- x: init_mount("/root")
+- y: mount succeeded; init_chdir("/root")
+- V: mount_root returned; move root mount
+- H: root move returned; chroot
+- R: prepare_namespace/kernel_init_freeable returned
+- !: all root mount attempts failed; panic entered
+
+The direct binary also replaces serial8250_console_putchar with the proven raw
+byte LSR/TX sequence. Normal VFS, mount and panic messages should therefore be
+visible when the serial8250 console is active.
+
+Image validation
+----------------
+Full flash SHA-256:
+  7cd2aa896d42abed5205a311295e94fcf3c1fc8a5cee733e52282db27f7ed8cf
+
+Firmware SHA-256:
+  aaefba5e6f69d5d7eef86f908a795bfd5a96b4857334c3b2b867fc22e5e6ffac
+
+LZMA stream:             2,824,060 bytes
+Fixed loader window:     2,824,743 bytes
+Remaining reserve:             683 bytes
+Decompressed kernel:     9,432,199 bytes
+SDK 4.40 decoder:        LZMA_RESULT_OK
+Kernel checksum:         0x0000
+Rootfs checksum:         0x0000
+
+Protected regions unchanged:
+- 0x000000..0x030000 bootloader and factory/CFG
+- 0x5c0000..0x800000 CFM, backup, LOG and ENV
+
+Physical v42.18 result
+----------------------
+Not tested when this report was generated. The marker stream and any newly
+visible normal kernel/VFS/panic text are required for the next diagnosis.

@@ -1,0 +1,16 @@
+variant	register_map	chip_id_revision	ports	cpu_link	linux_driver	v35_status	notes
+RTL8367 / RTL8367-VB	B	varies / large revision tables	8	normally E0/port 5	legacy rtl8367/rtl8367b	optional swconfig module	Exact board/chip init table required; not accepted by DSA family fallback.
+RTL8367B	B	older B-map	8	board dependent	legacy rtl8367b	optional swconfig module	Source and register map present; no generic safe DSA profile.
+RTL8367R	B or alias	runtime ID authoritative	8	board dependent	DSA alias or legacy	fail-closed unless C/D ID	Alias does not override chip ID; old B silicon must use swconfig.
+RTL8367RB	B	version 0x1000 in legacy driver	8	E0/logical port 5	legacy rtl8367b	optional swconfig module	Legacy detector does not constrain chip number for this revision.
+RTL8367R-VB	B	version 0x1010 in legacy driver	8	E0/E1 board dependent	legacy rtl8367b	optional swconfig module	Large B-map initialization table retained by legacy driver.
+RTL8367RB-VB	C	ID 0x6367, ver 0x0020	8	physical 6/EXT0; optional 7/EXT1	DSA rtl8365mb family	exact profile	C-map, not the same register map as RB-VC.
+RTL8367S	C	ID 0x6367, ver 0x00a0	8	physical 6/7 by mode	DSA rtl8365mb family	exact profile	num_ports corrected to 8; C-map SSC support.
+RTL8365MB-VC	C	ID 0x6367, ver 0x0040	up to 11	physical 6/EXT0 and 7/EXT1	upstream DSA rtl8365mb	exact upstream profile	Reference C-map profile and init jam table.
+RTL8367C family	C	IDs 0x0276, 0x0597, other 0x6367	8	physical 6/EXT0 and 7/EXT1	DSA rtl8365mb family	experimental family profile	Runtime warning; reuses closest C-map jam table pending revision-specific validation.
+RTL8367D	D	ID 0x6642, ver 0x0030	8	physical 7/EXT1/MAC7	DSA rtl8365mb family	exact RD05 profile	D-map force/status/SSC/TOP_CON0 path; protocol-4 rtl8_4 tag.
+RTL8367RB-VC	D	ID 0x6642, ver 0x0030	8	physical 7/EXT1/MAC7	DSA rtl8365mb family	same exact D profile	SDK handles RB-VC in rtl8367d DAL; not the C/RB-VB path.
+RTL8367S-VB	D	ID 0x6642, ver 0x0010	8	variant dependent	legacy rtl8367b or DSA fallback	experimental	Legacy driver has exact detection; DSA 0x6642 fallback needs hardware verification.
+other RTL8367D-map revisions	D	ID 0x6642, other revision	8	expected physical 7/EXT1	DSA rtl8365mb family	experimental family profile	Runtime warning and explicit DT timings required.
+RTL8367N	B-era SDK source	SDK product symbol	unknown here	board dependent	vendor source inventory only	not enabled	No unambiguous Linux 6.6 profile derived.
+RTL8367MB / RTL8367M-VB / RTL8367-VB	B-era SDK source	SDK product symbols	variant dependent	board dependent	vendor source inventory only	not enabled	Keep fail-closed until exact ID, revision and init table are confirmed.

@@ -1,0 +1,77 @@
+/*
+ * Copyright (C) 2009 Realtek Semiconductor Corp.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Revision: 30425 $
+ * $Date: 2012-06-29 11:48:48 +0800 (Fri, 29 Jun 2012) $
+ *
+ * Purpose : Realtek Switch SDK Rtusr API Module
+ *
+ * Feature : The file have include the following module and sub-modules
+ *           1) sdk test
+ *
+ */
+
+#include <string.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <rtusr_util.h>
+#include <rtdrv/rtdrv_netfilter.h>
+
+int32 sdktest_run(uint32 unit, uint8 *item)
+{
+    rtdrv_sdkCfg_t sdk_cfg;
+    
+    sdk_cfg.unit = unit;
+    memset(sdk_cfg.item, 0, SDK_CFG_ITEM+1);
+    strncpy((char *)sdk_cfg.item, (char *)item, SDK_CFG_ITEM);
+       
+    SETSOCKOPT(RTDRV_SDK_TEST, &sdk_cfg, rtdrv_sdkCfg_t, 1);
+    
+    return RT_ERR_OK;    
+} /* sdktest_run */
+
+int32 sdktest_run_id(uint32 unit, uint32 start, uint32 end)
+{
+    rtdrv_sdkCfg_t sdk_cfg;
+    
+    sdk_cfg.unit = unit;
+    sdk_cfg.start = start;
+    sdk_cfg.end = end;
+       
+    SETSOCKOPT(RTDRV_SDK_TEST_ID, &sdk_cfg, rtdrv_sdkCfg_t, 1);
+    
+    return RT_ERR_OK;    
+} /* sdktest_run_id */
+
+int32 sdktest_mode_get(int32 *pMode)
+{
+    rtdrv_sdkCfg_t sdk_cfg;
+    
+    GETSOCKOPT(RTDRV_SDK_TEST_MODE_GET, &sdk_cfg, rtdrv_sdkCfg_t, 1);
+    *pMode = sdk_cfg.mode;
+    return RT_ERR_OK;
+} /* sdktest_mode_get */
+
+int32 sdktest_mode_set(int32 mode)
+{
+    rtdrv_sdkCfg_t sdk_cfg;
+    
+    sdk_cfg.mode = mode;
+    SETSOCKOPT(RTDRV_SDK_TEST_MODE_SET, &sdk_cfg, rtdrv_sdkCfg_t, 1);
+    return RT_ERR_OK;    
+} /* sdktest_mode_set */

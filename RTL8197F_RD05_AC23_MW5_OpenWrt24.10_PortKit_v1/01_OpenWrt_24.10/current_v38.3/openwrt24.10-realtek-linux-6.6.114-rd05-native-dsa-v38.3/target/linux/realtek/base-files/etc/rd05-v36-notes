@@ -1,0 +1,84 @@
+RD05 v36 CPU-port, RGMII timing and persistent overlay correction
+
+Network datapath
+----------------
+The stable topology remains RTL8197F physical P0/RGMII to RTL8367D CPU7/EXT1.
+Linux DSA supplies and consumes the 8-byte rtl8_4 tag. Hardware TX insertion
+and RX tag removal therefore remain disabled on the RTL8197F side.
+
+v33 hardware confirmation:
+- CPUICR1 accepted 0x002081d3 after DMA start (8-dword TX/RX descriptors);
+- CPURPDCR0 and CPUTPDCR0 accepted the actual ring bases;
+- the diagnostic window contained no new peer/LAN2 traffic, so it could not
+  prove or disprove switch-to-SoC RX packet delivery.
+
+The same trace recorded FCS errors on RTL8367D CPU7 while receiving frames from
+the SoC. v36 returns the non-SSC SDK switch-mode fallback TX0/RX2. This changes neither DSA tags, VLAN
+membership, descriptor format nor the switch-to-SoC receive direction.
+
+Expected markers after LAN is brought up:
+  RD05 DSA master v36: ...
+  rd05 p0 rgmii v36: ... cputag-rx=1 cputag-tx=1 preserve-tag=1 ...
+  rd05 poststart v36: ... cpuicr1=0x002081d3 rxbase=... txbase=...
+
+Persistent overlay
+------------------
+Only the RD05 rootfs_data range is writable:
+  offset 0x00e60000
+  size   0x001a0000
+
+The v33 log returned the identical raw status word 0x00000004 after every WREN.
+That does not prove which status bit or command write width the controller uses.
+v36 therefore calibrates non-destructively before the first erase/program:
+
+  WRDI -> RDSR -> WREN -> RDSR -> WRDI -> RDSR -> WREN -> RDSR
+
+It tests the Realtek GPL SDK command placement (32-bit high byte) first, then
+8-, 16- and 32-bit-low alternatives. A clear/set/clear/set transition must be
+observed in the same status bit; static protection bits cannot pass this test.
+No erase or page program is issued until calibration succeeds.
+
+Expected success marker:
+  calibrated SPI-NOR WEL: cmd=... lane=... bit=... before=... after=...
+
+Expected overlay result:
+  /dev/mtd8 exists
+  /overlay is mounted from rootfs_data/JFFS2
+  no "unable to calibrate SPI-NOR WEL" or JFFS2 errno -5 messages
+
+Run:
+  rd05-v36-check
+  rd05-netdiag full
+
+Use `tools/rd05-pc-netdiag.py` from the source tree on the PC during the full traffic window. A router cannot generate
+proof of inbound LAN traffic by itself.
+
+
+Native PCIe and WLAN boundary
+-----------------------------
+The GPL RTL8197F BSP reset/MDIO/config-window sequence is now implemented by
+pcie-rtl8197f.c through Linux's generic PCI host-bridge API. RD05 enables the
+40 MHz and RTL8197FH/VG PHY tuning. OEM Linux identifies the directly attached
+endpoint as PCI 10ec:f812 and Hardware type RTL8812FE.
+
+Expected host marker:
+  rtl8197f-pcie ... native host ready: endpoint=10ec:f812 ...
+
+The supplied WLAN implementation is the legacy vendor rtl8192cd fullmac driver
+plus a Linux-5.2 backports stack. It is inventoried in RD05_SDK_SOURCE_MAP.tsv,
+but is deliberately not presented as a native Linux-6.6/mac80211 driver. The
+PCIe host and calibration/MAC data are ready for a future native RTL8812FE
+wireless driver without importing Realtek fastpath or private netfilter hooks.
+
+
+V36 hardware-derived correction
+-------------------------------
+The paired July 25 v35 router/PC trace proved both directions were blocked:
+CPU7 counted SoC-origin frames as FCS/drop, while PC broadcasts left CPU7 but
+never advanced CPURPDCR0. The exact RTL8367D DAL clears bit 2 of register
+0x03f7 whenever EXT1 is not TMII. V36 performs that missing write, does not
+program the RTL8367B-only 0x13f9 timing field, and exposes all four RGMII delay
+axes plus SSC through rd05-rgmii-calibrate.
+
+Default profile: SoC TX0/RX6, switch TX0/RX2, SSC off.
+Measured profiles can be saved in /etc/rd05-rgmii.conf.

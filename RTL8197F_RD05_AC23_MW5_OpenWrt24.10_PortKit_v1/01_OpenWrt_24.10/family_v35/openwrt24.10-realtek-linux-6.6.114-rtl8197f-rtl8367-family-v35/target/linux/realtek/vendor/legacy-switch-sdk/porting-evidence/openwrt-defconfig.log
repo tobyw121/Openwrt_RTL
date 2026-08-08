@@ -1,0 +1,43 @@
+WARNING: Makefile 'package/base-files/Makefile' has a dependency on 'ubi-utils', which does not exist
+WARNING: Makefile 'package/utils/busybox/Makefile' has a dependency on 'libpam', which does not exist
+WARNING: Makefile 'package/utils/busybox/Makefile' has a dependency on 'libtirpc', which does not exist
+WARNING: Makefile 'package/utils/busybox/Makefile' has a dependency on 'libpam', which does not exist
+WARNING: Makefile 'package/utils/busybox/Makefile' has a dependency on 'libtirpc', which does not exist
+WARNING: Makefile 'package/utils/busybox/Makefile' has a build dependency on 'libpam', which does not exist
+WARNING: Makefile 'package/network/services/dnsmasq/Makefile' has a dependency on 'libnettle', which does not exist
+WARNING: Makefile 'package/network/services/dnsmasq/Makefile' has a dependency on 'libnetfilter-conntrack', which does not exist
+WARNING: Makefile 'package/libs/elfutils/Makefile' has a dependency on 'libintl-full', which does not exist
+WARNING: Makefile 'package/system/fstools/Makefile' has a dependency on 'ubi-utils', which does not exist
+WARNING: Makefile 'package/network/utils/iptables/Makefile' has a dependency on 'libnetfilter-conntrack', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'kmod-phy-bcm-ns-usb2', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'kmod-phy-bcm-ns-usb3', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-app-firewall/Makefile' has a build dependency on 'csstidy/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-app-firewall/Makefile' has a build dependency on 'luasrcdiet/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-app-package-manager/Makefile' has a build dependency on 'csstidy/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-app-package-manager/Makefile' has a build dependency on 'luasrcdiet/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-base/Makefile' has a dependency on 'cgi-io', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-base/Makefile' has a dependency on 'liblucihttp-ucode', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-base/Makefile' has a build dependency on 'csstidy/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-base/Makefile' has a build dependency on 'luasrcdiet/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-light/Makefile' has a build dependency on 'csstidy/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-light/Makefile' has a build dependency on 'luasrcdiet/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-mod-admin-full/Makefile' has a build dependency on 'csstidy/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-mod-admin-full/Makefile' has a build dependency on 'luasrcdiet/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-mod-network/Makefile' has a build dependency on 'csstidy/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-mod-network/Makefile' has a build dependency on 'luasrcdiet/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-mod-status/Makefile' has a build dependency on 'csstidy/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-mod-status/Makefile' has a build dependency on 'luasrcdiet/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-mod-system/Makefile' has a build dependency on 'csstidy/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-mod-system/Makefile' has a build dependency on 'luasrcdiet/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-proto-ipv6/Makefile' has a build dependency on 'csstidy/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-proto-ipv6/Makefile' has a build dependency on 'luasrcdiet/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-proto-ppp/Makefile' has a build dependency on 'csstidy/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-proto-ppp/Makefile' has a build dependency on 'luasrcdiet/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-theme-bootstrap/Makefile' has a build dependency on 'csstidy/host', which does not exist
+WARNING: Makefile 'package/feeds/luci/luci-theme-bootstrap/Makefile' has a build dependency on 'luasrcdiet/host', which does not exist
+WARNING: Makefile 'package/libs/ustream-ssl/Makefile' has a dependency on 'libwolfssl', which does not exist
+WARNING: Makefile 'package/libs/ustream-ssl/Makefile' has a dependency on 'libopenssl', which does not exist
+tmp/.config-target.in:128:warning: choice default symbol 'TARGET_ath79' is not contained in the choice
+#
+# configuration written to .config
+#

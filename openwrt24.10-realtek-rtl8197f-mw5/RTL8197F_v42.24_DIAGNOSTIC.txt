@@ -1,0 +1,42 @@
+MW5 v42.24 UART RX + SDK P0/RGMII alternative LZMA loader fix
+source=openwrt-realtek-rtl8197f-tenda_nova_mw5-squashfs-spi-full-v42.22-squashfs-bytes-used-fix.bin
+output_sha256=0fd02cbf12b061f169848cd041276c225039651fafeb68be436bf4ee0e7e603c
+firmware_sha256=eb7127c3a384d5bbcdb2600948930e2bdf08240cf2bc033b26fb098802195af7
+encoder=dict=8MiB,lc=1,lp=2,pb=2,mode=normal,nice=100,mf=bt3
+new_lzma_size=2824257
+loader_window=2824743
+loader_window_free=486
+lzma440=result=0 in=2824238/2824730 out=9432199/9432199 lc=1 lp=2 pb=2
+new_rootfs_offset=0x2e2f3c
+loader_flush_cache_end=0x809fec80
+loader_flush_cache_size=0x8fec87
+uart0_rbr_thr_alias=0xb8147024
+uart0_dll_address=0xb8147000_when_dlab
+uart0_lcr_address=0xb814700c
+network_descriptor_tx_port_mask=0x1
+network_descriptor_tx_dp_ext=0x0
+mw5_sdk_p0_rgmii=enabled_at_hw_start
+mw5_p0_tx_delay=0
+mw5_p0_rx_delay=5
+mw5_p0_cpu_tag_rx=enabled
+mw5_p0_cpu_tag_tx=enabled
+mw5_p0_tag_removal=disabled
+mw5_p0_pad_drive=6
+mw5_p0_vg_only_pad_bits=cleared
+mw5_p0_vg_only_fixed_ipg=not_programmed
+kernel_checksum_sum=0x0000
+rootfs_checksum_sum=0x0000
+protected_000000_030000=unchanged
+protected_5c0000_800000=unchanged
+
+Expected console change:
+  Pressing Enter produces an interactive ash console instead of repeated ^@ NUL characters.
+
+Expected network diagnostics:
+  registered eth0 ... tx-port-mask=0x1 tx-dp-ext=0x0 ...
+  rd05 p0 rgmii ... p0gmii ... txdelay=0 rxdelay=5 cputag-rx=1 cputag-tx=1 ...
+  DSA lan/wan remain switch-side ports; RTL8197FS physical P0 is the SoC-side RGMII endpoint.
+
+Hardware traffic remains to be verified with ip link, bridge link, ping and ethtool counters.
+fdt_patch path=/soc@18000000/ethernet@10000 property=realtek,tx-port-mask kernel_offset=0x8fd74c old=0x40 new=0x1 fdt=0x8fcdc0/0x1ec7
+fdt_patch path=/soc@18000000/ethernet@10000 property=realtek,tx-dp-ext kernel_offset=0x8fd77c old=0x2 new=0x0 fdt=0x8fcdc0/0x1ec7

@@ -1,0 +1,16 @@
+[RTL8391M] Driver probe mechanism and initial function failed.
+Bug fix:
+    Updated probe and initial functions for RTL8391M.
+
+Modified files
+*     sdk/src/hal/mac/mac_debug.c
+*     sdk/src/hal/mac/mac_probe.c
+*     sdk/system/drv/gpio/ext_gpio.c
+*     sdk/system/drv/intr/intr.c
+*     sdk/system/drv/swcore/sys.c
+*     sdk/system/drv/swled/swctrl_led_main.c
+*     sdk/system/include/drv/swcore/chip.h
+*     sdk/system/ioal/user/ioal_init.c
+
+Release Files: (Mantis 0017869, r60871 and r60910)
+	rtk-ms-sdk-src-2.1.4.53590-patch008.tar.gz

@@ -1,0 +1,9 @@
+exit_code=0
+generated_config_sha256=0336315f475fbce1f30baf5f6a141a1d37959940638633b1e87dacfb0ad82b5f
+generated_config_lines=2958
+CONFIG_TARGET_realtek=y
+CONFIG_TARGET_realtek_rtl8197f=y
+CONFIG_TARGET_realtek_rtl8197f_DEVICE_xiaomi_r4_rd05=y
+CONFIG_LINUX_6_6=y
+warning_count=39
+error_count=0

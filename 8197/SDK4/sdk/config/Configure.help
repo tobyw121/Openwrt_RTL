@@ -1,0 +1,282 @@
+#
+# Format of this file: description<nl>variable<nl>  helptext<nl>...<nl><nl>.
+# If the question being documented is of type "choice", we list
+# only the first occurring config variable. The help texts
+# must not contain empty lines. No variable should occur twice; if it
+# does, only the first occurrence will be used by Configure. The lines
+# in a help text should be indented two positions. Lines starting with
+# `#' are ignored. To be nice to menuconfig, limit your lines to 70
+# characters. Use emacs' kfill.el to edit this file or you lose.
+#
+
+CONFIG_SDK_RTL8328
+	Realtek RTL8328 Switch SoC
+
+CONFIG_SDK_RTL8390
+	Realtek RTL8390 Switch SoC
+
+CONFIG_SDK_RTL8380
+	Realtek RTL8380 Switch SoC
+
+CONFIG_SDK_RTL8208
+	Realtek RTL8208/RTL8208D PHY SoC - 8 port 10/100 Fast Ethernet PHY
+
+CONFIG_SDK_RTL8214
+	Realtek RTL8214 PHY SoC - 4 port 10/100/1000 Giga Ethernet PHY
+
+CONFIG_SDK_RTL8214F
+	Realtek RTL8214F PHY SoC - 4 port 10/100/1000 Combo Giga Ethernet PHY
+
+CONFIG_SDK_RTL8201
+	Realtek RTL8201 PHY SoC - 1 port 10/100 Fast Ethernet PHY
+
+CONFIG_SDK_RTL8218
+	Realtek RTL8218 PHY SoC - 8 port 10/100/1000 Giga Ethernet PHY
+
+CONFIG_SDK_RTL8218B
+	Realtek RTL8218B PHY SoC - 8 port 10/100/1000 Giga Ethernet PHY
+
+CONFIG_SDK_RTL8218FB
+	Realtek RTL8218FB PHY SoC - 4 port 10/100/1000+ 4 port 10/100/1000 Combo Giga Ethernet PHY
+
+CONFIG_SDK_RTL8212F
+	Realtek RTL8212F PHY SoC - 2 port 10/100/1000 Combo Giga Ethernet PHY
+
+CONFIG_SDK_RTL8212B
+	Realtek RTL8212B PHY SoC - 2 port 10/100/1000 Combo Giga Ethernet PHY
+
+CONFIG_SDK_RTL8214B
+	Realtek RTL8214B PHY SoC - 4 port 10/100/1000 Combo Giga Ethernet PHY
+
+CONFIG_SDK_RTL8214FB
+	Realtek RTL8214FB PHY SoC - 4 port 10/100/1000 Combo Giga Ethernet PHY, 
+	pin-to-pin compatible with RTL8214F
+
+CONFIG_SDK_RTL8214FC
+	Realtek RTL8214FC PHY SoC - 4 port 10/100/1000 Combo Giga Ethernet PHY, 
+
+CONFIG_SDK_RTL8231
+	Realtek RTL8231 SoC - LED/GPIO chip
+
+CONFIG_SDK_ENDIAN_BIG
+	SDK for Big Endian CPU
+
+CONFIG_SDK_ENDIAN_LITTLE
+	SDK for Little Endian CPU
+
+CONFIG_SDK_KERNEL_LINUX
+	SDK for Linux platform
+
+CONFIG_SDK_KERNEL_LINUX_MODULE_LOADABLE
+	Compile SDK component to become a loadable Linux module
+
+CONFIG_SDK_KERNEL_ECOS
+	SDK for eCos platform
+
+CONFIG_SDK_DRIVER_COMPILE
+	Compile all drivers below RTK Layer as built-in or module
+
+CONFIG_SDK_DRIVER_NIC
+    Compile the NIC driver as built-in or module
+
+CONFIG_SDK_DRIVER_NIC_KERNEL_MODE
+    Select the NIC driver in kernel mode
+
+CONFIG_SDK_DRIVER_NIC_USER_MODE
+    Select the NIC driver in user mode
+
+CONFIG_SDK_DRIVER_NIC_R8328
+    Compiler the 8328 NIC driver as built-in or module
+
+CONFIG_SDK_DRIVER_NIC_R8390
+    Compiler the 8390 NIC driver as built-in or module
+
+CONFIG_SDK_DRIVER_NIC_R8380
+    Compiler the 8380 NIC driver as built-in or module
+
+CONFIG_SDK_DRIVER_RTCORE
+	Select the option to compile the feature code for SDK Kernel Core Driver
+
+CONFIG_SDK_DRIVER_RTK
+	Select the option to compile the feature code for RTK Kernel Driver or RTK User Library
+
+CONFIG_SDK_DRIVER_RTK_BACKWARD_COMPATIBLE_8328
+	Select the option to compile the backward compatible 8328 RTK API code for RTK Kernel Driver or RTK User Library
+
+CONFIG_SDK_DRIVER_RTK_CUSTOMER
+	Select the option to compile the customer RTK API code for RTK Kernel Driver or RTK User Library
+
+CONFIG_SDK_DRIVER_TEST
+	Select the option to compile the internal testing code for SDK Kernel Driver
+
+CONFIG_SDK_DRIVER_MX
+	SDK Linux Net Driver
+
+CONFIG_SDK_DRIVER_RTDRV
+	SDK Linux User/Kernel Common Driver
+
+CONFIG_SDK_DRIVER_RTNIC
+	SDK Linux Ethernet Driver
+
+CONFIG_SDK_DEBUG
+	Enable or disable SDK debug messages. Reduce the code size when you do not select this
+
+CONFIG_SDK_DEBUG_LOG_TYPE_LEVEL
+	Type: log level of debug messages
+
+CONFIG_SDK_DEBUG_LOG_TYPE_LEVEL_MASK
+	Type: log level-mask of debug messages
+
+CONFIG_SDK_DEBUG_LOG_LEVEL
+	default "3"
+	
+	Designate the logging level of debug messages.
+	
+	0: FATAL ERROR
+	1: MAJOR ERROR
+	2: MINOR ERROR
+	3: WARNING
+	4: EVENT
+	5: INFO
+	6: FUNC_ENTER
+	7: DEBUG
+	8: TRACE
+
+CONFIG_SDK_DEBUG_LOG_LEVEL_MASK
+	default "0xF"
+	
+	Assign a bitmask of debug levels
+	
+	0xF     : DEFAULT LEVEL MASK OF MESSAGES (WARNING)
+	0x0     : ALL MESSAGES OFF
+	0x1FF   : ALL MESSAGES ON
+
+CONFIG_SDK_DEBUG_LOG_MOD_MASK
+	default "0x7FFFFFFF"
+	
+	Assign a bitmask of debug modules
+	
+	0x0     : ALL MODULES OFF
+	0x7FFFFFFF: ALL MODULES ON
+	
+	Please refer to the debug header file for other bit definition
+
+CONFIG_SDK_APP_COMPILE
+	Compile SDK application code
+
+CONFIG_SDK_APP_DIAG
+	Compile SDK Diag Shell
+
+CONFIG_RRCP_MASTER
+    Compile the RRCP function
+
+CONFIG_SDK_APP_ECOS_EXAMPLE
+    Compile the example of SDK application for eCos
+
+CONFIG_SDK_BSP_SMI
+	Select the option to enable SMI and GPIO driver support
+
+CONFIG_SDK_BSP_FLASH
+    Enable the flash common setting
+
+CONFIG_FLASH_BLOCK_SIZE
+    The flash block size definition
+
+CONFIG_FLASH_SIZE_4MB
+    Select the flash size
+
+CONFIG_FLASH_SIZE_8MB
+    Select the flash size
+
+CONFIG_FLASH_SIZE_16MB
+    Select the flash size
+
+CONFIG_DUAL_IMAGE
+    Enable the dual image support
+
+CONFIG_FLASH_LAYOUT_TYPE1
+    Select the flash layout type 1
+
+CONFIG_SDK_BSP_MTD
+    Enable the MTD driver
+
+CONFIG_SDK_BSP_MTD_SPI
+    Enable the SPI flash driver
+
+CONFIG_SDK_BSP_MTD_SPI_QUAD_IO
+    Select the SPI flash driver to QUAD IO type
+
+CONFIG_SDK_BSP_MTD_NOR
+    Enable the NOR flash driver
+
+CONFIG_SDK_FPGA_PLATFORM
+	Select the option to verify SDK on FPGA development platform
+
+CONFIG_SDK_MODEL_MODE
+	Select the option to verify SDK on x86 development platform
+
+CONFIG_SDK_LINKED_KMOD
+	Select the option to linked the SDK kernel mode and don't build from source again
+
+CONFIG_TRUNK_FAILOVER_HANDLING
+    Select the option to enable the trunk failover handing mechanism
+
+CONFIG_SDK_REG_DFLT_VAL
+    Select the option to include the register default value in strcuture
+
+CONFIG_SDK_REG_FIELD_TYPE
+    Select the option to include the register field type in strcuture
+
+CONFIG_SDK_SOFTWARE_RX_CPU_TAG
+    Select the option to parse RMA and ACL index for RTL8328M/RTL8328S
+
+CONFIG_SDK_RX_THREAD
+    Select the option to enable the NIC receive thread
+
+CONFIG_SDK_LINKMON_POLLING_MODE
+    Select the option to enable the LinkMon thread by polling mode
+
+CONFIG_SDK_LINKMON_ISR_MODE
+    Select the option to enable the LinkMon thread by interrupt mode
+
+CONFIG_SDK_LINKMON_MIXED_MODE
+    Select the option to enable the LinkMon thread by polling and interrupt mixed mode
+
+CONFIG_SDK_AUTO_COMBO_MEDIA_BY_GPIO
+    Detect the GPIO signal and auto configure media of combo port by software thread
+
+CONFIG_SDK_WA_88E6063_COMPATIBLE
+    Select the option to workaround link up issue with Marvell 88E6063 when connect in Nway 10M
+
+CONFIG_SDK_WA_LINKDOWN_PWR_SAVING
+    Select the option to workaround link up issue in internal port of RTL8328M/RTL8328S when power saving mode is enabled
+
+CONFIG_SDK_WA_BACK_PRESSURE
+    Select the option to workaround the back pressure issue of RTL8328M/RTL8328S when duplex is half 
+
+CONFIG_SDK_WA_INTRALINK_DELAY
+    Select the option to workaround intralink delay argument of RTL8328M/RTL8328S when connect to RTL8212F PHY
+
+CONFIG_SDK_WA_EEE_COMPATIBLE
+    Select the option to workaround the eee compatible issue in RTL8208D PHY
+
+CONFIG_SDK_WA_RTL8231_RESET
+    Select the option to workaround the reset issue in RTL8231
+
+CONFIG_SDK_WA_PKTBUF_WATCHDOG
+    Select the option to monitor packet buffer status and trigger packet buffer recovery procedure if condition is match in RTL8328M/RTL8328S/RTL8328L
+
+CONFIG_SDK_WA_RTL833X_COMBO_LED
+    Select the option to workaround the combo port led display in MAC RTL833X chip.
+
+CONFIG_SDK_SOFTWARE_CONTROL_LED
+    Select the option to controls RTL8231 by software driver, and disable hardware control capability.
+
+CONFIG_SDK_UART1
+    Select the option to enable uart1 function.
+
+CONFIG_SDK_PORT_VIEW_PHYSICAL_PORT
+    Select the RTK API port view option to physical port
+
+CONFIG_SDK_PORT_VIEW_ZERO_BASE_PORT
+    Select the RTK API port view option to zero-based port for 838x/833x 8-port/16-port model

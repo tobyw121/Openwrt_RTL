@@ -1,0 +1,32 @@
+[RTL8396M][10G] Updated 10G parameters and support mechanisms.
+Enhancement:
+		Updated 10G parameters and support mechanisms.
+===================================================================================================
+Modified files
+*     sdk/include/hal/phy/phy_8390.h
+*     sdk/include/rtk/port.h
+*     sdk/src/dal/cypress/dal_cypress_port.c
+*     sdk/src/hal/mac/drv.c
+*     sdk/src/hal/phy/phy_8390.c
+*     sdk/src/app/diag_v2/config/diag.cli
+*     sdk/src/app/diag_v2/include/flag/cmd_flag_rtl8390.h
+*     sdk/src/app/diag_v2/src/diag_diag.c
+
+Release Files:
+	rtk-ms-sdk-src-2.1.4.53590-patch016.tar.gz
+
+===================================================================================================
+Modified files
+*     u-boot-2011.12/board/Realtek/switch/rtk/mac/rtl8390/rtl8390_drv.c
+*     u-boot-2011.12/board/Realtek/switch/rtk/mac/rtl8390/rtl8390_init.c
+*     u-boot-2011.12/board/Realtek/switch/rtk/mac/rtl8390/rtl8390_init.h
+*     u-boot-2011.12/board/Realtek/switch/rtk/mac/rtl8390/rtl8390_rtk.c
+*     u-boot-2011.12/board/Realtek/switch/rtk/mac/rtl8390/rtl8390_rtk.h
+*     u-boot-2011.12/board/Realtek/switch/common/cmd_rtk.c
+
+Notice:
+		This patch is used to replace patch011 and patch13.
+		The patch011 and patch013 should be obsoleted.
+
+Release Files:
+rtk-ms-uboot-2011.12-src-svn53590-patch-016.tar.gz

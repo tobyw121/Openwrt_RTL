@@ -1,0 +1,275 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+
+#include <dt-bindings/gpio/gpio.h>
+
+/dts-v1/;
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	compatible = "realtek,rtl8197f-soc";
+
+	aliases {
+		serial0 = &uart0;
+		serial1 = &uart1;
+		serial2 = &uart2;
+		ethernet0 = &ethernet0;
+	};
+
+	chosen {
+		bootargs = "console=ttyS0,115200n8 lpj=5000000 rootfstype=squashfs,jffs2 clk_ignore_unused";
+		stdout-path = "serial0:115200n8";
+	};
+
+	/* RTL8197F-VG boards use a 1 GHz MIPS 24Kc CPU in the vendor BSP. */
+	cpu_clk: clock-1000m {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <1000000000>;
+	};
+
+	/* Vendor BSP: UART clock is fixed to 100 MHz on RTL8197F/RTL8197F-VG. */
+	uart_clk: clock-100m {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <100000000>;
+	};
+
+	/* Vendor BSP: DW APB timer reference clock is 25 MHz. */
+	timer_clk: clock-25m {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <25000000>;
+	};
+
+	/* Vendor BSP: LX/SPIC clock is 200 MHz. */
+	lx_clk: clock-200m {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <200000000>;
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			compatible = "mips,mips24Kc";
+			reg = <0>;
+			clocks = <&cpu_clk>;
+		};
+	};
+
+	cpuintc: interrupt-controller {
+		compatible = "mti,cpu-interrupt-controller";
+		#address-cells = <0>;
+		#interrupt-cells = <1>;
+		interrupt-controller;
+	};
+
+	/*
+	 * RTL8197F peripheral window from the vendor BSP:
+	 *   0x18000000 system registers
+	 *   0x18100000 USB OTG
+	 *   0x18143000 SHEIPA SPI-NOR controller
+	 *   0x18147000 UART0
+	 *   0x18640000 WLAN MAC
+	 *   0x18b00000 PCIe RC configuration
+	 * The 0x10000000 range is the SPIC automatic read window.
+	 */
+	soc: soc@18000000 {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges = <0x00000000 0x18000000 0x02000000>,
+			 <0x03800000 0x1b800000 0x00100000>,
+			 <0x10000000 0x10000000 0x02000000>;
+
+		syscon: syscon@0 {
+			compatible = "realtek,rtl8197f-syscon", "syscon", "simple-mfd";
+			reg = <0x00000000 0x1000>;
+		};
+
+		pinmux: pinctrl@800 {
+			compatible = "pinctrl-single";
+			reg = <0x00000800 0x4c>;
+			pinctrl-single,bit-per-mux;
+			pinctrl-single,register-width = <32>;
+			pinctrl-single,function-mask = <0xf>;
+			#pinctrl-cells = <2>;
+		};
+
+		intc: interrupt-controller@3000 {
+			compatible = "realtek,rtl8197f-intc", "realtek,rtl-intc";
+			reg = <0x00003000 0x38>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+
+			interrupt-parent = <&cpuintc>;
+			interrupts = <2>, <3>, <4>, <5>, <6>;
+		};
+
+		/* Timer/counter block at BSP_TC_BASE. TC0 is ICTL bit 7. */
+		timer0: timer@3100 {
+			compatible = "realtek,rtl8197f-timer", "realtek,otto-timer";
+			reg = <0x00003100 0x20>;
+			interrupt-parent = <&intc>;
+			interrupts = <7 1>; /* OEM IRR value 2 -> intc output-index 1 */
+			clocks = <&lx_clk>;
+			status = "disabled";
+		};
+
+		watchdog0: watchdog@311c {
+			compatible = "realtek,rtl8197f-wdt", "realtek,otto-wdt";
+			reg = <0x0000311c 0x4>;
+			clocks = <&lx_clk>;
+			status = "disabled";
+		};
+
+		gpio0: gpio-controller@3500 {
+			compatible = "realtek,rtl8197f-gpio";
+			reg = <0x00003500 0x38>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <64>;
+
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			interrupt-parent = <&intc>;
+			interrupts = <16 1>, <17 1>; /* OEM IRR value 2 -> intc output-index 1 */
+			status = "disabled";
+		};
+
+		ethernet0: ethernet@10000 {
+			compatible = "realtek,rtl8197f-rtknet", "realtek,rtl865x-cpuif";
+			reg = <0x00010000 0x1000>, <0x03800000 0x10000>, <0x00000000 0x4000>;
+			reg-names = "cpuif", "swcore", "system";
+			interrupt-parent = <&intc>;
+			interrupts = <15 3>; /* BSP_SWCORE_IRQ: OEM IRR value 4 -> output-index 3 */
+			clocks = <&lx_clk>;
+			phy-mode = "rgmii";
+			realtek,rx-ring-size = <64>;
+			realtek,tx-ring-size = <64>;
+			realtek,rx-buffer-size = <2048>;
+			/* SDK rtknet sends direct-to-port frames via descriptor DP bits. */
+			realtek,tx-port-mask = <0x7f>;
+			/* Mirror the SDK's KSEG1 descriptor/buffer address programming. */
+			realtek,desc-addr-kseg1;
+			status = "disabled";
+		};
+
+		usb_otg: usb@100000 {
+			compatible = "realtek,rtl8197f-usb-otg";
+			reg = <0x00100000 0x40000>;
+			interrupt-parent = <&intc>;
+			interrupts = <12 1>; /* OEM IRR value 2 -> intc output-index 1 */
+			status = "disabled";
+		};
+
+		spi0: spi@143000 {
+			compatible = "realtek,rtl8197f-spi-sheipa";
+			reg = <0x00143000 0x1000>;
+			clocks = <&lx_clk>;
+			interrupt-parent = <&intc>;
+			interrupts = <23 1>; /* OEM IRR value 2 -> intc output-index 1 */
+			#address-cells = <1>;
+			#size-cells = <0>;
+			/* Realtek BSP initialises the boot flash as SPI mode 3. */
+			spi-cpol;
+			spi-cpha;
+			/* 32 MiB linear read window; actual RD05 flash size is 16 MiB. */
+			realtek,auto-map = <0x10000000 0x02000000>;
+			status = "disabled";
+		};
+
+		spirom0: flash@10000000 {
+			compatible = "realtek,rtl8197f-spirom";
+			reg = <0x10000000 0x01000000>, <0x00143000 0x1000>;
+			reg-names = "automap", "controller";
+			clocks = <&lx_clk>;
+			label = "rtl8197f-spirom";
+			erase-size = <0x10000>;
+			/* RD05 Linux ioremap byte reads from auto-map are shifted by +1. */
+			realtek,read-shift = <1>;
+			status = "disabled";
+		};
+
+		uart0: serial@147000 {
+			compatible = "realtek,rtl8197f-uart", "snps,dw-apb-uart", "ns16550a";
+			reg = <0x00147000 0x100>;
+			clocks = <&uart_clk>;
+			clock-frequency = <100000000>;
+			/*
+			 * Keep the SoC-level node conservative.  Boards with validated
+			 * RTL8197F UART routing, such as RD05, override IRQ9 in their DTS.
+			 */
+			reg-io-width = <4>;
+			reg-shift = <2>;
+			current-speed = <115200>;
+			fifo-size = <16>;
+			no-loopback-test;
+			status = "okay";
+		};
+
+		uart1: serial@147400 {
+			compatible = "snps,dw-apb-uart", "ns16550a";
+			reg = <0x00147400 0x100>;
+			clocks = <&uart_clk>;
+			clock-frequency = <100000000>;
+			interrupt-parent = <&intc>;
+			interrupts = <46 2>;
+			reg-io-width = <4>;
+			reg-shift = <2>;
+			fifo-size = <16>;
+			no-loopback-test;
+			status = "disabled";
+		};
+
+		uart2: serial@147800 {
+			compatible = "snps,dw-apb-uart", "ns16550a";
+			reg = <0x00147800 0x400>;
+			clocks = <&uart_clk>;
+			clock-frequency = <100000000>;
+			interrupt-parent = <&intc>;
+			interrupts = <47 2>;
+			reg-io-width = <4>;
+			reg-shift = <2>;
+			fifo-size = <16>;
+			no-loopback-test;
+			status = "disabled";
+		};
+
+		wlan: wifi@640000 {
+			compatible = "realtek,rtl8197f-wmac";
+			reg = <0x00640000 0x40000>;
+			interrupt-parent = <&cpuintc>;
+			interrupts = <6>;
+			status = "disabled";
+		};
+
+		pcie0: pcie@b00000 {
+			compatible = "realtek,rtl8197f-pcie";
+			reg = <0x00b00000 0x10000>, <0x00b10000 0x10000>;
+			interrupt-parent = <&cpuintc>;
+			interrupts = <5>;
+			status = "disabled";
+		};
+	};
+
+	ethdiag0: ethernet-diagnostics@1b800000 {
+		compatible = "realtek,rtl8197f-ethdiag";
+		reg = <0x1b800000 0x10000>;
+		/* v30: SWCORE diagnostics plus GPIO-SMI read probe only, no packet TX/RX. */
+		status = "disabled";
+	};
+
+	/* Vendor rtknet uses physical 0x1b800000 for SWCORE registers. */
+	switchcore: switchcore@1b800000 {
+		compatible = "realtek,rtl8197f-switchcore", "syscon", "simple-mfd";
+		reg = <0x1b800000 0x10000>;
+		interrupt-parent = <&cpuintc>;
+		interrupts = <4>;
+		status = "disabled";
+	};
+};

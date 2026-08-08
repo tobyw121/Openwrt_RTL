@@ -1,0 +1,85 @@
+RTL8197F / Tenda Nova MW5 v42.17 diagnostic report
+
+Physical evidence from v42.16
+--------------------------------
+The UART stream reached:
+
+  QabcdefghijklmRNGXY01234567
+
+This proves that proc_root_init(), nsfs_init(), cgroup_init(), rest_init(),
+PID 1 creation, kthreadd creation, the first scheduler pass and entry into
+cpu_startup_entry() all completed before the OEM bootloader later reported a
+watchdog timeout.
+
+Late reachable watchdog write
+-----------------------------
+Binary and source inspection found a normal-boot postcore_initcall in:
+
+  target/linux/realtek/files-6.6/drivers/net/ethernet/
+  rtl8197f_rd05_oem_switch_preinit.c
+
+The MW5 path performs two one-second switch-reset delays and then used a bare
+write of 0xa5000000 to WDTCNR. The Realtek vendor watchdog implementation warns
+that this direct stop-pattern write may reset the SoC immediately unless the
+counter is reloaded first.
+
+v42.17 source fix
+-----------------
+The board-local preinit driver now uses this sequence:
+
+  1. read WDTCNR
+  2. set WDT_CLEAR bit 23
+  3. write the updated value
+  4. read back WDTCNR
+  5. write the exact stop pattern 0xa5000000
+  6. read back WDTCNR
+
+It is executed immediately after mapping the system registers, before the MW5
+2 x 1 second reset delays, and repeated after GPIO reset/pinmux setup. The
+unsafe bare post-delay write is removed.
+
+Direct diagnostic image markers
+-------------------------------
+The v42.17 direct image instruments the already-built kernel without changing
+protected flash partitions. Scheduler interleaving can change the exact order.
+The useful markers are:
+
+  7  boot CPU entered cpu_startup_entry()
+  I  kernel_init entered
+  F  kernel_init_freeable entered
+  D  do_initcalls entered
+  W  rtl8197f_oem_switch_preinit entered; safe WDT stop performed
+  1  first MW5 one-second reset delay entered
+  2  second MW5 one-second reset delay entered
+  3  second delay returned
+  u  switch GPIO/pinmux sequence completed
+  w  final safe kick-then-stop completed
+  E  restart-handler registration reached
+  d  do_initcalls returned
+  c  wait_for_initramfs returned
+  R  kernel_init_freeable returned
+
+Interpretation:
+- no W: reset occurs before the OEM switch preinit initcall
+- W1: reset during the first delay/reset phase
+- W12: reset during the second delay/reset phase
+- W123uwE: the corrected OEM switch preinit completed
+- d/c/R: progressively later generic kernel-init stages completed
+
+Validation of direct image
+---------------------------
+- LZMA SDK 4.40 decoder: OK
+- decompressed kernel: 9,432,199 bytes
+- fixed loader LZMA window: 2,824,743 bytes
+- compressed stream: 2,823,975 bytes
+- free loader-window reserve: 768 bytes
+- kernel checksum: 0x0000
+- rootfs checksum: 0x0000
+- full flash size: 0x800000
+- bootloader/CFG and 0x5c0000-0x800000 protected regions unchanged
+- deterministic rebuild: byte-identical
+
+Physical v42.17 status
+----------------------
+Not yet tested on hardware. This report does not claim working Ethernet, DSA,
+WLAN RF calibration, sysupgrade or long-term stability.

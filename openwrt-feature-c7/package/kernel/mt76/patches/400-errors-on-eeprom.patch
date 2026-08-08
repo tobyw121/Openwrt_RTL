@@ -1,0 +1,33 @@
+--- a/eeprom.c
++++ b/eeprom.c
+@@ -107,11 +107,18 @@
+ int
+ mt76_eeprom_init(struct mt76_dev *dev, int len)
+ {
++	int ret;
+ 	dev->eeprom.size = len;
+ 	dev->eeprom.data = devm_kzalloc(dev->dev, len, GFP_KERNEL);
+ 	if (!dev->eeprom.data)
+ 		return -ENOMEM;
+ 
+-	return !mt76_get_of_eeprom(dev, len);
++	ret = !mt76_get_of_eeprom(dev, len);
++	if(ret)
++		dev_info(dev->dev, "Success reading EEPROM from mtd\n");
++	else
++		dev_err(dev->dev, "FAIL reading EEPROM from mtd\n");
++
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(mt76_eeprom_init);
+
+--- a/mt7603/eeprom.c
++++ b/mt7603/eeprom.c
+@@ -138,6 +138,7 @@
+ 	case 0x7603:
+ 		return 0;
+ 	default:
++		dev_err(dev->dev, "EEPROM data check failed: %04x\n", val);
+ 		return -EINVAL;
+ 	}
+ }

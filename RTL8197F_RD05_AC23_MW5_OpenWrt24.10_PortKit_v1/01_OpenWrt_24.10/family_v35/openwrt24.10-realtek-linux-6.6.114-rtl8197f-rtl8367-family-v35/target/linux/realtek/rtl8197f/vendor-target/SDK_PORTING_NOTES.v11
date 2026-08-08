@@ -1,0 +1,17 @@
+SDK v11 extraction summary
+==========================
+
+RTL8197 variants observed in SDK configs:
+- RTL_8197F, RTL_8197F_FPGA
+- RTL_8197F_GW / AP
+- RTL_8197F_VG and board revisions V355I, V612, V672, V622G
+- SPINAND_RTL8197F_VG_* board configs
+
+RTL8367D/RB/R switch facts ported:
+- RTL8367D chip-id 0x6642
+- CPU_PORT_MASK 0x1219
+- CPU_CTRL 0x121a
+- unknown/broadcast flood masks 0x0890/0x0891/0x0892
+- unknown IPv4/IPv6/L2 multicast action regs 0x08c9/0x08cb/0x08cd
+- unknown unicast action reg 0x09c0
+- EXT_PORT0/1/2 enum is 16/17/18 in SDK; RD05 uses EXT1/port6 in the Linux DTS

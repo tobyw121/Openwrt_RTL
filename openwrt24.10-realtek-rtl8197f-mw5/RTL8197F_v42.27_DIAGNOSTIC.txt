@@ -1,0 +1,60 @@
+RTL8197F / Tenda Nova MW5 v42.27 diagnostic rationale
+=====================================================
+
+Observed v42.26 hardware state
+------------------------------
+- RTL8363/RTL8367-class chip ID: 0x6367, revision 0x0060.
+- External switch LAN and WAN links reach 1 Gbit/s full duplex and DSA forwarding.
+- RTL8197FS rtknet selects desc=6/24 and programs CPURPDCR0/CPUTPDCR0.
+- LAN and WAN switch-side RX counters increase.
+- eth0 RX remains exactly zero.
+- A client receives no DHCP lease, DNS or ARP response unless configured statically.
+
+Interpretation
+--------------
+The client DHCP DISCOVER and ARP broadcast reach the external switch user port but
+are not delivered from RTL8197FS physical P0/RGMII into the CPU DMA ring. The
+OpenWrt dnsmasq configuration cannot answer a packet that never reaches Linux.
+This is below UCI, bridge VLAN, DHCP and DNS.
+
+Missing v42.26 state
+--------------------
+The driver registration line reports legacy-pipeline=0 on MW5. The Realtek OEM
+RTL8367R path also initializes the internal RTL865x tables and enables unknown VID
+and CPU trap paths. The existing OpenWrt driver contained that reconstruction only
+for Xiaomi RD05, although both boards terminate an external RTL83xx CPU link on
+RTL8197F physical P0.
+
+v42.27 operation
+----------------
+1. Wait for SWCORE PVCR0 to expose non-zero reset defaults.
+2. Program VLAN 9/FID0 and VLAN 8/FID1 with P0 as the only internal member.
+3. Program P0 PVID=9 and port-to-netif0.
+4. Create netif0 from the live eth0 MAC.
+5. Create FID0/FID1 broadcast and CPU-MAC L2 entries.
+6. Enable unknown VID, unknown unicast and unknown multicast to CPU.
+7. Program the retained OEM DHCPv4/DHCPv6/PPPoE/permit ACL entries.
+8. Repeat after three seconds and allow a manual reseed through:
+
+   echo reseed > /proc/rd05-rtknet
+
+Required test
+-------------
+On the router:
+
+  dmesg | grep -E 'registered eth0|rtl865x|p0 cpu-pipeline|NETDEV WATCHDOG'
+  ip -s link show eth0
+  ip -s link show lan
+  ip -s link show wan
+  logread | grep -E 'dnsmasq|DHCP'
+
+On the client, remove the static address and renew DHCP. Success requires:
+- eth0 RX packet/byte counters increase;
+- an ARP neighbor appears on the router;
+- dnsmasq logs DHCPDISCOVER/DHCPOFFER/DHCPREQUEST/DHCPACK;
+- no new NETDEV WATCHDOG timeout;
+- client receives 192.168.1.x, gateway 192.168.1.1 and DNS automatically.
+
+If l2_ok/pipe_ok remain zero, table access itself failed. If those counters are
+non-zero but eth0 RX remains zero, the next isolated target is the external
+RTL8363 ingress ACL/CPU-port forwarding rule, not descriptor size or DHCP config.

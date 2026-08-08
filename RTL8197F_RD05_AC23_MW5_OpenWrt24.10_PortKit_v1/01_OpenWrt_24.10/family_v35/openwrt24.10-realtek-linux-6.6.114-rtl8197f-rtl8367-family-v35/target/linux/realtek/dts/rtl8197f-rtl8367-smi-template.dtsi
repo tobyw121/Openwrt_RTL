@@ -1,0 +1,78 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+/*
+ * RTL8197F external RTL8367D / RTL8367RB-VC D-map switch template.
+ *
+ * RD05 OEM reference from stock Linux 4.4.176:
+ *   switchChip = 8367D
+ *   rtl819x_8367r_i2c_pin.{1,2}: GPIO55/GPIO56
+ *   rtl819x_8367r_reset_pin.0: GPIO58, deasserted high
+ *   RTL8367D CPU port 7/EXT1/MAC7 <-> RTL8197F physical P0/RGMII
+ *
+ * The RTL8197F TX descriptor must target physical P0 (DP bit 0).  DP bit 6
+ * plus DP_EXT is an internal rtl865x extension selector and must not be used
+ * for this board. RTL8367D EXT1 uses SDK SSC settings. Generic boards
+ * default to TX0/RX5; the RD05 hardware profile uses TX0/RX6.
+ */
+
+/ {
+	rtl8367_smi: switch {
+		compatible = "realtek,rtl8367rb-vc";
+		pinctrl-names = "default";
+		pinctrl-0 = <&rtl8367_smi_h0_g7_pins>;
+		mdc-gpios = <&gpio0 56 GPIO_ACTIVE_HIGH>;  /* OEM i2c_pin.2 / H0 */
+		mdio-gpios = <&gpio0 55 GPIO_ACTIVE_HIGH>; /* OEM i2c_pin.1 / G7 */
+		reset-gpios = <&gpio0 58 GPIO_ACTIVE_LOW>; /* OEM reset_pin.0 / H2 */
+		realtek,disable-leds;
+		realtek,rtl8197f-cpu-path-bootstrap;
+		status = "disabled";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 { reg = <0>; label = "lan1"; phy-handle = <&swphy0>; };
+			port@1 { reg = <1>; label = "lan2"; phy-handle = <&swphy1>; };
+			port@2 { reg = <2>; label = "wan";  phy-handle = <&swphy2>; };
+			port@3 { reg = <3>; label = "lan3"; phy-handle = <&swphy3>; };
+			port@4 { reg = <4>; label = "lan4"; phy-handle = <&swphy4>; };
+
+			port@7 {
+				reg = <7>;
+				label = "cpu";
+				ethernet = <&ethernet0>;
+				phy-mode = "rgmii";
+				tx-internal-delay-ps = <0>;
+				/* Use 1500 for the SDK RX5 default; RD05 uses RX6/1800. */
+				rx-internal-delay-ps = <1800>;
+				fixed-link { speed = <1000>; full-duplex; pause; };
+			};
+		};
+
+		mdio {
+			compatible = "realtek,smi-mdio";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			swphy0: ethernet-phy@0 { reg = <0>; };
+			swphy1: ethernet-phy@1 { reg = <1>; };
+			swphy2: ethernet-phy@2 { reg = <2>; };
+			swphy3: ethernet-phy@3 { reg = <3>; };
+			swphy4: ethernet-phy@4 { reg = <4>; };
+		};
+	};
+};
+
+&ethernet0 {
+	realtek,rtl8367-dsa-master;
+	realtek,p0-rgmii-tx-delay = <0>;
+	realtek,p0-rgmii-rx-delay = <6>;
+	realtek,p0-rgtxc = <3>;
+	realtek,tx-port-mask = <0x1>;
+	realtek,tx-dp-ext = <0>;
+	realtek,tx-extspa = <0>;
+};
+
+&pinmux {
+	rtl8367_smi_h0_g7_pins: rtl8367-smi-h0-g7-pins {
+		pinctrl-single,bits = <0x34 0x03300000 0x0ff00000>;
+	};
+};

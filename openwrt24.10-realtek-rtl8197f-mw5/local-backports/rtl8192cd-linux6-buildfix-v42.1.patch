@@ -1,0 +1,111 @@
+--- a/package/kernel/rtl8192cd-rtl8197f/src/WlanHAL/HalCommon.c
++++ b/package/kernel/rtl8192cd-rtl8197f/src/WlanHAL/HalCommon.c
+@@ -136,8 +136,8 @@
+             printk("IS_RTL8822B_SERIES value8 = %x \n",value8);
+ 
+ 			unsigned long HCI_22B = platform_efio_read_4byte(Adapter, REG_SYS_STATUS1);
+-			unsigned char hci_type = (HCI_22B >> 12) & 0x7;
+-			switch (hci_type) {
++			unsigned char hci_type_22b = (HCI_22B >> 12) & 0x7;
++			switch (hci_type_22b) {
+ 				case 3:
+ 				case 6:
+ 					printk("Hardware type = RTL8822BE\n");
+@@ -161,8 +161,8 @@
+             printk("IS_RTL8822C_SERIES value8 = %x \n",value8);
+ 
+ 			unsigned long HCI_22C = platform_efio_read_4byte(Adapter, REG_SYS_STATUS1);
+-			unsigned char hci_type = (HCI_22C >> 12) & 0x7;
+-			switch (hci_type) {
++			unsigned char hci_type_22c = (HCI_22C >> 12) & 0x7;
++			switch (hci_type_22c) {
+ 				case 3:
+ 				case 6:
+ 					printk("Hardware type = RTL8822CE\n");
+@@ -186,8 +186,8 @@
+             printk("IS_RTL8812F_SERIES value8 = %x \n",value8);
+ 
+ 			unsigned long HCI_12F = platform_efio_read_4byte(Adapter, REG_SYS_STATUS1);
+-			unsigned char hci_type = (HCI_12F >> 12) & 0x7;
+-			switch (hci_type) {
++			unsigned char hci_type_12f = (HCI_12F >> 12) & 0x7;
++			switch (hci_type_12f) {
+ 				case 3:
+ 				case 6:
+ 					printk("Hardware type = RTL8812FE\n");
+@@ -216,8 +216,8 @@
+             printk("IS_RTL8821C_SERIES value8 = %x \n",value8);
+ 
+ 			unsigned long HCI_21C = platform_efio_read_4byte(Adapter, REG_SYS_STATUS1);
+-			unsigned char hci_type = (HCI_21C >> 12) & 0x3;
+-			switch (hci_type) {
++			unsigned char hci_type_21c = (HCI_21C >> 12) & 0x3;
++			switch (hci_type_21c) {
+ 				case 2:
+ 				case 3:
+ 					printk("Hardware type = RTL8821CE\n");
+--- a/package/kernel/rtl8192cd-rtl8197f/src/8192cd_cfg.h
++++ b/package/kernel/rtl8192cd-rtl8197f/src/8192cd_cfg.h
+@@ -1586,6 +1586,9 @@
+ //Check Veriwave MU bug
+ //-------------------------------------------------------------
+ #ifdef CONFIG_WLAN_HAL_8822BE
++#ifndef BEAMFORMING_SUPPORT
++#define BEAMFORMING_SUPPORT 0
++#endif
+ #if (BEAMFORMING_SUPPORT == 1)
+ #ifndef CONFIG_VERIWAVE_MU_CHECK
+ #define CONFIG_VERIWAVE_MU_CHECK
+--- a/package/kernel/rtl8192cd-rtl8197f/src/core/8192cd_core_util.h
++++ b/package/kernel/rtl8192cd-rtl8197f/src/core/8192cd_core_util.h
+@@ -1178,6 +1178,13 @@
+ 
+ #endif
+ 
++#ifdef get_desc
++#undef get_desc
++#endif
++#ifdef set_desc
++#undef set_desc
++#endif
++
+ #if defined(CONFIG_RTL_TRIBAND_SUPPORT)
+ #define get_desc(val)	le32_to_cpu(val)
+ #define set_desc(val)	cpu_to_le32(val)
+--- a/package/kernel/rtl8192cd-rtl8197f/src/phydm/halrf/rtl8197f/halrf_dpk_8197f.h
++++ b/package/kernel/rtl8192cd-rtl8197f/src/phydm/halrf/rtl8197f/halrf_dpk_8197f.h
+@@ -28,7 +28,9 @@
+ #define DPK_SRAM_write_DBG_8197F 0
+ #define DPK_DO_PATH_A 1
+ #define DPK_DO_PATH_B 1
++#ifndef RF_T_METER_8197F
+ #define RF_T_METER_8197F RF_0x42
++#endif
+ #define DPK_THRESHOLD_8197F 6
+ 
+ 
+--- a/package/kernel/rtl8192cd-rtl8197f/src/WlanHAL/RTL88XX/RTL8197F/Hal8197FPwrSeqCmd.h
++++ b/package/kernel/rtl8192cd-rtl8197f/src/WlanHAL/RTL88XX/RTL8197F/Hal8197FPwrSeqCmd.h
+@@ -170,16 +170,16 @@
+ 	/* format */																\
+ 	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, // comments here*/								\
+ 	{0x00A3, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_WRITE, BIT0 | BIT1 | BIT2 , 0}, /*0xa0[26:24] = 0 to prepare for checking HPON PMC*/	\
+-	{0x00A0, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_POLLING, BIT4|BIT5|BIT6|BIT7, BIT5}, /* 0xa0[9:4] == 6'b10_0010 HPON PMC is ready.*/	\ 
+-	{0x00A1, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_POLLING, BIT0|BIT1, BIT1}, /* 0xa0[9:4] == 6'b10_0010 HPON PMC is ready.*/	\   
++	{0x00A0, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_POLLING, BIT4|BIT5|BIT6|BIT7, BIT5}, /* 0xa0[9:4] == 6'b10_0010 HPON PMC is ready.*/	\
++	{0x00A1, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_POLLING, BIT0|BIT1, BIT1}, /* 0xa0[9:4] == 6'b10_0010 HPON PMC is ready.*/	\
+ 	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_WRITE, BIT0 , BIT0}, /*set (0x4[8] =1) to enable MAC PMC*/	\
+-    {0x0006, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_WRITE, BIT0, BIT0},/* release WLON reset  0x04[16]=1*/	\	
+-	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_POLLING, BIT0, 0}, /* Polling (0x4[8] == 0){MAC PMC is ready}*/	\	
++    {0x0006, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_WRITE, BIT0, BIT0},/* release WLON reset  0x04[16]=1*/	\
++	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_POLLING, BIT0, 0}, /* Polling (0x4[8] == 0){MAC PMC is ready}*/	\
+ 	{0x00A3, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_WRITE, BIT0 | BIT1 | BIT2 , 0x4}, /*0xa0[26:24] = 4 to prepare for checking HPON PMC*/	\
+ 	{0x00A0, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_POLLING, BIT0|BIT1|BIT2|BIT3|BIT4|BIT5|BIT6|BIT7, 0}, /* If 0xa0[7:0] == 8'b0 HPON PMC is ready.*/	\
+ 	{0x00A1, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_POLLING, BIT0|BIT1, BIT0}, /* 0xa0[9:8] == 6'b01 HPON PMC is ready.*/	\
+-	{0x0002, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_WRITE, 0xFF , 0xFF}, /*0x2[7:0] = 0xff to enable all function */	\	
+-	{0x0003, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_WRITE, 0xFF , 0xFF}, /*0x2[15:8] = 0xff to enable all function */	\		             
++	{0x0002, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_WRITE, 0xFF , 0xFF}, /*0x2[7:0] = 0xff to enable all function */	\
++	{0x0003, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,PWR_BASEADDR_MAC,PWR_CMD_WRITE, 0xFF , 0xFF}, /*0x2[15:8] = 0xff to enable all function */	\
+  
+ 
+ extern WLAN_PWR_CFG rtl8197F_power_on_flow[RTL8197F_TRANS_CARDEMU_TO_ACT_STEPS+RTL8197F_TRANS_END_STEPS];

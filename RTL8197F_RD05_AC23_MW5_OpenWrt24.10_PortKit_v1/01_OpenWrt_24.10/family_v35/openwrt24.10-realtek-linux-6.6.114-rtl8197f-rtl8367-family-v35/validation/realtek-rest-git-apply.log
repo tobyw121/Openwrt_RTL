@@ -1,0 +1,28 @@
+REALTEK_REST 0001 325-net-dsa-realtek-rtl8365mb-add-native-rtl8367d.patch
+REALTEK_REST 0002 326-rtl8197f-rtl8367d-mainstream-offload-notes.patch
+REALTEK_REST 0003 327-net-dsa-realtek-rtl8367-family-profiles.patch
+REALTEK_REST 0004 700-net-dsa-increase-dsa-max-ports-for-rtl838x.patch
+REALTEK_REST 0005 702-include-linux-add-phy-hsgmii-mode.patch
+REALTEK_REST 0006 704-include-linux-phy-increase-phy-address-number-for-rtl839x.patch
+REALTEK_REST 0007 706-include-linux-add-phy-ops-for-rtl838x.patch
+REALTEK_REST 0008 708-drivers-net-phy-eee-support-for-rtl838x.patch
+REALTEK_REST 0009 710-net-phy-sfp-re-probe-modules-on-DEV_UP-event.patch
+REALTEK_REST 0010 712-net-phy-add-an-MDIO-SMBus-library.patch
+REALTEK_REST 0011 714-net-phy-sfp-add-support-for-SMBus.patch
+REALTEK_REST 0012 716-net-ethernet-add-support-for-rtl838x-ethernet.patch
+REALTEK_REST 0013 718-net-dsa-add-support-for-rtl838x-switch.patch
+REALTEK_REST 0014 720-add-rtl-phy.patch
+REALTEK_REST 0015 722-net-dsa-add-rtl838x-support-for-tag-trailer.patch
+REALTEK_REST 0016 723-net-mdio-Add-Realtek-Otto-auxiliary-controller.patch
+REALTEK_REST 0017 800-gpio-regmap-Bypass-cache-for-shadowed-outputs.patch
+REALTEK_REST 0018 802-mfd-Add-RTL8231-core-device.patch
+REALTEK_REST 0019 803-pinctrl-Add-RTL8231-pin-control-and-GPIO-support.patch
+REALTEK_REST 0020 804-leds-Add-support-for-RTL8231-LED-scan-matrix.patch
+REALTEK_REST_APPLIED=20
+MATCH drivers/net/dsa/realtek/rtl8365mb.c
+MATCH drivers/net/dsa/realtek/realtek-mdio.c
+MATCH drivers/net/dsa/realtek/realtek-smi.c
+MATCH Documentation/devicetree/bindings/net/dsa/realtek.yaml
+MATCH drivers/net/ethernet/Kconfig
+NO_REJECT_OR_ORIG_FILES
+REALTEK_REST_GIT_APPLY_PASS

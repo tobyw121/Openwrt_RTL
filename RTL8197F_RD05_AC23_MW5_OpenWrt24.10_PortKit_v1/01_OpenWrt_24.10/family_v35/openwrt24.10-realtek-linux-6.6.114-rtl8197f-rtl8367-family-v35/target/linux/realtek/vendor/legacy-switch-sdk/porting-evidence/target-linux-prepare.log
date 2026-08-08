@@ -1,0 +1,58 @@
+awk: include/scan.awk: line 21: function asort never defined
+awk: include/scan.awk: line 21: function asort never defined
+
+awk: include/scan.awk: line 21: function asort never defined
+awk: include/scan.awk: line 21: function asort never defined
+
+make[2]: Entering directory '/mnt/data/openwrt_port_work/openwrt/scripts/config'
+make[2]: 'conf' is up to date.
+make[2]: Leaving directory '/mnt/data/openwrt_port_work/openwrt/scripts/config'
+make[4]: Entering directory '/mnt/data/openwrt_port_work/openwrt/target/linux'
+make[5]: Entering directory '/mnt/data/openwrt_port_work/openwrt/target/linux/realtek'
+make[6]: Entering directory '/mnt/data/openwrt_port_work/openwrt/target/linux/realtek/image'
+make[6]: Leaving directory '/mnt/data/openwrt_port_work/openwrt/target/linux/realtek/image'
+make[5]: Leaving directory '/mnt/data/openwrt_port_work/openwrt/target/linux/realtek'
+make[4]: Leaving directory '/mnt/data/openwrt_port_work/openwrt/target/linux'
+time: target/linux/prereq#0.20#0.05#0.25
+WARNING: your configuration is out of sync. Please run make menuconfig, oldconfig or defconfig!
+make[1]: Entering directory '/mnt/data/openwrt_port_work/openwrt'
+make[2]: Entering directory '/mnt/data/openwrt_port_work/openwrt/target/linux'
+make[3]: Entering directory '/mnt/data/openwrt_port_work/openwrt/target/linux/realtek'
+mkdir -p /mnt/data/openwrt_port_work/openwrt/dl
+/mnt/data/openwrt_port_work/openwrt/scripts/download.pl "/mnt/data/openwrt_port_work/openwrt/dl" "linux-6.6.114.tar.xz" "ca4175a03ce2943ae192d77ad91e37ee292f1f1bb7b2954b062b0ef7eb0cb97c" "" "@KERNEL/linux/kernel/v6.x"    
++ curl -f --connect-timeout 20 --retry 5 --location https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.6.114.tar.xz
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: cdn.kernel.org
+Warning: Problem : timeout. Will retry in 1 seconds. 5 retries left.
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: cdn.kernel.org
+Warning: Problem : timeout. Will retry in 2 seconds. 4 retries left.
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:04 --:--:--     0curl: (6) Could not resolve host: cdn.kernel.org
+Warning: Problem : timeout. Will retry in 4 seconds. 3 retries left.
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: cdn.kernel.org
+Warning: Problem : timeout. Will retry in 8 seconds. 2 retries left.
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: cdn.kernel.org
+Warning: Problem : timeout. Will retry in 16 seconds. 1 retries left.
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: cdn.kernel.org
+Download failed.
++ curl -f --connect-timeout 20 --retry 5 --location https://mirrors.mit.edu/kernel/linux/kernel/v6.x/linux-6.6.114.tar.xz
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:04 --:--:--     0curl: (6) Could not resolve host: mirrors.mit.edu
+Warning: Problem : timeout. Will retry in 1 seconds. 5 retries left.
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: mirrors.mit.edu
+Warning: Problem : timeout. Will retry in 2 seconds. 4 retries left.
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: mirrors.mit.edu
+Warning: Problem : timeout. Will retry in 4 seconds. 3 retries left.
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: mirrors.mit.edu
+Warning: Problem : timeout. Will retry in 8 seconds. 2 retries left.
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: mirrors.mit.edu
+Warning: Problem : timeout. Will retry in 16 seconds. 1 retries left.
+make: *** [/mnt/data/openwrt_port_work/openwrt/include/toplevel.mk:233: target/linux/prepare] Terminated
+make[3]: *** wait: No child processes.  Stop.
+make[3]: *** Waiting for unfinished jobs....
+make[3]: *** wait: No child processes.  Stop.
+make[1]: *** wait: No child processes.  Stop.
+make[1]: *** Waiting for unfinished jobs....
+make[1]: *** wait: No child processes.  Stop.
+make[2]: *** [Makefile:12: prepare] Error 2

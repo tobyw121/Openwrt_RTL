@@ -1,0 +1,21 @@
+RTL8197F v42.25 diagnostic
+
+Observed failing full-tree image:
+  loader start:          0x80a00000
+  kernel load:           0x80100000
+  uncompressed size:     0x00900d5b
+  kernel end:            0x80a00d5b
+  loader overwrite:      0x00000d5b
+
+v42.25:
+  OEM staging/jump:      0x80a00000
+  loader link/runtime:   0x80d00000
+  kernel end:            0x80a00d5b
+  gap:                   0x002ff2a5
+  relocation distance:   0x00300000
+  failing image payload: 0x002b34ac
+
+Expected serial transition:
+  Decompressing kernel... done!
+  Starting kernel at 80100000...
+  KSP

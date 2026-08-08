@@ -1,0 +1,14 @@
+
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+@@ -463,6 +463,10 @@
+ 	if (!rt2x00_has_cap_hw_crypto(rt2x00dev) || (sta && sta->mfp))
+ 		return -EOPNOTSUPP;
+ 
++	/* The hardware can't do mesh */
++	if (vif && ieee80211_vif_is_mesh(vif))
++		return -EOPNOTSUPP;
++
+ 	/*
+ 	 * To support IBSS RSN, don't program group keys in IBSS, the
+ 	 * hardware will then not attempt to decrypt the frames.

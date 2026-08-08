@@ -1,0 +1,18 @@
+Anlix Patch
+This driver dont sent noise info on site survey.
+Hostapd need this information. Send the default value.
+This patch can be removed when the driver sends the real value.
+---
+
+--- a/mac80211.c	2020-05-25 15:35:59.598559829 -0300
++++ b/mac80211.c	2020-05-25 16:23:23.428954103 -0300
+@@ -517,6 +517,9 @@
+ 			survey->filled |= SURVEY_INFO_TIME_BSS_RX;
+ 	}
+ 
++	survey->filled |= SURVEY_INFO_NOISE_DBM;
++	survey->noise = -95;
++
+ 	survey->time_busy = div_u64(state->cc_busy, 1000);
+ 	survey->time_rx = div_u64(state->cc_rx, 1000);
+ 	survey->time = div_u64(state->cc_active, 1000);

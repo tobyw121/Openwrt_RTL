@@ -1,0 +1,13 @@
+Paket	Dateien	Logische_Groesse_MiB	Bytegleich_im_alten_Archiv	Inhaltlich_neu	Relevanz_RD05
+rtk_openwrtSDK_v2.5_20160905	172355	1706.5	878	171477	Sehr hoch fuer Bootloader, RTL8197F, GPIO, SMI, RTL8367RB
+rtl819x-SDK-v3.4.11C-full-package	67887	1298.5	399	67488	Sehr hoch fuer RTL8197F NIC und alte WLAN/Switch-Pfade
+rtk-ms-uClinux-src-2.6.19-2.6.32.58-svn53590	56145	649.3	20	56125	Niedrig; Managed-Switch-SDK
+8197	8952	279.9	8952	0	Bekannter, verkleinerter Ausschnitt
+msdk-4.3.6-mips-EB-2.6.32-0.9.30.3-m32-120424	1583	91.4	3	1580	Legacy-Build-Reproduktion
+rtk-ms-linux-toolchain-0.9.28	263	66.0	1	262	Legacy-Build-Reproduktion
+mips-linux-uclibc	677	39.8	5	672	Legacy-Build-Reproduktion
+msdk-4.3.6-extracted-duplicate	1602	6.8	10	1592	Weitgehend Toolchain-Duplikate
+SDK_V2.1.4.53590_Patch	65	5.0	0	65	RTL833x/838x/839x, kaum RD05-Relevanz
+SDK_V2.1.4.53590_Patch.zip_extracted	41	0	1	40	Duplizierte Patch-Ausgabe
+sdk	142	0	142	0	Bereits vorhanden
+rtk-ms-sdk-src-2.1.4.53590	178	0	178	0	Bereits vorhanden

@@ -1,0 +1,31 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenWrt RTL8197F bringup <noreply@example.invalid>
+Date: Mon, 25 May 2026 00:00:00 +0000
+Subject: [PATCH] mips: realtek: add RTL8197F platform Kconfig symbol
+
+The RTL8197F router WiSoC is not an RTL838x switch SoC.  Keep it under the
+Realtek MIPS machine family for now, but give it a separate SoC symbol so the
+OpenWrt rtl8197f subtarget no longer needs to pretend to be RTL838x.
+
+---
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -621,5 +621,5 @@
+ config MACH_REALTEK_RTL
+-	bool "Realtek RTL838x/RTL839x based machines"
++	bool "Realtek RTL819x/RTL83xx/RTL93xx based machines"
+ 	select DMA_NONCOHERENT
+ 	select IRQ_MIPS_CPU
+ 	select SYS_HAS_CPU_MIPS32_R1
+@@ -972,4 +972,11 @@ endchoice
+ 
++config RTL8197F
++	bool "Realtek RTL8197F based platforms"
++	depends on MACH_REALTEK_RTL
++	select MIPS_EXTERNAL_TIMER
++	select CPU_SUPPORTS_CPUFREQ
++	select SYS_SUPPORTS_LITTLE_ENDIAN
++
+ config RTL838X
+ 	bool "Realtek RTL838X based platforms"
+ 	depends on MACH_REALTEK_RTL

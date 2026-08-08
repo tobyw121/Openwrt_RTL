@@ -1,0 +1,14 @@
+cgi-io
+csstidy/host
+kmod-phy-bcm-ns-usb2
+kmod-phy-bcm-ns-usb3
+libintl-full
+liblucihttp-ucode
+libnetfilter-conntrack
+libnettle
+libopenssl
+libpam
+libtirpc
+libwolfssl
+luasrcdiet/host
+ubi-utils

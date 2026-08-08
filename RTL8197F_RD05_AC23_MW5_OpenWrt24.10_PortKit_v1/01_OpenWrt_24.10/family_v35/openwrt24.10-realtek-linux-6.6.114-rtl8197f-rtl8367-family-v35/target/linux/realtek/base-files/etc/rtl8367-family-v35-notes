@@ -1,0 +1,19 @@
+RTL8197F / RTL8367 family support v35
+=====================================
+
+This image tree supports runtime-selected RTL8367 C/D register families and
+retains optional legacy swconfig modules for old B-map chips.
+
+Exact profiles:
+  0x6367:0x0020 RTL8367RB-VB (C map)
+  0x6367:0x0040 RTL8365MB-VC (C map)
+  0x6367:0x00a0 RTL8367S (C map)
+  0x6642:0x0030 RTL8367D / RTL8367RB-VC (D map)
+
+Family profiles emit a warning and must be validated on the actual PCB.
+RD05 remains the D-map CPU7/EXT1 profile with switch and SoC RX delay tap 6.
+
+Read-only diagnostics:
+  rtl8367-family-check
+  rd05-v34-check
+  rd05-netdiag full

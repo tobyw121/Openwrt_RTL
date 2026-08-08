@@ -1,0 +1,46 @@
+RTL8197F / Tenda Nova MW5 v43.12 static validation
+===================================================
+
+Scope
+-----
+v43.12 changes the DSA CPU-to-switch four-byte tag only. The stable v43.11
+RTL8197F DMA/FCS/KSEG1/ring-completion logic is intentionally retained.
+
+Expected tag arithmetic
+-----------------------
+protocol = 0x9
+LAN port 1 mask = BIT(1) = 0x02 -> tag 0x9002
+WAN port 3 mask = BIT(3) = 0x08 -> tag 0x9008
+Observed RX LAN tag remains 0x0401.
+
+Validation performed
+--------------------
+CHECK_MW5_V43.12.sh: 45 PASS / 0 FAIL
+CHECK_MW5_WANLAN_V43.sh: 57 PASS / 0 FAIL
+CHECK_MW5_DIAG_BUILTIN_V43.4.sh: 43 PASS / 0 FAIL
+CHECK_SOURCE_TREE_V42.sh: PASS
+BusyBox/POSIX shell syntax for changed router scripts: PASS
+tag_rtl4_9.c checkpatch --strict --file: 0 errors / 0 warnings / 0 checks
+
+Hardware evidence motivating the change
+---------------------------------------
+v43.11 eliminated RX descriptor corruption and TX ring stalls: the captured
+run reached 244 TX submissions and 244 completions with zero ring-full, busy
+or timeout events, while DSA user-port TX counters remained zero and ping still
+failed. The tagger was emitting 0x9202/0x9208. v43.12 removes only the
+unverified 0x0200 bit.
+
+Limitations
+-----------
+No complete OpenWrt MIPS cross-build was run in this environment.
+No claim of v43.12 hardware success is made until it is built/flashed/tested on
+the user's MW5.
+
+Reproducibility and archive validation
+--------------------------------------
+v43.11 -> v43.12 patch --dry-run --fuzz=0: PASS
+v43.11 -> v43.12 patch apply --fuzz=0: PASS
+Patch replay content comparison: byte-identical
+External apply-script replay: byte-identical, 45 PASS / 0 FAIL
+Full source ZIP integrity (`unzip -t`): PASS
+Upgrade bundle ZIP integrity (`unzip -t`): PASS

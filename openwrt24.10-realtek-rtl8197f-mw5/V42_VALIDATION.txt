@@ -1,0 +1,59 @@
+RTL8197F RD05/MW5/AC23 v42.0 validation record
+Date: 2026-07-31
+Kernel target: Linux 6.6.114
+OpenWrt target: 24.10
+
+PASSED
+- Python syntax for all rtl8197f image/profile tools.
+- Shell syntax for v42 checker/build/runtime scripts.
+- JSON syntax and DTS/image consistency for all three board profiles.
+- Unified-diff hunk counts for the complete target/linux/realtek/patches-6.6 series.
+- No duplicate patch contents detected.
+- Private SPI template size/SHA-256/board-marker/header checks:
+  RD05  16 MiB 805469c49ecd6860a444f92ef19bcf4834ee912261b4a0205074d6095c516608
+  MW5    8 MiB b4b1b2caca98e20096a80519b9c8ff22399d051bc77f6aef4f29b6ef76a31428
+  AC23   8 MiB 300c7216dbfa1d7d930a8db896ec755edb0c41bd3c1b3ab90e4befcd045aebf5
+- MW5 stock firmware exact fullflash round-trip: generated output equals template byte-for-byte.
+- MW5 kernel and rootfs additive checksums: valid.
+- AC23 stock cr6c kernel header/checksum and 60-byte payload alignment: valid.
+- AC23 synthetic OpenWrt combined-firmware insertion: valid kernel/rootfs checksums,
+  output readback identical, boot/factory and top config regions preserved.
+- RTL8197F rootfs checksum tool checked the real MW5 rootfs trailer successfully.
+- CHECK_SOURCE_TREE_V42.sh completed successfully after cleanup.
+- Kbuild dry-run enumerated 193 rtl8192cd compilation units and every
+  referenced source file exists in the reconstructed package tree.
+- External SPI programmer workflow passes shell syntax and enforces two pre-write reads, template equality, guarded write, flashrom verification and complete post-write readback comparison.
+- MW5 2.4 GHz reconstructed AP private-MIB sequence passes a non-destructive
+  dry-run check (wlan1, RTL8197FS, RFE5, B/G/N band mask 11).
+- rtl8197f_platform_glue.c and its compatibility header compiled and linked as
+  a standalone test module against available Linux 6.12 host headers. This is a
+  C/API sanity test only, not a MIPS/Linux 6.6 target validation.
+- `sha256.c` was decoupled from the complete vendor header graph and now compiles
+  as a self-contained kernel object in the host Kbuild sanity test.
+- A complete vendor-module host Kbuild progresses through platform glue and
+  SHA-256, then stops because Debian kernel-header packages intentionally omit
+  the internal `net/bridge/br_private.h`; the OpenWrt full kernel source contains
+  that private header. This test therefore does not validate 8192cd_osdep.c or
+  8192cd_hw.c linkage.
+- The guarded SPI-program workflow was executed end-to-end with a deterministic
+  flashrom emulator for both MW5 and AC23, including double pre-read, write,
+  complete readback, byte comparison and protected-region verification.
+
+NOT COMPLETED IN THIS ENVIRONMENT
+- make defconfig / target compile / package compile: the container lacks GNU awk
+  and ncurses development headers. Installing them timed out because package
+  repositories were unavailable/too slow.
+- DTS compilation with the target toolchain.
+- Linux 6.6 module link/load test.
+- Physical SPI write/readback, UART boot, Ethernet traffic and RF validation.
+
+HARDWARE VALIDATION STILL REQUIRED
+- MW5 RTL8363NB exact reset/jam sequence and RGMII delay.
+- Read back the MW5 physical PCI ID and RFE data even though OEM runtime
+  evidence strongly identifies RTL8822B (`10ec:b822`, RFE6).
+- RD05 Ethernet/DSA packet path and RTL8812F calibration.
+- AC23 RAM size, GPIOs, port labels, CPU-port delay and RTL8814B calibration.
+
+A formal fullflash verifier greatly reduces image-construction risk, but no
+software-only test can provide a 100 percent boot guarantee without testing the
+specific router, UART recovery and programmer readback.

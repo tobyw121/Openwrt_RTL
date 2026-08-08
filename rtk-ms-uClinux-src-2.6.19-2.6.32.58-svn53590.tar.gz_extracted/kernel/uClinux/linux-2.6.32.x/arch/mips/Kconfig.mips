@@ -1,0 +1,151 @@
+#
+# Realtek Semiconductor Corp.
+#
+# RLX Linux Kernel Configuration
+#
+# Tony Wu (tonywu@realtek.com)
+# Dec. 07, 2008
+#
+
+source "../target/selection/config.cpu"
+source "../target/selection/config.in"
+
+#
+# MIPS
+#
+config MACH_MIPS
+	bool
+	default y
+	select SYS_HAS_CPU_MIPS32_R2
+	select SYS_HAS_EARLY_PRINTK
+	select CPU_SUPPORTS_32BIT_KERNEL
+	select SYS_SUPPORTS_32BIT_KERNEL
+	select SYS_SUPPORTS_LITTLE_ENDIAN if ARCH_CPU_EL
+	select SYS_SUPPORTS_BIG_ENDIAN if ARCH_CPU_EB
+	select IRQ_CPU if ARCH_IRQ_CPU
+	select IRQ_GIC if ARCH_IRQ_GIC
+	select CPU_MIPSR2_IRQ_VI if ARCH_IRQ_VI
+	select CPU_MIPSR2_IRQ_EI if ARCH_IRQ_EI
+	select HW_HAS_PCI if (ARCH_BUS_PCI && BSP_ENABLE_PCI)
+	select HW_HAS_USB if (ARCH_BUS_USB && BSP_ENABLE_USB)
+	select ARCH_SUPPORTS_MSI if (ARCH_BUS_PCI_MSI && BSP_ENABLE_PCI)
+	select DMA_NONCOHERENT
+	select CEVT_R4K if ARCH_CEVT_R4K
+	select CSRC_R4K if ARCH_CEVT_R4K
+	select CEVT_EXT if ARCH_CEVT_EXT
+
+#
+# CPU
+#
+config CPU_MIPS4K
+	bool
+	default y if ARCH_CPU_MIPS4K
+
+config CPU_MIPS24K
+	bool
+	default y if ARCH_CPU_MIPS24K
+
+config CPU_MIPS34K
+	bool
+	default y if ARCH_CPU_MIPS34K
+	select SYS_SUPPORTS_MULTITHREADING
+	select CPU_HAS_MIPSMT
+
+config CPU_MIPS74K
+	bool
+	default y if ARCH_CPU_MIPS74K
+
+config CPU_MIPS1004K
+	bool
+	default y if ARCH_CPU_MIPS1004K
+	select SYS_SUPPORTS_SMP
+	select SYS_SUPPORTS_MULTITHREADING
+	select SYS_SUPPORTS_MIPS_CMP
+	select CPU_HAS_MIPSMT
+
+config CPU_MIPS1074K
+        bool
+	default y if ARCH_CPU_MIPS1074K
+	select SYS_SUPPORTS_SMP
+	select SYS_SUPPORTS_MIPS_CMP
+
+#
+# CPU features
+#
+config CPU_HAS_FPU
+	bool
+	default y if (ARCH_CPU_HAS_FPU && BSP_ENABLE_FPU)
+
+config CPU_USE_FPU
+	bool
+	default y if (CPU_HAS_FPU || MIPS_FPU_EMU)
+
+config CPU_HAS_TLS
+	bool
+	default y if BSP_ENABLE_TLS
+
+config CPU_USE_TLS
+	bool
+	default y if CPU_HAS_TLS
+
+config CPU_HAS_DSP
+	bool
+	default y if (ARCH_CPU_HAS_DSP && BSP_ENABLE_DSP)
+
+config CPU_USE_DSP
+	bool
+	default y if CPU_HAS_DSP
+
+config CPU_HAS_MIPSMT
+	bool
+
+config CPU_USE_MIPSMT
+	bool
+	default y if (CPU_HAS_MIPSMT && !MIPS_MT_DISABLED)
+
+config CPU_HAS_MIPS16
+	bool
+	default y
+
+config CPU_USE_MIPS16
+	bool
+	default y if ARCH_CPU_HAS_MIPS16
+
+config CPU_HAS_MDMX
+	bool
+	default n
+
+config CPU_HAS_DIVEC
+	bool
+	default y
+
+#
+# Timer
+#
+config CEVT_EXT
+	bool
+
+#
+# CACHE
+#
+config CPU_HAS_SPRAM
+	bool
+	default y if ARCH_CACHE_SPRAM
+
+config CPU_HAS_WBC
+	bool
+	default y if ARCH_CACHE_WBC
+
+config CPU_HAS_L2C
+	bool
+	default y if ARCH_CACHE_L2C
+
+config CPU_HAS_AR7
+	bool
+	default y if ARCH_CACHE_AR7
+
+#
+# BUS
+#
+config HW_HAS_USB
+	bool

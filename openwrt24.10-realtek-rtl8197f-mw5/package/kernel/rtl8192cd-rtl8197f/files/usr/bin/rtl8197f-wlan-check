@@ -1,0 +1,41 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+OUT="${1:-/tmp/rtl8197f-wlan-check.txt}"
+{
+	echo 'RTL8197F rtl8192cd v42 staged WLAN diagnostics'
+	date; uname -a
+	echo '=== board/profile ==='
+	cat /tmp/sysinfo/board_name 2>/dev/null || true
+	cat /etc/rtl8197f-wlan-profiles.conf 2>/dev/null || true
+	echo '=== module phases ==='
+	grep -E '^rtl8192cd ' /proc/modules 2>/dev/null || echo 'rtl8192cd not loaded'
+	for p in /sys/module/rtl8192cd/parameters/*; do
+		[ -e "$p" ] || continue
+		printf '%s=' "$(basename "$p")"; cat "$p" 2>/dev/null || true
+	done
+	echo '=== PCI ==='
+	cat /proc/bus/pci/devices 2>/dev/null || true
+	command -v lspci >/dev/null 2>&1 && lspci -nnk 2>&1 || true
+	echo '=== interfaces ==='
+	ip -details link show 2>&1
+	cat /proc/net/wireless 2>/dev/null || true
+	command -v iwconfig >/dev/null 2>&1 && iwconfig 2>&1 || true
+	command -v iwpriv >/dev/null 2>&1 && iwpriv 2>&1 || true
+	echo '=== interrupts ==='
+	grep -Ei 'wlan|wifi|rtl|pcie' /proc/interrupts 2>/dev/null || true
+	echo '=== AP test state ==='
+	for f in /tmp/rtl8197f-wlan-ap-test.phase /tmp/rtl8197f-wlan-ap-test.log; do
+		[ -r "$f" ] && { echo "--- $f"; cat "$f"; }
+	done
+	echo '=== vendor proc trees ==='
+	for d in /proc/wl* /proc/wlan* /proc/rtl8192cd*; do
+		[ -e "$d" ] || continue
+		echo "--- $d"; find "$d" -maxdepth 2 -type f 2>/dev/null | sort
+		for f in "$d"/mib_all "$d"/mib_rf "$d"/mib_operation; do
+			[ -r "$f" ] && { echo "--- $f"; cat "$f"; }
+		done
+	done
+	echo '=== initialization evidence ==='
+	dmesg | grep -Ei 'rtl8197f-wlan|rtl8192cd|hal_Associate|InitPON|firmware|efuse|phydm|halrf|halmac|iqk|lck|dpk|pci|irq|dma' | tail -n 1000
+} >"$OUT" 2>&1
+cat "$OUT"

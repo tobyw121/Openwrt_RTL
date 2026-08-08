@@ -1,0 +1,1 @@
+cmd_/tmp/include/video/.install := perl scripts/headers_install.pl /opt/cadpc4/tonywu/repo/rlxlinux-2.6.32/linux-2.6.32/include/video /tmp/include/video mips edid.h sisfb.h uvesafb.h; perl scripts/headers_install.pl /opt/cadpc4/tonywu/repo/rlxlinux-2.6.32/linux-2.6.32/include/video /tmp/include/video mips ; touch /tmp/include/video/.install
