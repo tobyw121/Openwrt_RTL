@@ -1,0 +1,1 @@
+cmd_/tmp/include/scsi/.install := perl scripts/headers_install.pl /opt/cadpc4/tonywu/repo/rlxlinux-2.6.32/linux-2.6.32/include/scsi /tmp/include/scsi mips scsi.h scsi_bsg_fc.h scsi_netlink.h scsi_netlink_fc.h; perl scripts/headers_install.pl /opt/cadpc4/tonywu/repo/rlxlinux-2.6.32/linux-2.6.32/include/scsi /tmp/include/scsi mips ; touch /tmp/include/scsi/.install
