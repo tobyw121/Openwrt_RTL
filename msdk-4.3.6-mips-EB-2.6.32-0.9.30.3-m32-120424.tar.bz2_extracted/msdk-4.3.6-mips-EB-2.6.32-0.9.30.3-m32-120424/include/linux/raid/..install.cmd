@@ -1,0 +1,1 @@
+cmd_/tmp/include/linux/raid/.install := perl scripts/headers_install.pl /opt/cadpc4/tonywu/repo/rlxlinux-2.6.32/linux-2.6.32/include/linux/raid /tmp/include/linux/raid mips md_p.h md_u.h; perl scripts/headers_install.pl /opt/cadpc4/tonywu/repo/rlxlinux-2.6.32/linux-2.6.32/include/linux/raid /tmp/include/linux/raid mips ; touch /tmp/include/linux/raid/.install
