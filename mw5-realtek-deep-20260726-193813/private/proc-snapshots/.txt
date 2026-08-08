@@ -1,0 +1,19 @@
+-------------------------------------------------------------------------
+module index:0, device:eth*, portMask:0xa,swPortMask:0x0 fastleave:0 ipv4[0xffffffff]ipv6[0xffffffff]
+
+igmp list:
+    <empty>
+
+
+mld list:
+    <empty>
+-------------------------------------------------------------------------
+module index:1, device:br0, portMask:0x1e,swPortMask:0x1c fastleave:0 ipv4[0xffffffff]ipv6[0xffffffff]
+
+igmp list:
+    <empty>
+
+
+mld list:
+    <empty>
+------------------------------------------------------------------

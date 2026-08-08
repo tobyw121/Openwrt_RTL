@@ -1,0 +1,15 @@
+SW Network Interface Table:
+[0]netif:br-lan	VID[9] a4:ba:70:1b:d4:10	Routing enabled	
+is slave 0	  is_defaultWan 0 
+
+   VID:9,MTU 1500 Bytes
+      enableRouteV6:0,    mtuv6:1500
+)
+
+[1]netif:pppoe-wan	VID[8] 0:12:34:56:78:91	Routing enabled	
+is slave 1	  is_defaultWan 0 master netif:(null)
+
+   VID:8,MTU 1500 Bytes
+      enableRouteV6:0,    mtuv6:1500
+)
+

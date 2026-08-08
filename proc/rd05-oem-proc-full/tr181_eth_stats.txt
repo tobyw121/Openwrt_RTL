@@ -1,0 +1,9 @@
+Inter-|   Receive                                                |  Transmit
+ face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed  rx_uc  rx_bc  tx_uc  tx_mc  tx_bc
+port0: 0 0 0 0  0  0  0  0  0 0 0 0  0  0  0 0  0 0 0 0  0
+port1: 11118263 18994 0 0  0  0  0  1394  6603105 14531 0 0  0  0  0 0  14029 3571 10593 1214  2724
+port2: 0 0 0 0  0  0  0  0  0 0 0 0  0  0  0 0  0 0 0 0  0
+port3: 0 0 0 0  0  0  0  0  0 0 0 0  0  0  0 0  0 0 0 0  0
+port4: 0 0 0 0  0  0  0  0  0 0 0 0  0  0  0 0  0 0 0 0  0
+eth0: 0 0 0 0  0  0  0  0  0 0 0 0  0  0  0 0  0 0 0 0  0
+eth1: 11118263 18994 0 0  0  0  0  1394  6603105 14531 0 0  0  0  0 0  14029 3571 10593 1214  2724

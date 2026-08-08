@@ -1,0 +1,11 @@
+ASIC L2 Table:
+4096.[  0,0] ff:ff:ff:ff:ff:ff FID:0 mbr(0 1 2 3 4 8 )CPU STA  NH age:0 AUTH:1
+4097.[  5,0] 00:00:0a:00:00:0f FID:0 mbr()CPU STA  NH age:0 AUTH:1
+4098.[ 10,0] 00:00:0a:00:00:0f FID:1 mbr()CPU STA  NH age:0 AUTH:1
+4099.[ 15,0] ff:ff:ff:ff:ff:ff FID:1 mbr(0 1 2 3 4 8 )CPU STA  NH age:0 AUTH:1
+4100.[ 33,0] 0a:cb:b5:50:2e:2b FID:0 mbr(8 )FWD STA   age:300 AUTH:1
+4101.[ 91,0] 00:e0:4c:55:62:c0 FID:0 mbr(1 )FWD DYN   age:450 AUTH:0
+4102.[176,0] a4:ba:70:1b:d4:11 FID:0 mbr(8 )FWD STA   age:0 AUTH:1
+4103.[179,0] a4:ba:70:1b:d4:12 FID:0 mbr(8 )FWD STA   age:0 AUTH:1
+4104.[185,0] ae:ba:70:1b:d4:12 FID:0 mbr(8 )FWD STA   age:0 AUTH:1
+L2 entry count: 9  

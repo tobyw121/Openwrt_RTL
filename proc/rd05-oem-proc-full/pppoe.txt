@@ -1,0 +1,10 @@
+ASIC PPPOE Table:
+
+	[0]  sessionID(0)  ageSec(0)
+	[1]  sessionID(0)  ageSec(0)
+	[2]  sessionID(0)  ageSec(0)
+	[3]  sessionID(0)  ageSec(0)
+	[4]  sessionID(0)  ageSec(0)
+	[5]  sessionID(0)  ageSec(0)
+	[6]  sessionID(0)  ageSec(0)
+	[7]  sessionID(0)  ageSec(0)

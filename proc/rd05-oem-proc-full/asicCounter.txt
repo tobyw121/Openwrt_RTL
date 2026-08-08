@@ -1,0 +1,74 @@
+<Port: 0>
+Rx counters
+	 Rcv 11177692 bytes, TpPortInDiscard 0, DropEvent 0, QmDiscard  0
+	 CRCAlignErr 0, SymbolErr 0, FragErr 0, JabberErr 0
+	 Unicast 14029 pkts, Multicast 178 pkts, Broadcast 842 pkts
+	 < 64: 0 pkts, 64: 0 pkts, 65 -127: 7089 pkts, 128 -255: 584 pkts
+	 256 - 511: 77 pkts, 512 - 1023: 142 pkts, 1024 - 1518: 1283 pkts
+	 oversize: 5874 pkts, Control unknown 0 pkts, Pause 0 pkts
+Output counters
+	 Snd 6802160 bytes, Unicast 10593 pkts, Multicast 1248 pkts
+	 Broadcast 3562 pkts, Late collision 0, Deferred transmission 0
+	 Collisions 0, Single collision 0, Multiple collision 0, pause 0
+<Port: 1>
+Rx counters
+	 Rcv 0 bytes, TpPortInDiscard 0, DropEvent 0, QmDiscard  0
+	 CRCAlignErr 0, SymbolErr 0, FragErr 0, JabberErr 0
+	 Unicast 0 pkts, Multicast 0 pkts, Broadcast 0 pkts
+	 < 64: 0 pkts, 64: 0 pkts, 65 -127: 0 pkts, 128 -255: 0 pkts
+	 256 - 511: 0 pkts, 512 - 1023: 0 pkts, 1024 - 1518: 0 pkts
+	 oversize: 0 pkts, Control unknown 0 pkts, Pause 0 pkts
+Output counters
+	 Snd 0 bytes, Unicast 0 pkts, Multicast 0 pkts
+	 Broadcast 0 pkts, Late collision 0, Deferred transmission 0
+	 Collisions 0, Single collision 0, Multiple collision 0, pause 0
+<Port: 2>
+Rx counters
+	 Rcv 0 bytes, TpPortInDiscard 0, DropEvent 0, QmDiscard  0
+	 CRCAlignErr 0, SymbolErr 0, FragErr 0, JabberErr 0
+	 Unicast 0 pkts, Multicast 0 pkts, Broadcast 0 pkts
+	 < 64: 0 pkts, 64: 0 pkts, 65 -127: 0 pkts, 128 -255: 0 pkts
+	 256 - 511: 0 pkts, 512 - 1023: 0 pkts, 1024 - 1518: 0 pkts
+	 oversize: 0 pkts, Control unknown 0 pkts, Pause 0 pkts
+Output counters
+	 Snd 0 bytes, Unicast 0 pkts, Multicast 0 pkts
+	 Broadcast 0 pkts, Late collision 0, Deferred transmission 0
+	 Collisions 0, Single collision 0, Multiple collision 0, pause 0
+<Port: 3>
+Rx counters
+	 Rcv 0 bytes, TpPortInDiscard 0, DropEvent 0, QmDiscard  0
+	 CRCAlignErr 0, SymbolErr 0, FragErr 0, JabberErr 0
+	 Unicast 0 pkts, Multicast 0 pkts, Broadcast 0 pkts
+	 < 64: 0 pkts, 64: 0 pkts, 65 -127: 0 pkts, 128 -255: 0 pkts
+	 256 - 511: 0 pkts, 512 - 1023: 0 pkts, 1024 - 1518: 0 pkts
+	 oversize: 0 pkts, Control unknown 0 pkts, Pause 0 pkts
+Output counters
+	 Snd 0 bytes, Unicast 0 pkts, Multicast 0 pkts
+	 Broadcast 0 pkts, Late collision 0, Deferred transmission 0
+	 Collisions 0, Single collision 0, Multiple collision 0, pause 0
+<Port: 4>
+Rx counters
+	 Rcv 0 bytes, TpPortInDiscard 0, DropEvent 0, QmDiscard  0
+	 CRCAlignErr 0, SymbolErr 0, FragErr 0, JabberErr 0
+	 Unicast 0 pkts, Multicast 0 pkts, Broadcast 0 pkts
+	 < 64: 0 pkts, 64: 0 pkts, 65 -127: 0 pkts, 128 -255: 0 pkts
+	 256 - 511: 0 pkts, 512 - 1023: 0 pkts, 1024 - 1518: 0 pkts
+	 oversize: 0 pkts, Control unknown 0 pkts, Pause 0 pkts
+Output counters
+	 Snd 0 bytes, Unicast 0 pkts, Multicast 0 pkts
+	 Broadcast 0 pkts, Late collision 0, Deferred transmission 0
+	 Collisions 0, Single collision 0, Multiple collision 0, pause 0
+<CPU port (extension port included)>
+Rx counters
+	 Rcv 90 bytes, TpPortInDiscard 1, DropEvent 1, QmDiscard  0
+	 CRCAlignErr 14531, SymbolErr 0, FragErr 0, JabberErr 0
+	 Unicast 10593 pkts, Multicast 1215 pkts, Broadcast 2724 pkts
+	 < 64: 0 pkts, 64: 405 pkts, 65 -127: 6620 pkts, 128 -255: 1769 pkts
+	 256 - 511: 187 pkts, 512 - 1023: 2981 pkts, 1024 - 1518: 2570 pkts
+	 oversize: 0 pkts, Control unknown 0 pkts, Pause 0 pkts
+Output counters
+	 Snd 11117496 bytes, Unicast 2278 pkts, Multicast 178 pkts
+	 Broadcast 12593 pkts, Late collision 0, Deferred transmission 0
+	 Collisions 0, Single collision 0, Multiple collision 0, pause 0
+<Whole system counters>
+	 CpuEvent 0 pkts

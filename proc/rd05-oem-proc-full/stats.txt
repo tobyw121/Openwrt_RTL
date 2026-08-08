@@ -1,0 +1,47 @@
+  Debug Statistics Info:
+    rx_noBuffer_cnt:	0
+    tx_ringFull_cnt:	0
+    tx_drop_cnt:	0
+    statistic_total:	1640221
+    statistic_ps:	1640221
+    statistic_ipv6_fp:	0
+    statistic_pptp_fp:	(uplink:0, downlink:0)
+    statistic_l2tp_fp:	(uplink:0, downlink:0)
+    statistic_ipv6_pppoe_xmit:	0
+    statistic_fp:	0 (up:0, down:0)
+    cnt_swcore:	28801
+    cnt_swcore_tx:	17441
+    cnt_swcore_rx:	12477
+    cnt_swcore_link_chg:	0
+    cnt_swcore_runout:	0
+    rx_desc_num: 2048
+    tx_desc_num: 768
+    rx_desc_full_and_buf_pool_not_empty:	0
+    runOutIrq:	enable
+    freeSkbThreshold:	128
+    statistic_udp_frag_rx 10
+    statistic_udp_frag_ps 5
+    statistic_udp_frag_tbl_full  0
+    statistic_udp_frag_add 0
+    statistic_udp_frag_free 0
+    statistic_wlan_rx_unicast_pkt 1338
+    statistic_wlan_out_napt_exist 0
+    statistic_wlan_out_ipv6_tcp_pkt 0
+    statistic_wlan_xmit_to_eth 0
+    statistic_wlan_rx_gt_wan_mtu 0
+    statistic_wlan_rx_fragment 0
+    statistic_wlan_rx_tcp_flag 18
+    statistic_wlan_rx_miss_napt_entry 20
+    statistic_wlan_rx_not_tcp_udp 0
+    statistic_wlan_rx_to_br 1300
+    statistic_eth_rx_unicast_pkt  14029
+    statistic_eth_xmit_to_wlan  0
+    statistic_eth_rx_dst_not_extport  14029
+    statistic_eth_xmit_brsc_entry_not_found  0
+    statistic_eth_rx_ext_fwd_failed_pkt 0
+    _br0_hw_addr = a4-ba-70-1b-d4-10
+    _br0_ip = 192.168.31.1
+    _br0_mask = 255.255.255.0
+    WanPortMask: 0x10
+    LanPortMask: 0x10f
+    WanDevMTU: 1500

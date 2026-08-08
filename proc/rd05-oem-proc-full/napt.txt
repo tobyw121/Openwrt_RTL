@@ -1,0 +1,3 @@
+ASIC NAPT TCP/UDP Table:
+
+Total entry: 0

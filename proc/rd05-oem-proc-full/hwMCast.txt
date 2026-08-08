@@ -1,0 +1,7 @@
+ASIC Multicast Table:
+
+	 TotalOpCnt:AddMcastOpCnt:0	DelMcastOpCnt:0	ForceAddMcastOpCnt:0	 
+----------------------------------------------------
+ASIC IPV6 Multicast Table:
+
+	 TotalOpCntv6:AddMcastOpCntv6:0	DelMcastOpCntv6:0	ForceAddMcastOpCntv6:32	 

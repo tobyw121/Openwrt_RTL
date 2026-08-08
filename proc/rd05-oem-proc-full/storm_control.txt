@@ -1,0 +1,11 @@
+Dump storm control info:
+rate(0)
+port0, disable BCSC, disable BC, disable MC
+port1, disable BCSC, disable BC, disable MC
+port2, disable BCSC, disable BC, disable MC
+port3, disable BCSC, disable BC, disable MC
+port4, disable BCSC, disable BC, disable MC
+port5, disable BCSC, disable BC, disable MC
+port6, disable BCSC, disable BC, disable MC
+port7, disable BCSC, disable BC, disable MC
+port8, disable BCSC, disable BC, disable MC

@@ -1,0 +1,9 @@
+MAC Configuration Register Info:
+IfgSel:  internal counter =480
+INFINITE_PAUSE_FRAMES:  Maximum of 128 consecutive pause frames
+LONG_TXE:  Carrier-based backpressure
+EN_48_DROP:  Disabled
+SELIPG:  12 byte-time
+CF_SYSCLK_SEL:  100MHz
+CF_FCDSC:  72 pages
+CF_RXIPG:  5 pkts

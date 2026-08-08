@@ -1,0 +1,6 @@
+port0: false Down 10706 false 10 Half
+port1: true Up 10663 false 1000 Full
+port2: false Down 10739 false 10 Half
+port3: false Down 10739 false 10 Half
+port4: false Down 10739 false 10 Half
+port7: true Up 10739 false -1 Auto

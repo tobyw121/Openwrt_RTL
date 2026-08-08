@@ -1,0 +1,13 @@
+ASIC VLAN Table:
+  VID[8] 
+	member ports:4 
+	Untag member ports:4 
+	FID:	1
+
+	HP:	0
+  VID[9] 
+	member ports:0 1 2 3 4 8 
+	Untag member ports:0 1 2 3 4 8 
+	FID:	0
+
+	HP:	0
