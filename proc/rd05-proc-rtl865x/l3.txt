@@ -1,0 +1,12 @@
+ASIC L3 Routing Table:
+
+	[0]  192.168.31.0/24 process(ARP) LAN DSLEG(0),DSL_IDX(0)
+             dvidx(0) ARPSTA(0) ARPEND(248) IPIDX(0)
+	[1]  (Invalid)
+	[2]  (Invalid)
+	[3]  (Invalid)
+	[4]  (Invalid)
+	[5]  (Invalid)
+	[6]  (Invalid)
+	[7]  0.0.0.0/0 process(CPU) WAN DSLEG(0),DSL_IDX(0)
+             dvidx(0)

@@ -1,0 +1,251 @@
+=== ifconfig -a ===
+br-lan    Link encap:Ethernet  HWaddr A4:BA:70:1B:D4:10  
+          inet addr:192.168.31.1  Bcast:192.168.31.255  Mask:255.255.255.0
+          inet6 addr: fd00:6969:6969::1/128 Scope:Global
+          inet6 addr: fe80::a6ba:70ff:fe1b:d410/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:16865 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:12941 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:11078530 (10.5 MiB)  TX bytes:5690622 (5.4 MiB)
+
+br-miot   Link encap:Ethernet  HWaddr 00:00:00:00:00:00  
+          inet addr:192.168.32.1  Bcast:192.168.32.255  Mask:255.255.255.0
+          inet6 addr: fe80::a8ba:70ff:fe1b:d411/64 Scope:Link
+          UP BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:12 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:1328 (1.2 KiB)
+
+eth0      Link encap:Ethernet  HWaddr A4:BA:70:1B:D4:10  
+          UP BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+          Interrupt:4 
+
+eth1      Link encap:Ethernet  HWaddr A4:BA:70:1B:D4:10  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:18994 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:14531 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:11118263 (10.6 MiB)  TX bytes:6603105 (6.2 MiB)
+          Interrupt:4 
+
+eth2      Link encap:Ethernet  HWaddr A4:BA:70:1B:D4:10  
+          UP BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+          Interrupt:4 
+
+eth3      Link encap:Ethernet  HWaddr 00:12:34:56:78:90  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+          Interrupt:4 
+
+eth4      Link encap:Ethernet  HWaddr 00:12:34:56:78:91  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+          Interrupt:4 
+
+eth9      Link encap:Ethernet  HWaddr 00:12:34:56:78:90  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+          Interrupt:4 
+
+gre0      Link encap:UNSPEC  HWaddr 00-00-00-00-00-00-D6-03-00-00-00-00-00-00-00-00  
+          NOARP  MTU:1476  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+gretap0   Link encap:Ethernet  HWaddr 00:00:00:00:00:00  
+          BROADCAST MULTICAST  MTU:1462  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+ip6gre0   Link encap:UNSPEC  HWaddr 00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00  
+          NOARP  MTU:1448  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+ip6tnl0   Link encap:UNSPEC  HWaddr 00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00  
+          NOARP  MTU:1452  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:1606511 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:1606511 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:108409290 (103.3 MiB)  TX bytes:108409290 (103.3 MiB)
+
+pwlan0    Link encap:Ethernet  HWaddr 00:E0:4C:81:96:96  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:714 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:1917 errors:1 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:115566 (112.8 KiB)  TX bytes:218821 (213.6 KiB)
+
+veth9     Link encap:Ethernet  HWaddr 00:12:34:56:78:90  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+          Interrupt:4 
+
+wl0       Link encap:Ethernet  HWaddr A4:BA:70:1B:D4:12  
+          inet6 addr: fe80::a6ba:70ff:fe1b:d412/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:714 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:1917 errors:1 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:115566 (112.8 KiB)  TX bytes:218821 (213.6 KiB)
+          Interrupt:5 
+
+wl01      Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wl02      Link encap:Ethernet  HWaddr A4:BA:70:1B:D4:12  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wl1       Link encap:Ethernet  HWaddr A4:BA:70:1B:D4:11  
+          inet6 addr: fe80::a6ba:70ff:fe1b:d411/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:890 errors:5 dropped:0 overruns:0 frame:5
+          TX packets:1012 errors:33 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:136027 (132.8 KiB)  TX bytes:233263 (227.7 KiB)
+          Interrupt:6 
+
+wl11      Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wl12      Link encap:Ethernet  HWaddr A4:BA:70:1B:D4:11  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wl13      Link encap:Ethernet  HWaddr AA:BA:70:1B:D4:11  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:1 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wl14      Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wl15      Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wl16      Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+wl5       Link encap:Ethernet  HWaddr AE:BA:70:1B:D4:12  
+          inet6 addr: fe80::acba:70ff:fe1b:d412/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:431 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:1 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:45895 (44.8 KiB)  TX bytes:0 (0.0 B)
+
+wl9       Link encap:Ethernet  HWaddr 00:E0:4C:81:86:86  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+=== brctl show ===
+bridge name	bridge id		STP enabled	interfaces
+br-lan		7fff.a4ba701bd410	no		wl0
+							wl1
+							wl5
+							eth0
+							eth1
+							eth2
+br-miot		7fff.000000000000	no
+=== brctl showmacs br-lan ===
+port no	mac addr		is local?	ageing timer
+  2	00:e0:4c:55:62:c0	no		   2.09
+  4	01:00:5e:00:01:bb	no		   0.00
+  4	0a:cb:b5:50:2e:2b	no		  28.88
+  1	a4:ba:70:1b:d4:10	yes		   0.00
+  4	a4:ba:70:1b:d4:11	yes		   0.00
+  5	a4:ba:70:1b:d4:12	yes		   0.00
+  6	ae:ba:70:1b:d4:12	yes		   0.00
+=== route -n ===
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.31.0    0.0.0.0         255.255.255.0   U     0      0        0 br-lan
+192.168.32.0    0.0.0.0         255.255.255.0   U     0      0        0 br-miot
+=== arp -n ===
+IP address       HW type     Flags       HW address            Mask     Device
+192.168.31.212   0x1         0x2         a6:bc:cb:40:59:93     *        br-lan
+192.168.31.97    0x1         0x2         46:06:0c:1c:5c:d8     *        br-lan
+192.168.31.218   0x1         0x2         72:08:cb:a0:4d:fb     *        br-lan
+192.168.31.254   0x1         0x2         d2:cc:f6:2e:cd:ba     *        br-lan
+192.168.31.102   0x1         0x2         8a:2b:72:89:eb:14     *        br-lan
+192.168.31.35    0x1         0x2         de:6d:1b:b5:4c:85     *        br-lan
+192.168.31.223   0x1         0x2         6a:49:25:b7:36:79     *        br-lan
+192.168.31.153   0x1         0x2         5e:62:a4:37:ce:01     *        br-lan
+192.168.31.175   0x1         0x0         32:18:0a:0d:ba:11     *        br-lan
+192.168.31.228   0x1         0x2         5e:be:0b:fb:13:50     *        br-lan
+192.168.31.76    0x1         0x2         00:e0:4c:55:62:c0     *        br-lan
+192.168.31.107   0x1         0x0         da:76:5a:be:db:89     *        br-lan
+192.168.31.92    0x1         0x2         6a:82:9f:e6:d6:a2     *        br-lan
+192.168.31.173   0x1         0x2         06:57:00:a5:b9:39     *        br-lan
+192.168.31.246   0x1         0x2         0a:cb:b5:50:2e:2b     *        br-lan
+=== dmesg realtek/eth ===

@@ -1,0 +1,18 @@
+Diagnostic Register Info:
+MaxUsedDescriptor: 31 CurUsed Descriptor: 18
+DescRunOut: NO TotalDescFC: NO ShareBufFC: NO
+Port0 not congestion
+Port1 not congestion
+Port2 not congestion
+Port3 not congestion
+Port4 not congestion
+Port5 not congestion
+Port6 not congestion
+Port7 not congestion
+Port0 each queue used descriptor: Queue[0~7]: [ 0 0 0 0 0 0 0 0 ]  Input queue [884]
+Port1 each queue used descriptor: Queue[0~7]: [ 0 0 0 0 0 0 0 0 ]  Input queue [146]
+Port2 each queue used descriptor: Queue[0~7]: [ 0 0 0 0 0 0 0 0 ]  Input queue [3]
+Port3 each queue used descriptor: Queue[0~7]: [ 0 0 0 0 0 0 0 0 ]  Input queue [3]
+Port4 each queue used descriptor: Queue[0~7]: [ 0 0 0 0 0 0 0 0 ]  Input queue [3]
+Port5 each queue used descriptor: Queue[0~7]: [ 0 0 0 0 0 0 0 0 ]  Input queue [0]
+Port6 each queue used descriptor: Queue[0~7]: [ 0 0 0 0 0 0 0 0 ]  Input queue [3]

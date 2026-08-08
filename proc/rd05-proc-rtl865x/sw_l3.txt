@@ -1,0 +1,3 @@
+SW L3 Routing Table:
+
+	[0]  ip:c0a81f00,ffffff00,	c0a81f01,nexthop:0  process(2)  asicIdx:0, netifbr-lan 

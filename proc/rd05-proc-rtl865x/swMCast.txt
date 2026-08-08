@@ -1,0 +1,24 @@
+----------------------------------------------------
+Asic Operation Layer :4
+Asic Multicast Table:Enable
+Asic Multicast MTU:1522
+Asic IPV6 Multicast Table:Enable
+Asic IPV6 Multicast MTU:1522
+Asic IPV6 Multicast Table Aging:Disable
+Internal Port Mask:0x1ef
+External Port Mask:0x10
+----------------------------------------------------
+Multicast STP State:
+port[0]:disabled
+port[1]:forwarding
+port[2]:forwarding
+port[3]:forwarding
+port[4]:forwarding
+port[5]:disabled
+port[6]:forwarding
+port[7]:forwarding
+port[8]:forwarding
+----------------------------------------------------
+Software Multicast Table:
+----------------------------------------------------
+IPV6 Software Multicast Table:

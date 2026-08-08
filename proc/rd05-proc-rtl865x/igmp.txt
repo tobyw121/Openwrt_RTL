@@ -1,0 +1,28 @@
+-------------------------------------------------------------------------
+module index:0, device:eth*, portMask:0x1f,swPortMask:0x0 fastleave:0 ipv4[0xffffffff]ipv6[0xffffffff]
+
+igmp list:
+    <empty>
+
+
+mld list:
+    <empty>
+-------------------------------------------------------------------------
+module index:1, device:br-lan, portMask:0x7e,swPortMask:0x70 fastleave:0 ipv4[0xffffffff]ipv6[0xffffffff]
+
+igmp list:
+    <empty>
+
+
+mld list:
+    <empty>
+-------------------------------------------------------------------------
+module index:2, device:br-miot, portMask:0x0,swPortMask:0x0 fastleave:0 ipv4[0xffffffff]ipv6[0xffffffff]
+
+igmp list:
+    <empty>
+
+
+mld list:
+    <empty>
+------------------------------------------------------------------

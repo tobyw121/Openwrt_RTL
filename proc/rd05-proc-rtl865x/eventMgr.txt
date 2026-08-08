@@ -1,0 +1,19 @@
+realtek event management Table:
+ No.1 eventLayerList:eventLayerId:0x10000000 
+ 	No.1 event:eventId:0x10000005,priority:0,action_fn is 0x802e8058
+ No.2 eventLayerList:eventLayerId:0x20000000 
+ 	No.1 event:eventId:0x20000001,priority:0,action_fn is 0x802e7510
+ 	No.2 event:eventId:0x20000002,priority:0,action_fn is 0x802e7714
+ 	No.3 event:eventId:0x20000002,priority:0,action_fn is 0x802e8050
+ No.3 eventLayerList:eventLayerId:0x30000000 
+ 	No.1 event:eventId:0x30000007,priority:0,action_fn is 0x802e91a8
+ 	No.2 event:eventId:0x30000008,priority:0,action_fn is 0x802ecdc8
+ 	No.3 event:eventId:0x30000008,priority:0,action_fn is 0x802e9240
+ 	No.4 event:eventId:0x30000010,priority:0,action_fn is 0x802e90e8
+ 	No.5 event:eventId:0x30000011,priority:0,action_fn is 0x802df6f0
+ 	No.6 event:eventId:0x30000020,priority:0,action_fn is 0x802e1bac
+ No.4 eventLayerList:eventLayerId:0x50000000 
+ 	No.1 event:eventId:0x20000002,priority:0,action_fn is 0x802e5238
+ 	No.2 event:eventId:0x30000010,priority:0,action_fn is 0x802e5e4c
+ 	No.3 event:eventId:0x50000001,priority:0,action_fn is 0x802e5fb8
+ 	No.4 event:eventId:0x50000002,priority:0,action_fn is 0x802e6054

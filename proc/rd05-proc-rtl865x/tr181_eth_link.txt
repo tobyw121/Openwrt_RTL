@@ -1,0 +1,2 @@
+eth0: true Up eth0 437 a4:ba:70:1b:d4:10
+eth1: true Up eth1 436 a4:ba:70:1b:d4:10

@@ -1,0 +1,11 @@
+ASIC Network Interface Table:
+ASIC Network Interface Table is vlan-base:
+[0]  VID[9] a4:ba:70:1b:d4:10  Routing enabled 
+      ingress ACL 0-4,   egress ACL 253-253, 
+      1 MAC Addresses, MTU 1500 Bytes
+      enableRouteV6:0,    mtuv6:1500
+
+      Untag member ports:0 1 2 3 4 8 
+      Active member ports:0 1 2 3 4 8 
+      Port state(0:FWD 1:FWD 2:FWD 3:FWD 4:FWD 8:FWD )
+

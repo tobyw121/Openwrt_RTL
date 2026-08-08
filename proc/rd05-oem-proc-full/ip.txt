@@ -1,0 +1,18 @@
+ASIC IP Table:
+
+  [0] (Invalid)
+  [1] (Invalid)
+  [2] (Invalid)
+  [3] (Invalid)
+  [4] (Invalid)
+  [5] (Invalid)
+  [6] (Invalid)
+  [7] (Invalid)
+  [8] (Invalid)
+  [9] (Invalid)
+  [10] (Invalid)
+  [11] (Invalid)
+  [12] (Invalid)
+  [13] (Invalid)
+  [14] (Invalid)
+  [15] (Invalid)

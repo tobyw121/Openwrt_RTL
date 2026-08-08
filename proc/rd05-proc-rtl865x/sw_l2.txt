@@ -1,0 +1,9 @@
+sw l2 table:
+   0.[  0,0] ff:ff:ff:ff:ff:ff FID:0 mbr(0 1 2 3 4 8 )CPU STA NH  AUTH:1  
+   1.[  5,0] 00:00:0a:00:00:0f FID:0 mbr()CPU STA NH  AUTH:1  
+   2.[ 91,0] 00:e0:4c:55:62:c0 FID:0 mbr(1 )FWD DYN   
+   3.[176,0] a4:ba:70:1b:d4:11 FID:0 mbr(8 )FWD STA   AUTH:1  
+   4.[179,0] a4:ba:70:1b:d4:12 FID:0 mbr(8 )FWD STA   AUTH:1  
+   5.[185,0] ae:ba:70:1b:d4:12 FID:0 mbr(8 )FWD STA   AUTH:1  
+   6.[ 10,0] 00:00:0a:00:00:0f FID:1 mbr()CPU STA NH  AUTH:1  
+   7.[ 15,0] ff:ff:ff:ff:ff:ff FID:1 mbr(0 1 2 3 4 8 )CPU STA NH  AUTH:1  

@@ -1,0 +1,4 @@
+sw napt table:
+inbound 4-way enable 1
+total napt connection number is 0
+total free entry number is 1024

@@ -1,0 +1,8 @@
+Dump Port Bandwidth Info:
+Port0 Ingress:FullSpeed	Egress:FullSpeed
+Port1 Ingress:FullSpeed	Egress:FullSpeed
+Port2 Ingress:FullSpeed	Egress:FullSpeed
+Port3 Ingress:FullSpeed	Egress:FullSpeed
+Port4 Ingress:FullSpeed	Egress:FullSpeed
+Port5 Ingress:FullSpeed	Engress:[0.001Mbps]
+Port6 Ingress:FullSpeed	Egress:FullSpeed

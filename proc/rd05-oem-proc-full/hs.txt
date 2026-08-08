@@ -1,0 +1,41 @@
+HSB(	type:0	spa:7	len:586	vid :9
+	pppoe:0	tagif:0	pppoeId:0	ethrtype:0x0020
+	llc_other:0	snap:0
+	da:ff-ff-ff-ff-ff-ff	sa:00-00-00-00-00-00
+	sip:0.0.0.0(hex:00000000)   	sprt:0 (hex:0)
+ 	dip:0.0.0.0(hex:00000000) 	dprt:0(hex:00000000)
+	ipptl:0,	ipflg:0,	iptos:0,	tcpflg:0
+	dirtx:1,	prtnmat:0	udp_nocs:0	ttlst:0x0
+	hp:0	l3csok:1	l4csok:1	ipfragif:0
+	extspa:3	urlmch:0
+	ipv4_opt:0	cputag_if:0
+	ipv6_ext:0	ipv6fo:0
+	ipv6flag:0	qpri:0
+	ptp_pkt:0	ptp_ver:0
+	ptp_typ:0	ipver_1st:0
+	sip6:	0000:0000:0000:0000:0000:0000:0000:0000
+	dip6:	0000:0000:0000:0000:0000:0000:0000:0000
+	hop_limit:0x0	tra_cla:0x0
+	flow_lab:0x0	nxt_hdr:0x0
+	ipv4:0x0	ipv6:0x0
+	ip_len:0x238	tun_len:0x14
+	l3_cso:0x0	l4_cso:0x0
+	l3_csum:0x0	l4_csum:0x0
+)
+HSA(	mac:ff-ff-ff-ff-ff-ff
+	trip:0.0.0.0(hex:00000000)	prt:0	ipmcast:0
+	l3cs:0x0	l4cs:0x0	Internal NETIF:0	l2tr:0,
+ 	l34tr:0	dirtx:1	type:0	snapo:0	why2cpu 0x4 (4)
+	pppif:0	pppid:0	ttl_1:0x0	dpc:1,	leno:586(0x24a) 	mirrort:0
+	l3CrcOk:1	l4CrcOk:1	frag:0	lastFrag:0
+	svid:0x9	dvid:9(0x9)	destination interface :0
+	rxtag:0		dvtag:0x0	spa:7 	ipv4_1st:0	dpext:0x0	hwfwrd:0
+	spcp:0		priority:0	dp:0x1
+	cputag:0	ptp_pkt:0	ptp_v2:0	ptp_type:0x0
+	rmdp:0x2	dpri:0x0	mdf:0x0
+	sip6:	0000:0000:0000:0000:0000:0000:0000:0000
+	dip6:	0000:0000:0000:0000:0000:0000:0000:0000
+	ip_len:0x238	ipv4_id:0x0
+	has_ipv4:0x0	has_ipv6:0x0
+	tun_len:0x14	mltcst_v6:0x0	addip_pri:0x0
+	l3_cso:0x0	l4_cso:0x0)

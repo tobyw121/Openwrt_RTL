@@ -1,0 +1,13 @@
+Dump Port Status:
+Port0 LinkDown
+
+Port1 LinkUp | NWay Mode Enabled
+	RXPause Enabled | TXPause Enabled
+	Duplex Enabled | Speed 1G
+
+Port2 LinkDown
+
+Port3 LinkDown
+
+Port4 LinkDown
+

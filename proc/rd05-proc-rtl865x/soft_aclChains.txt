@@ -1,0 +1,50 @@
+netif(br-lan),isEgress(0):
+	chain:priority(-30004),rulecnt(4)
+===========================
+ [1] rule type: Source Filter   rule action: permit
+	SMAC: 0:0:0:0:0:0  SMACM: 0:0:0:0:0:0
+	svidx: 0   svidxM: 0   sport: 256   sportM: 100   ProtoType: 1
+	sip: 0.0.0.0   sipM: 0.0.0.0
+	sportL: 0   sportU: 0
+	netifIdx: 0   pppoeIdx: 0   l2Idx:0  pktOpApp: 7
+ [2] rule type: UDP   rule action: to cpu
+	dip: 0.0.0.0 dipM: 0.0.0.0
+	sip: 0.0.0.0 sipM: 0.0.0.0
+	Tos:0  TosM:0  sportL:67  sportU:68  dportL:67  dportU:68
+	netifIdx: 0   pppoeIdx: 0   l2Idx:0  pktOpApp: 7
+ [3] rule type: UDP   rule action: to cpu
+	dip: 0.0.0.0 dipM: 0.0.0.0
+	sip: 0.0.0.0 sipM: 0.0.0.0
+	Tos:0  TosM:0  sportL:546  sportU:547  dportL:546  dportU:547
+	netifIdx: 0   pppoeIdx: 0   l2Idx:0  pktOpApp: 7
+ [4] rule type: Ethernet   rule action: to cpu
+	ether type: 8863   ether type mask: ffff
+	DMAC: 0:0:0:0:0:0  DMACM: 0:0:0:0:0:0
+	SMAC: 0:0:0:0:0:0  SMACM: 0:0:0:0:0:0
+	netifIdx: 0   pppoeIdx: 0   l2Idx:0  pktOpApp: 7
+===========================
+	chain:priority(-10000),rulecnt(1)
+===========================
+ [1] rule type: Ethernet   rule action: permit
+	ether type: 0   ether type mask: 0
+	DMAC: 0:0:0:0:0:0  DMACM: 0:0:0:0:0:0
+	SMAC: 0:0:0:0:0:0  SMACM: 0:0:0:0:0:0
+	netifIdx: 0   pppoeIdx: 0   l2Idx:0  pktOpApp: 7
+===========================
+	chain:priority(0),rulecnt(0)
+===========================
+===========================
+--------------------------------
+
+netif(br-lan),isEgress(1):
+	chain:priority(0),rulecnt(0)
+===========================
+===========================
+--------------------------------
+
+netif(pppoe-wan),isEgress(0):
+--------------------------------
+
+netif(pppoe-wan),isEgress(1):
+--------------------------------
+

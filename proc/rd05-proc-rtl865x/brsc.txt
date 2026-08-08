@@ -1,0 +1,25 @@
+brsc disable: 0
+br-lan mac address: a4:ba:70:1b:d4:10
+entry[0]: mac 00:e0:4c:55:62:c0, dev_name eth1
+hast list 27: mac->00:e0:4c:55:62:c0, dev_name eth1
+brsc blacklist_enable: 0
+dev_blocklist[0]: valid: 0, ifname: 
+dev_blocklist[1]: valid: 0, ifname: 
+dev_blocklist[2]: valid: 0, ifname: 
+dev_blocklist[3]: valid: 0, ifname: 
+dev_blocklist[4]: valid: 0, ifname: 
+dev_blocklist[5]: valid: 0, ifname: 
+dev_blocklist[6]: valid: 0, ifname: 
+dev_blocklist[7]: valid: 0, ifname: 
+dev_blocklist[8]: valid: 0, ifname: 
+dev_blocklist[9]: valid: 0, ifname: 
+dev_blocklist[10]: valid: 0, ifname: 
+dev_blocklist[11]: valid: 0, ifname: 
+dev_blocklist[12]: valid: 0, ifname: 
+dev_blocklist[13]: valid: 0, ifname: 
+dev_blocklist[14]: valid: 0, ifname: 
+dev_blocklist[15]: valid: 0, ifname: 
+dev_blocklist[16]: valid: 0, ifname: 
+dev_blocklist[17]: valid: 0, ifname: 
+dev_blocklist[18]: valid: 0, ifname: 
+dev_blocklist[19]: valid: 0, ifname: 
