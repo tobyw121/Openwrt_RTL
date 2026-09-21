@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/spi/realtek,rtl8197f-spi-sheipa.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Realtek RTL8197F/RTL8197FH SHEIPA SPI-NOR controller
+
+maintainers:
+  - OpenWrt RTL8197F bringup <noreply@example.invalid>
+
+allOf:
+  - $ref: spi-controller.yaml#
+
+properties:
+  compatible:
+    enum:
+      - realtek,rtl8197f-spi-sheipa
+      - realtek,rtl8197fh-spi-sheipa
+
+  reg:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  realtek,auto-map:
+    $ref: /schemas/types.yaml#/definitions/uint32-array
+    minItems: 2
+    maxItems: 2
+    description: Physical address and size of the controller's SPI-NOR automatic read window.
+
+  spi-cpol: true
+  spi-cpha: true
+
+required:
+  - compatible
+  - reg
+  - '#address-cells'
+  - '#size-cells'
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    spi@143000 {
+        compatible = "realtek,rtl8197f-spi-sheipa";
+        reg = <0x143000 0x1000>;
+        clocks = <&lx_clk>;
+        interrupt-parent = <&intc>;
+        interrupts = <23 2>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+        spi-cpol;
+        spi-cpha;
+        realtek,auto-map = <0x10000000 0x02000000>;
+    };
+...
