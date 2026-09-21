@@ -1,0 +1,3 @@
+CONFIG_TARGET_realtek=y
+CONFIG_TARGET_realtek_rtl8197f=y
+CONFIG_TARGET_realtek_rtl8197f_DEVICE_xiaomi_r4_rd05=y
