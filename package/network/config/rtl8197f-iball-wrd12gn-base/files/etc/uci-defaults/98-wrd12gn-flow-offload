@@ -1,0 +1,10 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+[ "$(cat /tmp/sysinfo/board_name 2>/dev/null)" = "iball,wrd12gn" ] || exit 0
+
+uci -q set firewall.@defaults[0].flow_offloading='1'
+# HW flow offload stays off until the NAPT backend is explicitly enabled and validated.
+uci -q set firewall.@defaults[0].flow_offloading_hw='0'
+uci -q commit firewall
+exit 0
