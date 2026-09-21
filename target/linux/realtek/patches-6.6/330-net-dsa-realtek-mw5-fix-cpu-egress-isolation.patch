@@ -1,0 +1,699 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenAI <noreply@openai.com>
+Date: Sat, 8 Aug 2026 05:00:00 +0000
+Subject: [PATCH] net: dsa: realtek: fix MW5 CPU egress isolation and expose audit state
+
+The RTL8365MB common setup initializes every active port with an isolation
+mask containing only the CPU-port mask.  This is correct for user ports,
+but on Tenda Nova MW5 it also leaves CPU port 6 isolated to itself.
+Hardware
+traces show the resulting asymmetry: frames from switch port 1 reach Linux,
+while frames submitted and completed by the RTL8197F CPU DMA never
+increment the user-port TX counters.
+
+For the MW5 board only, keep user ports isolated toward the CPU and replace
+the CPU port's forwarding mask with the set of DSA user ports.  The v44.66.4
+hardware trace proves that the physical SoC-to-switch conduit is RTL8197F
+P0/RGMII: encoding external LAN/WAN as RTL8197F descriptor DP=P1/P3 completes
+DMA locally but does not reach the switch.  v44.66.12 transports the native rtl8_4 eight-byte 0x8899 CPU tag over P0
+and lets the external switch select P1/P3.
+
+Also expose read-only MW5 snapshots for CPU-tag registers, port
+isolation/STP,
+MIB packet counters and the direct board-init/threshold/SSC register state.
+The additional /proc/mw5-rtl8367-{regs,mib,ports,flowctrl} views use only
+configuration registers already accessed by this driver/SDK reconstruction;
+no blind SMI sweep or indirect command table is performed.  This lets the
+built-in diagnostics correlate RTL8197F/P0 traffic with the external switch
+state before and after sustained load.
+
+Signed-off-by: OpenAI <noreply@openai.com>
+---
+ drivers/net/dsa/realtek/rtl8365mb.c | 600 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 600 insertions(+)
+
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -96,8 +96,10 @@
+ #include <linux/irqdomain.h>
+ #include <linux/mutex.h>
+ #include <linux/moduleparam.h>
+ #include <linux/of_irq.h>
++#include <linux/proc_fs.h>
+ #include <linux/regmap.h>
++#include <linux/seq_file.h>
+ #include <linux/if_bridge.h>
+ #include <linux/if_vlan.h>
+ 
+@@ -1206,6 +1208,193 @@ static int rtl8365mb_port_set_isolation(struct realtek_priv *priv, int port,
+ 	return regmap_write(priv->map, RTL8365MB_PORT_ISOLATION_REG(port), mask);
+ }
+ 
++static bool rtl8365mb_is_mw5_cpu_cascade(struct realtek_priv *priv)
++{
++	return of_property_read_bool(priv->dev->of_node,
++				     "realtek,mw5-cpu-cascade");
++}
++
++/* RTL8367C/R family register layout from the Realtek SDK.  v44.66.12 keeps
++ * the upstream RTL8365MB protocol-4 eight-byte CPU tag on P0/RGMII and uses
++ * the real CPU port as the only tag parser.  Do not widen CPU-awareness to user ports: they are
++ * destinations selected by the CPU tag, not additional parser ports. Use KEEP
++ * on wire-facing user ports so CPU frames that enter without an 802.1Q tag
++ * also egress untagged; keep the CPU port itself in SDK ORIGINAL mode.
++ */
++#define RTL8365MB_MW5_PORT_MISC_CFG_BASE		0x000e
++#define RTL8365MB_MW5_PORT_MISC_CFG_REG(_port)	\
++	(RTL8365MB_MW5_PORT_MISC_CFG_BASE + ((_port) << 5))
++#define RTL8365MB_MW5_VLAN_EGRESS_MODE_MASK	0x0030
++#define RTL8365MB_MW5_VLAN_EGRESS_MODE_ORI	0x0000
++#define RTL8365MB_MW5_VLAN_EGRESS_MODE_KEEP	0x0010
++#define RTL8365MB_MW5_VLAN_EXT_CTRL		0x07b5
++#define RTL8365MB_MW5_VID0_ACTION		BIT(0)
++#define RTL8365MB_MW5_CPU_EN			BIT(0)
++#define RTL8365MB_MW5_CPU_INSERT_MODE		GENMASK(2, 1)
++#define RTL8365MB_MW5_CPU_TRAP_PORT		GENMASK(5, 3)
++#define RTL8365MB_MW5_CPU_TAG_POSITION		BIT(6)
++#define RTL8365MB_MW5_CPU_RXBYTECOUNT		BIT(7)
++#define RTL8365MB_MW5_CPU_TAG_FORMAT		BIT(9)
++#define RTL8365MB_MW5_CPU_TRAP_PORT_EXT		BIT(10)
++
++static int rtl8365mb_mw5_set_egress_mode(struct realtek_priv *priv, int port,
++					u32 mode, u32 *before, u32 *after)
++{
++	u32 reg = RTL8365MB_MW5_PORT_MISC_CFG_REG(port);
++	int ret;
++
++	ret = regmap_read(priv->map, reg, before);
++	if (ret)
++		return ret;
++
++	ret = regmap_update_bits(priv->map, reg,
++				 RTL8365MB_MW5_VLAN_EGRESS_MODE_MASK,
++				 mode);
++	if (ret)
++		return ret;
++
++	return regmap_read(priv->map, reg, after);
++}
++
++static int rtl8365mb_mw5_fix_cpu_tag_strip(struct realtek_priv *priv,
++					  u32 user_mask, int cpu_port)
++{
++	struct rtl8365mb *mb = priv->chip_data;
++	struct rtl8365mb_cpu *cpu = &mb->cpu;
++	u32 parse_before = 0, parse_after = 0;
++	u32 cpu_ctrl = 0;
++	u32 p1_before = 0, p1_after = 0;
++	u32 p3_before = 0, p3_after = 0;
++	u32 pcpu_before = 0, pcpu_after = 0;
++	u32 parse_mask;
++	int ret;
++
++	/* v44.66.12: the RTL8197F master preserves the upstream protocol-4
++	 * eight-byte CPU tag and sends it through physical P0/RGMII. V212's
++	 * rtl8367c_setAsicCputagPortmask API maps exactly to 0x1219, so keep only
++	 * the actual CPU port able to parse switch CPU tags. P1/P3 stay ordinary
++	 * destinations and no guessed tag-mode/position values are written here.
++	 */
++	parse_mask = cpu->mask & RTL8365MB_CPU_PORT_MASK_MASK;
++
++	ret = regmap_read(priv->map, RTL8365MB_CPU_PORT_MASK_REG, &parse_before);
++	if (ret)
++		return ret;
++
++	ret = regmap_update_bits(priv->map, RTL8365MB_CPU_PORT_MASK_REG,
++				 RTL8365MB_CPU_PORT_MASK_MASK, parse_mask);
++	if (ret)
++		return ret;
++
++	ret = regmap_read(priv->map, RTL8365MB_CPU_PORT_MASK_REG, &parse_after);
++	if (ret)
++		return ret;
++
++	if (user_mask & BIT(1)) {
++		ret = rtl8365mb_mw5_set_egress_mode(priv, 1,
++						 RTL8365MB_MW5_VLAN_EGRESS_MODE_KEEP,
++						 &p1_before, &p1_after);
++		if (ret)
++			return ret;
++	}
++
++	if (user_mask & BIT(3)) {
++		ret = rtl8365mb_mw5_set_egress_mode(priv, 3,
++						 RTL8365MB_MW5_VLAN_EGRESS_MODE_KEEP,
++						 &p3_before, &p3_after);
++		if (ret)
++			return ret;
++	}
++
++	ret = rtl8365mb_mw5_set_egress_mode(priv, cpu_port,
++					 RTL8365MB_MW5_VLAN_EGRESS_MODE_ORI,
++					 &pcpu_before, &pcpu_after);
++	if (ret)
++		return ret;
++
++	/* v44.66.12: captures prove that rtl8_4 is consumed by the RTL8367,
++	 * but the resulting user frame is still emitted as an 802.1Q priority
++	 * tag with VID 0. The included RTL8367C SDK documents REG_VLAN_EXT_CTRL
++	 * bit 0 as the reserved-VID0 action: 0=UNTAG, 1=TAG. Force only that
++	 * documented MW5 policy bit to UNTAG; leave VID4095 and unrelated VLAN
++	 * and flow-control state untouched. */
++	ret = regmap_update_bits(priv->map, RTL8365MB_MW5_VLAN_EXT_CTRL,
++				 RTL8365MB_MW5_VID0_ACTION, 0);
++	if (ret)
++		return ret;
++
++	regmap_read(priv->map, RTL8365MB_CPU_CTRL_REG, &cpu_ctrl);
++
++	dev_info(priv->dev,
++		 "MW5 CPU tag parser v44.66.12: cpu=%d users=0x%x parse-mask=0x%x->0x%x cpu-ctrl=0x%x egress-keep-users p1=0x%x->0x%x p3=0x%x->0x%x p%d=0x%x->0x%x\n",
++		 cpu_port, user_mask, parse_before, parse_after, cpu_ctrl,
++		 p1_before, p1_after, p3_before, p3_after, cpu_port,
++		 pcpu_before, pcpu_after);
++
++	return 0;
++}
++
++static int rtl8365mb_mw5_fix_cpu_egress_isolation(struct realtek_priv *priv)
++{
++	struct rtl8365mb *mb = priv->chip_data;
++	struct rtl8365mb_cpu *cpu = &mb->cpu;
++	u32 cpu_iso_before = 0;
++	u32 cpu_iso_after = 0;
++	u32 cpu_mask_reg = 0;
++	u32 cpu_ctrl_reg = 0;
++	u32 user_mask = 0;
++	int cpu_port = -1;
++	int ret;
++	int i;
++
++	if (!rtl8365mb_is_mw5_cpu_cascade(priv))
++		return 0;
++
++	for (i = 0; i < priv->num_ports; i++) {
++		if (dsa_is_unused_port(priv->ds, i))
++			continue;
++
++		if (dsa_is_cpu_port(priv->ds, i))
++			cpu_port = i;
++		else
++			user_mask |= BIT(i);
++	}
++
++	if (cpu_port < 0 || !cpu->mask || !user_mask) {
++		dev_err(priv->dev,
++			"MW5 v43.13 invalid CPU/user isolation topology cpu=%d cpu-mask=0x%x users=0x%x\n",
++			cpu_port, cpu->mask, user_mask);
++		return -EINVAL;
++	}
++
++	regmap_read(priv->map, RTL8365MB_PORT_ISOLATION_REG(cpu_port),
++		    &cpu_iso_before);
++
++	/* The generic setup already keeps each user port pointed at cpu->mask.
++	 * Only widen CPU-port reachability. LAN/WAN selection is performed by the
++	 * rtl8_4 CPU tag after the frame arrives over RTL8197F P0/RGMII.
++	 */
++	ret = rtl8365mb_port_set_isolation(priv, cpu_port, user_mask);
++	if (ret)
++		return ret;
++
++	ret = rtl8365mb_mw5_fix_cpu_tag_strip(priv, user_mask, cpu_port);
++	if (ret)
++		return ret;
++
++	regmap_read(priv->map, RTL8365MB_PORT_ISOLATION_REG(cpu_port),
++		    &cpu_iso_after);
++	regmap_read(priv->map, RTL8365MB_CPU_PORT_MASK_REG, &cpu_mask_reg);
++	regmap_read(priv->map, RTL8365MB_CPU_CTRL_REG, &cpu_ctrl_reg);
++
++	dev_info(priv->dev,
++		 "MW5 CPU egress isolation v43.13: cpu=%d users=0x%x cpu-mask=0x%x isolation=0x%x->0x%x cpu-mask-reg=0x%x cpu-ctrl=0x%x\n",
++		 cpu_port, user_mask, cpu->mask, cpu_iso_before, cpu_iso_after,
++		 cpu_mask_reg, cpu_ctrl_reg);
++
++	return 0;
++}
++
+ static int rtl8365mb_mib_counter_read(struct realtek_priv *priv, int port,
+ 				      u32 offset, u32 length, u64 *mibvalue)
+ {
+@@ -1257,6 +1327,428 @@ static int rtl8365mb_mib_counter_read(struct realtek_priv *priv, int port,
+ 	return 0;
+ }
+ 
++static struct proc_dir_entry *rtl8365mb_mw5_proc;
++static struct proc_dir_entry *rtl8365mb_mw5_regs_proc;
++static struct proc_dir_entry *rtl8365mb_mw5_mib_proc;
++static struct proc_dir_entry *rtl8365mb_mw5_ports_proc;
++static struct proc_dir_entry *rtl8365mb_mw5_flowctrl_proc;
++static struct realtek_priv *rtl8365mb_mw5_proc_priv;
++
++/* Direct configuration registers recovered from the supplied MW5/Realtek
++ * material and from the board init sequence in patch 328.  These are only
++ * read here; no indirect table command, PHY latch or clear-on-read MIB
++ * register is exposed by this raw snapshot.
++ */
++struct rtl8365mb_mw5_diag_reg {
++	const char *name;
++	u16 reg;
++};
++
++static const struct rtl8365mb_mw5_diag_reg rtl8365mb_mw5_diag_regs[] = {
++	{ "port1_ctrl", 0x0038 },
++	{ "port3_ctrl", 0x0078 },
++	{ "port6_ctrl", 0x00d8 },
++	{ "sdk_tail_0301", 0x0301 },
++	{ "vlan_filter", 0x07a8 },
++	{ "ingress_filter", 0x07a9 },
++	{ "cpu_port_mask", RTL8365MB_CPU_PORT_MASK_REG },
++	{ "cpu_ctrl", RTL8365MB_CPU_CTRL_REG },
++	{ "sdk_tail_121e", 0x121e },
++	{ "mw5_thresh_121f", 0x121f },
++	{ "mw5_thresh_1220", 0x1220 },
++	{ "mw5_thresh_1221", 0x1221 },
++	{ "mw5_thresh_1222", 0x1222 },
++	{ "mw5_thresh_1223", 0x1223 },
++	{ "mw5_thresh_1224", 0x1224 },
++	{ "mw5_thresh_1225", 0x1225 },
++	{ "mw5_thresh_1226", 0x1226 },
++	{ "sdk_ctrl_122b", 0x122b },
++	{ "sdk_tail_1233", 0x1233 },
++	{ "sdk_tail_1237", 0x1237 },
++	{ "sdk_tail_1239", 0x1239 },
++	{ "sdk_tail_123a", 0x123a },
++	{ "sdk_tail_1303", 0x1303 },
++	{ "sdk_tail_1304", 0x1304 },
++	{ "sdk_ctrl_1305", 0x1305 },
++	{ "sdk_tail_1349", 0x1349 },
++	{ "mw5_board_13c3", 0x13c3 },
++	{ "mw5_board_13c4", 0x13c4 },
++	{ "sdk_tail_13e2", 0x13e2 },
++	{ "sdk_tail_13eb", 0x13eb },
++	{ "sdk_tail_13f9", 0x13f9 },
++	{ "sdk_ctrl_18e0", 0x18e0 },
++	{ "mw5_board_1b03", 0x1b03 },
++	{ "mw5_ssc_1d52", 0x1d52 },
++	{ "mw5_ssc_1d53", 0x1d53 },
++	{ "mw5_ssc_1d54", 0x1d54 },
++	{ "mw5_ssc_1d55", 0x1d55 },
++	{ "mw5_ssc_1d59", 0x1d59 },
++	{ "mw5_ssc_1d5a", 0x1d5a },
++	{ "mw5_ssc_1d5b", 0x1d5b },
++	{ "mw5_ssc_1d5c", 0x1d5c },
++};
++
++#define RTL8365MB_MW5_MIB_IN_OCTETS		0
++#define RTL8365MB_MW5_MIB_IN_UCAST		16
++#define RTL8365MB_MW5_MIB_IN_MCAST		20
++#define RTL8365MB_MW5_MIB_IN_BCAST		22
++#define RTL8365MB_MW5_MIB_OUT_OCTETS		60
++#define RTL8365MB_MW5_MIB_OUT_DISCARDS		78
++#define RTL8365MB_MW5_MIB_OUT_UCAST		82
++#define RTL8365MB_MW5_MIB_OUT_MCAST		84
++#define RTL8365MB_MW5_MIB_OUT_BCAST		86
++
++static int rtl8365mb_mw5_read_port_mib(struct realtek_priv *priv, int port,
++				       u64 *in_packets, u64 *out_packets,
++				       u64 *in_octets, u64 *out_octets,
++				       u64 *out_discards)
++{
++	struct rtl8365mb *mb = priv->chip_data;
++	u64 in_ucast = 0, in_mcast = 0, in_bcast = 0;
++	u64 out_ucast = 0, out_mcast = 0, out_bcast = 0;
++	int ret;
++
++	mutex_lock(&mb->mib_lock);
++
++	ret = rtl8365mb_mib_counter_read(priv, port,
++					 RTL8365MB_MW5_MIB_IN_UCAST, 2,
++					 &in_ucast);
++	if (ret)
++		goto out_unlock;
++	ret = rtl8365mb_mib_counter_read(priv, port,
++					 RTL8365MB_MW5_MIB_IN_MCAST, 2,
++					 &in_mcast);
++	if (ret)
++		goto out_unlock;
++	ret = rtl8365mb_mib_counter_read(priv, port,
++					 RTL8365MB_MW5_MIB_IN_BCAST, 2,
++					 &in_bcast);
++	if (ret)
++		goto out_unlock;
++	ret = rtl8365mb_mib_counter_read(priv, port,
++					 RTL8365MB_MW5_MIB_OUT_UCAST, 2,
++					 &out_ucast);
++	if (ret)
++		goto out_unlock;
++	ret = rtl8365mb_mib_counter_read(priv, port,
++					 RTL8365MB_MW5_MIB_OUT_MCAST, 2,
++					 &out_mcast);
++	if (ret)
++		goto out_unlock;
++	ret = rtl8365mb_mib_counter_read(priv, port,
++					 RTL8365MB_MW5_MIB_OUT_BCAST, 2,
++					 &out_bcast);
++	if (ret)
++		goto out_unlock;
++	ret = rtl8365mb_mib_counter_read(priv, port,
++					 RTL8365MB_MW5_MIB_IN_OCTETS, 4,
++					 in_octets);
++	if (ret)
++		goto out_unlock;
++	ret = rtl8365mb_mib_counter_read(priv, port,
++					 RTL8365MB_MW5_MIB_OUT_OCTETS, 4,
++					 out_octets);
++	if (ret)
++		goto out_unlock;
++	ret = rtl8365mb_mib_counter_read(priv, port,
++					 RTL8365MB_MW5_MIB_OUT_DISCARDS, 2,
++					 out_discards);
++	if (ret)
++		goto out_unlock;
++
++	*in_packets = in_ucast + in_mcast + in_bcast;
++	*out_packets = out_ucast + out_mcast + out_bcast;
++
++out_unlock:
++	mutex_unlock(&mb->mib_lock);
++	return ret;
++}
++
++static int rtl8365mb_mw5_proc_show(struct seq_file *m, void *v)
++{
++	struct realtek_priv *priv = m->private;
++	struct rtl8365mb *mb = priv->chip_data;
++	u32 cpu_mask = 0, cpu_ctrl = 0;
++	u32 iso1 = 0, iso3 = 0, iso6 = 0;
++	u32 msti1 = 0, msti3 = 0, msti6 = 0;
++	u64 in_pkts, out_pkts, in_octets, out_octets, out_discards;
++	static const int ports[] = { 1, 3, 6 };
++	u32 user_mask = 0;
++	int ret;
++	int i;
++
++	for (i = 0; i < priv->num_ports; i++) {
++		if (dsa_is_unused_port(priv->ds, i) || dsa_is_cpu_port(priv->ds, i))
++			continue;
++		user_mask |= BIT(i);
++	}
++
++	regmap_read(priv->map, RTL8365MB_CPU_PORT_MASK_REG, &cpu_mask);
++	regmap_read(priv->map, RTL8365MB_CPU_CTRL_REG, &cpu_ctrl);
++	regmap_read(priv->map, RTL8365MB_PORT_ISOLATION_REG(1), &iso1);
++	regmap_read(priv->map, RTL8365MB_PORT_ISOLATION_REG(3), &iso3);
++	regmap_read(priv->map, RTL8365MB_PORT_ISOLATION_REG(6), &iso6);
++	regmap_read(priv->map, RTL8365MB_MSTI_CTRL_REG(0, 1), &msti1);
++	regmap_read(priv->map, RTL8365MB_MSTI_CTRL_REG(0, 3), &msti3);
++	regmap_read(priv->map, RTL8365MB_MSTI_CTRL_REG(0, 6), &msti6);
++
++	seq_puts(m, "driver=rtl8365mb mw5_diag=v43.13\n");
++	seq_printf(m, "cpu_port=6 user_mask=0x%x cpu_mask=0x%x cpu_ctrl=0x%x\n",
++		   user_mask, cpu_mask, cpu_ctrl);
++	seq_printf(m, "cpu_tag_decode enable=%u format4b=%u format8b=%u position=%u insert_mode=%u trap_port=%u rx_byte_count=%u\n",
++		   !!(cpu_ctrl & RTL8365MB_MW5_CPU_EN),
++		   !!(cpu_ctrl & RTL8365MB_MW5_CPU_TAG_FORMAT),
++		   !(cpu_ctrl & RTL8365MB_MW5_CPU_TAG_FORMAT),
++		   !!(cpu_ctrl & RTL8365MB_MW5_CPU_TAG_POSITION),
++		   (unsigned int)FIELD_GET(RTL8365MB_MW5_CPU_INSERT_MODE, cpu_ctrl),
++		   (unsigned int)FIELD_GET(RTL8365MB_MW5_CPU_TRAP_PORT, cpu_ctrl) |
++			((cpu_ctrl & RTL8365MB_MW5_CPU_TRAP_PORT_EXT) ? 8 : 0),
++		   !!(cpu_ctrl & RTL8365MB_MW5_CPU_RXBYTECOUNT));
++	seq_printf(m, "isolation_port1=0x%x isolation_port3=0x%x isolation_port6=0x%x\n",
++		   iso1, iso3, iso6);
++	seq_printf(m, "stp_port1=%u stp_port3=%u stp_port6=%u\n",
++		   (unsigned int)FIELD_GET(RTL8365MB_MSTI_CTRL_PORT_STATE_MASK(1), msti1),
++		   (unsigned int)FIELD_GET(RTL8365MB_MSTI_CTRL_PORT_STATE_MASK(3), msti3),
++		   (unsigned int)FIELD_GET(RTL8365MB_MSTI_CTRL_PORT_STATE_MASK(6), msti6));
++
++	for (i = 0; i < ARRAY_SIZE(ports); i++) {
++		int port = ports[i];
++
++		in_pkts = 0;
++		out_pkts = 0;
++		in_octets = 0;
++		out_octets = 0;
++		out_discards = 0;
++		ret = rtl8365mb_mw5_read_port_mib(priv, port, &in_pkts,
++						  &out_pkts, &in_octets,
++						  &out_octets, &out_discards);
++		if (ret) {
++			seq_printf(m, "port%d_mib_error=%d\n", port, ret);
++			continue;
++		}
++
++		seq_printf(m, "port%d_in_packets=%llu\n", port,
++			   (unsigned long long)in_pkts);
++		seq_printf(m, "port%d_out_packets=%llu\n", port,
++			   (unsigned long long)out_pkts);
++		seq_printf(m, "port%d_in_octets=%llu\n", port,
++			   (unsigned long long)in_octets);
++		seq_printf(m, "port%d_out_octets=%llu\n", port,
++			   (unsigned long long)out_octets);
++		seq_printf(m, "port%d_out_discards=%llu\n", port,
++			   (unsigned long long)out_discards);
++	}
++
++	seq_printf(m, "chip_id=0x%04x chip_ver=0x%04x\n",
++		   mb->detected_chip_id, mb->detected_chip_ver);
++	return 0;
++}
++
++static void rtl8365mb_mw5_seq_reg(struct seq_file *m,
++				  struct realtek_priv *priv,
++				  const char *name, u32 reg)
++{
++	u32 val = 0;
++	int ret;
++
++	ret = regmap_read(priv->map, reg, &val);
++	if (ret)
++		seq_printf(m, "%s reg=0x%04x error=%d\n", name, reg, ret);
++	else
++		seq_printf(m, "%s reg=0x%04x value=0x%04x\n",
++			   name, reg, val & 0xffff);
++}
++
++static int rtl8365mb_mw5_regs_proc_show(struct seq_file *m, void *v)
++{
++	struct realtek_priv *priv = m->private;
++	struct rtl8365mb *mb = priv->chip_data;
++	unsigned int i;
++
++	seq_puts(m, "driver=rtl8365mb mw5_diag=v44.65.24.1 view=regs read_only=1\n");
++	seq_printf(m, "chip_id=0x%04x chip_ver=0x%04x\n",
++		   mb->detected_chip_id, mb->detected_chip_ver);
++
++	for (i = 0; i < ARRAY_SIZE(rtl8365mb_mw5_diag_regs); i++)
++		rtl8365mb_mw5_seq_reg(m, priv,
++				      rtl8365mb_mw5_diag_regs[i].name,
++				      rtl8365mb_mw5_diag_regs[i].reg);
++
++	/* Per-port direct configuration/state registers used by the in-tree
++	 * DSA driver.  Values are deliberately reported raw as well as through
++	 * the interpreted ports view.
++	 */
++	for (i = 0; i < priv->num_ports; i++) {
++		char name[40];
++
++		if (dsa_is_unused_port(priv->ds, i))
++			continue;
++		snprintf(name, sizeof(name), "port%u_isolation", i);
++		rtl8365mb_mw5_seq_reg(m, priv, name,
++				      RTL8365MB_PORT_ISOLATION_REG(i));
++		snprintf(name, sizeof(name), "port%u_misc", i);
++		rtl8365mb_mw5_seq_reg(m, priv, name,
++				      RTL8365MB_MW5_PORT_MISC_CFG_REG(i));
++	}
++
++	return 0;
++}
++
++static int rtl8365mb_mw5_mib_proc_show(struct seq_file *m, void *v)
++{
++	struct realtek_priv *priv = m->private;
++	static const int ports[] = { 1, 3, 6 };
++	u64 in_pkts, out_pkts, in_octets, out_octets, out_discards;
++	int i, ret;
++
++	seq_puts(m, "driver=rtl8365mb mw5_diag=v44.65.24.1 view=mib read_only=1\n");
++	for (i = 0; i < ARRAY_SIZE(ports); i++) {
++		int port = ports[i];
++
++		in_pkts = 0;
++		out_pkts = 0;
++		in_octets = 0;
++		out_octets = 0;
++		out_discards = 0;
++		ret = rtl8365mb_mw5_read_port_mib(priv, port, &in_pkts,
++						  &out_pkts, &in_octets,
++						  &out_octets, &out_discards);
++		if (ret) {
++			seq_printf(m, "port%d_error=%d\n", port, ret);
++			continue;
++		}
++		seq_printf(m,
++			   "port%d in_packets=%llu out_packets=%llu in_octets=%llu out_octets=%llu out_discards=%llu\n",
++			   port, (unsigned long long)in_pkts,
++			   (unsigned long long)out_pkts,
++			   (unsigned long long)in_octets,
++			   (unsigned long long)out_octets,
++			   (unsigned long long)out_discards);
++	}
++	return 0;
++}
++
++static int rtl8365mb_mw5_ports_proc_show(struct seq_file *m, void *v)
++{
++	struct realtek_priv *priv = m->private;
++	struct rtl8365mb *mb = priv->chip_data;
++	struct rtl8365mb_cpu *cpu = &mb->cpu;
++	u32 user_mask = 0, val = 0, msti = 0;
++	int i;
++
++	seq_puts(m, "driver=rtl8365mb mw5_diag=v44.65.24.1 view=ports read_only=1\n");
++	for (i = 0; i < priv->num_ports; i++)
++		if (!dsa_is_unused_port(priv->ds, i) &&
++		    !dsa_is_cpu_port(priv->ds, i))
++			user_mask |= BIT(i);
++	seq_printf(m, "cpu_mask_expected=0x%x user_mask_expected=0x%x\n",
++		   cpu->mask, user_mask);
++
++	for (i = 0; i < priv->num_ports; i++) {
++		if (dsa_is_unused_port(priv->ds, i))
++			continue;
++		regmap_read(priv->map, RTL8365MB_PORT_ISOLATION_REG(i), &val);
++		regmap_read(priv->map, RTL8365MB_MSTI_CTRL_REG(0, i), &msti);
++		seq_printf(m,
++			   "port%d role=%s isolation=0x%x stp=%u\n", i,
++			   dsa_is_cpu_port(priv->ds, i) ? "cpu" : "user", val,
++			   (unsigned int)((msti >>
++				RTL8365MB_MSTI_CTRL_PORT_STATE_OFFSET(i)) & 0x3));
++	}
++	return 0;
++}
++
++static int rtl8365mb_mw5_flowctrl_proc_show(struct seq_file *m, void *v)
++{
++	struct realtek_priv *priv = m->private;
++	static const int ports[] = { 1, 3, 6 };
++	static const u16 threshold_regs[] = {
++		0x121f, 0x1220, 0x1221, 0x1222,
++		0x1223, 0x1224, 0x1225, 0x1226,
++	};
++	static const u16 ssc_regs[] = {
++		0x1d52, 0x1d53, 0x1d54, 0x1d55,
++		0x1d59, 0x1d5a, 0x1d5b, 0x1d5c,
++	};
++	u32 val = 0;
++	int i;
++
++	seq_puts(m, "driver=rtl8365mb mw5_diag=v44.65.24.1 view=flowctrl read_only=1\n");
++	for (i = 0; i < ARRAY_SIZE(ports); i++) {
++		u32 reg = 0x0018 + 0x20 * ports[i];
++
++		if (!regmap_read(priv->map, reg, &val))
++			seq_printf(m,
++				   "port%d_ctrl reg=0x%04x value=0x%04x sdk_init_field_0f00=0x%03x\n",
++			   ports[i], reg, val & 0xffff, val & 0x0f00);
++	}
++	for (i = 0; i < ARRAY_SIZE(threshold_regs); i++) {
++		char name[32];
++
++		snprintf(name, sizeof(name), "threshold_%04x", threshold_regs[i]);
++		rtl8365mb_mw5_seq_reg(m, priv, name, threshold_regs[i]);
++	}
++	for (i = 0; i < ARRAY_SIZE(ssc_regs); i++) {
++		char name[32];
++
++		snprintf(name, sizeof(name), "ssc_%04x", ssc_regs[i]);
++		rtl8365mb_mw5_seq_reg(m, priv, name, ssc_regs[i]);
++	}
++	return 0;
++}
++
++static void rtl8365mb_mw5_diag_create(struct realtek_priv *priv)
++{
++	if (!rtl8365mb_is_mw5_cpu_cascade(priv) || rtl8365mb_mw5_proc)
++		return;
++
++	rtl8365mb_mw5_proc = proc_create_single_data("mw5-rtl8367", 0444, NULL,
++						     rtl8365mb_mw5_proc_show, priv);
++	rtl8365mb_mw5_regs_proc =
++		proc_create_single_data("mw5-rtl8367-regs", 0444, NULL,
++					rtl8365mb_mw5_regs_proc_show, priv);
++	rtl8365mb_mw5_mib_proc =
++		proc_create_single_data("mw5-rtl8367-mib", 0444, NULL,
++					rtl8365mb_mw5_mib_proc_show, priv);
++	rtl8365mb_mw5_ports_proc =
++		proc_create_single_data("mw5-rtl8367-ports", 0444, NULL,
++					rtl8365mb_mw5_ports_proc_show, priv);
++	rtl8365mb_mw5_flowctrl_proc =
++		proc_create_single_data("mw5-rtl8367-flowctrl", 0444, NULL,
++					rtl8365mb_mw5_flowctrl_proc_show, priv);
++
++	if (!rtl8365mb_mw5_proc || !rtl8365mb_mw5_regs_proc ||
++	    !rtl8365mb_mw5_mib_proc || !rtl8365mb_mw5_ports_proc ||
++	    !rtl8365mb_mw5_flowctrl_proc)
++		dev_warn(priv->dev,
++			 "failed to create one or more MW5 RTL8367 diagnostic proc files\n");
++
++	rtl8365mb_mw5_proc_priv = priv;
++}
++
++static void rtl8365mb_mw5_diag_remove(struct realtek_priv *priv)
++{
++	if (rtl8365mb_mw5_proc_priv != priv)
++		return;
++
++	if (rtl8365mb_mw5_flowctrl_proc)
++		proc_remove(rtl8365mb_mw5_flowctrl_proc);
++	if (rtl8365mb_mw5_ports_proc)
++		proc_remove(rtl8365mb_mw5_ports_proc);
++	if (rtl8365mb_mw5_mib_proc)
++		proc_remove(rtl8365mb_mw5_mib_proc);
++	if (rtl8365mb_mw5_regs_proc)
++		proc_remove(rtl8365mb_mw5_regs_proc);
++	if (rtl8365mb_mw5_proc)
++		proc_remove(rtl8365mb_mw5_proc);
++	rtl8365mb_mw5_flowctrl_proc = NULL;
++	rtl8365mb_mw5_ports_proc = NULL;
++	rtl8365mb_mw5_mib_proc = NULL;
++	rtl8365mb_mw5_regs_proc = NULL;
++	rtl8365mb_mw5_proc = NULL;
++	rtl8365mb_mw5_proc_priv = NULL;
++}
++
+ static void rtl8365mb_get_ethtool_stats(struct dsa_switch *ds, int port, u64 *data)
+ {
+ 	struct realtek_priv *priv = ds->priv;
+@@ -2020,6 +2227,12 @@ static int rtl8365mb_setup(struct dsa_switch *ds)
+ 		p->index = i;
+ 	}
+ 
++	ret = rtl8365mb_mw5_fix_cpu_egress_isolation(priv);
++	if (ret) {
++		dev_err(priv->dev, "failed to configure MW5 CPU egress isolation: %d\n", ret);
++		goto out_teardown_irq;
++	}
++
+ 	ret = rtl8365mb_port_change_mtu(ds, cpu->trap_port, ETH_DATA_LEN);
+ 	if (ret)
+ 		goto out_teardown_irq;
+@@ -2053,6 +2266,7 @@ static int rtl8365mb_setup(struct dsa_switch *ds)
+ 
+ 	/* Start statistics counter polling */
+ 	rtl8365mb_stats_setup(priv);
++	rtl8365mb_mw5_diag_create(priv);
+ 
+ 	return 0;
+ 
+@@ -2068,6 +2282,7 @@ static void rtl8365mb_teardown(struct dsa_switch *ds)
+ 		mutex_unlock(&rtl8367d_rd05_runtime_lock);
+ 	}
+ 
++	rtl8365mb_mw5_diag_remove(priv);
+ 	rtl8365mb_stats_teardown(priv);
+ 	rtl8365mb_irq_teardown(priv);
+ }

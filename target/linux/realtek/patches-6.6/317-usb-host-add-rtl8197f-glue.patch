@@ -1,0 +1,44 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenAI <noreply@openai.com>
+Date: Sun, 26 Jul 2026 00:00:00 +0000
+Subject: [PATCH] usb: host: add RTL8197F USB2 glue
+
+Add Kconfig and Makefile hooks for the RTL8197F USB2 host glue supplied by
+the OpenWrt target files overlay.  The glue follows the GPL BSP clock,
+host/OTG selection, PHY enable/reset and 25/40 MHz PHY tuning sequences,
+then instantiates the generic EHCI and OHCI platform controllers.
+
+---
+ drivers/usb/host/Kconfig  | 12 ++++++++++++
+ drivers/usb/host/Makefile |  1 +
+ 2 files changed, 13 insertions(+)
+
+--- a/drivers/usb/host/Kconfig
++++ b/drivers/usb/host/Kconfig
+@@ -4,5 +4,17 @@
+ comment "USB Host Controller Drivers"
+ 
++config USB_RTL8197F_HOST
++	tristate "Realtek RTL8197F USB2 host glue"
++	depends on RTL8197F && OF && HAS_IOMEM
++	depends on USB_EHCI_HCD_PLATFORM && USB_OHCI_HCD_PLATFORM
++	select MFD_SYSCON
++	default y if RTL8197F
++	help
++	  Enable the RTL8197F/RTL8197FH SoC glue used before the standard
++	  EHCI and OHCI blocks can operate.  It enables the USB clock and host
++	  mode, resets both PHYs and applies the GPL BSP's 25/40 MHz PHY tuning.
++	  Board device trees still decide whether the host block is enabled.
++
+ config USB_C67X00_HCD
+ 	tristate "Cypress C67x00 HCD support"
+ 	depends on HAS_IOMEM
+--- a/drivers/usb/host/Makefile
++++ b/drivers/usb/host/Makefile
+@@ -3,5 +3,6 @@
+ # Makefile for USB Host Controller Drivers
+ #
+ 
++obj-$(CONFIG_USB_RTL8197F_HOST)	+= rtl8197f-usb-host.o
+ # tell define_trace.h where to find the xhci trace header
+ CFLAGS_xhci-trace.o := -I$(src)

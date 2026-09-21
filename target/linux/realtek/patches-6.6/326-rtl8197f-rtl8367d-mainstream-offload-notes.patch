@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RTL8197F/RD05 port <noreply@example.invalid>
+Date: Sat, 18 Jul 2026 18:30:00 +0200
+Subject: [PATCH] net: rtl8197f/rtl8367d: document mainstream offload replacement
+
+The Realtek SDK exposes swconfig, private IOCTLs, FastPath/HWNAT and ACL table
+programming through non-upstream ABIs.  Keep the kernel port aligned with
+standard Linux interfaces: DSA/bridge VLANs, ethtool diagnostics, nftables
+flowtables and tc flower.  The driver implements Linux 6.6 ndo_setup_tc()/flow_block callback binding so
+OpenWrt can translate SDK private IOCTL/FastPath/ACL requests through standard
+tc/nft hooks.  Unsupported hardware table encodings fail explicitly and fall
+back to software instead of creating a private ABI.
+
+--- a/drivers/net/ethernet/Kconfig
++++ b/drivers/net/ethernet/Kconfig
+@@ -41,6 +41,24 @@ config RTL8197F_RTKNET
+ 	  This driver does not import Realtek's legacy NAT/fastpath/swconfig stack.
+ 	  It still requires board-level validation of descriptor address format,
+ 	  port-mask semantics and external switch wiring.
++
++config RTL8197F_RTKNET_MAINSTREAM_OFFLOADS
++	bool "RTL8197F mainstream offload control-plane documentation"
++	depends on RTL8197F_RTKNET
++	default y if RTL8197F_RTKNET
++	help
++	  The Realtek RTL8197F SDK provided swconfig, private IOCTLs, FastPath/HWNAT
++	  and ACL control paths.  Those are intentionally not reintroduced as kernel
++	  ABIs.  OpenWrt 24.10 should use:
++
++	    - DSA and bridge VLANs instead of swconfig;
++	    - ethtool and, where appropriate, devlink/debugfs for diagnostics;
++	    - nftables flowtables for software fastpath;
++	    - tc flower for switch ACL/offload requests;
++	    - Linux flowtable offload callbacks for future rtl865x HWNAT.
++
++	  Selecting this symbol documents that the compatibility layer is expected to
++	  live above standard Linux APIs rather than through Realtek private hooks.
+ 
+ config SUNGEM_PHY
+ 	tristate

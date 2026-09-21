@@ -1,0 +1,56 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenAI <noreply@openai.com>
+Date: Sun, 20 Sep 2026 17:05:00 +0200
+Subject: [PATCH] net: dsa: realtek: mw5: report OEM CPU-tag strip state
+
+Rebase the MW5 diagnostic patch on top of the v44.66 CPU-egress patch.
+The old patch still expected the pre-v44.66 proc layout and its second hunk
+failed after 330-net-dsa-realtek-mw5-fix-cpu-egress-isolation.patch had
+already added the CPU-tag decoder.
+
+Keep this patch diagnostic-only: read the per-port misc registers and report
+the SDK-defined CPU control fields, but do not program guessed CPU-tag mode,
+position, insert-mode or VLAN egress values.
+
+Signed-off-by: OpenAI <noreply@openai.com>
+---
+ drivers/net/dsa/realtek/rtl8365mb.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -2007,6 +2007,7 @@ static int rtl8365mb_mw5_proc_show(struct seq_file *m, void *v)
+ 	u32 cpu_mask = 0, cpu_ctrl = 0;
+ 	u32 iso1 = 0, iso3 = 0, iso6 = 0;
+ 	u32 msti1 = 0, msti3 = 0, msti6 = 0;
++	u32 misc1 = 0, misc3 = 0, misc6 = 0, vlan_ext = 0;
+ 	u64 in_pkts, out_pkts, in_octets, out_octets, out_discards;
+ 	static const int ports[] = { 1, 3, 6 };
+ 	u32 user_mask = 0;
+@@ -2027,10 +2028,25 @@ static int rtl8365mb_mw5_proc_show(struct seq_file *m, void *v)
+ 	regmap_read(priv->map, RTL8365MB_MSTI_CTRL_REG(0, 1), &msti1);
+ 	regmap_read(priv->map, RTL8365MB_MSTI_CTRL_REG(0, 3), &msti3);
+ 	regmap_read(priv->map, RTL8365MB_MSTI_CTRL_REG(0, 6), &msti6);
++	regmap_read(priv->map, RTL8365MB_MW5_PORT_MISC_CFG_REG(1), &misc1);
++	regmap_read(priv->map, RTL8365MB_MW5_PORT_MISC_CFG_REG(3), &misc3);
++	regmap_read(priv->map, RTL8365MB_MW5_PORT_MISC_CFG_REG(6), &misc6);
++	regmap_read(priv->map, RTL8365MB_MW5_VLAN_EXT_CTRL, &vlan_ext);
+ 
+-	seq_puts(m, "driver=rtl8365mb mw5_diag=v43.13\n");
++	seq_puts(m, "driver=rtl8365mb mw5_diag=v44.66.12\n");
+ 	seq_printf(m, "cpu_port=6 user_mask=0x%x cpu_mask=0x%x cpu_ctrl=0x%x\n",
+ 		   user_mask, cpu_mask, cpu_ctrl);
++	seq_printf(m, "cpu_tag_policy=v44.66.12 user_egress=keep cpu_egress=original cpu_aware_mask=0x%x expected_cpu_only=0x%x insert_mode=%u enabled=%u port1_misc=0x%x port3_misc=0x%x port6_misc=0x%x egress_tagmode1=%u egress_tagmode3=%u egress_tagmode6=%u\n",
++		   cpu_mask, mb->cpu.mask,
++		   (unsigned int)FIELD_GET(RTL8365MB_CPU_CTRL_INSERTMODE_MASK, cpu_ctrl),
++		   (unsigned int)!!(cpu_ctrl & RTL8365MB_CPU_CTRL_EN_MASK),
++		   misc1, misc3, misc6,
++		   (unsigned int)FIELD_GET(RTL8365MB_MW5_VLAN_EGRESS_MODE_MASK, misc1),
++		   (unsigned int)FIELD_GET(RTL8365MB_MW5_VLAN_EGRESS_MODE_MASK, misc3),
++		   (unsigned int)FIELD_GET(RTL8365MB_MW5_VLAN_EGRESS_MODE_MASK, misc6));
++	seq_printf(m, "vid0_egress_action=%s vlan_ext_ctrl=0x%x (0=UNTAG 1=TAG)\n",
++		   (vlan_ext & RTL8365MB_MW5_VID0_ACTION) ? "tag" : "untag",
++		   vlan_ext);
+ 	seq_printf(m, "cpu_tag_decode enable=%u format4b=%u format8b=%u position=%u insert_mode=%u trap_port=%u rx_byte_count=%u\n",
+ 		   !!(cpu_ctrl & RTL8365MB_MW5_CPU_EN),
+ 		   !!(cpu_ctrl & RTL8365MB_MW5_CPU_TAG_FORMAT),

@@ -1,0 +1,74 @@
+From: OpenAI <noreply@openai.com>
+Date: Mon, 17 Aug 2026 00:00:00 +0000
+Subject: [PATCH] irqchip/realtek: use linear IRR banks on RTL8197F
+
+The generic Realtek interrupt controller driver inherited the RTL83xx IRR
+bank layout where the 32 inputs are addressed in reverse bank order.  The
+RTL8197F vendor BSP uses the four IRR registers linearly instead:
+
+  inputs  0.. 7 -> IRR0
+  inputs  8..15 -> IRR1
+  inputs 16..23 -> IRR2
+  inputs 24..31 -> IRR3
+
+This matters directly on Tenda Nova MW5.  PCIe/WLAN input 21 must be written
+to IRR2 nibble 5 with route value 5 (CPU5), and the integrated WLAN input 29
+must be written to IRR3 nibble 5 with route value 6 (CPU6).  With the reversed
+RTL83xx formula the child IRQ domains are created and request_irq() succeeds,
+but the hardware source is routed through the wrong IRR register and no ISR
+is ever entered.
+
+Keep the existing reversed layout for other Realtek SoCs and select the
+linear bank calculation only for realtek,rtl8197f-intc.
+
+Signed-off-by: OpenAI <noreply@openai.com>
+---
+ drivers/irqchip/irq-realtek-rtl.c | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
+
+--- a/drivers/irqchip/irq-realtek-rtl.c
++++ b/drivers/irqchip/irq-realtek-rtl.c
+@@ -36,5 +36,6 @@ static u32 realtek_ictl_unmask[NR_CPUS];
+ static void __iomem *realtek_ictl_base[NR_CPUS];
+ static cpumask_t realtek_ictl_cpu_configurable;
++static bool realtek_ictl_linear_irr;
+ 
+ struct realtek_ictl_output {
+ 	/* IRQ controller data */
+@@ -69,14 +70,24 @@ struct realtek_ictl_output {
+ #define IRR_OFFSET(idx)		(4 * (3 - (idx * 4) / 32))
+ #define IRR_SHIFT(idx)		((idx * 4) % 32)
+ 
++static inline unsigned int realtek_irr_offset(int idx)
++{
++	/* RTL8197F BSP numbers IRR banks linearly: 0..7 in IRR0, 8..15
++	 * in IRR1, 16..23 in IRR2 and 24..31 in IRR3. */
++	if (realtek_ictl_linear_irr)
++		return 4 * (idx / 8);
++
++	return IRR_OFFSET(idx);
++}
++
+ static inline u32 read_irr(void __iomem *irr0, int idx)
+ {
+-	return (readl(irr0 + IRR_OFFSET(idx)) >> IRR_SHIFT(idx)) & 0xf;
++	return (readl(irr0 + realtek_irr_offset(idx)) >> IRR_SHIFT(idx)) & 0xf;
+ }
+ 
+ static inline void write_irr(void __iomem *irr0, int idx, u32 value)
+ {
+-	unsigned int offset = IRR_OFFSET(idx);
++	unsigned int offset = realtek_irr_offset(idx);
+ 	unsigned int shift = IRR_SHIFT(idx);
+ 	u32 irr;
+ 
+@@ -316,6 +331,9 @@ static int __init realtek_rtl_of_init(st
+ 	unsigned int p;
+ 	int cpu;
+ 
++	realtek_ictl_linear_irr =
++		of_device_is_compatible(node, "realtek,rtl8197f-intc");
++
+ 	cpumask_clear(&realtek_ictl_cpu_configurable);
+ 
+ 	for (cpu = 0; cpu < NR_CPUS; cpu++) {

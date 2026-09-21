@@ -1,0 +1,44 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenWrt RTL8197F bringup <noreply@example.invalid>
+Date: Tue, 02 Jun 2026 00:00:00 +0000
+Subject: [PATCH] net: ethernet: add RTL8197F board switch preinit helper
+
+Port the small but critical board-level switch reset and pinmux sequences
+from the Realtek RTL8197F/RTL83xx GPL/SDK paths. Xiaomi RD05 uses GPIO58/H2
+for reset and H0/G7 for SMI. Tenda Nova MW5 uses GPIO58/H2 for reset and
+C2/C3 for SMI, with the verified OEM low/high reset pulse and PIN_MUX_SEL2
+value 0x0660.
+
+The helper runs as an early initcall before the native realtek-smi DSA probe.
+It is selected only for the matching board compatibles and does not import the
+legacy fastpath or vendor switch stack. The historical Kconfig symbol is kept
+to avoid changing existing RD05 configurations.
+---
+--- a/drivers/net/ethernet/Kconfig
++++ b/drivers/net/ethernet/Kconfig
+@@ -41,6 +41,16 @@ config RTL8197F_RTKNET
+ 
+ 	  driver still requires board-level validation of descriptor address format,
+ 	  port-mask semantics and external switch wiring.
++
++config RTL8197F_RD05_OEM_SWITCH_PREINIT
++	bool "RTL8197F OEM external-switch reset/pinmux pre-initialisation"
++	depends on RTL8197F && HAS_IOMEM && OF
++	default y if RTL8197F
++	help
++	  Enable the early board helper used by Xiaomi R4/RD05 and Tenda Nova
++	  MW5. It applies their verified GPIO/pinmux/reset sequence before the
++	  native realtek-smi DSA probe. It does not import the legacy rtknet
++	  fastpath or the full vendor switch stack.
+ 
+ config SUNGEM_PHY
+ 	tristate
+--- a/drivers/net/ethernet/Makefile
++++ b/drivers/net/ethernet/Makefile
+@@ -6,5 +6,6 @@
+ obj-$(CONFIG_RTL8197F_ETH_DIAG) += rtl8197f_ethdiag.o
+ obj-$(CONFIG_RTL8197F_RTKNET) += rtl8197f_rtknet.o
++obj-$(CONFIG_RTL8197F_RD05_OEM_SWITCH_PREINIT) += rtl8197f_rd05_oem_switch_preinit.o
+ obj-$(CONFIG_NET_VENDOR_3COM) += 3com/
+ obj-$(CONFIG_NET_VENDOR_8390) += 8390/
+ obj-$(CONFIG_NET_VENDOR_ACTIONS) += actions/

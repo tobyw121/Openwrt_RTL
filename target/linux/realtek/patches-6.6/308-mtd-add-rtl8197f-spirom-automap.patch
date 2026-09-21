@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenWrt RTL8197F bringup <noreply@example.invalid>
+Date: Sat, 30 May 2026 00:00:00 +0000
+Subject: [PATCH] mtd: maps: add RTL8197F SPI auto-map MTD driver
+
+Add Kconfig/Makefile hooks for the RTL8197F SPI-NOR automatic read
+window driver supplied by the OpenWrt target files overlay.
+
+Array reads avoid the unsafe JEDEC/SFDP probe path. Boards may opt into a
+strictly bounded command-mode write/erase window for rootfs_data; all other
+fixed partitions remain read-only.
+
+---
+--- a/drivers/mtd/maps/Kconfig
++++ b/drivers/mtd/maps/Kconfig
+@@ -356,6 +356,15 @@ config MTD_PLATRAM
+ 	  system.
+ 
+ 	  This selection automatically selects the map_ram driver.
++
++config MTD_RTL8197F_SPIROM
++	tristate "Realtek RTL8197F SPI auto-map flash"
++	depends on MACH_REALTEK_RTL || COMPILE_TEST
++	depends on OF
++	help
++	  Expose the RTL8197F boot SPI-NOR through the SoC's automatic read
++	  window. Boards may opt into a strictly bounded command-mode write and
++	  erase window for rootfs_data while all other partitions remain read-only.
+ 
+ config MTD_PISMO
+ 	tristate "PISMO interface found on ARM Versatile board"
+--- a/drivers/mtd/maps/Makefile
++++ b/drivers/mtd/maps/Makefile
+@@ -24,6 +24,7 @@ physmap-objs-$(CONFIG_MTD_PHYSMAP_GEMINI) += physmap-gemini.o
+ physmap-objs-$(CONFIG_MTD_PHYSMAP_IXP4XX) += physmap-ixp4xx.o
+ physmap-objs			:= $(physmap-objs-y)
+ obj-$(CONFIG_MTD_PHYSMAP)	+= physmap.o
++obj-$(CONFIG_MTD_RTL8197F_SPIROM) += rtl8197f-spirom.o
+ obj-$(CONFIG_MTD_PISMO)		+= pismo.o
+ obj-$(CONFIG_MTD_PCMCIA)	+= pcmciamtd.o
+ obj-$(CONFIG_MTD_SA1100)	+= sa1100-flash.o

@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenWrt RTL8197F bringup <noreply@example.invalid>
+Date: Sat, 30 May 2026 00:00:00 +0000
+Subject: [PATCH] mips: realtek: force R4K timer for RTL8197F
+
+RTL8197F uses the MIPS CP0 Count/Compare timer for early bring-up.  The
+subtarget config may request CONFIG_CEVT_R4K/CONFIG_CSRC_R4K, but those are
+hidden MIPS Kconfig symbols and must be selected by the platform symbol to be
+robust across oldconfig/syncconfig runs.
+
+Without this, boot can reach plat_time_init(), print the RTL8197F R4K timer
+message, and still fall back to the generic 100 Hz jiffies sched_clock before
+hanging around delay calibration because no real clockevent was registered.
+---
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -974,6 +974,8 @@ config RTL8197F
+ 	bool "Realtek RTL8197F based platforms"
+ 	depends on MACH_REALTEK_RTL
+ 	select MIPS_EXTERNAL_TIMER
++	select CEVT_R4K
++	select CSRC_R4K
+ 	select CPU_SUPPORTS_CPUFREQ
+ 	select SYS_SUPPORTS_LITTLE_ENDIAN
+ 

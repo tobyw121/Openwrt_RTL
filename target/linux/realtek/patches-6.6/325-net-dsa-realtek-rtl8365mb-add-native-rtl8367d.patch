@@ -1,0 +1,1406 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenAI <noreply@openai.com>
+Date: Sun, 26 Jul 2026 00:00:00 +0000
+Subject: [PATCH] net: dsa: realtek: add RTL8367D and complete RTL8367 family IDs
+
+Port the RTL8367D/RB-VC EXT1, CPU-tag, VLAN, FDB, MIB and RGMII paths to
+the native RTL8365MB-family DSA driver, and retain standard bridge,
+switchdev, phylink and ethtool integration.  Add the legacy RTL8367C/R/RB
+chip IDs used by the v1.3.9/v1.4 SDK auto-probe, while keeping the known
+0x6367 revisions ahead of the generic fallback.
+
+The Xiaomi RD05 path uses RTL8197F P0/RGMII to RTL8367D CPU7/EXT1 with
+8-byte rtl8_4 tags.  Its default switch timing now follows the exact D-SDK
+sequence: stage TX0/RX2, enable SSC, then finish at TX0/RX5 with fine tap 0.
+Runtime timing controls remain available for hardware calibration.
+
+Signed-off-by: OpenAI <noreply@openai.com>
+---
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -95,6 +95,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/irqdomain.h>
+ #include <linux/mutex.h>
++#include <linux/moduleparam.h>
+ #include <linux/of_irq.h>
+ #include <linux/regmap.h>
+ #include <linux/if_bridge.h>
+@@ -251,6 +252,48 @@
+ #define   RTL8365MB_DIGITAL_INTERFACE_FORCE_DUPLEX_MASK		0x0004
+ #define   RTL8365MB_DIGITAL_INTERFACE_FORCE_SPEED_MASK		0x0003
+ 
++/* RTL8367D-specific EXT/RGMII and MAC force registers. These are the
++ * mainline-safe subset of the GPL RTL8367D DAL needed to expose the
++ * external CPU link through DSA/phylink.
++ */
++#define RTL8367D_MAC_FORCE_REG(_port)		(0x12c0 + (_port))
++#define RTL8367D_MAC_FORCE_EN_REG(_port)	(0x12c8 + (_port))
++#define RTL8367D_CHIP_DEBUG0_REG		0x1303
++#define   RTL8367D_CHIP_DEBUG0_EXT1_MASK	(BIT(9) | BIT(6) | BIT(4) | BIT(1))
++#define RTL8367D_CHIP_DEBUG1_REG		0x1304
++#define   RTL8367D_CHIP_DEBUG1_EXT1_MASK	(GENMASK(14, 12) | GENMASK(10, 8))
++#define   RTL8367D_CHIP_DEBUG1_EXT1_VAL		(FIELD_PREP(GENMASK(14, 12), 7) | \
++						 FIELD_PREP(GENMASK(10, 8), 5))
++#define RTL8367D_TOP_CON0_REG			0x1d70
++#define   RTL8367D_TOP_CON0_MAC7_EXT1		BIT(13)
++#define   RTL8367D_TOP_CON0_MAC4_EXT1		BIT(12)
++#define RTL8367D_SDS1_MISC0_REG		0x1d78
++#define   RTL8367D_SDS1_MODE_MASK		GENMASK(4, 0)
++#define   RTL8367D_SDS1_MODE_DISABLE		0x1f
++#define RTL8367D_SYNC_FIFO1_REG		0x13f7
++#define   RTL8367D_SYNC_FIFO_TX_ERR_MASK	GENMASK(10, 8)
++#define   RTL8367D_SYNC_FIFO_RX_ERR_MASK	GENMASK(7, 0)
++#define RTL8367D_EXT_TXC_DLY_REG		0x13f9
++#define   RTL8367D_EXT1_RGMII_TX_DLY_MASK	GENMASK(5, 3)
++#define RTL8367D_PORT7_MISC_CFG_REG		0x00ee
++#define   RTL8367D_PORT7_CRC_SKIP		BIT(8)
++#define RTL8367D_EXT1_SSC_CTRL_REG		0x1d52
++#define RTL8367D_EXT1_SSC_SEED_REG		0x1d53
++#define RTL8367D_EXT1_SSC_POLY_REG		0x1d54
++#define RTL8367D_EXT1_SSC_DIV_REG		0x1d55
++#define RTL8367D_EXT1_SSC_CTRL_ENABLE		0x2473
++#define RTL8367D_EXT1_SSC_SEED_ENABLE		0x0001
++#define RTL8367D_EXT1_SSC_POLY_ENABLE		0x05fa
++#define RTL8367D_EXT1_SSC_DIV_ENABLE		0x000f
++#define RTL8367D_EXT1_SSC_CTRL_DISABLE		0x2411
++#define RTL8367D_EXT1_SSC_SEED_DISABLE		0x8000
++#define RTL8367D_EXT1_SSC_POLY_DISABLE		0x0008
++#define RTL8367D_EXT1_SSC_DIV_DISABLE		0x000f
++#define RTL8367D_BYPASS_LINE_RATE_REG		0x03f7
++#define RTL8367D_BYPASS_EXT1_BIT		BIT(2)
++#define   RTL8367D_PORT_STATUS_SPEED1_MASK	GENMASK(13, 12)
++#define   RTL8367D_PORT_STATUS_SPEED1_SHIFT	10
++
+ /* CPU port mask register - controls which ports are treated as CPU ports */
+ #define RTL8365MB_CPU_PORT_MASK_REG	0x1219
+ #define   RTL8365MB_CPU_PORT_MASK_MASK	0x07FF
+@@ -265,6 +308,58 @@
+ #define   RTL8365MB_CPU_CTRL_INSERTMODE_MASK	0x0006
+ #define   RTL8365MB_CPU_CTRL_EN_MASK		0x0001
+ 
++/* RTL8367D SDK/OEM forwarding, flooding and VLAN registers used by the
++ * Xiaomi RD05 board.  These are programmed only for RTL8367D and only to
++ * establish the standard DSA CPU-port datapath; swconfig/private IOCTL ABI is
++ * intentionally not reintroduced.
++ */
++#define RTL8365MB_UNDA_FLOODING_PMSK_REG		0x0890
++#define RTL8365MB_UNMCAST_FLOODING_PMSK_REG	0x0891
++#define RTL8365MB_BCAST_FLOODING_PMSK_REG		0x0892
++#define RTL8365MB_SOURCE_PORT_PERMIT_REG		0x08c5
++#define RTL8365MB_UNKNOWN_IPV4_MULTICAST_CTRL0_REG	0x08c9
++#define RTL8365MB_UNKNOWN_IPV6_MULTICAST_CTRL0_REG	0x08cb
++#define RTL8365MB_UNKNOWN_L2_MULTICAST_CTRL0_REG	0x08cd
++#define RTL8365MB_UNKNOWN_UCAST_DA_PORT_BEHAVE_REG	0x09c0
++#define RTL8365MB_LOOKUP_HIT_ISO_ACT_REG		0x0a10
++#define RTL8365MB_RTL8367D_PHY_PORTS_MASK		0x00ff
++
++/* RTL8367D/C-family mirror/monitor registers.  They are used only by the RD05
++ * v29 diagnostic ingress-force-to-CPU matrix.  The default mode leaves mirror
++ * disabled; non-zero modes can copy ingress traffic from UTP1/lan2 to CPU7/6
++ * before normal VLAN/FDB/flood decisions would otherwise drop it.
++ */
++#define RTL8367D_MIRROR_CTRL3_REG		0x09c1
++#define   RTL8367D_MIRROR_RX_OVERRIDE_EN	BIT(0)
++#define RTL8367D_MIRROR_CTRL2_REG		0x09da
++#define   RTL8367D_MIRROR_RX_VLAN_LEAKY	BIT(1)
++#define   RTL8367D_MIRROR_RX_ISO_LEAKY	BIT(3)
++#define RTL8367D_MIRROR_CTRL_REG		0x121c
++#define   RTL8367D_MIRROR_SOURCE_PORT_MASK	GENMASK(3, 0)
++#define   RTL8367D_MIRROR_MONITOR_PORT_MASK	GENMASK(7, 4)
++#define   RTL8367D_MIRROR_RX_EN		BIT(9)
++#define   RTL8367D_MIRROR_TX_EN		BIT(10)
++#define   RTL8367D_MIRROR_ISO_EN		BIT(11)
++#define RTL8367D_MIRROR_SRC_PMSK_REG		0x12fb
++#define   RTL8367D_MIRROR_SRC_PMSK_MASK	0x07ff
++
++/* RTL8367D CVLAN/PVID registers from the GPL vendor DAL.  The PVID registers
++ * are direct 12-bit per-physical-port VID fields on RTL8367D.
++ */
++#define RTL8367D_TABLE_ACCESS_CTRL_REG		0x0500
++#define RTL8367D_TABLE_ACCESS_ADDR_REG		0x0501
++#define RTL8367D_TABLE_WRITE_DATA0_REG		0x0510
++#define RTL8367D_TABLE_WRITE_DATA1_REG		0x0511
++#define RTL8367D_TABLE_ACCESS_CVLAN_WRITE	0x000b
++#define RTL8367D_TABLE_ACCESS_MASK		0x000f
++#define RTL8367D_VLAN_PVID_CTRL_BASE		0x0700
++#define RTL8367D_VLAN_PVID_CTRL_REG(_port)	(RTL8367D_VLAN_PVID_CTRL_BASE + (_port))
++#define RTL8367D_VLAN_PVID_CTRL_MASK		0x0fff
++#define RTL8367D_VLAN_CTRL_REG			0x07a8
++#define RTL8367D_VLAN_INGRESS_REG		0x07a9
++#define RTL8367D_VLAN_ACCEPT_CTRL0_REG		0x07aa
++#define RTL8367D_RD05_OEM_VID			9
++
+ /* Maximum packet length register */
+ #define RTL8365MB_CFG0_MAX_LEN_REG	0x088C
+ #define   RTL8365MB_CFG0_MAX_LEN_MASK	0x3FFF
+@@ -498,6 +593,10 @@
+  * @name: human-readable chip name
+  * @chip_id: chip identifier
+  * @chip_ver: chip silicon revision
++ * @chip_ver_mask: optional mask to match a chip revision family
++ * @chip_ver_any: accept every revision for chip IDs whose SDK uses one common DAL
++ * @num_ports: optional number of ports for this chip
++ * @rtl8367d: this chip uses RTL8367D-specific EXT/MAC force registers
+  * @extints: available external interfaces
+  * @jam_table: chip-specific initialization jam table
+  * @jam_size: size of the chip's jam table
+@@ -510,6 +609,10 @@
+ 	const char *name;
+ 	u32 chip_id;
+ 	u32 chip_ver;
++	u32 chip_ver_mask;
++	bool chip_ver_any;
++	u8 num_ports;
++	bool rtl8367d;
+ 	const struct rtl8365mb_extint extints[RTL8365MB_MAX_NUM_EXTINTS];
+ 	const struct rtl8365mb_jam_tbl_entry *jam_table;
+ 	size_t jam_size;
+@@ -554,6 +657,67 @@
+ 		.jam_table = rtl8365mb_init_jam_8365mb_vc,
+ 		.jam_size = ARRAY_SIZE(rtl8365mb_init_jam_8365mb_vc),
+ 	},
++	/* The v1.3.9/v1.4 SDK auto-probe routes IDs 0x0276, 0x0597 and
++	 * 0x6367 through the rtl8367c common DAL.  Keep the known 0x6367
++	 * revisions above so their narrower interface capabilities win, then
++	 * provide fallbacks for older RTL8367R/RB/SB and RB-VB steppings.
++	 */
++	{
++		.name = "RTL8367R/RB legacy (0x0276)",
++		.chip_id = 0x0276,
++		.chip_ver_any = true,
++		.num_ports = 8,
++		.extints = {
++			{ 6, 1, PHY_INTF(MII) | PHY_INTF(TMII) |
++				PHY_INTF(RMII) | PHY_INTF(RGMII) |
++				PHY_INTF(SGMII) | PHY_INTF(HSGMII) },
++			{ 7, 2, PHY_INTF(MII) | PHY_INTF(TMII) |
++				PHY_INTF(RMII) | PHY_INTF(RGMII) },
++		},
++		.jam_table = rtl8365mb_init_jam_8365mb_vc,
++		.jam_size = ARRAY_SIZE(rtl8365mb_init_jam_8365mb_vc),
++	},
++	{
++		.name = "RTL8367R/RB legacy (0x0597)",
++		.chip_id = 0x0597,
++		.chip_ver_any = true,
++		.num_ports = 8,
++		.extints = {
++			{ 6, 1, PHY_INTF(MII) | PHY_INTF(TMII) |
++				PHY_INTF(RMII) | PHY_INTF(RGMII) |
++				PHY_INTF(SGMII) | PHY_INTF(HSGMII) },
++			{ 7, 2, PHY_INTF(MII) | PHY_INTF(TMII) |
++				PHY_INTF(RMII) | PHY_INTF(RGMII) },
++		},
++		.jam_table = rtl8365mb_init_jam_8365mb_vc,
++		.jam_size = ARRAY_SIZE(rtl8365mb_init_jam_8365mb_vc),
++	},
++	{
++		.name = "RTL8367C/R/RB/SB family",
++		.chip_id = 0x6367,
++		.chip_ver_any = true,
++		.num_ports = 8,
++		.extints = {
++			{ 6, 1, PHY_INTF(MII) | PHY_INTF(TMII) |
++				PHY_INTF(RMII) | PHY_INTF(RGMII) |
++				PHY_INTF(SGMII) | PHY_INTF(HSGMII) },
++			{ 7, 2, PHY_INTF(MII) | PHY_INTF(TMII) |
++				PHY_INTF(RMII) | PHY_INTF(RGMII) },
++		},
++		.jam_table = rtl8365mb_init_jam_8365mb_vc,
++		.jam_size = ARRAY_SIZE(rtl8365mb_init_jam_8365mb_vc),
++	},
++	{
++		.name = "RTL8367D / RTL8367RB-VC",
++		.chip_id = 0x6642,
++		.chip_ver = 0x0030,
++		.chip_ver_mask = 0xfff0, /* accept minor 0x003x steppings */
++		.num_ports = 8,
++		.rtl8367d = true,
++		.extints = {
++			{ 7, 1, PHY_INTF(RGMII) },
++		},
++	},
+ };
+ 
+ enum rtl8365mb_stp_state {
+@@ -873,6 +1037,124 @@
+ 	return DSA_TAG_PROTO_RTL8_4;
+ }
+ 
++/* The SDK exposes two independent switch-side TX controls on RTL8367D:
++ * coarse delay in EXT1_RGMXF (0x1307) and a three-bit TX-clock tap in
++ * EXT_TXC_DLY (0x13f9).  v36 swept only the coarse field, while the hardware
++ * log kept the RTL8197F RX descriptor at OWN.  v38 retains both bounded
++ * controls for diagnostics, but boots with the exact D-SDK production
++ * baseline: coarse TX0, fine tap0, RX5 and SSC enabled.
++ */
++static unsigned int rtl8367d_rd05_ext1_tx_delay;
++static unsigned int rtl8367d_rd05_ext1_txc_tap;
++static unsigned int rtl8367d_rd05_ext1_rx_delay = 5;
++static bool rtl8367d_rd05_ext1_ssc = true;
++
++static int rtl8367d_ext1_set_ssc(struct realtek_priv *priv, bool enable)
++{
++	int ret;
++
++	ret = regmap_write(priv->map, RTL8367D_EXT1_SSC_SEED_REG,
++			   enable ? RTL8367D_EXT1_SSC_SEED_ENABLE :
++				    RTL8367D_EXT1_SSC_SEED_DISABLE);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8367D_EXT1_SSC_DIV_REG,
++			   enable ? RTL8367D_EXT1_SSC_DIV_ENABLE :
++				    RTL8367D_EXT1_SSC_DIV_DISABLE);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8367D_EXT1_SSC_POLY_REG,
++			   enable ? RTL8367D_EXT1_SSC_POLY_ENABLE :
++				    RTL8367D_EXT1_SSC_POLY_DISABLE);
++	if (ret)
++		return ret;
++	return regmap_write(priv->map, RTL8367D_EXT1_SSC_CTRL_REG,
++			    enable ? RTL8367D_EXT1_SSC_CTRL_ENABLE :
++				     RTL8367D_EXT1_SSC_CTRL_DISABLE);
++}
++
++static int rtl8367d_ext1_config_rgmii(struct realtek_priv *priv)
++{
++	int ret;
++
++	/* Equivalent of _dal_rtl8367d_setAsicPortExtMode(ext_id=2, RGMII).
++	 * The missing BYPASS_LINE_RATE bit clear is significant: v35 inherited
++	 * bootloader state because the RTL8367D software reset is intentionally
++	 * skipped, and every SoC-origin frame was counted as a CPU7 FCS error.
++	 */
++	ret = regmap_update_bits(priv->map, RTL8367D_BYPASS_LINE_RATE_REG,
++				 RTL8367D_BYPASS_EXT1_BIT, 0);
++	if (ret)
++		return ret;
++
++	ret = regmap_update_bits(priv->map, RTL8367D_CHIP_DEBUG0_REG,
++				 RTL8367D_CHIP_DEBUG0_EXT1_MASK,
++				 RTL8367D_CHIP_DEBUG0_EXT1_MASK);
++	if (ret)
++		return ret;
++
++	ret = regmap_update_bits(priv->map, RTL8367D_CHIP_DEBUG1_REG,
++				 RTL8367D_CHIP_DEBUG1_EXT1_MASK,
++				 RTL8367D_CHIP_DEBUG1_EXT1_VAL);
++	if (ret)
++		return ret;
++
++	ret = regmap_update_bits(priv->map, RTL8367D_TOP_CON0_REG,
++				 RTL8367D_TOP_CON0_MAC7_EXT1 |
++					 RTL8367D_TOP_CON0_MAC4_EXT1,
++				 RTL8367D_TOP_CON0_MAC7_EXT1);
++	if (ret)
++		return ret;
++
++	/* RTL8367D_REG_EXT_TXC_DLY is present in the exact family-D register
++	 * map.  Its EXT1 field is a fine TX-clock tap in addition to the public
++	 * API's coarse 0x1307 TX delay bit.  Preserve EXT0/EXT2 fields.
++	 */
++	ret = regmap_update_bits(priv->map, RTL8367D_EXT_TXC_DLY_REG,
++				 RTL8367D_EXT1_RGMII_TX_DLY_MASK,
++				 FIELD_PREP(RTL8367D_EXT1_RGMII_TX_DLY_MASK,
++					    min_t(u32, READ_ONCE(rtl8367d_rd05_ext1_txc_tap), 7)));
++	if (ret)
++		return ret;
++
++	ret = regmap_update_bits(priv->map,
++				 RTL8365MB_DIGITAL_INTERFACE_SELECT_REG0,
++				 GENMASK(7, 4),
++				 RTL8365MB_EXT_PORT_MODE_RGMII << 4);
++	if (ret)
++		return ret;
++
++	ret = regmap_update_bits(priv->map, RTL8367D_SDS1_MISC0_REG,
++				 RTL8367D_SDS1_MODE_MASK,
++				 RTL8367D_SDS1_MODE_DISABLE);
++	if (ret)
++		return ret;
++
++	/* Match the SDK ordering: pre-program TX0/RX2 before changing SSC, then
++	 * apply the selected final timing.  The first TX0/RX2 write is the SDK
++	 * pre-SSC staging value; production then enables SSC and finishes at
++	 * TX0/RX5.
++	 */
++	ret = regmap_update_bits(priv->map, RTL8365MB_EXT_RGMXF_REG(1),
++				 RTL8365MB_EXT_RGMXF_TXDELAY_MASK |
++				 RTL8365MB_EXT_RGMXF_RXDELAY_MASK,
++				 FIELD_PREP(RTL8365MB_EXT_RGMXF_TXDELAY_MASK, 0) |
++				 FIELD_PREP(RTL8365MB_EXT_RGMXF_RXDELAY_MASK, 2));
++	if (ret)
++		return ret;
++	ret = rtl8367d_ext1_set_ssc(priv, READ_ONCE(rtl8367d_rd05_ext1_ssc));
++	if (ret)
++		return ret;
++
++	return regmap_update_bits(priv->map, RTL8365MB_EXT_RGMXF_REG(1),
++				  RTL8365MB_EXT_RGMXF_TXDELAY_MASK |
++				  RTL8365MB_EXT_RGMXF_RXDELAY_MASK,
++				  FIELD_PREP(RTL8365MB_EXT_RGMXF_TXDELAY_MASK,
++					     min_t(u32, READ_ONCE(rtl8367d_rd05_ext1_tx_delay), 1)) |
++				  FIELD_PREP(RTL8365MB_EXT_RGMXF_RXDELAY_MASK,
++					     min_t(u32, READ_ONCE(rtl8367d_rd05_ext1_rx_delay), 7)));
++}
++
+ static int rtl8365mb_ext_config_rgmii(struct realtek_priv *priv, int port,
+ 				      phy_interface_t interface)
+ {
+@@ -942,6 +1224,9 @@
+ 	if (ret)
+ 		return ret;
+ 
++	if (((struct rtl8365mb *)priv->chip_data)->chip_info->rtl8367d)
++		return rtl8367d_ext1_config_rgmii(priv);
++
+ 	ret = regmap_update_bits(
+ 		priv->map, RTL8365MB_DIGITAL_INTERFACE_SELECT_REG(extint->id),
+ 		RTL8365MB_DIGITAL_INTERFACE_SELECT_MODE_MASK(extint->id),
+@@ -954,6 +1239,55 @@
+ 	return 0;
+ }
+ 
++static int rtl8367d_ext_config_forcemode(struct realtek_priv *priv, int port,
++					 bool link, int speed, int duplex,
++					 bool tx_pause, bool rx_pause)
++{
++	u32 speed_code;
++	u32 val = 0;
++	int ret;
++
++	if (port < 0 || port > 7)
++		return -EINVAL;
++
++	if (link) {
++		switch (speed) {
++		case SPEED_1000:
++			speed_code = RTL8365MB_PORT_SPEED_1000M;
++			break;
++		case SPEED_100:
++			speed_code = RTL8365MB_PORT_SPEED_100M;
++			break;
++		case SPEED_10:
++			speed_code = RTL8365MB_PORT_SPEED_10M;
++			break;
++		default:
++			return -EINVAL;
++		}
++
++		if (duplex != DUPLEX_FULL && duplex != DUPLEX_HALF)
++			return -EINVAL;
++
++		val |= tx_pause ? BIT(6) : 0;
++		val |= rx_pause ? BIT(5) : 0;
++		val |= BIT(4);
++		val |= duplex == DUPLEX_FULL ? BIT(2) : 0;
++		val |= speed_code & GENMASK(1, 0);
++		/* Family-D register 0x12c0 mirrors the extended speed status bits
++		 * used by RTL8367D_PORT_STATUS_REG.  Keep them coherent with the
++		 * low speed field, matching OpenWrt's rtl8367d swconfig family patch.
++		 */
++		val |= (speed_code << RTL8367D_PORT_STATUS_SPEED1_SHIFT) &
++		       RTL8367D_PORT_STATUS_SPEED1_MASK;
++	}
++
++	ret = regmap_write(priv->map, RTL8367D_MAC_FORCE_REG(port), val);
++	if (ret)
++		return ret;
++
++	return regmap_write(priv->map, RTL8367D_MAC_FORCE_EN_REG(port), 0xffff);
++}
++
+ static int rtl8365mb_ext_config_forcemode(struct realtek_priv *priv, int port,
+ 					  bool link, int speed, int duplex,
+ 					  bool tx_pause, bool rx_pause)
+@@ -971,6 +1305,10 @@
+ 	if (!extint)
+ 		return -ENODEV;
+ 
++	if (((struct rtl8365mb *)priv->chip_data)->chip_info->rtl8367d)
++		return rtl8367d_ext_config_forcemode(priv, port, link, speed,
++						     duplex, tx_pause, rx_pause);
++
+ 	if (link) {
+ 		/* Force the link up with the desired configuration */
+ 		r_link = 1;
+@@ -1902,6 +2240,13 @@
+ 
+ 	ci = mb->chip_info;
+ 
++	/* The RTL8367D GPL DAL switch_init() is empty. The RTL8365MB/RTL8367C
++	 * jam tables are not register-compatible with RTL8367D, so keep DSA setup
++	 * deterministic and do not run the MB common jam on this chip.
++	 */
++	if (ci->rtl8367d)
++		return 0;
++
+ 	/* Do any chip-specific init jam before getting to the common stuff */
+ 	if (ci->jam_table) {
+ 		for (i = 0; i < ci->jam_size; i++) {
+@@ -1923,6 +2268,885 @@
+ 	return 0;
+ }
+ 
++static DEFINE_MUTEX(rtl8367d_rd05_runtime_lock);
++static struct realtek_priv *rtl8367d_rd05_runtime_priv;
++static int rtl8367d_rd05_portmap_mode = 1;
++static int rtl8367d_rd05_extcpu_mode;
++static int rtl8367d_rd05_ingress_cpu_mode;
++static u32 rtl8367d_rd05_base_cpu_mask;
++static u32 rtl8367d_rd05_base_trap_port = RTL8365MB_MAX_NUM_PORTS;
++
++static const char *rtl8367d_rd05_portmap_mode_name(int mode)
++{
++	switch (mode) {
++	case 0:
++		return "broad-split-flood";
++	case 1:
++		return "broad-full-flood";
++	case 2:
++		return "all-open-phy0-7";
++	case 3:
++		return "focus-utp0";
++	case 4:
++		return "focus-utp1";
++	case 5:
++		return "focus-utp2";
++	case 6:
++		return "focus-utp3";
++	case 7:
++		return "focus-utp4";
++	default:
++		return "unknown";
++	}
++}
++
++static const char *rtl8367d_rd05_extcpu_mode_name(int mode)
++{
++	switch (mode) {
++	case 0:
++		return "sdk-toall-after-sa-8b-rx64-ssc-rx5";
++	case 1:
++		return "tonone-after-sa-8b-rx64-delay0";
++	case 2:
++		return "totrap-after-sa-8b-rx64-delay0";
++	case 3:
++		return "toall-before-crc-8b-rx64-delay0";
++	case 4:
++		return "toall-after-sa-4b-rx64-delay0";
++	case 5:
++		return "toall-after-sa-8b-rx72-delay0";
++	case 6:
++		return "toall-after-sa-8b-rx64-delay1";
++	case 7:
++		return "toall-after-sa-8b-rx64-delay3";
++	case 8:
++		return "toall-after-sa-8b-rx64-delay5";
++	case 9:
++		return "toall-after-sa-8b-rx64-delay7";
++	case 10:
++		return "sdk-toall-rx5-cpu7";
++	case 11:
++		return "sdk-none-rx5-cpu7";
++	case 12:
++		return "sdk-trap-rx5-cpu7";
++	case 13:
++		return "sdk-none-rx5-4b-cpu7";
++	case 14:
++		return "sdk-none-rx5-cpumask6";
++	case 15:
++		return "sdk-none-rx5-cpumask7";
++	case 16:
++		return "sdk-toall-rx5-cpumask6";
++	case 17:
++		return "sdk-toall-rx5-cpumask7";
++	default:
++		return "unknown";
++	}
++}
++
++static const char *rtl8367d_rd05_ingress_cpu_mode_name(int mode)
++{
++	switch (mode) {
++	case 0:
++		return "off";
++	case 1:
++		return "mirror-utp1-rx-cpu7";
++	case 2:
++		return "mirror-utp1-rx-cpu7-leaky";
++	case 3:
++		return "mirror-utp1-rx-cpu6-leaky";
++	case 4:
++		return "force-flood-cpu";
++	case 5:
++		return "force-utp1-cpu-only";
++	case 6:
++		return "mirror-all-users-rx-cpu7-leaky";
++	case 7:
++		return "mirror-utp1-rxtx-cpu7-leaky";
++	default:
++		return "unknown";
++	}
++}
++
++static void rtl8367d_rd05_extcpu_apply(struct rtl8365mb_cpu *cpu, int mode,
++				       u32 *tx_delay, u32 *rx_delay)
++{
++	/* Always reconstruct from the DSA-discovered CPU base before applying a
++	 * diagnostic mode.  Some v27 rows intentionally program CPU mask/trap port
++	 * 6; without this reset, later rows would inherit that hypothesis.
++	 */
++	if (!rtl8367d_rd05_base_cpu_mask)
++		rtl8367d_rd05_base_cpu_mask = cpu->mask ? cpu->mask : BIT(7);
++	if (rtl8367d_rd05_base_trap_port == RTL8365MB_MAX_NUM_PORTS)
++		rtl8367d_rd05_base_trap_port = cpu->trap_port;
++
++	cpu->mask = rtl8367d_rd05_base_cpu_mask;
++	cpu->trap_port = rtl8367d_rd05_base_trap_port;
++	cpu->enable = true;
++	cpu->insert = RTL8365MB_CPU_INSERT_TO_ALL;
++	cpu->position = RTL8365MB_CPU_POS_AFTER_SA;
++	cpu->rx_length = RTL8365MB_CPU_RXLEN_64BYTES;
++	cpu->format = RTL8365MB_CPU_FORMAT_8BYTES;
++	*tx_delay = min_t(u32, READ_ONCE(rtl8367d_rd05_ext1_tx_delay), 1);
++	*rx_delay = min_t(u32, READ_ONCE(rtl8367d_rd05_ext1_rx_delay), 7);
++
++	switch (mode) {
++	case 1:
++		cpu->insert = RTL8365MB_CPU_INSERT_TO_NONE;
++		*rx_delay = 0;
++		break;
++	case 2:
++		cpu->insert = RTL8365MB_CPU_INSERT_TO_TRAPPING;
++		*rx_delay = 0;
++		break;
++	case 3:
++		cpu->position = RTL8365MB_CPU_POS_BEFORE_CRC;
++		*rx_delay = 0;
++		break;
++	case 4:
++		cpu->format = RTL8365MB_CPU_FORMAT_4BYTES;
++		*rx_delay = 0;
++		break;
++	case 5:
++		cpu->rx_length = RTL8365MB_CPU_RXLEN_72BYTES;
++		*rx_delay = 0;
++		break;
++	case 6:
++		*rx_delay = 1;
++		break;
++	case 7:
++		*rx_delay = 3;
++		break;
++	case 8:
++		*rx_delay = 5;
++		break;
++	case 9:
++		*rx_delay = 7;
++		break;
++	case 10:
++		/* SDK-relevant 8197F/8367 compatibility case: TO_ALL with
++		 * RGMII txDelay=0/rxDelay=5 on the default CPU port.
++		 */
++		*rx_delay = 5;
++		break;
++	case 11:
++		/* Seen in Realtek SDK board code for RTL8197F host links. */
++		cpu->insert = RTL8365MB_CPU_INSERT_TO_NONE;
++		*rx_delay = 5;
++		break;
++	case 12:
++		cpu->insert = RTL8365MB_CPU_INSERT_TO_TRAPPING;
++		*rx_delay = 5;
++		break;
++	case 13:
++		cpu->insert = RTL8365MB_CPU_INSERT_TO_NONE;
++		cpu->format = RTL8365MB_CPU_FORMAT_4BYTES;
++		*rx_delay = 5;
++		break;
++	case 14:
++		cpu->mask = BIT(6);
++		cpu->trap_port = 6;
++		cpu->insert = RTL8365MB_CPU_INSERT_TO_NONE;
++		*rx_delay = 5;
++		break;
++	case 15:
++		cpu->mask = BIT(7);
++		cpu->trap_port = 7;
++		cpu->insert = RTL8365MB_CPU_INSERT_TO_NONE;
++		*rx_delay = 5;
++		break;
++	case 16:
++		cpu->mask = BIT(6);
++		cpu->trap_port = 6;
++		*rx_delay = 5;
++		break;
++	case 17:
++		cpu->mask = BIT(7);
++		cpu->trap_port = 7;
++		*rx_delay = 5;
++		break;
++	default:
++		break;
++	}
++}
++
++static void rtl8367d_rd05_portmap_masks(u32 cpu_mask, u32 user_mask, int mode,
++					u32 *vlan_mask, u32 *flood_mask,
++					u32 *iso_mask, u32 *src_permit,
++					int *focus_port)
++{
++	u32 wide = cpu_mask | user_mask;
++	u32 focus;
++
++	*focus_port = -1;
++	*vlan_mask = wide & RTL8365MB_RTL8367D_PHY_PORTS_MASK;
++	*flood_mask = wide & RTL8365MB_RTL8367D_PHY_PORTS_MASK;
++	*iso_mask = wide & RTL8365MB_RTL8367D_PHY_PORTS_MASK;
++	*src_permit = RTL8365MB_RTL8367D_PHY_PORTS_MASK;
++
++	switch (mode) {
++	case 1:
++		/* Re-test OEM-like full flooding with CPU still in VID9. */
++		*flood_mask = wide & RTL8365MB_RTL8367D_PHY_PORTS_MASK;
++		break;
++	case 2:
++		/* Open every physical bitmap bit the RTL8367D exposes. */
++		*vlan_mask = RTL8365MB_RTL8367D_PHY_PORTS_MASK;
++		*iso_mask = RTL8365MB_RTL8367D_PHY_PORTS_MASK;
++		*src_permit = RTL8365MB_RTL8367D_PHY_PORTS_MASK;
++		break;
++	case 3 ... 7:
++		*focus_port = mode - 3;
++		focus = BIT(*focus_port);
++		*vlan_mask = (cpu_mask | focus) & RTL8365MB_RTL8367D_PHY_PORTS_MASK;
++		*flood_mask = (cpu_mask | focus) & RTL8365MB_RTL8367D_PHY_PORTS_MASK;
++		*iso_mask = (cpu_mask | focus) & RTL8365MB_RTL8367D_PHY_PORTS_MASK;
++		break;
++	default:
++		break;
++	}
++}
++
++static int rtl8367d_rd05_program_vid9(struct realtek_priv *priv, u32 member_mask)
++{
++	u32 mask = member_mask & RTL8365MB_RTL8367D_PHY_PORTS_MASK;
++	int ret;
++	int port;
++
++	if (!mask)
++		return 0;
++
++	/* RTL8367D CVLAN 4K table format used by the vendor DAL:
++	 * word0 low byte is member mask, word0 high byte is untag mask;
++	 * word1 keeps FID/MSTI zero for the default domain.
++	 */
++	ret = regmap_write(priv->map, RTL8367D_TABLE_WRITE_DATA0_REG,
++			   mask | (mask << 8));
++	if (ret)
++		return ret;
++
++	ret = regmap_write(priv->map, RTL8367D_TABLE_WRITE_DATA1_REG, 0);
++	if (ret)
++		return ret;
++
++	ret = regmap_write(priv->map, RTL8367D_TABLE_ACCESS_ADDR_REG,
++			   RTL8367D_RD05_OEM_VID);
++	if (ret)
++		return ret;
++
++	ret = regmap_update_bits(priv->map, RTL8367D_TABLE_ACCESS_CTRL_REG,
++				 RTL8367D_TABLE_ACCESS_MASK,
++				 RTL8367D_TABLE_ACCESS_CVLAN_WRITE);
++	if (ret)
++		return ret;
++
++	for (port = 0; port < 8; port++) {
++		if (!(mask & BIT(port)))
++			continue;
++
++		ret = regmap_update_bits(priv->map,
++					 RTL8367D_VLAN_PVID_CTRL_REG(port),
++					 RTL8367D_VLAN_PVID_CTRL_MASK,
++					 RTL8367D_RD05_OEM_VID);
++		if (ret)
++			return ret;
++	}
++
++	ret = regmap_write(priv->map, RTL8367D_VLAN_ACCEPT_CTRL0_REG, 0);
++	if (ret)
++		return ret;
++
++	ret = regmap_write(priv->map, RTL8367D_VLAN_INGRESS_REG, mask);
++	if (ret)
++		return ret;
++
++	return regmap_update_bits(priv->map, RTL8367D_VLAN_CTRL_REG,
++				  BIT(0), BIT(0));
++}
++
++static int
++rtl8367d_rd05_apply_ingress_cpu_mode(struct realtek_priv *priv,
++				     int ingress_mode, u32 cpu_mask,
++				     u32 user_mask, u32 *vlan_mask,
++				     u32 *flood_mask, u32 *iso_mask,
++				     u32 *src_permit)
++{
++	u32 src_port = 1; /* RD05 observed PC link: lan2 / UTP1 */
++	u32 monitor_port = 7;
++	u32 mirror_src_mask = 0;
++	u32 mirror_ctrl = 0;
++	u32 mirror_ctrl2 = 0;
++	u32 mirror_ctrl3 = 0;
++	u32 utp1 = BIT(1);
++	int ret;
++
++	/* Start each re-apply from mirror disabled so matrix rows do not inherit
++	 * stale monitor state.  The register writes are deliberately kept in the
++	 * same function that reprograms VLAN/flood/isolation, making the sysfs
++	 * parameter a complete and reversible diagnostic mode.
++	 */
++	switch (ingress_mode) {
++	case 1:
++		mirror_src_mask = utp1;
++		mirror_ctrl = FIELD_PREP(RTL8367D_MIRROR_SOURCE_PORT_MASK, src_port) |
++			      FIELD_PREP(RTL8367D_MIRROR_MONITOR_PORT_MASK, monitor_port) |
++			      RTL8367D_MIRROR_RX_EN;
++		break;
++	case 2:
++		mirror_src_mask = utp1;
++		mirror_ctrl = FIELD_PREP(RTL8367D_MIRROR_SOURCE_PORT_MASK, src_port) |
++			      FIELD_PREP(RTL8367D_MIRROR_MONITOR_PORT_MASK, monitor_port) |
++			      RTL8367D_MIRROR_RX_EN | RTL8367D_MIRROR_ISO_EN;
++		mirror_ctrl2 = RTL8367D_MIRROR_RX_VLAN_LEAKY |
++			       RTL8367D_MIRROR_RX_ISO_LEAKY;
++		mirror_ctrl3 = RTL8367D_MIRROR_RX_OVERRIDE_EN;
++		*vlan_mask |= cpu_mask | utp1;
++		*flood_mask |= cpu_mask | utp1;
++		*iso_mask |= cpu_mask | utp1;
++		*src_permit |= cpu_mask | utp1;
++		break;
++	case 3:
++		monitor_port = 6;
++		mirror_src_mask = utp1;
++		mirror_ctrl = FIELD_PREP(RTL8367D_MIRROR_SOURCE_PORT_MASK, src_port) |
++			      FIELD_PREP(RTL8367D_MIRROR_MONITOR_PORT_MASK, monitor_port) |
++			      RTL8367D_MIRROR_RX_EN | RTL8367D_MIRROR_ISO_EN;
++		mirror_ctrl2 = RTL8367D_MIRROR_RX_VLAN_LEAKY |
++			       RTL8367D_MIRROR_RX_ISO_LEAKY;
++		mirror_ctrl3 = RTL8367D_MIRROR_RX_OVERRIDE_EN;
++		*vlan_mask |= BIT(6) | utp1;
++		*flood_mask |= BIT(6) | utp1;
++		*iso_mask |= BIT(6) | utp1;
++		*src_permit |= BIT(6) | utp1;
++		break;
++	case 4:
++		/* Force the broadest normal switching ingress-to-CPU path without
++		 * enabling mirroring.  This isolates pure flood/VLAN/isolation bugs.
++		 */
++		*vlan_mask |= cpu_mask | user_mask;
++		*flood_mask |= cpu_mask | user_mask;
++		*iso_mask |= cpu_mask | user_mask;
++		*src_permit = RTL8365MB_RTL8367D_PHY_PORTS_MASK;
++		break;
++	case 5:
++		/* Minimal UTP1<->CPU domain.  If this hits while broad modes do not,
++		 * another physical port or WAN/LAN domain is stealing the frame.
++		 */
++		*vlan_mask = cpu_mask | utp1;
++		*flood_mask = cpu_mask | utp1;
++		*iso_mask = cpu_mask | utp1;
++		*src_permit = cpu_mask | utp1;
++		break;
++	case 6:
++		mirror_src_mask = user_mask;
++		mirror_ctrl = FIELD_PREP(RTL8367D_MIRROR_SOURCE_PORT_MASK, src_port) |
++			      FIELD_PREP(RTL8367D_MIRROR_MONITOR_PORT_MASK, monitor_port) |
++			      RTL8367D_MIRROR_RX_EN | RTL8367D_MIRROR_ISO_EN;
++		mirror_ctrl2 = RTL8367D_MIRROR_RX_VLAN_LEAKY |
++			       RTL8367D_MIRROR_RX_ISO_LEAKY;
++		mirror_ctrl3 = RTL8367D_MIRROR_RX_OVERRIDE_EN;
++		*vlan_mask |= cpu_mask | user_mask;
++		*flood_mask |= cpu_mask | user_mask;
++		*iso_mask |= cpu_mask | user_mask;
++		*src_permit = RTL8365MB_RTL8367D_PHY_PORTS_MASK;
++		break;
++	case 7:
++		mirror_src_mask = utp1;
++		mirror_ctrl = FIELD_PREP(RTL8367D_MIRROR_SOURCE_PORT_MASK, src_port) |
++			      FIELD_PREP(RTL8367D_MIRROR_MONITOR_PORT_MASK, monitor_port) |
++			      RTL8367D_MIRROR_RX_EN | RTL8367D_MIRROR_TX_EN |
++			      RTL8367D_MIRROR_ISO_EN;
++		mirror_ctrl2 = RTL8367D_MIRROR_RX_VLAN_LEAKY |
++			       RTL8367D_MIRROR_RX_ISO_LEAKY;
++		mirror_ctrl3 = RTL8367D_MIRROR_RX_OVERRIDE_EN;
++		*vlan_mask |= cpu_mask | utp1;
++		*flood_mask |= cpu_mask | utp1;
++		*iso_mask |= cpu_mask | utp1;
++		*src_permit |= cpu_mask | utp1;
++		break;
++	default:
++		break;
++	}
++
++	ret = regmap_write(priv->map, RTL8367D_MIRROR_CTRL3_REG, mirror_ctrl3);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8367D_MIRROR_CTRL2_REG, mirror_ctrl2);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8367D_MIRROR_SRC_PMSK_REG,
++			   mirror_src_mask & RTL8367D_MIRROR_SRC_PMSK_MASK);
++	if (ret)
++		return ret;
++	return regmap_write(priv->map, RTL8367D_MIRROR_CTRL_REG, mirror_ctrl);
++}
++
++static int rtl8367d_rd05_force_dsa_cpu_path(struct realtek_priv *priv)
++{
++	struct rtl8365mb *mb = priv->chip_data;
++	struct rtl8365mb_cpu *cpu = &mb->cpu;
++	u32 cpu_mask = cpu->mask;
++	u32 user_mask = 0;
++	u32 wide_mask;
++	u32 vlan_mask;
++	u32 flood_mask;
++	u32 iso_mask;
++	u32 src_permit;
++	u32 reg_cpu_mask = 0, reg_cpu_ctrl = 0, reg_msti = 0;
++	u32 reg_flood_b = 0, reg_flood_u = 0, reg_flood_m = 0;
++	u32 reg_vlan_ctrl = 0, reg_vlan_ingress = 0;
++	u32 reg_iso0 = 0, reg_iso1 = 0, reg_iso2 = 0;
++	u32 reg_iso3 = 0, reg_iso4 = 0, reg_iso7 = 0;
++	u32 reg_pvid0 = 0, reg_pvid1 = 0, reg_pvid2 = 0;
++	u32 reg_pvid3 = 0, reg_pvid4 = 0, reg_pvid7 = 0;
++	u32 reg_txc_dly = 0, reg_sync_fifo = 0, reg_port7_misc = 0;
++	u32 reg_bypass = 0;
++	u32 reg_ssc_ctrl = 0, reg_ssc_seed = 0;
++	u32 reg_ssc_poly = 0, reg_ssc_div = 0;
++	u32 reg_rg_mxf = 0, reg_debug0 = 0, reg_debug1 = 0;
++	u32 reg_topcon0 = 0, reg_sds1 = 0;
++	u32 reg_mac6 = 0, reg_mac7 = 0, reg_macen6 = 0, reg_macen7 = 0;
++	u32 reg_mirror_ctrl = 0, reg_mirror_src = 0;
++	u32 reg_mirror_ctrl2 = 0, reg_mirror_ctrl3 = 0;
++	u32 tx_delay, rx_delay;
++	int focus_port;
++	int mode = READ_ONCE(rtl8367d_rd05_portmap_mode);
++	int extcpu_mode = READ_ONCE(rtl8367d_rd05_extcpu_mode);
++	int ingress_mode = READ_ONCE(rtl8367d_rd05_ingress_cpu_mode);
++	int ret;
++	int i;
++
++	if (!mb->chip_info->rtl8367d)
++		return 0;
++
++	for (i = 0; i < priv->num_ports; i++) {
++		if (dsa_is_unused_port(priv->ds, i) || dsa_is_cpu_port(priv->ds, i))
++			continue;
++		user_mask |= BIT(i);
++	}
++
++	if (!cpu_mask || !user_mask)
++		return 0;
++
++	/* RD05: UTP0..4 plus CPU7/EXT1/MAC7, wired to RTL8197F P0, share one
++	 * untagged VID9 switching domain.  netifd/DSA still decides which Linux
++	 * slave belongs to br-lan or wan; this only prevents hardware ingress VLAN
++	 * drops before frames can reach the DSA CPU port.
++	 */
++	rtl8367d_rd05_extcpu_apply(cpu, extcpu_mode, &tx_delay, &rx_delay);
++
++	cpu_mask = cpu->mask;
++	wide_mask = cpu_mask | user_mask;
++	rtl8367d_rd05_portmap_masks(cpu_mask, user_mask, mode, &vlan_mask,
++				    &flood_mask, &iso_mask, &src_permit,
++				    &focus_port);
++
++	ret = rtl8367d_rd05_apply_ingress_cpu_mode(priv, ingress_mode, cpu_mask,
++						   user_mask, &vlan_mask, &flood_mask,
++						   &iso_mask, &src_permit);
++	if (ret)
++		return ret;
++
++	ret = regmap_update_bits(priv->map, RTL8367D_BYPASS_LINE_RATE_REG,
++				 RTL8367D_BYPASS_EXT1_BIT, 0);
++	if (ret)
++		return ret;
++
++	ret = rtl8367d_ext1_set_ssc(priv, READ_ONCE(rtl8367d_rd05_ext1_ssc));
++	if (ret)
++		return ret;
++
++	ret = rtl8365mb_cpu_config(priv);
++	if (ret)
++		return ret;
++
++	/* Apply the family-D fine TX-clock tap as well as the coarse 0x1307
++	 * delay.  This controls RTL8367D -> RTL8197F timing independently of the
++	 * reverse direction and is therefore part of the runtime calibration.
++	 */
++	ret = regmap_update_bits(priv->map, RTL8367D_EXT_TXC_DLY_REG,
++				 RTL8367D_EXT1_RGMII_TX_DLY_MASK,
++				 FIELD_PREP(RTL8367D_EXT1_RGMII_TX_DLY_MASK,
++					    min_t(u32, READ_ONCE(rtl8367d_rd05_ext1_txc_tap), 7)));
++	if (ret)
++		return ret;
++
++	ret = regmap_update_bits(priv->map, RTL8365MB_EXT_RGMXF_REG(1),
++				 RTL8365MB_EXT_RGMXF_TXDELAY_MASK |
++				 RTL8365MB_EXT_RGMXF_RXDELAY_MASK,
++				 FIELD_PREP(RTL8365MB_EXT_RGMXF_TXDELAY_MASK,
++					    tx_delay ? 1 : 0) |
++				 FIELD_PREP(RTL8365MB_EXT_RGMXF_RXDELAY_MASK,
++					    rx_delay));
++	if (ret)
++		return ret;
++
++	/* RD05 diagnostics keep the port/VLAN/isolation controls available,
++	 * but make
++	 * the RTL8367D EXT1/CPU-port path SDK-exact and runtime-selectable. v24/v25
++	 * showed that UTP0..4 targeting and generic TXDESC changes do not make the
++	 * PC see router frames, so v27 probes CPU tag insert mode, hardware-tested
++	 * RGMII tx=0/rx=5, and CPU mask/trap-port 6-vs-7.
++	 */
++	ret = regmap_write(priv->map, RTL8365MB_CPU_PORT_MASK_REG, cpu_mask);
++	if (ret)
++		return ret;
++
++	ret = rtl8367d_rd05_program_vid9(priv, vlan_mask);
++	if (ret)
++		return ret;
++
++	ret = regmap_write(priv->map, RTL8365MB_SOURCE_PORT_PERMIT_REG, src_permit);
++	if (ret)
++		return ret;
++
++	ret = regmap_write(priv->map, RTL8365MB_UNDA_FLOODING_PMSK_REG, flood_mask);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8365MB_UNMCAST_FLOODING_PMSK_REG, flood_mask);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8365MB_BCAST_FLOODING_PMSK_REG, flood_mask);
++	if (ret)
++		return ret;
++
++	ret = regmap_write(priv->map, RTL8365MB_UNKNOWN_UCAST_DA_PORT_BEHAVE_REG, 0);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8365MB_UNKNOWN_L2_MULTICAST_CTRL0_REG, 0);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8365MB_UNKNOWN_IPV4_MULTICAST_CTRL0_REG, 0);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8365MB_UNKNOWN_IPV6_MULTICAST_CTRL0_REG, 0);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8365MB_LOOKUP_HIT_ISO_ACT_REG, 0);
++	if (ret)
++		return ret;
++
++	for (i = 0; i < priv->num_ports; i++) {
++		u32 port_mask;
++
++		if (dsa_is_unused_port(priv->ds, i))
++			continue;
++
++		/* Bootstrap each user port toward the CPU only. The CPU may reach all
++		 * users; normal DSA bridge callbacks can widen this later.
++		 */
++		port_mask = dsa_is_cpu_port(priv->ds, i) ? user_mask : cpu_mask;
++		if (mode > 1 || ingress_mode)
++			port_mask = iso_mask;
++
++		ret = rtl8365mb_port_set_isolation(priv, i, port_mask);
++		if (ret)
++			return ret;
++	}
++
++	/* DSA owns STP state. Do not globally force all ports forwarding here;
++	 * doing so can bypass bridge/WAN isolation during netifd setup.
++	 */
++
++	regmap_read(priv->map, RTL8365MB_CPU_PORT_MASK_REG, &reg_cpu_mask);
++	regmap_read(priv->map, RTL8365MB_CPU_CTRL_REG, &reg_cpu_ctrl);
++	regmap_read(priv->map, RTL8365MB_BCAST_FLOODING_PMSK_REG, &reg_flood_b);
++	regmap_read(priv->map, RTL8365MB_UNDA_FLOODING_PMSK_REG, &reg_flood_u);
++	regmap_read(priv->map, RTL8365MB_UNMCAST_FLOODING_PMSK_REG, &reg_flood_m);
++	regmap_read(priv->map, RTL8365MB_PORT_ISOLATION_REG(0), &reg_iso0);
++	regmap_read(priv->map, RTL8365MB_PORT_ISOLATION_REG(1), &reg_iso1);
++	regmap_read(priv->map, RTL8365MB_PORT_ISOLATION_REG(2), &reg_iso2);
++	regmap_read(priv->map, RTL8365MB_PORT_ISOLATION_REG(3), &reg_iso3);
++	regmap_read(priv->map, RTL8365MB_PORT_ISOLATION_REG(4), &reg_iso4);
++	regmap_read(priv->map, RTL8365MB_PORT_ISOLATION_REG(7), &reg_iso7);
++	regmap_read(priv->map, RTL8365MB_MSTI_CTRL_REG(0, 0), &reg_msti);
++	regmap_read(priv->map, RTL8367D_VLAN_CTRL_REG, &reg_vlan_ctrl);
++	regmap_read(priv->map, RTL8367D_VLAN_INGRESS_REG, &reg_vlan_ingress);
++	regmap_read(priv->map, RTL8367D_VLAN_PVID_CTRL_REG(0), &reg_pvid0);
++	regmap_read(priv->map, RTL8367D_VLAN_PVID_CTRL_REG(1), &reg_pvid1);
++	regmap_read(priv->map, RTL8367D_VLAN_PVID_CTRL_REG(2), &reg_pvid2);
++	regmap_read(priv->map, RTL8367D_VLAN_PVID_CTRL_REG(3), &reg_pvid3);
++	regmap_read(priv->map, RTL8367D_VLAN_PVID_CTRL_REG(4), &reg_pvid4);
++	regmap_read(priv->map, RTL8367D_VLAN_PVID_CTRL_REG(7), &reg_pvid7);
++	regmap_read(priv->map, RTL8367D_EXT_TXC_DLY_REG, &reg_txc_dly);
++	regmap_read(priv->map, RTL8367D_SYNC_FIFO1_REG, &reg_sync_fifo);
++	regmap_read(priv->map, RTL8367D_PORT7_MISC_CFG_REG, &reg_port7_misc);
++	regmap_read(priv->map, RTL8367D_BYPASS_LINE_RATE_REG, &reg_bypass);
++	regmap_read(priv->map, RTL8367D_EXT1_SSC_CTRL_REG, &reg_ssc_ctrl);
++	regmap_read(priv->map, RTL8367D_EXT1_SSC_SEED_REG, &reg_ssc_seed);
++	regmap_read(priv->map, RTL8367D_EXT1_SSC_POLY_REG, &reg_ssc_poly);
++	regmap_read(priv->map, RTL8367D_EXT1_SSC_DIV_REG, &reg_ssc_div);
++	regmap_read(priv->map, RTL8365MB_EXT_RGMXF_REG(1), &reg_rg_mxf);
++	regmap_read(priv->map, RTL8367D_CHIP_DEBUG0_REG, &reg_debug0);
++	regmap_read(priv->map, RTL8367D_CHIP_DEBUG1_REG, &reg_debug1);
++	regmap_read(priv->map, RTL8367D_TOP_CON0_REG, &reg_topcon0);
++	regmap_read(priv->map, RTL8367D_SDS1_MISC0_REG, &reg_sds1);
++	regmap_read(priv->map, RTL8367D_MAC_FORCE_REG(6), &reg_mac6);
++	regmap_read(priv->map, RTL8367D_MAC_FORCE_REG(7), &reg_mac7);
++	regmap_read(priv->map, RTL8367D_MAC_FORCE_EN_REG(6), &reg_macen6);
++	regmap_read(priv->map, RTL8367D_MAC_FORCE_EN_REG(7), &reg_macen7);
++	regmap_read(priv->map, RTL8367D_MIRROR_CTRL_REG, &reg_mirror_ctrl);
++	regmap_read(priv->map, RTL8367D_MIRROR_SRC_PMSK_REG, &reg_mirror_src);
++	regmap_read(priv->map, RTL8367D_MIRROR_CTRL2_REG, &reg_mirror_ctrl2);
++	regmap_read(priv->map, RTL8367D_MIRROR_CTRL3_REG, &reg_mirror_ctrl3);
++
++	dev_info(priv->dev,
++		 "RTL8367D RD05 DSA CPU path: portmap=%d/%s focus=%d extcpu=%d/%s ingress=%d/%s txdelay=%u txc_tap=%u rxdelay=%u ssc_en=%u cpu=0x%x trap=%u users=0x%x wide=0x%x vid=9 vlanmask=0x%x srcpermit=0x%x cpu_mask_reg=0x%x cpu_ctrl=0x%x bypass=0x%x ext_txc_dly=0x%x syncfifo=0x%x/txerr=%u/rxerr=%u port7misc=0x%x/crcskip=%u ssc=0x%x/0x%x/0x%x/0x%x ext1_rgmxf=0x%x dbg0/1=0x%x/0x%x topcon0=0x%x sds1=0x%x mac6/7=0x%x/0x%x macen6/7=0x%x/0x%x mirror=0x%x src=0x%x ctrl2=0x%x ctrl3=0x%x flood u/m/b=0x%x/0x%x/0x%x iso0-4/7=0x%x/0x%x/0x%x/0x%x/0x%x/0x%x msti0=0x%x vlan ctrl/ing/pvid0-4/7=0x%x/0x%x/0x%x/0x%x/0x%x/0x%x/0x%x/0x%x dsa-tag=rtl8_4/8byte/cpu7-ext1-sdk-baseline-calibratable-v38\n",
++		 mode, rtl8367d_rd05_portmap_mode_name(mode), focus_port,
++		 extcpu_mode, rtl8367d_rd05_extcpu_mode_name(extcpu_mode),
++		 ingress_mode, rtl8367d_rd05_ingress_cpu_mode_name(ingress_mode),
++		 tx_delay, READ_ONCE(rtl8367d_rd05_ext1_txc_tap), rx_delay,
++		 READ_ONCE(rtl8367d_rd05_ext1_ssc), cpu_mask, cpu->trap_port,
++		 user_mask, wide_mask, vlan_mask, src_permit, reg_cpu_mask,
++		 reg_cpu_ctrl, reg_bypass, reg_txc_dly, reg_sync_fifo,
++		 (unsigned int)FIELD_GET(RTL8367D_SYNC_FIFO_TX_ERR_MASK,
++					 reg_sync_fifo),
++		 (unsigned int)FIELD_GET(RTL8367D_SYNC_FIFO_RX_ERR_MASK,
++					 reg_sync_fifo),
++		 reg_port7_misc, !!(reg_port7_misc & RTL8367D_PORT7_CRC_SKIP),
++		 reg_ssc_ctrl, reg_ssc_seed, reg_ssc_poly, reg_ssc_div, reg_rg_mxf,
++		 reg_debug0, reg_debug1, reg_topcon0, reg_sds1, reg_mac6, reg_mac7,
++		 reg_macen6, reg_macen7, reg_mirror_ctrl, reg_mirror_src,
++		 reg_mirror_ctrl2, reg_mirror_ctrl3, reg_flood_u, reg_flood_m,
++		 reg_flood_b,
++		 reg_iso0, reg_iso1, reg_iso2, reg_iso3, reg_iso4, reg_iso7,
++		 reg_msti, reg_vlan_ctrl, reg_vlan_ingress, reg_pvid0, reg_pvid1,
++		 reg_pvid2, reg_pvid3, reg_pvid4, reg_pvid7);
++
++	return 0;
++}
++
++static int rtl8367d_rd05_reapply_runtime(void)
++{
++	struct realtek_priv *priv;
++	u32 rgmxf = 0, txc = 0, sync = 0;
++	int ret = 0;
++
++	/* Delay calibration must not replay VID9, flooding or isolation tables:
++	 * those may already contain live Linux bridge/VLAN state.  Reapply only
++	 * the exact EXT1 mux, bypass, SSC, 0x1307 coarse and 0x13f9 fine timing sequence, followed by
++	 * the fixed CPU7 MAC force state.
++	 */
++	mutex_lock(&rtl8367d_rd05_runtime_lock);
++	priv = rtl8367d_rd05_runtime_priv;
++	if (priv) {
++		ret = rtl8367d_ext1_config_rgmii(priv);
++		if (!ret)
++			ret = rtl8367d_ext_config_forcemode(priv, 7, true,
++						       SPEED_1000, DUPLEX_FULL,
++						       true, true);
++		if (!ret) {
++			regmap_read(priv->map, RTL8365MB_EXT_RGMXF_REG(1), &rgmxf);
++			regmap_read(priv->map, RTL8367D_EXT_TXC_DLY_REG, &txc);
++			regmap_read(priv->map, RTL8367D_SYNC_FIFO1_REG, &sync);
++			dev_info(priv->dev,
++				 "RTL8367D RD05 RGMII v38 reapply: tx=%u txc=%u rx=%u ssc=%u rgmxf=0x%x ext_txc=0x%x syncfifo=0x%x/txerr=%u/rxerr=%u\n",
++				 READ_ONCE(rtl8367d_rd05_ext1_tx_delay),
++				 READ_ONCE(rtl8367d_rd05_ext1_txc_tap),
++				 READ_ONCE(rtl8367d_rd05_ext1_rx_delay),
++				 READ_ONCE(rtl8367d_rd05_ext1_ssc), rgmxf, txc, sync,
++				 (unsigned int)FIELD_GET(RTL8367D_SYNC_FIFO_TX_ERR_MASK,
++						 sync),
++				 (unsigned int)FIELD_GET(RTL8367D_SYNC_FIFO_RX_ERR_MASK,
++						 sync));
++		}
++	}
++	mutex_unlock(&rtl8367d_rd05_runtime_lock);
++	return ret;
++}
++
++static int rtl8367d_rd05_ext1_tx_delay_set(const char *val,
++					   const struct kernel_param *kp)
++{
++	unsigned int delay;
++	int ret = kstrtouint(val, 0, &delay);
++
++	if (ret)
++		return ret;
++	if (delay > 1)
++		return -EINVAL;
++	WRITE_ONCE(rtl8367d_rd05_ext1_tx_delay, delay);
++	return rtl8367d_rd05_reapply_runtime();
++}
++
++static int rtl8367d_rd05_ext1_txc_tap_set(const char *val,
++					 const struct kernel_param *kp)
++{
++	unsigned int tap;
++	int ret = kstrtouint(val, 0, &tap);
++
++	if (ret)
++		return ret;
++	if (tap > 7)
++		return -EINVAL;
++	WRITE_ONCE(rtl8367d_rd05_ext1_txc_tap, tap);
++	return rtl8367d_rd05_reapply_runtime();
++}
++
++static int rtl8367d_rd05_ext1_rx_delay_set(const char *val,
++					   const struct kernel_param *kp)
++{
++	unsigned int delay;
++	int ret = kstrtouint(val, 0, &delay);
++
++	if (ret)
++		return ret;
++	if (delay > 7)
++		return -EINVAL;
++	WRITE_ONCE(rtl8367d_rd05_ext1_rx_delay, delay);
++	return rtl8367d_rd05_reapply_runtime();
++}
++
++static int rtl8367d_rd05_ext1_ssc_set(const char *val,
++				      const struct kernel_param *kp)
++{
++	bool enable;
++	int ret = kstrtobool(val, &enable);
++
++	if (ret)
++		return ret;
++	WRITE_ONCE(rtl8367d_rd05_ext1_ssc, enable);
++	return rtl8367d_rd05_reapply_runtime();
++}
++
++static const struct kernel_param_ops rtl8367d_rd05_ext1_tx_delay_ops = {
++	.set = rtl8367d_rd05_ext1_tx_delay_set,
++	.get = param_get_uint,
++};
++static const struct kernel_param_ops rtl8367d_rd05_ext1_txc_tap_ops = {
++	.set = rtl8367d_rd05_ext1_txc_tap_set,
++	.get = param_get_uint,
++};
++static const struct kernel_param_ops rtl8367d_rd05_ext1_rx_delay_ops = {
++	.set = rtl8367d_rd05_ext1_rx_delay_set,
++	.get = param_get_uint,
++};
++static const struct kernel_param_ops rtl8367d_rd05_ext1_ssc_ops = {
++	.set = rtl8367d_rd05_ext1_ssc_set,
++	.get = param_get_bool,
++};
++
++module_param_cb(rd05_ext1_tx_delay, &rtl8367d_rd05_ext1_tx_delay_ops,
++		&rtl8367d_rd05_ext1_tx_delay, 0644);
++MODULE_PARM_DESC(rd05_ext1_tx_delay,
++		 "RD05 RTL8367D EXT1 RGMII TX delay: 0 or 1");
++module_param_cb(rd05_ext1_txc_tap, &rtl8367d_rd05_ext1_txc_tap_ops,
++		&rtl8367d_rd05_ext1_txc_tap, 0644);
++MODULE_PARM_DESC(rd05_ext1_txc_tap,
++		 "RD05 RTL8367D EXT1 fine TX-clock delay tap in 0x13f9: 0..7");
++module_param_cb(rd05_ext1_rx_delay, &rtl8367d_rd05_ext1_rx_delay_ops,
++		&rtl8367d_rd05_ext1_rx_delay, 0644);
++MODULE_PARM_DESC(rd05_ext1_rx_delay,
++		 "RD05 RTL8367D EXT1 RGMII RX delay tap: 0..7");
++module_param_cb(rd05_ext1_ssc, &rtl8367d_rd05_ext1_ssc_ops,
++		&rtl8367d_rd05_ext1_ssc, 0644);
++MODULE_PARM_DESC(rd05_ext1_ssc,
++		 "RD05 RTL8367D EXT1 spread-spectrum clock: 0 off, 1 on");
++
++static int rtl8367d_rd05_portmap_mode_set(const char *val,
++					  const struct kernel_param *kp)
++{
++	struct realtek_priv *priv;
++	int mode;
++	int ret;
++
++	ret = kstrtoint(val, 0, &mode);
++	if (ret)
++		return ret;
++
++	if (mode < 0 || mode > 7)
++		return -EINVAL;
++
++	WRITE_ONCE(rtl8367d_rd05_portmap_mode, mode);
++
++	mutex_lock(&rtl8367d_rd05_runtime_lock);
++	priv = rtl8367d_rd05_runtime_priv;
++	ret = priv ? rtl8367d_rd05_force_dsa_cpu_path(priv) : 0;
++	mutex_unlock(&rtl8367d_rd05_runtime_lock);
++
++	return ret;
++}
++
++static const struct kernel_param_ops rtl8367d_rd05_portmap_mode_ops = {
++	.set = rtl8367d_rd05_portmap_mode_set,
++	.get = param_get_int,
++};
++
++module_param_cb(rd05_portmap_mode, &rtl8367d_rd05_portmap_mode_ops,
++		&rtl8367d_rd05_portmap_mode, 0644);
++MODULE_PARM_DESC(rd05_portmap_mode,
++		 "RD05 diagnostic port/VLAN/isolation mode; 1 is stable");
++
++static int
++rtl8367d_rd05_ingress_cpu_mode_set(const char *val,
++				   const struct kernel_param *kp)
++{
++	struct realtek_priv *priv;
++	int mode;
++	int ret;
++
++	ret = kstrtoint(val, 0, &mode);
++	if (ret)
++		return ret;
++
++	if (mode < 0 || mode > 7)
++		return -EINVAL;
++
++	WRITE_ONCE(rtl8367d_rd05_ingress_cpu_mode, mode);
++
++	mutex_lock(&rtl8367d_rd05_runtime_lock);
++	priv = rtl8367d_rd05_runtime_priv;
++	ret = priv ? rtl8367d_rd05_force_dsa_cpu_path(priv) : 0;
++	mutex_unlock(&rtl8367d_rd05_runtime_lock);
++
++	return ret;
++}
++
++static const struct kernel_param_ops rtl8367d_rd05_ingress_cpu_mode_ops = {
++	.set = rtl8367d_rd05_ingress_cpu_mode_set,
++	.get = param_get_int,
++};
++
++module_param_cb(rd05_ingress_cpu_mode,
++		&rtl8367d_rd05_ingress_cpu_mode_ops,
++		&rtl8367d_rd05_ingress_cpu_mode, 0644);
++MODULE_PARM_DESC(rd05_ingress_cpu_mode,
++		 "RD05 v29 RTL8367D ingress-to-CPU diagnostic: 0 off, 1 mirror UTP1 rx CPU7, 2 mirror UTP1 rx CPU7 leaky, 3 mirror UTP1 rx CPU6 leaky, 4 force flood CPU, 5 UTP1 CPU-only, 6 mirror all users rx CPU7, 7 mirror UTP1 rx/tx CPU7");
++
++static int rtl8367d_rd05_extcpu_mode_set(const char *val,
++					 const struct kernel_param *kp)
++{
++	struct realtek_priv *priv;
++	int mode;
++	int ret;
++
++	ret = kstrtoint(val, 0, &mode);
++	if (ret)
++		return ret;
++
++	if (mode < 0 || mode > 17)
++		return -EINVAL;
++
++	WRITE_ONCE(rtl8367d_rd05_extcpu_mode, mode);
++
++	mutex_lock(&rtl8367d_rd05_runtime_lock);
++	priv = rtl8367d_rd05_runtime_priv;
++	ret = priv ? rtl8367d_rd05_force_dsa_cpu_path(priv) : 0;
++	mutex_unlock(&rtl8367d_rd05_runtime_lock);
++
++	return ret;
++}
++
++static const struct kernel_param_ops rtl8367d_rd05_extcpu_mode_ops = {
++	.set = rtl8367d_rd05_extcpu_mode_set,
++	.get = param_get_int,
++};
++
++module_param_cb(rd05_extcpu_mode, &rtl8367d_rd05_extcpu_mode_ops,
++		&rtl8367d_rd05_extcpu_mode, 0644);
++MODULE_PARM_DESC(rd05_extcpu_mode,
++		 "RD05 diagnostic EXT1/CPU mode; 0 is stable CPU7/rtl8_4");
++
+ static int rtl8365mb_reset_chip(struct realtek_priv *priv)
+ {
+ 	u32 val;
+@@ -1951,10 +3175,16 @@
+ 	mb = priv->chip_data;
+ 	cpu = &mb->cpu;
+ 
+-	ret = rtl8365mb_reset_chip(priv);
+-	if (ret) {
+-		dev_err(priv->dev, "failed to reset chip: %d\n", ret);
+-		goto out_error;
++	/* RTL8367D reset is handled by the realtek-smi reset-gpios path. Its
++	 * software reset semantics are different from RTL8365MB and can leave
++	 * EXT/MAC force state inaccessible on RD05.
++	 */
++	if (!mb->chip_info->rtl8367d) {
++		ret = rtl8365mb_reset_chip(priv);
++		if (ret) {
++			dev_err(priv->dev, "failed to reset chip: %d\n", ret);
++			goto out_error;
++		}
+ 	}
+ 
+ 	/* Configure switch to vendor-defined initial state */
+@@ -2023,6 +3253,18 @@
+ 		}
+ 	}
+ 
++	ret = rtl8367d_rd05_force_dsa_cpu_path(priv);
++	if (ret) {
++		dev_err(priv->dev, "failed to configure RTL8367D RD05 DSA CPU path: %d\n", ret);
++		goto out_teardown_irq;
++	}
++
++	if (mb->chip_info && mb->chip_info->rtl8367d) {
++		mutex_lock(&rtl8367d_rd05_runtime_lock);
++		rtl8367d_rd05_runtime_priv = priv;
++		mutex_unlock(&rtl8367d_rd05_runtime_lock);
++	}
++
+ 	/* Start statistics counter polling */
+ 	rtl8365mb_stats_setup(priv);
+ 
+@@ -2038,6 +3280,14 @@
+ static void rtl8365mb_teardown(struct dsa_switch *ds)
+ {
+ 	struct realtek_priv *priv = ds->priv;
++	struct rtl8365mb *mb = priv->chip_data;
++
++	if (mb->chip_info && mb->chip_info->rtl8367d) {
++		mutex_lock(&rtl8367d_rd05_runtime_lock);
++		if (rtl8367d_rd05_runtime_priv == priv)
++			rtl8367d_rd05_runtime_priv = NULL;
++		mutex_unlock(&rtl8367d_rd05_runtime_lock);
++	}
+ 
+ 	rtl8365mb_stats_teardown(priv);
+ 	rtl8365mb_irq_teardown(priv);
+@@ -2087,8 +3337,11 @@
+ 
+ 	for (i = 0; i < ARRAY_SIZE(rtl8365mb_chip_infos); i++) {
+ 		const struct rtl8365mb_chip_info *ci = &rtl8365mb_chip_infos[i];
++		u32 mask = ci->chip_ver_mask ? ci->chip_ver_mask : 0xffff;
+ 
+-		if (ci->chip_id == chip_id && ci->chip_ver == chip_ver) {
++		if (ci->chip_id == chip_id &&
++		    (ci->chip_ver_any ||
++		     (chip_ver & mask) == ci->chip_ver)) {
+ 			mb->chip_info = ci;
+ 			break;
+ 		}
+@@ -2103,7 +3356,8 @@
+ 
+ 	dev_info(priv->dev, "found an %s switch\n", mb->chip_info->name);
+ 
+-	priv->num_ports = RTL8365MB_MAX_NUM_PORTS;
++	priv->num_ports = mb->chip_info->num_ports ?
++			  mb->chip_info->num_ports : RTL8365MB_MAX_NUM_PORTS;
+ 	mb->priv = priv;
+ 	mb->cpu.trap_port = RTL8365MB_MAX_NUM_PORTS;
+ 	mb->cpu.insert = RTL8365MB_CPU_INSERT_TO_ALL;
