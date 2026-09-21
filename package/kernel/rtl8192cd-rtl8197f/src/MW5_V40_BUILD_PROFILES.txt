@@ -1,0 +1,7 @@
+default OpenWrt package: RTL8197F integrated 2.4 GHz only
+optional variable: MW5_WLAN_DUAL=1 adds PCIe RTL8822B
+module name: rtl8192cd
+control plane: legacy Wireless Extensions/vendor private ioctls
+autoload: intentionally disabled for first hardware bring-up
+first hardware test: initramfs + serial console + verified SPI recovery image
+x86 smoke module: compilation proof only, never load on the router
