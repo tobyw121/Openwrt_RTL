@@ -1,0 +1,49 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenWrt RTL8197F bringup <noreply@example.invalid>
+Date: Sun, 31 May 2026 00:00:00 +0000
+Subject: [PATCH] net: ethernet: add native RTL8197F/RTL8197FH rtl865x CPU-interface driver
+
+Add a Linux-6.6 native net_device/NAPI driver option for the RTL8197F
+rtl865x CPU-interface block.  This intentionally does not build the old
+Realtek rtknet forwarding/fastpath stack; only the packet DMA interface is
+integrated into the normal Linux networking model.
+
+The actual driver source is supplied through the OpenWrt target files overlay
+as drivers/net/ethernet/rtl8197f_rtknet.c.
+
+---
+--- a/drivers/net/ethernet/Kconfig
++++ b/drivers/net/ethernet/Kconfig
+@@ -25,6 +25,22 @@ config RTL8197F_ETH_DIAG
+ 	  not configure the switch, DMA, VLANs or PHYs; it only prints register
+ 	  snapshots during early bring-up.
+ 
++config RTL8197F_RTKNET
++	tristate "Realtek RTL8197F/RTL8197FH rtl865x native Ethernet CPU interface"
++	depends on RTL8197F && HAS_DMA && HAS_IOMEM
++	select CRC32
++	select PHYLINK
++	help
++	  Enable a native Linux net_device/NAPI driver for the Realtek RTL8197F
++	  rtl865x CPU-interface DMA block.  This is the replacement direction for
++	  the old Realtek rtknet SDK driver on Linux 6.6: descriptor rings, IRQ and
++	  packet DMA are handled by the kernel network stack, while VLAN/bridge/
++	  external RTL8367 switching should be handled by DSA and phylink.
++
++	  This driver does not import Realtek's legacy NAT/fastpath/swconfig stack.
++	  It still requires board-level validation of descriptor address format,
++	  port-mask semantics and external switch wiring.
++
+ config SUNGEM_PHY
+ 	tristate
+ 
+--- a/drivers/net/ethernet/Makefile
++++ b/drivers/net/ethernet/Makefile
+@@ -4,6 +4,7 @@
+ #
+ 
+ obj-$(CONFIG_RTL8197F_ETH_DIAG) += rtl8197f_ethdiag.o
++obj-$(CONFIG_RTL8197F_RTKNET) += rtl8197f_rtknet.o
+ obj-$(CONFIG_NET_VENDOR_3COM) += 3com/
+ obj-$(CONFIG_NET_VENDOR_8390) += 8390/
+ obj-$(CONFIG_NET_VENDOR_ACTIONS) += actions/

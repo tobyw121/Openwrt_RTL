@@ -1,0 +1,349 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+
+#include "rtl8197f.dtsi"
+
+/ {
+	compatible = "xiaomi,r4-rd05", "realtek,rtl8197f-vg", "realtek,rtl8197f-soc";
+	model = "Xiaomi Mi WiFi R4 RD05";
+
+	aliases {
+		serial0 = &uart0;
+	};
+
+	chosen {
+		bootargs = "console=ttyS0,115200n8 lpj=5000000 rootfstype=squashfs,jffs2 clk_ignore_unused";
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x00000000 0x08000000>;
+	};
+
+	/*
+	 * GPIOs are deliberately conservative for first boot.  The RD05 SPI
+	 * backup carries model=RD05 plus ethaddr/ethaddr_wan in the NVRAM/Bdata
+	 * areas.  SDK/U-Boot references for this RTL8197F_VG + RTL8367R family
+	 * point at H0/G7 for SMI candidates and G6/H1 for button/LED functions.
+	 */
+	leds {
+		compatible = "gpio-leds";
+		status = "okay";
+
+		led_sys: system {
+			label = "green:status";
+			gpios = <&gpio0 57 GPIO_ACTIVE_LOW>; /* H1, BSP reference */
+			default-state = "off";
+		};
+	};
+
+	keys {
+		compatible = "gpio-keys";
+		status = "disabled";
+
+		reset {
+			label = "reset";
+			gpios = <&gpio0 54 GPIO_ACTIVE_LOW>; /* G6, BSP V672 reference */
+			linux,code = <KEY_RESTART>;
+		};
+	};
+
+	/*
+	 * OEM RD05 logs expose rtl819x_8367r_i2c_pin.1/.2 plus GPIOs 55/56/58
+	 * and report switchChip=8367D.  The RTL8197F_VG BSP path for 83xx/8367
+	 * selects MDC=H0, MDIO=G7 and reset=H2 for 8197FH/VG boards, matching
+	 * those exported GPIO numbers with this driver's A0..H7 numbering.
+	 *
+	 * Xiaomi's userspace models the two LAN ports as eth0/eth1 and WAN as eth2;
+	 * keep that logical layout by labelling RTL8367 ports 0/1 as LAN and port 2
+	 * as WAN.  Ports 3/4 are present in the switch core but disabled here until
+	 * hardware probing proves whether they are routed on RD05.
+	 *
+	 * The DSA node uses the upstream RTL8365MB-family compatible. Silicon is
+	 * identified by chip number/version, and GPIO58/H2 is the active-low reset.
+	 */
+	rtl8367_smi: switch {
+		compatible = "realtek,rtl8367d", "realtek,rtl8365mb";
+		pinctrl-names = "default";
+		pinctrl-0 = <&rtl8367_smi_h0_g7_pins>;
+		mdc-gpios = <&gpio0 56 GPIO_ACTIVE_HIGH>;  /* H0 */
+		mdio-gpios = <&gpio0 55 GPIO_ACTIVE_HIGH>; /* G7 */
+		reset-gpios = <&gpio0 58 GPIO_ACTIVE_LOW>; /* H2 */
+		realtek,disable-leds;
+		status = "okay";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			/*
+			 * RD05 port bring-up: PHY1 and PHY2 are proven working as LAN2/WAN.
+			 * The first physical LAN jack did not link on PHY0, PHY3 or PHY4 when
+			 * only one candidate was exposed at a time.  Keep all remaining copper
+			 * candidates published and bridged during bring-up.  The one that shows
+			 * carrier with a cable in the first LAN jack can be renamed to lan1 in a
+			 * final clean DTS after hardware validation.
+			 */
+			port@0 {
+				reg = <0>;
+				label = "lan1";
+				phy-handle = <&swphy0>;
+			};
+
+			port@1 {
+				reg = <1>;
+				label = "lan2";
+				phy-handle = <&swphy1>;
+			};
+
+			port@2 {
+				reg = <2>;
+				label = "wan";
+				phy-handle = <&swphy2>;
+			};
+
+			port@3 {
+				reg = <3>;
+				label = "lan3";
+				phy-handle = <&swphy3>;
+			};
+
+			port@4 {
+				reg = <4>;
+				label = "lan4";
+				phy-handle = <&swphy4>;
+			};
+
+			/* RTL8367D CPU port 7 maps to EXT_PORT1/MAC7.  Its RGMII peer is
+			 * RTL8197F physical P0, configured by rtl8197f-rtknet.
+			 */
+			port@7 {
+				reg = <7>;
+				label = "cpu";
+				ethernet = <&ethernet0>;
+				phy-mode = "rgmii";
+				/* The RTL8367D DAL enables EXT1 spread-spectrum clocking and then
+				 * re-tunes the host RGMII link to TX0/RX5.  The register uses
+				 * 0.3 ns RX steps, so vendor value 5 is represented as 1500 ps.
+				 */
+				tx-internal-delay-ps = <0>;
+				rx-internal-delay-ps = <1500>;
+
+				fixed-link {
+					speed = <1000>;
+					full-duplex;
+					pause;
+				};
+			};
+		};
+
+		mdio {
+			compatible = "realtek,smi-mdio";
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			/*
+			 * RD05 recovery logs show real link events on these PHYs, but
+			 * some links can flap after autonegotiation.  Keep the initial
+			 * PHY description conservative and prevent phylib from enabling
+			 * EEE/LPI on the external RTL8367D user ports during bring-up.
+			 */
+			swphy0: ethernet-phy@0 {
+				reg = <0>;
+				eee-broken-100tx;
+				eee-broken-1000t;
+			};
+
+			swphy1: ethernet-phy@1 {
+				reg = <1>;
+				eee-broken-100tx;
+				eee-broken-1000t;
+			};
+
+			swphy2: ethernet-phy@2 {
+				reg = <2>;
+				eee-broken-100tx;
+				eee-broken-1000t;
+			};
+
+			swphy3: ethernet-phy@3 {
+				reg = <3>;
+				eee-broken-100tx;
+				eee-broken-1000t;
+			};
+
+			swphy4: ethernet-phy@4 { reg = <4>; };
+		};
+	};
+};
+
+
+&pinmux {
+	/*
+	 * OEM exports gpio55/gpio56 for rtl819x_8367r_i2c_pin.{1,2}.
+	 * Vendor PIN_MUX_SEL13 is observed as 0x33320000 after stock init.
+	 * This keeps the H0/G7 nibbles in GPIO-capable mode for diagnostics.
+	 */
+	rtl8367_smi_h0_g7_pins: rtl8367-smi-h0-g7-pins {
+		pinctrl-single,bits = <0x34 0x03300000 0x0ff00000>;
+	};
+
+};
+
+&gpio0 {
+	/* v32: enable GPIO as SDK-derived platform base, but keep GPIO IRQs
+	 * disabled until timer/interrupt accounting is proven with real jiffies.
+	 */
+	/delete-property/ interrupt-controller;
+	/delete-property/ #interrupt-cells;
+	/delete-property/ interrupt-parent;
+	/delete-property/ interrupts;
+	status = "okay";
+};
+
+/*
+ * UART0 is physically the DW-APB block at 0x18147000 and remains serial0.
+ * Keep the recovery console in polling mode on RD05: early printk already
+ * proves the port/base/baud are correct, while the board-level UART IRQ lane
+ * has not yet been validated without console lockups.
+ */
+&uart0 {
+	/delete-property/ interrupt-parent;
+	/delete-property/ interrupts;
+};
+
+&spi0 {
+	/* Disabled for v23: JEDEC/SFDP FIFO probe wedges on RD05 hardware. */
+	status = "disabled";
+};
+
+&spirom0 {
+	/* Command-mode writes are hard-limited by the driver to rootfs_data. */
+	realtek,writable-offset = <0x00e60000>;
+	realtek,writable-size = <0x001a0000>;
+	realtek,spi-clock-div = <8>;
+	status = "okay";
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "boot";
+			reg = <0x00000000 0x00020000>;
+			read-only;
+		};
+
+		partition@20000 {
+			compatible = "u-boot,env";
+			label = "nvram";
+			reg = <0x00020000 0x00010000>;
+			read-only;
+
+			/* The RD05 stores a standard CRC32 U-Boot environment here. */
+			ethaddr: ethaddr { };
+			ethaddr_wan: ethaddr_wan { };
+			wl0_macaddr: wl0_macaddr { };
+			wl1_macaddr: wl1_macaddr { };
+		};
+
+		partition@30000 {
+			label = "bdata";
+			reg = <0x00030000 0x00010000>;
+			read-only;
+		};
+
+		partition@40000 {
+			label = "factory";
+			reg = <0x00040000 0x00010000>;
+			read-only;
+		};
+
+		partition@50000 {
+			label = "crash";
+			reg = <0x00050000 0x00010000>;
+			read-only;
+		};
+
+		kernel: partition@60000 {
+			label = "kernel";
+			reg = <0x00060000 0x002f0000>;
+			read-only;
+		};
+
+		rootfs: partition@350000 {
+			label = "rootfs";
+			/* OEM partition table: rootfs 0x350000-0xe60000. */
+			reg = <0x00350000 0x00b10000>;
+			read-only;
+		};
+
+		partition@e60000 {
+			/* OEM calls this partition "overlay"; OpenWrt uses rootfs_data. */
+			label = "rootfs_data";
+			reg = <0x00e60000 0x001a0000>;
+		};
+	};
+};
+
+
+&pcie0 {
+	/*
+	 * OEM Linux enumerates the RD05 PCIe WLAN endpoint as 10ec:f812 and
+	 * identifies it as RTL8812FE.  The RTL8197FH-VG BSP uses a 40 MHz PCIe
+	 * reference clock plus the VG-specific MDIO register-8 tuning value.
+	 */
+	realtek,refclk-40mhz;
+	realtek,rtl8197f-vg;
+	status = "okay";
+};
+
+&ethdiag0 {
+	/* Standard boot: keep the old bring-up diagnostic driver disabled. */
+	status = "disabled";
+};
+
+&ethernet0 {
+	nvmem-cells = <&ethaddr>;
+	nvmem-cell-names = "mac-address";
+
+	/*
+	 * GPL SDK topology for RTL8197F + RTL83xx: the SoC drives the external
+	 * switch through physical P0/RGMII.  RTL8367D port 7/EXT1 is the switch-side
+	 * endpoint only.  Direct DMA TX must therefore select DP bit 0; DP bit 6 with
+	 * DP_EXT=2 is an internal CPU/extension path and produced the v30 self-loop.
+	 */
+	realtek,tx-port-mask = <0x1>;
+	realtek,tx-dp-ext = <0x0>;
+	realtek,tx-extspa = <0x0>;
+	/* SDK-derived safety net: the RTL8197F CPU interface sometimes does
+	 * not raise RX IRQs while DSA/switch MIB counters still see ingress
+	 * traffic. Poll the RX ring during bring-up so ARP/DHCP can progress
+	 * even if CPUIISR/RX_DONE is not wired correctly yet.
+	 */
+	realtek,rx-poll-fallback;
+	realtek,rx-poll-ms = <50>;
+	realtek,sdk-cpuicr1-init;
+	realtek,sdk-swcore-init;
+	realtek,sdk-trxrdy;
+	/* Keep the SoC-side VID9/L2/netif/ACL host-link seed active while DSA owns
+	 * the external switch.  The seed contains only RTL8197F P0; DSA represents
+	 * RTL8367D UTP ports and parses the rtl8_4 CPU tag in Linux.
+	 */
+	realtek,legacy-rd05-sdk-pipeline;
+	/* Accept RTL8367D protocol-4 CPU-tagged frames in the RTL8197F P0 parser,
+	 * but preserve the 8-byte tag for Linux's rtl8_4 DSA tagger.
+	 */
+	realtek,p0-cpu-tag-pass-through;
+	/* v23: physical DMA addresses did not move the CPU ring.  Return to the
+	 * SDK-compatible KSEG1 descriptor/buffer address form inherited from the SoC
+	 * dtsi and test the missing rtl865x_start() side-band sequence instead.
+	 */
+	/* Realtek SDK clears CPUICR.EXCLUDE_CRC and includes FCS in descriptor lengths. */
+	realtek,sdk-crc-lengths;
+	status = "okay";
+};

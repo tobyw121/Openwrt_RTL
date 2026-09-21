@@ -1,0 +1,213 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+/*
+ * iBall Baton WRD12GN
+ *
+ * Reconstructed from the supplied serial boot log, full flash images and the
+ * isolated RTL8197F accelerator sources.  Physical board population is
+ * RTL8197FH + RTL8812BRH + RTL8211F, 64 MiB DDR2 and Winbond W25Q64.  The
+ * Realtek WLAN SDK intentionally drives the PCI 10ec:b822 radio through its
+ * 8822B/HALMAC-compatible code path and reports the integrated WLAN bonding
+ * profile as 97FN/PKG2; those vendor software identifiers are retained where
+ * required and are not treated as the physical chip marking.
+ *
+ * The internal rtl865x switch uses OEM VID9 for LAN (P1..P4) and VID8 for WAN
+ * (P0/RGMII -> RTL8211F).  Linux exposes those domains as hardware-accelerated
+ * VLAN interfaces eth0.9/eth0.8 while firewall4/nf_conntrack remains the sole
+ * policy/NAT authority.
+ */
+
+#include "rtl8197f.dtsi"
+
+/ {
+	compatible = "iball,wrd12gn", "realtek,rtl8197fh", "realtek,rtl8197f-soc";
+	model = "iBall Baton WRD12GN";
+
+	aliases {
+		serial0 = &uart0;
+	};
+
+	chosen {
+		bootargs = "console=ttyS0,38400n8 lpj=4000000 rootfstype=squashfs,jffs2 clk_ignore_unused";
+		stdout-path = "serial0:38400n8";
+	};
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x00000000 0x04000000>;
+	};
+};
+
+&cpu_clk {
+	/* Serial boot reports 799.7 MHz. */
+	clock-frequency = <800000000>;
+};
+
+&uart0 {
+	current-speed = <38400>;
+	/delete-property/ interrupt-parent;
+	/delete-property/ interrupts;
+};
+
+&spi0 {
+	status = "disabled";
+};
+
+&spirom0 {
+	status = "okay";
+	reg = <0x10000000 0x00800000>, <0x00143000 0x1000>;
+	erase-size = <0x1000>;
+	realtek,read-shift = <0>;
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "boot";
+			reg = <0x000000 0x020000>;
+			read-only;
+		};
+
+		wrd_factory_partition: partition@20000 {
+			compatible = "nvmem-cells";
+			label = "factory";
+			reg = <0x020000 0x010000>;
+			read-only;
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			wrd_factory: factory@0 {
+				reg = <0x0000 0x10000>;
+			};
+
+			/* H601 board data contains explicit per-interface addresses.
+			 * Use direct cells: this image does not use last-octet increments.
+			 */
+			wrd_mac_lan: mac-address@8 {
+				reg = <0x0008 0x0006>;
+			};
+
+			wrd_mac_5g: mac-address@e {
+				reg = <0x000e 0x0006>;
+			};
+
+			wrd_mac_2g: mac-address@14 {
+				reg = <0x0014 0x0006>;
+			};
+
+			wrd_mac_wan: mac-address@1a {
+				reg = <0x001a 0x0006>;
+			};
+		};
+
+		firmware: partition@30000 {
+			label = "firmware";
+			reg = <0x030000 0x760000>;
+		};
+
+		partition@790000 {
+			label = "config";
+			reg = <0x790000 0x010000>;
+			read-only;
+		};
+
+		partition@7a0000 {
+			label = "database";
+			reg = <0x7a0000 0x060000>;
+			read-only;
+		};
+	};
+};
+
+&ethdiag0 {
+	status = "disabled";
+};
+
+&ethernet0 {
+	nvmem-cells = <&wrd_mac_lan>, <&wrd_mac_wan>;
+	nvmem-cell-names = "mac-address", "wan-mac-address";
+
+	/* OEM internal-switch topology:
+	 *   VID 9: LAN P1..P4 (OEM mask 0x11e; bit8 is vendor WLAN shortcut)
+	 *   VID 8: WAN P0/RGMII -> RTL8211F
+	 * The driver presents these as VLAN acceleration metadata.
+	 */
+	realtek,internal-vlan-split;
+	realtek,lan-vid = <9>;
+	realtek,wan-vid = <8>;
+	realtek,lan-port-mask = <0x1e>;
+	realtek,wan-port-mask = <0x01>;
+	realtek,tx-port-mask = <0x1e>;
+	realtek,tx-dp-ext = <0x0>;
+	realtek,tx-extspa = <0x0>;
+	phy-mode = "rgmii";
+	phy-handle = <&wrd8211f>;
+	realtek,descriptor-dwords = <6>;
+	realtek,rx-ring-size = <128>;
+	realtek,tx-ring-size = <128>;
+	realtek,new-descriptor-rx;
+	realtek,rx-poll-fallback;
+	realtek,rx-poll-ms = <10>;
+	realtek,sdk-cpuicr1-init;
+	realtek,sdk-swcore-init;
+	realtek,sdk-crc-lengths;
+	realtek,sdk-trxrdy;
+
+	/* Capability bits are deliberately NOT enabled as boot defaults.
+	 * Checksum/SG/TSO/QoS remain runtime-testable in the driver, but the first
+	 * iBall bring-up uses the same conservative non-coherent-DMA policy that
+	 * recovered MW5 stability. HW NAPT is separately gated and can only be
+	 * populated by nf_flow_table after firewall/conntrack has accepted a flow.
+	 */
+	realtek,hw-napt-flowtable-capable;
+
+	/* Device-tree properties must precede child nodes. */
+	status = "okay";
+
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		wrd8211f: ethernet-phy@6 {
+			reg = <6>;
+			compatible = "ethernet-phy-ieee802.3-c22";
+			/* Realtek GPL SDK CONFIG_RTL_8197F + RTL_8211F_SUPPORT:
+			 * PORT0_RGMII_PHYID=6, non-VG/97FN reset is GPIO F1.
+			 */
+			reset-gpios = <&gpio0 41 GPIO_ACTIVE_LOW>;
+			reset-assert-us = <500000>;
+			reset-deassert-us = <300000>;
+		};
+	};
+};
+
+&wlan {
+	interrupt-parent = <&intc>;
+	interrupts = <29 5>;
+	compatible = "realtek,rtl8197f-wlan", "realtek,rtl8197f-wmac";
+	realtek,radio-index = <1>;
+	realtek,rfe-type = <0>;
+	realtek,mac-address-increment = <0>;
+	nvmem-cells = <&wrd_factory &wrd_mac_2g &wrd_factory>;
+	nvmem-cell-names = "factory", "mac-address", "calibration";
+	status = "okay";
+};
+
+&pcie0 {
+	interrupt-parent = <&intc>;
+	interrupts = <21 4>;
+	ranges = <0x01000000 0 0x18c00000 0x00c00000 0 0x00200000>,
+		 <0x02000000 0 0x19000000 0x01000000 0 0x01000000>;
+	status = "okay";
+
+	wifi@0,0 {
+		compatible = "pci10ec,b822";
+		reg = <0x00000000 0 0 0 0>;
+		realtek,radio-index = <0>;
+		realtek,rfe-type = <0>;
+		realtek,mac-address-increment = <0>;
+		nvmem-cells = <&wrd_factory &wrd_mac_5g &wrd_factory>;
+		nvmem-cell-names = "factory", "mac-address", "calibration";
+	};
+};

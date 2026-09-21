@@ -1,0 +1,177 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenWrt RTL8197F bringup <noreply@example.invalid>
+Date: Mon, 7 Sep 2026 18:00:00 +0000
+Subject: [PATCH] serial: 8250_dw: complete RTL8197F UART IRQ/FIFO quirk
+
+RTL8197F/RTL8197FS uses byte RBR/THR aliases at +0x24 while DLL remains at
+standard offset zero with DLAB set.  The vendor BSP also fixes UART0 as a
+16550A with a 16-byte FIFO, skips destructive type probing and services it
+through the DesignWare busy-detect interrupt path.
+
+Keep the alias handling, add a dedicated RTL8197F platform quirk, and retain
+the normal DW APB IRQ handler.  Board DT supplies ICTL input 9 on MW5, so RX
+is interrupt driven rather than polling; this prevents long TTL paste bursts
+from overflowing the 16-byte hardware FIFO.
+
+Signed-off-by: OpenWrt RTL8197F bringup <noreply@example.invalid>
+---
+--- a/drivers/tty/serial/8250/8250_dw.c
++++ b/drivers/tty/serial/8250/8250_dw.c
+@@ -56,6 +56,7 @@
+ #define DW_UART_QUIRK_IS_DMA_FC		BIT(3)
+ #define DW_UART_QUIRK_APMC0D08		BIT(4)
+ #define DW_UART_QUIRK_CPR_VALUE		BIT(5)
++#define DW_UART_QUIRK_RTL8197F		BIT(6)
+ 
+ struct dw8250_platform_data {
+ 	u8 usr_reg;
+@@ -75,6 +76,8 @@
+ 	struct work_struct	clk_work;
+ 	struct reset_control	*rst;
+ 
++	u32			rx_alias_offset;
++	u32			tx_alias_offset;
+ 	unsigned int		skip_autocfg:1;
+ 	unsigned int		uart_16550_compatible:1;
+ };
+@@ -187,8 +190,18 @@
+ static void dw8250_serial_out(struct uart_port *p, int offset, int value)
+ {
+ 	struct dw8250_data *d = to_dw8250_data(p->private_data);
++	void __iomem *addr = p->membase + (offset << p->regshift);
+ 
+-	writeb(value, p->membase + (offset << p->regshift));
++	/*
++	 * RTL8197FS exposes the transmit holding register through a byte-only
++	 * alias at +0x24.  Offset zero must remain the normal DLL register while
++	 * DLAB is set, otherwise baud-rate programming would be redirected too.
++	 */
++	if (offset == UART_TX && d->tx_alias_offset &&
++	    !(readb(p->membase + (UART_LCR << p->regshift)) & UART_LCR_DLAB))
++		addr = p->membase + d->tx_alias_offset;
++
++	writeb(value, addr);
+ 
+ 	if (offset == UART_LCR && !d->uart_16550_compatible)
+ 		dw8250_check_lcr(p, value);
+@@ -205,7 +218,19 @@
+ 
+ static unsigned int dw8250_serial_in(struct uart_port *p, int offset)
+ {
+-	unsigned int value = readb(p->membase + (offset << p->regshift));
++	struct dw8250_data *d = to_dw8250_data(p->private_data);
++	void __iomem *addr = p->membase + (offset << p->regshift);
++	unsigned int value;
++
++	/*
++	 * RTL8197FS maps the normal receive buffer through the same byte-only
++	 * vendor alias as THR.  Keep offset zero for DLL while DLAB is set.
++	 */
++	if (offset == UART_RX && d->rx_alias_offset &&
++	    !(readb(p->membase + (UART_LCR << p->regshift)) & UART_LCR_DLAB))
++		addr = p->membase + d->rx_alias_offset;
++
++	value = readb(addr);
+ 
+ 	return dw8250_modify_msr(p, offset, value);
+ }
+@@ -504,6 +529,15 @@
+ 		p->serial_in = dw8250_serial_in32;
+ 		data->uart_16550_compatible = true;
+ 	}
++	if (quirks & DW_UART_QUIRK_RTL8197F) {
++		/* RTL8197F BSP registers UART0 as a fixed 16550A with a 16-byte
++		 * FIFO and UPF_SKIP_TEST. Avoid destructive FIFO/type probing and
++		 * retain the DesignWare busy-detect IRQ handler from this driver. */
++		p->type = PORT_16550A;
++		p->fifosize = 16;
++		p->flags |= UPF_SKIP_TEST | UPF_FIXED_TYPE;
++		data->skip_autocfg = true;
++	}
+ 
+ 	/* Platforms with iDMA 64-bit */
+ 	if (platform_get_resource_byname(to_platform_device(p->dev),
+@@ -560,6 +594,17 @@
+ 	p->mapbase = regs->start;
+ 	p->mapsize = resource_size(regs);
+ 
++	device_property_read_u32(dev, "realtek,rx-alias-offset",
++				 &data->rx_alias_offset);
++	device_property_read_u32(dev, "realtek,tx-alias-offset",
++				 &data->tx_alias_offset);
++	if (data->rx_alias_offset >= p->mapsize)
++		return dev_err_probe(dev, -EINVAL,
++				     "RX alias offset outside register window\n");
++	if (data->tx_alias_offset >= p->mapsize)
++		return dev_err_probe(dev, -EINVAL,
++				     "TX alias offset outside register window\n");
++
+ 	p->membase = devm_ioremap(dev, p->mapbase, p->mapsize);
+ 	if (!p->membase)
+ 		return -ENOMEM;
+@@ -571,6 +616,11 @@
+ 	if (err)
+ 		return err;
+ 
++	if ((data->rx_alias_offset || data->tx_alias_offset) &&
++	    p->iotype != UPIO_MEM)
++		return dev_err_probe(dev, -EINVAL,
++				     "RX/TX aliases require byte register I/O\n");
++
+ 	switch (p->iotype) {
+ 	case UPIO_MEM:
+ 		p->serial_in = dw8250_serial_in;
+@@ -765,6 +815,11 @@
+ 	RUNTIME_PM_OPS(dw8250_runtime_suspend, dw8250_runtime_resume, NULL)
+ };
+ 
++static const struct dw8250_platform_data dw8250_rtl8197f_data = {
++	.usr_reg = DW_UART_USR,
++	.quirks = DW_UART_QUIRK_RTL8197F,
++};
++
+ static const struct dw8250_platform_data dw8250_dw_apb = {
+ 	.usr_reg = DW_UART_USR,
+ };
+@@ -791,6 +846,7 @@
+ };
+ 
+ static const struct of_device_id dw8250_of_match[] = {
++	{ .compatible = "realtek,rtl8197f-uart", .data = &dw8250_rtl8197f_data },
+ 	{ .compatible = "snps,dw-apb-uart", .data = &dw8250_dw_apb },
+ 	{ .compatible = "cavium,octeon-3860-uart", .data = &dw8250_octeon_3860_data },
+ 	{ .compatible = "marvell,armada-38x-uart", .data = &dw8250_armada_38x_data },
+--- a/Documentation/devicetree/bindings/serial/snps-dw-apb-uart.yaml
++++ b/Documentation/devicetree/bindings/serial/snps-dw-apb-uart.yaml
+@@ -48,6 +48,10 @@
+               - starfive,jh7100-hsuart
+               - starfive,jh7100-uart
+           - const: snps,dw-apb-uart
++      - items:
++          - const: realtek,rtl8197f-uart
++          - const: snps,dw-apb-uart
++          - const: ns16550a
+       - const: snps,dw-apb-uart
+ 
+   reg:
+@@ -87,6 +91,20 @@
+ 
+   reg-io-width: true
+ 
++  realtek,rx-alias-offset:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description:
++      Byte offset from the UART register base of an alternate receive buffer
++      register. The alias is used only for UART_RX while DLAB is clear, so DLL
++      programming continues to use the standard offset zero register.
++
++  realtek,tx-alias-offset:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description:
++      Byte offset from the UART register base of an alternate transmit holding
++      register. The alias is used only for UART_TX while DLAB is clear, so DLL
++      programming continues to use the standard offset zero register.
++
+   dcd-override:
+     description: Override the DCD modem status signal. This signal will
+       always be reported as active instead of being obtained from the modem
