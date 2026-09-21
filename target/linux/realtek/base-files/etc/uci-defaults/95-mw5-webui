@@ -1,0 +1,46 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# v44.61: isolated routed Internet by default + stable management services.
+case "$(board_name 2>/dev/null) $(cat /tmp/sysinfo/board_name 2>/dev/null) $(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)" in
+	*tenda,nova-mw5*|*nova-mw5*) ;;
+	*) exit 0 ;;
+esac
+mkdir -p /tmp/mw5-webui
+uci -q set mw5webui.system='system'
+uci -q set mw5webui.system.version='v44.65.25-tx-own-lifetime-fix'
+uci -q set mw5webui.system.port_mode='safe'
+uci -q set mw5webui.system.effective_port_mode='safe'
+uci -q set mw5webui.system.autowan_detector='carrier-first-nondestructive'
+uci -q set mw5webui.system.allow_swap_probe='0'
+uci -q set mw5webui.system.wan_netmask='255.255.255.0'
+
+if [ -x /usr/sbin/mw5-wifi ]; then /usr/sbin/mw5-wifi init-defaults >/dev/null 2>&1 || true; fi
+
+if [ -x /etc/init.d/dropbear ]; then
+	uci -q get dropbear.@dropbear[0] >/dev/null || uci -q add dropbear dropbear >/dev/null
+	uci -q set dropbear.@dropbear[0].Port='22'
+	uci -q set dropbear.@dropbear[0].PasswordAuth='on'
+	uci -q set dropbear.@dropbear[0].RootPasswordAuth='on'
+	uci -q set dropbear.@dropbear[0].RootLogin='on'
+	uci -q set dropbear.@dropbear[0].DirectInterface='lan'
+	uci -q set dropbear.@dropbear[0].SSHKeepAlive='30'
+	uci -q set dropbear.@dropbear[0].IdleTimeout='0'
+	uci -q delete dropbear.@dropbear[0].Interface
+	uci -q commit dropbear 2>/dev/null || true
+fi
+uci -q commit mw5webui 2>/dev/null || true
+if [ -x /etc/init.d/uhttpd ]; then
+	uci -q get uhttpd.main >/dev/null || uci -q set uhttpd.main='uhttpd'
+	uci -q delete uhttpd.main.listen_http
+	uci -q add_list uhttpd.main.listen_http='0.0.0.0:80'
+	uci -q set uhttpd.main.home='/www'
+	uci -q set uhttpd.main.cgi_prefix='/cgi-bin'
+	uci -q set uhttpd.main.rfc1918_filter='0'
+	uci -q commit uhttpd 2>/dev/null || true
+	/etc/init.d/uhttpd enable >/dev/null 2>&1 || true
+fi
+[ -x /etc/init.d/mw5-webui ] && /etc/init.d/mw5-webui enable >/dev/null 2>&1 || true
+[ -x /etc/init.d/mw5-auto-wan ] && /etc/init.d/mw5-auto-wan enable >/dev/null 2>&1 || true
+[ -x /etc/init.d/mw5-uart ] && /etc/init.d/mw5-uart enable >/dev/null 2>&1 || true
+[ -x /etc/init.d/mw5-uart ] && /etc/init.d/mw5-uart start >/dev/null 2>&1 || true
+exit 0

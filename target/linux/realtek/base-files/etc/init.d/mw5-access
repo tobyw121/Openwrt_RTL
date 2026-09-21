@@ -1,0 +1,96 @@
+#!/bin/sh /etc/rc.common
+# SPDX-License-Identifier: GPL-2.0-or-later
+START=99
+STOP=10
+
+is_mw5() {
+	case "$(board_name 2>/dev/null) $(cat /tmp/sysinfo/board_name 2>/dev/null) $(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)" in
+		*tenda,nova-mw5*|*nova-mw5*) return 0 ;;
+	esac
+	return 1
+}
+
+configure_dropbear() {
+	local key=/tmp/dropbear/dropbear_ed25519_host_key
+	local log=/tmp/mw5-webui/access.log
+
+	[ -x /etc/init.d/dropbear ] || {
+		echo "dropbear init missing" >>"$log"
+		return 0
+	}
+	[ -x /usr/bin/dropbearkey ] || {
+		echo "dropbearkey missing" >>"$log"
+		return 0
+	}
+
+	# MW5 boots from an immutable squashfs without a usable rootfs_data
+	# overlay.  Stock dropbear tries to create /etc/dropbear host keys and
+	# therefore cannot rely on persistent key storage.  Generate a fresh
+	# per-boot key in tmpfs instead; never ship a fixed private key.
+	mkdir -p /tmp/dropbear
+	chmod 0700 /tmp/dropbear
+	if [ ! -s "$key" ]; then
+		rm -f "$key"
+		/usr/bin/dropbearkey -t ed25519 -f "$key" >>"$log" 2>&1 || {
+			echo "volatile host-key generation failed" >>"$log"
+			return 0
+		}
+		chmod 0600 "$key"
+	fi
+
+	uci -q get dropbear.@dropbear[0] >/dev/null || uci -q add dropbear dropbear >/dev/null
+	uci -q set dropbear.@dropbear[0].enable='1'
+	uci -q set dropbear.@dropbear[0].Port='22'
+	uci -q set dropbear.@dropbear[0].PasswordAuth='on'
+	uci -q set dropbear.@dropbear[0].RootPasswordAuth='on'
+	uci -q set dropbear.@dropbear[0].RootLogin='on'
+	# Bind to the logical LAN network.  dropbear resolves this to br-lan,
+	# so Auto-WAN swap never exposes SSH on the upstream/WAN side.
+	uci -q set dropbear.@dropbear[0].DirectInterface='lan'
+	uci -q set dropbear.@dropbear[0].SSHKeepAlive='30'
+	uci -q set dropbear.@dropbear[0].IdleTimeout='0'
+	uci -q delete dropbear.@dropbear[0].Interface
+	uci -q delete dropbear.@dropbear[0].keyfile
+	uci -q add_list dropbear.@dropbear[0].keyfile="$key"
+	# Do not commit here: MW5 boots from immutable squashfs.  The libuci
+	# delta in /tmp is intentionally the live configuration consumed by
+	# the stock procd/dropbear init script.  S97mw5-access is baked into
+	# the MW5-only squashfs package, so no runtime 'enable' write is needed.
+
+	/etc/init.d/dropbear restart >>"$log" 2>&1 || \
+		/etc/init.d/dropbear start >>"$log" 2>&1 || true
+	sleep 1
+	if pidof dropbear >/dev/null 2>&1; then
+		echo "dropbear running pid=$(pidof dropbear) key=$key bind=lan port=22" >>"$log"
+	else
+		echo "dropbear not running after start" >>"$log"
+	fi
+}
+
+configure_uhttpd() {
+	[ -x /etc/init.d/uhttpd ] || return 0
+	uci -q get uhttpd.main >/dev/null || uci -q set uhttpd.main='uhttpd'
+	uci -q delete uhttpd.main.listen_http
+	uci -q add_list uhttpd.main.listen_http='0.0.0.0:80'
+	uci -q set uhttpd.main.home='/www'
+	uci -q set uhttpd.main.cgi_prefix='/cgi-bin'
+	uci -q set uhttpd.main.rfc1918_filter='0'
+	uci -q commit uhttpd 2>/dev/null || true
+	chmod 755 /www/cgi-bin/mw5.cgi 2>/dev/null || true
+	/etc/init.d/uhttpd enable >/dev/null 2>&1 || true
+	/etc/init.d/uhttpd start >/dev/null 2>&1 || true
+}
+
+boot() {
+	is_mw5 || return 0
+	mkdir -p /tmp/mw5-webui
+	# v44.66.10: DSA uses the rtl8365mb native rtl8_4 protocol. Do not write
+	# the legacy tag_rtl4_9 module parameter: that tagger is diagnostic-only and
+	# is not attached to the production DSA tree. P0/RGMII remains the conduit.
+	configure_dropbear
+	configure_uhttpd
+}
+
+start() {
+	boot
+}

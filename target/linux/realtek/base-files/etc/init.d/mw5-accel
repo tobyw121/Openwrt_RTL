@@ -1,0 +1,13 @@
+#!/bin/sh /etc/rc.common
+# SPDX-License-Identifier: GPL-2.0-or-later
+START=94
+STOP=15
+
+start() {
+	[ -x /usr/sbin/mw5-accel ] || return 0
+	/usr/sbin/mw5-accel boot >/dev/null 2>&1 || logger -t mw5-accel 'boot apply failed'
+}
+
+reload() {
+	start
+}

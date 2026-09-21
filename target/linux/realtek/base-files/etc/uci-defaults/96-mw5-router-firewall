@@ -1,0 +1,17 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# MW5 v44.65.21: nftables/conntrack remain policy authority. Linux software
+# flow offload is enabled; netdev/TC hardware flow delivery stays off until
+# FLOW_CLS_REPLACE has been proven on hardware.
+case "$(board_name 2>/dev/null) $(cat /tmp/sysinfo/board_name 2>/dev/null) $(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)" in
+	*tenda,nova-mw5*|*nova-mw5*) ;;
+	*) exit 0 ;;
+esac
+[ -x /usr/sbin/mw5-portmode ] || exit 0
+/usr/sbin/mw5-portmode repair-firewall >/dev/null 2>&1 || true
+# v44.65.21: software nft flowtable only. Legacy WFO/HWNAT/HWLOOKUP are off.
+uci -q set firewall.@defaults[0].flow_offloading='1'
+uci -q set firewall.@defaults[0].flow_offloading_hw='0'
+uci -q commit firewall
+/etc/init.d/firewall reload >/dev/null 2>&1 || true
+exit 0

@@ -1,0 +1,6 @@
+#!/bin/sh /etc/rc.common
+# SPDX-License-Identifier: GPL-2.0-or-later
+# v43.35 ultraslim: boot diagnostics disabled to avoid kernel/userland trace spam.
+START=99
+STOP=10
+start() { return 0; }

@@ -1,0 +1,357 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Tenda Nova MW5 UART-friendly before/after speed-test diagnostics.
+# v44.65.14: one short command before and after a load test; all verbose output
+# is redirected to /tmp so a serial console never needs a large paste.
+set -u
+
+BASE=/tmp/mw5-speedtest
+BEFORE=${BASE}-before.txt
+AFTER=${BASE}-after.txt
+DMESG_BEFORE=${BASE}-dmesg-before.txt
+STATE=${BASE}-state.txt
+SUMMARY=${BASE}-summary.txt
+REPORT_GZ=${BASE}-report.tar.gz
+REPORT_TAR=${BASE}-report.tar
+
+usage() {
+	cat <<'USAGE'
+Usage: mw5-speedtest before|after|status|clean
+
+  before  collect the baseline immediately before OpenSpeedTest/iperf
+  after   collect the post-test state and create /tmp/mw5-speedtest-report.tar.gz
+  status  print only the short current health summary
+  clean   remove previous speed-test diagnostic files
+USAGE
+}
+
+now() {
+	date '+%Y-%m-%d %H:%M:%S %z' 2>/dev/null || date
+}
+
+section() {
+	printf '\n===== %s =====\n' "$1" >> "$OUT"
+}
+
+cmd() {
+	printf '\n$ %s\n' "$*" >> "$OUT"
+	"$@" >> "$OUT" 2>&1 || true
+}
+
+shell_cmd() {
+	printf '\n$ %s\n' "$1" >> "$OUT"
+	sh -c "$1" >> "$OUT" 2>&1 || true
+}
+
+read_file() {
+	f="$1"
+	[ -r "$f" ] || return 0
+	printf '\n--- %s ---\n' "$f" >> "$OUT"
+	cat "$f" >> "$OUT" 2>&1 || true
+}
+
+sys_param_dump() {
+	p=/sys/module/rtl8197f_rtknet/parameters
+	[ -d "$p" ] || return 0
+	for n in mw5_rx_coherent_bounce mw5_rx_page_pool mw5_hw_csum mw5_hw_rx_csum mw5_hw_sg mw5_sg_max_frags \
+		mw5_hw_tso mw5_hw_qos mw5_hwlookup_enable mw5_hw_napt_enable \
+		mw5_extport_wlan_enable mw5_drop_invalid_untagged; do
+		[ -r "$p/$n" ] && printf '%s=%s\n' "$n" "$(cat "$p/$n" 2>/dev/null)" >> "$OUT"
+	done
+}
+
+collect_wlan() {
+	section 'WLAN'
+	if command -v iw >/dev/null 2>&1; then
+		cmd iw dev
+		for d in wlan0 wlan1; do
+			[ -e "/sys/class/net/$d" ] || continue
+			cmd iw dev "$d" info
+			cmd iw dev "$d" station dump
+		done
+	else
+		echo 'iw unavailable' >> "$OUT"
+	fi
+	for d in wlan0 wlan1; do
+		[ -e "/sys/class/net/$d" ] || continue
+		printf '%s operstate=%s carrier=%s mtu=%s\n' "$d" \
+			"$(cat /sys/class/net/$d/operstate 2>/dev/null || echo '?')" \
+			"$(cat /sys/class/net/$d/carrier 2>/dev/null || echo '?')" \
+			"$(cat /sys/class/net/$d/mtu 2>/dev/null || echo '?')" >> "$OUT"
+	done
+}
+
+collect_common() {
+	label="$1"
+	OUT="$2"
+	: > "$OUT"
+
+	section "MW5 SPEEDTEST $label"
+	echo "tool=mw5-speedtest-v44.65.14" >> "$OUT"
+	echo "timestamp=$(now)" >> "$OUT"
+	echo "uptime=$(cat /proc/uptime 2>/dev/null || true)" >> "$OUT"
+	echo "board=$(cat /tmp/sysinfo/board_name 2>/dev/null || true)" >> "$OUT"
+	echo "model=$(cat /tmp/sysinfo/model 2>/dev/null || true)" >> "$OUT"
+	cmd uname -a
+	read_file /etc/openwrt_release
+
+	section 'HWACCEL / ETHERNET DRIVER'
+	if command -v mw5-accel >/dev/null 2>&1; then
+		cmd mw5-accel verify
+	fi
+	sys_param_dump
+	read_file /proc/rd05-rtknet
+	read_file /proc/mw5-rtl8367
+
+	section 'LINK / ADDRESS / ROUTE / NEIGHBOUR'
+	cmd ip link show
+	cmd ip addr show
+	cmd ip route show
+	cmd ip neigh show
+	if command -v bridge >/dev/null 2>&1; then
+		cmd bridge link show
+		cmd bridge fdb show
+		cmd bridge vlan show
+	fi
+
+	section 'NETIFD / UBUS'
+	if command -v ubus >/dev/null 2>&1; then
+		cmd ubus call network.interface dump
+		cmd ubus call network.interface.lan status
+		cmd ubus call network.interface.wan status
+		cmd ubus call network.device status
+	fi
+
+	section 'DHCP / DNS / FIREWALL CONFIG'
+	if command -v uci >/dev/null 2>&1; then
+		shell_cmd 'uci -q show network'
+		shell_cmd 'uci -q show dhcp'
+		shell_cmd 'uci -q show firewall'
+	fi
+	read_file /tmp/dhcp.leases
+	read_file /tmp/resolv.conf.d/resolv.conf.auto
+	if command -v nft >/dev/null 2>&1; then
+		cmd nft list ruleset
+	fi
+	if [ -r /proc/net/nf_conntrack ]; then
+		read_file /proc/net/nf_conntrack
+	fi
+	read_file /proc/sys/net/netfilter/nf_conntrack_count
+	read_file /proc/sys/net/netfilter/nf_conntrack_max
+
+	section 'SOCKETS / PROCESSES'
+	if command -v ss >/dev/null 2>&1; then
+		cmd ss -s
+		cmd ss -lntu
+	elif command -v netstat >/dev/null 2>&1; then
+		cmd netstat -lnut
+	fi
+	shell_cmd 'ps w | grep -E "(netifd|dnsmasq|odhcpd|hostapd|wpa_supplicant|udhcpc)" | grep -v grep'
+
+	section 'NETWORK COUNTERS'
+	read_file /proc/net/dev
+	read_file /proc/net/softnet_stat
+	read_file /proc/net/snmp
+	read_file /proc/net/netstat
+	read_file /proc/interrupts
+	read_file /proc/softirqs
+	read_file /proc/loadavg
+	read_file /proc/meminfo
+
+	section 'QDISC / FEATURES'
+	if command -v tc >/dev/null 2>&1; then
+		cmd tc -s qdisc show
+	fi
+	if command -v ethtool >/dev/null 2>&1; then
+		for d in eth0 lan wan wlan0 wlan1; do
+			[ -e "/sys/class/net/$d" ] || continue
+			cmd ethtool -k "$d"
+			cmd ethtool -S "$d"
+		done
+	fi
+
+	collect_wlan
+
+	section 'KERNEL LOG TAIL'
+	shell_cmd 'dmesg | tail -n 600'
+	if command -v logread >/dev/null 2>&1; then
+		shell_cmd 'logread | tail -n 400'
+	fi
+}
+
+link_state() {
+	d="$1"
+	if [ ! -e "/sys/class/net/$d" ]; then
+		printf '%s=missing' "$d"
+		return
+	fi
+	printf '%s=%s/%s' "$d" \
+		"$(cat /sys/class/net/$d/operstate 2>/dev/null || echo '?')" \
+		"$(cat /sys/class/net/$d/carrier 2>/dev/null || echo '?')"
+}
+
+ping_ok() {
+	host="$1"
+	if command -v ping >/dev/null 2>&1 && ping -c 1 -W 1 "$host" >/dev/null 2>&1; then
+		echo PASS
+	else
+		echo FAIL
+	fi
+}
+
+dns_lan_client_state() {
+	lan_ip="$1"
+	[ -n "$lan_ip" ] && [ -r /proc/net/nf_conntrack ] || { echo UNAVAILABLE; return; }
+	lan_prefix="${lan_ip%.*}."
+	awk -v lip="$lan_ip" -v pfx="$lan_prefix" '
+	 {
+	  srcn=0; pktn=0; client=""; dstok=0; dportok=0; replysrc=0; replypkts=0;
+	  for (i=1; i<=NF; i++) {
+	   if ($i ~ /^src=/) { v=$i; sub(/^src=/, "", v); srcn++; if (srcn==1) client=v; else if (srcn==2 && v==lip) replysrc=1; }
+	   if (srcn==1 && $i == "dst=" lip) dstok=1;
+	   if (srcn==1 && $i == "dport=53") dportok=1;
+	   if ($i ~ /^packets=/) { v=$i; sub(/^packets=/, "", v); pktn++; if (pktn==2) replypkts=v+0; }
+	  }
+	  if (index(client,pfx)==1 && client!=lip && dstok && dportok && replysrc && replypkts>0) found=1;
+	 }
+	 END { if (found) print "PASS"; else print "IDLE"; }
+	' /proc/net/nf_conntrack 2>/dev/null
+}
+
+health_summary() {
+	wan_ip="$(ip -4 addr show dev wan 2>/dev/null | awk '/inet / {print $2; exit}')"
+	gw="$(ip route show default 2>/dev/null | awk '/^default / {print $3; exit}')"
+	lan_peer="$(ip neigh show dev br-lan 2>/dev/null | awk '$NF ~ /REACHABLE|STALE|DELAY|PROBE/ {print $1; exit}')"
+	{
+		echo "timestamp=$(now)"
+		echo "$(link_state eth0) $(link_state lan) $(link_state wan) $(link_state br-lan) $(link_state wlan0) $(link_state wlan1)"
+		echo "wan_ip=${wan_ip:-NONE} default_gw=${gw:-NONE} lan_peer=${lan_peer:-NONE}"
+		if [ -n "${gw:-}" ]; then
+			echo "gateway_ping=$(ping_ok "$gw")"
+		else
+			echo 'gateway_ping=NO-GATEWAY'
+		fi
+		echo "internet_ping=$(ping_ok 1.1.1.1)"
+		lan_ip="$(ip -4 addr show dev br-lan 2>/dev/null | awk '/inet / {sub(/\/.*/, "", $2); print $2; exit}')"
+		up_dns="$(awk '/^nameserver[ \t]+/ {print $2; exit}' /tmp/resolv.conf.d/resolv.conf.auto 2>/dev/null)"
+		echo "ip_forward=$(cat /proc/sys/net/ipv4/ip_forward 2>/dev/null || echo '?') upstream_dns=${up_dns:-NONE}"
+		if ip -4 addr show dev lo 2>/dev/null | grep -q '127\.0\.0\.1/8'; then echo 'loopback=PASS'; else echo 'loopback=FAIL'; fi
+		for d in lan wlan0 wlan1; do
+			master=NONE
+			[ -L "/sys/class/net/$d/master" ] && master="$(basename "$(readlink "/sys/class/net/$d/master" 2>/dev/null)")"
+			echo "${d}_master=$master"
+		done
+		if command -v netstat >/dev/null 2>&1 && [ -n "$lan_ip" ]; then
+			if netstat -lnut 2>/dev/null | grep -Fq "$lan_ip:53"; then echo 'dnsmasq_lan_socket=PASS'; else echo 'dnsmasq_lan_socket=FAIL'; fi
+		else
+			echo 'dnsmasq_lan_socket=UNAVAILABLE'
+		fi
+		if command -v netstat >/dev/null 2>&1; then
+			if netstat -lnut 2>/dev/null | grep -Fq '127.0.0.1:53'; then echo 'dnsmasq_loopback_socket=PASS'; else echo 'dnsmasq_loopback_socket=FAIL'; fi
+		else
+			echo 'dnsmasq_loopback_socket=UNAVAILABLE'
+		fi
+		if [ -n "$lan_ip" ]; then
+			echo "dns_lan_client_query=$(dns_lan_client_state "$lan_ip")"
+		else
+			echo 'dns_lan_client_query=UNAVAILABLE'
+		fi
+		if command -v nslookup >/dev/null 2>&1 && [ -n "$up_dns" ]; then
+			if nslookup openwrt.org "$up_dns" >/dev/null 2>&1; then echo 'dns_upstream=PASS'; else echo 'dns_upstream=FAIL'; fi
+		else
+			echo 'dns_upstream=UNAVAILABLE'
+		fi
+		ct="$(cat /proc/sys/net/netfilter/nf_conntrack_count 2>/dev/null || echo '?')"
+		ctmax="$(cat /proc/sys/net/netfilter/nf_conntrack_max 2>/dev/null || echo '?')"
+		echo "conntrack=${ct}/${ctmax}"
+		if command -v nft >/dev/null 2>&1; then
+			nft list chain inet fw4 forward_lan 2>/dev/null | grep -q 'accept_to_wan' && echo 'lan_to_wan_rule=PASS' || echo 'lan_to_wan_rule=FAIL'
+			nft list chain inet fw4 srcnat_wan 2>/dev/null | grep -q 'masquerade' && echo 'wan_masquerade=PASS' || echo 'wan_masquerade=FAIL'
+		fi
+		if [ -r /proc/rd05-rtknet ]; then
+			grep -E '^(driver=|hwaccel |hwaccel_cap |hwaccel_rx |hwaccel_tx |wfo |napt |mw5_rx_dsa |mw5_rx_invalid_spa |mw5_rx_invalid_proto |mw5_rx_unclassified_detail |tx_internal |rx_internal |napi_detail |rx_poll |rings )' /proc/rd05-rtknet 2>/dev/null || true
+		fi
+		if [ -r /proc/mw5-rtl8367 ]; then
+			grep -E '^(cpu_port=|cpu_tag_policy=|isolation_port)' /proc/mw5-rtl8367 2>/dev/null || true
+		fi
+	} > "$SUMMARY"
+}
+
+make_report() {
+	rm -f "$REPORT_GZ" "$REPORT_TAR"
+	files=''
+	for f in "$BEFORE" "$AFTER" "$DMESG_BEFORE" "$STATE" "$SUMMARY" "${BASE}-dmesg-delta.txt"; do
+		[ -f "$f" ] && files="$files $(basename "$f")"
+	done
+	[ -n "$files" ] || return 1
+	if tar -czf "$REPORT_GZ" -C /tmp $files >/dev/null 2>&1; then
+		echo "$REPORT_GZ"
+		return 0
+	fi
+	if tar -cf "$REPORT_TAR" -C /tmp $files >/dev/null 2>&1; then
+		echo "$REPORT_TAR"
+		return 0
+	fi
+	return 1
+}
+
+case "${1:-}" in
+	before)
+		rm -f "$BEFORE" "$AFTER" "$DMESG_BEFORE" "$STATE" "$SUMMARY" \
+			"${BASE}-dmesg-delta.txt" "$REPORT_GZ" "$REPORT_TAR"
+		dmesg > "$DMESG_BEFORE" 2>/dev/null || : > "$DMESG_BEFORE"
+		{
+			echo "epoch=$(date +%s 2>/dev/null || echo 0)"
+			echo "dmesg_lines=$(wc -l < "$DMESG_BEFORE" 2>/dev/null || echo 0)"
+		} > "$STATE"
+		collect_common BEFORE "$BEFORE"
+		health_summary
+		echo 'MW5 speedtest BEFORE collected.'
+		echo "file=$BEFORE"
+		echo 'Run the speed test now, then: mw5-speedtest after'
+		;;
+	after)
+		collect_common AFTER "$AFTER"
+		cur=/tmp/mw5-speedtest-dmesg-current.$$
+		dmesg > "$cur" 2>/dev/null || : > "$cur"
+		base_lines=0
+		[ -r "$STATE" ] && base_lines="$(sed -n 's/^dmesg_lines=//p' "$STATE" | head -1)"
+		case "$base_lines" in ''|*[!0-9]*) base_lines=0 ;; esac
+		cur_lines="$(wc -l < "$cur" 2>/dev/null || echo 0)"
+		case "$cur_lines" in ''|*[!0-9]*) cur_lines=0 ;; esac
+		if [ "$base_lines" -gt 0 ] && [ "$cur_lines" -ge "$base_lines" ]; then
+			sed -n "$((base_lines + 1)),\$p" "$cur" > "${BASE}-dmesg-delta.txt" 2>/dev/null || true
+		else
+			{
+				echo '# dmesg ring wrapped or no BEFORE baseline; full current tail follows'
+				tail -n 800 "$cur"
+			} > "${BASE}-dmesg-delta.txt"
+		fi
+		rm -f "$cur"
+		health_summary
+		report="$(make_report 2>/dev/null || true)"
+		echo 'MW5 speedtest AFTER collected.'
+		echo "file=$AFTER"
+		if [ -n "$report" ]; then
+			echo "report=$report"
+		else
+			echo 'report=FAILED'
+		fi
+		echo 'Short health:'
+		sed -n '1,16p' "$SUMMARY" 2>/dev/null || true
+		;;
+	status)
+		health_summary
+		cat "$SUMMARY"
+		;;
+	clean)
+		rm -f ${BASE}-before.txt ${BASE}-after.txt ${BASE}-dmesg-before.txt \
+			${BASE}-dmesg-delta.txt ${BASE}-dmesg-current.* ${BASE}-state.txt \
+			${BASE}-summary.txt ${BASE}-report.tar.gz ${BASE}-report.tar
+		echo 'MW5 speedtest diagnostics removed.'
+		;;
+	*)
+		usage
+		exit 2
+		;;
+esac

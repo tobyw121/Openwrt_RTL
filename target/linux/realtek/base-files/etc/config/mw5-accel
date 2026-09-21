@@ -1,0 +1,5 @@
+config accel 'core'
+	option enabled '1'
+	option software '1'
+	option hardware '1'
+	option legacy '0'

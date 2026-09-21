@@ -1,0 +1,41 @@
+#!/bin/sh /etc/rc.common
+# SPDX-License-Identifier: GPL-2.0-or-later
+START=96
+STOP=10
+
+seed_dynamic_hostname() {
+	local h mac suffix
+	h="$(uci -q get system.@system[0].hostname 2>/dev/null || true)"
+	case "$h" in ''|OpenWrt|openwrt|MW5|mw5|*Nova*MW5*)
+		mac="$(cat /sys/class/net/eth0/address 2>/dev/null | tr -d ':' | tr '[:lower:]' '[:upper:]')"
+		suffix="${mac#????????}"
+		[ -n "$suffix" ] || suffix=ROUTER
+		h="Router-$suffix"
+		uci -q set system.@system[0].hostname="$h" 2>/dev/null || true
+		uci -q commit system 2>/dev/null || true
+		hostname "$h" 2>/dev/null || true
+	;; esac
+}
+
+boot() {
+	mkdir -p /tmp/mw5-webui
+	seed_dynamic_hostname
+	# v44.61 self-heal: upgrades from older rollback states may have a saved
+	# mode but missing WAN/firewall sections. Reapply only when the new backend
+	# detects an inconsistent topology.
+	if [ -x /usr/sbin/mw5-portmode ] && ! /usr/sbin/mw5-portmode show 2>/dev/null | grep -q '^config_consistent=1$'; then
+		/usr/sbin/mw5-portmode repair-current >/tmp/mw5-webui/boot-portmode-repair.log 2>&1 || true
+	fi
+	if [ -x /etc/init.d/uhttpd ]; then
+		/etc/init.d/uhttpd enable >/dev/null 2>&1 || true
+		/etc/init.d/uhttpd start >/dev/null 2>&1 || true
+	fi
+	# v44.65.21: Auto-WAN has its own deterministic S97 boot slot. Do not
+	# start it from S96 WebUI; doing so raced network reload/DHCP against the
+	# WiFi bridge setup on the overlay-less MW5.
+	[ -x /etc/init.d/mw5-auto-wan ] && /etc/init.d/mw5-auto-wan enable >/dev/null 2>&1 || true
+	# WiFi boot ownership remains in /etc/init.d/mw5-wifi (S98).
+	# Keep WebUI startup independent so duplicate AP initialization cannot occur.
+}
+
+start() { boot; }

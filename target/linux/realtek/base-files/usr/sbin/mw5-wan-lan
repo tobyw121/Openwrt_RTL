@@ -1,0 +1,289 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Tenda Nova MW5 automatic LAN/WAN/DHCP/DNS/ICMP diagnostic.
+set -u
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+VERSION='v44.66.10-rtl8367-rtl8_4-p0-transparent-network-test'
+STATE_DIR=/tmp/mw5-webui
+REPORT_DIR=$STATE_DIR/wan-lan-test
+LOG=$STATE_DIR/wan-lan-test.log
+SUMMARY=$STATE_DIR/wan-lan-test-summary.txt
+BUNDLE=/tmp/mw5-wan-lan-test-report.tar.gz
+PASS=0
+FAIL=0
+WARN=0
+SKIP=0
+
+out() { printf '%s\n' "$*" | tee -a "$LOG"; }
+section() { out ''; out "===== $* ====="; }
+pass() { PASS=$((PASS + 1)); out "PASS: $*"; }
+fail() { FAIL=$((FAIL + 1)); out "FAIL: $*"; }
+warn() { WARN=$((WARN + 1)); out "WARN: $*"; }
+skip() { SKIP=$((SKIP + 1)); out "SKIP: $*"; }
+have() { command -v "$1" >/dev/null 2>&1; }
+
+is_mw5() {
+	case "$(board_name 2>/dev/null) $(cat /tmp/sysinfo/board_name 2>/dev/null) $(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)" in
+		*tenda,nova-mw5*|*nova-mw5*) return 0 ;;
+	esac
+	return 1
+}
+
+capture_cmd() {
+	name="$1"; shift
+	out "+ $*"
+	"$@" >>"$LOG" 2>&1
+	rc=$?
+	out "[rc=$rc]"
+	return "$rc"
+}
+
+cat_if_exists() {
+	label="$1"; file="$2"
+	out "--- $label: $file"
+	if [ -r "$file" ]; then
+		cat "$file" >>"$LOG" 2>&1 || true
+	else
+		out '(missing)'
+	fi
+}
+
+link_up() {
+	dev="$1"
+	[ -e "/sys/class/net/$dev" ] || return 1
+	[ "$(cat "/sys/class/net/$dev/carrier" 2>/dev/null || echo 0)" = 1 ] && return 0
+	case "$(cat "/sys/class/net/$dev/operstate" 2>/dev/null || true)" in up|unknown) return 0 ;; esac
+	return 1
+}
+
+has_ipv4() { ip -4 addr show dev "$1" 2>/dev/null | grep -q ' inet '; }
+has_default_dev() { ip -4 route show default 2>/dev/null | grep -qw "dev $1"; }
+
+run_test() {
+	is_mw5 || { echo 'This command is only for Tenda Nova MW5.' >&2; return 2; }
+	mkdir -p "$STATE_DIR" "$REPORT_DIR"
+	rm -rf "$REPORT_DIR"/* "$LOG" "$SUMMARY" "$BUNDLE" 2>/dev/null || true
+	: >"$LOG"
+	out "MW5 WAN/LAN TEST $VERSION"
+	out "started=$(date 2>/dev/null || true)"
+	out 'This test is non-destructive. Auto-WAN remains enabled and is not forced to switch modes.'
+	out 'network_source=v44.66.10-rtl8367-rtl8_4-p0-transparent+v44.30-dhcp-autowan' 
+
+	section 'current port mode and v44.66.10 transparent P0/rtl8_4 invariant'
+	if [ -x /usr/sbin/mw5-portmode ]; then
+		/usr/sbin/mw5-portmode show | tee -a "$LOG" >"$REPORT_DIR/portmode.txt"
+	else
+		fail 'mw5-portmode missing'
+	fi
+	[ -r "$STATE_DIR/network-selfheal.state" ] && cat_if_exists 'network self-heal state' "$STATE_DIR/network-selfheal.state"
+	[ -r "$STATE_DIR/auto-wan.state" ] && cat_if_exists 'Auto-WAN state' "$STATE_DIR/auto-wan.state"
+
+	mode="$(/usr/sbin/mw5-portmode show 2>/dev/null | sed -n 's/^mode=//p' | head -n1)"
+	effective="$(/usr/sbin/mw5-portmode show 2>/dev/null | sed -n 's/^effective_mode=//p' | head -n1)"
+	[ -n "$mode" ] || mode=unknown
+	[ -n "$effective" ] || effective=unknown
+	cpu_decode="$(grep '^cpu_tag_decode ' /proc/mw5-rtl8367 2>/dev/null || true)"
+	case "$cpu_decode" in
+		*format8b=1*) pass 'v44.66.10 RTL8367 rtl8_4 eight-byte CPU-tag mode is active over transparent P0' ;;
+		*) fail "wrong RTL8367 CPU-tag mode: ${cpu_decode:-missing} (expected format8b=1)" ;;
+	esac
+	if grep -q '^mw5_dsa_host_vlan version=v44.66.10 p0_mode=transparent p0_router_mode=0 tx_dvid_lan=0 tx_dvid_wan=0 physical_dp=p0 ' /proc/rd05-rtknet 2>/dev/null; then
+		pass 'v44.66.10 RTL8197F P0 transparent/no-DVID host-link invariant active'
+	else
+		fail 'missing v44.66.10 transparent P0 + DVID0 host-link invariant'
+	fi
+	[ "$mode" = auto ] && pass 'Auto-WAN is the persistent requested mode' || warn "requested mode is $mode (expected auto unless manually changed)"
+
+	section 'UCI network / DHCP / firewall'
+	uci -q show network >"$REPORT_DIR/uci-network.txt" 2>&1 || true
+	uci -q show dhcp >"$REPORT_DIR/uci-dhcp.txt" 2>&1 || true
+	uci -q show firewall >"$REPORT_DIR/uci-firewall.txt" 2>&1 || true
+	uci -q changes network >"$REPORT_DIR/uci-network-changes.txt" 2>&1 || true
+	uci -q changes dhcp >"$REPORT_DIR/uci-dhcp-changes.txt" 2>&1 || true
+	uci -q changes mw5webui >"$REPORT_DIR/uci-mw5webui-changes.txt" 2>&1 || true
+	cat "$REPORT_DIR/uci-network.txt" >>"$LOG"
+	cat "$REPORT_DIR/uci-dhcp.txt" >>"$LOG"
+
+	if [ "$(uci -q get network.br_lan.type 2>/dev/null || true)" = bridge ] && [ "$(uci -q get network.lan.device 2>/dev/null || true)" = br-lan ]; then
+		pass 'br-lan and network.lan are configured'
+	else
+		fail 'br-lan/network.lan configuration is incomplete'
+	fi
+
+	for wif in wlan1 wlan0; do
+		[ -d "/sys/class/net/$wif" ] || continue
+		master="$(basename "$(readlink "/sys/class/net/$wif/master" 2>/dev/null)" 2>/dev/null || true)"
+		[ "$master" = br-lan ] && pass "$wif is bridged into br-lan for DHCP/DNS/Internet" || warn "$wif master=$master (expected br-lan while AP is active)"
+	done
+	ipf="$(cat /proc/sys/net/ipv4/ip_forward 2>/dev/null || echo 0)"
+	[ "$ipf" = 1 ] && pass 'IPv4 forwarding is enabled' || fail "IPv4 forwarding disabled ($ipf)"
+
+	case "$effective" in
+		router)
+			[ "$(uci -q get network.lan.proto 2>/dev/null || true)" = static ] && [ "$(uci -q get network.lan.ipaddr 2>/dev/null || true)" = 192.168.1.1 ] \
+				&& pass 'LAN is static 192.168.1.1/24' || fail 'LAN static IPv4 configuration mismatch'
+			[ "$(uci -q get network.wan.device 2>/dev/null || true)" = wan ] && [ "$(uci -q get network.wan.proto 2>/dev/null || true)" = dhcp ] \
+				&& pass 'Auto-WAN selected physical wan jack as WAN' || fail 'router-mode WAN mapping mismatch'
+			;;
+		swap)
+			[ "$(uci -q get network.wan.device 2>/dev/null || true)" = lan ] && [ "$(uci -q get network.wan.proto 2>/dev/null || true)" = dhcp ] \
+				&& pass 'Auto-WAN selected physical lan jack as WAN (swap)' || fail 'swap-mode WAN mapping mismatch'
+			;;
+		setup)
+			setup_ports="$(uci -q get network.br_lan.ports 2>/dev/null || true)"
+			case " $setup_ports " in *" lan "*) have_lan=1 ;; *) have_lan=0 ;; esac
+			case " $setup_ports " in *" wan "*) have_wan=1 ;; *) have_wan=0 ;; esac
+			[ "$have_lan" = 1 ] && [ "$have_wan" = 1 ] && \
+				pass 'Auto-WAN setup mode keeps both physical jacks in br-lan' || fail "setup mode bridge ports mismatch: $setup_ports"
+			;;
+		*) warn "effective mode is $effective" ;;
+	esac
+
+	if [ "$(uci -q get dhcp.lan.interface 2>/dev/null || true)" = lan ] && [ "$(uci -q get dhcp.lan.ignore 2>/dev/null || echo 0)" != 1 ]; then
+		pass 'LAN DHCP server is enabled in UCI'
+	else
+		fail 'LAN DHCP server is disabled or missing'
+	fi
+
+	section 'interfaces, bridge and packet counters'
+	capture_cmd ip-link ip link show || true
+	capture_cmd ip-address ip -4 addr show || true
+	capture_cmd ip-route ip -4 route show || true
+	cat /proc/net/dev >"$REPORT_DIR/proc-net-dev.txt" 2>/dev/null || true
+	cat "$REPORT_DIR/proc-net-dev.txt" >>"$LOG" 2>/dev/null || true
+	for dev in eth0 lan wan br-lan; do
+		[ -e "/sys/class/net/$dev" ] || { warn "$dev netdev missing"; continue; }
+		out "$dev operstate=$(cat /sys/class/net/$dev/operstate 2>/dev/null || echo unknown) carrier=$(cat /sys/class/net/$dev/carrier 2>/dev/null || echo n/a) rx_bytes=$(cat /sys/class/net/$dev/statistics/rx_bytes 2>/dev/null || echo n/a) tx_bytes=$(cat /sys/class/net/$dev/statistics/tx_bytes 2>/dev/null || echo n/a)"
+	done
+	link_up lan && pass 'physical LAN link is up' || warn 'physical LAN link is down (connect a client for an on-wire test)'
+	selected_wan="$(uci -q get network.wan.device 2>/dev/null || true)"
+	case "$effective" in safe|router|swap)
+		[ -n "$selected_wan" ] && link_up "$selected_wan" && pass "selected physical WAN $selected_wan link is up" || skip 'selected WAN link is down; upstream tests skipped' ;;
+	esac
+
+	section 'netifd / ubus state'
+	if have ubus; then
+		ubus call network.interface.lan status >"$REPORT_DIR/ubus-lan.json" 2>&1 || true
+		ubus call network.interface.wan status >"$REPORT_DIR/ubus-wan.json" 2>&1 || true
+		out '--- ubus network.interface.lan status'; cat "$REPORT_DIR/ubus-lan.json" >>"$LOG"
+		out '--- ubus network.interface.wan status'; cat "$REPORT_DIR/ubus-wan.json" >>"$LOG"
+	else
+		warn 'ubus unavailable'
+	fi
+
+	section 'DHCP and DNS service'
+	if pidof dnsmasq >/dev/null 2>&1; then
+		pass "dnsmasq running pid=$(pidof dnsmasq 2>/dev/null)"
+	else
+		fail 'dnsmasq is not running'
+	fi
+	ps w >"$REPORT_DIR/processes.txt" 2>&1 || true
+	grep -E '[d]nsmasq|[n]etifd|[o]dhcp|[f]irewall' "$REPORT_DIR/processes.txt" >>"$LOG" 2>/dev/null || true
+	if have netstat; then
+		netstat -lnp >"$REPORT_DIR/netstat.txt" 2>&1 || true
+		grep -E '(:53[[:space:]]|:67[[:space:]])' "$REPORT_DIR/netstat.txt" >>"$LOG" 2>/dev/null || true
+		grep -Eq '(:53[[:space:]])' "$REPORT_DIR/netstat.txt" && pass 'DNS listener on port 53 observed' || warn 'DNS port 53 not visible in netstat'
+		grep -Eq '(:67[[:space:]])' "$REPORT_DIR/netstat.txt" && pass 'DHCPv4 server listener on port 67 observed' || warn 'DHCPv4 port 67 not visible in netstat'
+	else
+		skip 'netstat unavailable; socket-listener check skipped'
+	fi
+	cat_if_exists 'dnsmasq generated resolv.conf' /tmp/resolv.conf.d/resolv.conf.auto
+	cat_if_exists 'DHCP leases' /tmp/dhcp.leases
+	if have nslookup; then
+		if nslookup localhost 127.0.0.1 >"$REPORT_DIR/nslookup-local.txt" 2>&1; then
+			pass 'local DNS query through dnsmasq succeeded'
+		else
+			warn 'local DNS query through dnsmasq failed'
+		fi
+		cat "$REPORT_DIR/nslookup-local.txt" >>"$LOG" 2>/dev/null || true
+	else
+		skip 'nslookup unavailable'
+	fi
+
+	section 'ICMP and WAN reachability'
+	lan_ip="$(ip -4 addr show dev br-lan 2>/dev/null | sed -n 's/.* inet \([0-9.]*\)\/.*/\1/p' | head -n1)"
+	if [ -n "$lan_ip" ] && ping -c 2 -W 1 "$lan_ip" >"$REPORT_DIR/ping-lan-self.txt" 2>&1; then
+		pass "local ICMP stack answers on br-lan $lan_ip"
+	else
+		fail "ICMP to local br-lan address failed (${lan_ip:-no-address})"
+	fi
+	cat "$REPORT_DIR/ping-lan-self.txt" >>"$LOG" 2>/dev/null || true
+
+	if { [ "$effective" = safe ] || [ "$effective" = router ] || [ "$effective" = swap ]; } && [ -n "$selected_wan" ] && link_up "$selected_wan"; then
+		if has_ipv4 "$selected_wan"; then pass 'WAN received an IPv4 address (DHCP client path active)'; else fail 'WAN link is up but has no IPv4 address'; fi
+		if has_default_dev "$selected_wan"; then
+			pass 'default route via WAN is present'
+			gw="$(ip -4 route show default dev "$selected_wan" 2>/dev/null | sed -n 's/.* via \([0-9.]*\).*/\1/p' | head -n1)"
+			if [ -n "$gw" ]; then
+				if ping -c 2 -W 2 "$gw" >"$REPORT_DIR/ping-wan-gateway.txt" 2>&1; then pass "WAN gateway $gw answers ICMP"; else warn "WAN gateway $gw did not answer ICMP"; fi
+				cat "$REPORT_DIR/ping-wan-gateway.txt" >>"$LOG" 2>/dev/null || true
+			fi
+			if ping -c 2 -W 2 1.1.1.1 >"$REPORT_DIR/ping-internet.txt" 2>&1; then pass 'Internet IPv4 ICMP to 1.1.1.1 succeeded'; else warn 'Internet IPv4 ICMP to 1.1.1.1 failed'; fi
+			cat "$REPORT_DIR/ping-internet.txt" >>"$LOG" 2>/dev/null || true
+			if have nslookup; then
+				if nslookup openwrt.org 127.0.0.1 >"$REPORT_DIR/nslookup-internet.txt" 2>&1; then pass 'DNS recursion through dnsmasq succeeded'; else warn 'DNS recursion through dnsmasq failed'; fi
+				cat "$REPORT_DIR/nslookup-internet.txt" >>"$LOG" 2>/dev/null || true
+			fi
+		else
+			fail 'WAN link is up but no default route exists'
+		fi
+	else
+		skip 'WAN Internet tests not applicable without active routed WAN'
+	fi
+
+	section 'firewall / NAT'
+	if have nft; then
+		nft list ruleset >"$REPORT_DIR/nft-ruleset.txt" 2>&1 || true
+		grep -E 'masquerade|name .*wan|oifname .*wan|iifname .*lan' "$REPORT_DIR/nft-ruleset.txt" | head -80 >>"$LOG" 2>/dev/null || true
+		if [ "$effective" = safe ] || [ "$effective" = router ] || [ "$effective" = swap ]; then
+			grep -q 'masquerade' "$REPORT_DIR/nft-ruleset.txt" && pass 'firewall NAT/masquerade rule observed' || warn 'no masquerade rule found in nft ruleset'
+		fi
+	else
+		skip 'nft unavailable'
+	fi
+
+	section 'Realtek DSA / CPU-port diagnostics'
+	dmesg >"$REPORT_DIR/dmesg.txt" 2>/dev/null || true
+	grep -E 'rtl8197f-rtknet|realtek-smi|DSA:|mw5 .*cpu|txring|cpuidma|Link is' "$REPORT_DIR/dmesg.txt" >"$REPORT_DIR/dmesg-network.txt" 2>/dev/null || true
+	tail -n 250 "$REPORT_DIR/dmesg-network.txt" >>"$LOG" 2>/dev/null || true
+	grep -q 'DSA: tree 0 setup' "$REPORT_DIR/dmesg-network.txt" && pass 'DSA tree setup observed' || warn 'DSA tree setup marker not found'
+	if [ -r /proc/mw5-rtl8367 ]; then
+		cp /proc/mw5-rtl8367 "$REPORT_DIR/mw5-rtl8367.txt" 2>/dev/null || true
+		grep -q 'mw5_diag=v43.15' "$REPORT_DIR/mw5-rtl8367.txt" && pass 'v43.20 switch CPU-isolation/tag-strip patch set active' || warn 'MW5 switch diagnostics do not report v43.15 patch state'
+	else
+		warn '/proc/mw5-rtl8367 missing; patch 330/331 runtime state unavailable'
+	fi
+	grep -q 'hw-start-active' "$REPORT_DIR/dmesg-network.txt" && pass 'RTL8197F CPU-DMA active marker observed' || warn 'CPU-DMA active marker not found'
+
+	section 'final status'
+	/usr/sbin/mw5-portmode show >>"$LOG" 2>&1 || true
+	cat >"$SUMMARY" <<EOF_SUMMARY
+MW5 WAN/LAN TEST $VERSION
+PASS=$PASS FAIL=$FAIL WARN=$WARN SKIP=$SKIP
+requested_mode=$mode
+effective_mode=$effective
+lan_ip=${lan_ip:-}
+wan_device=${selected_wan:-}
+wan_link=$([ -n "${selected_wan:-}" ] && link_up "$selected_wan" && echo up || echo down)
+wan_ipv4=$([ -n "${selected_wan:-}" ] && has_ipv4 "$selected_wan" && echo yes || echo no)
+wan_default_route=$([ -n "${selected_wan:-}" ] && has_default_dev "$selected_wan" && echo yes || echo no)
+LOG=$LOG
+BUNDLE=$BUNDLE
+EOF_SUMMARY
+	cat "$SUMMARY" | tee -a "$LOG"
+	cp "$SUMMARY" "$REPORT_DIR/summary.txt" 2>/dev/null || true
+	cp "$LOG" "$REPORT_DIR/full.log" 2>/dev/null || true
+	if tar -czf "$BUNDLE" -C "$STATE_DIR" wan-lan-test wan-lan-test.log wan-lan-test-summary.txt 2>>"$LOG"; then
+		out "report bundle created: $BUNDLE"
+	else
+		warn 'could not create report bundle'
+	fi
+	out 'MW5 WAN/LAN TEST COMPLETE - no additional diagnostic commands are required.'
+	[ "$FAIL" -eq 0 ]
+}
+
+case "${1:-test}" in
+	test) run_test ;;
+	status) /usr/sbin/mw5-portmode show; [ -r "$STATE_DIR/auto-wan.state" ] && cat "$STATE_DIR/auto-wan.state" ;;
+	*) echo 'Usage: mw5-wan-lan test|status' >&2; exit 2 ;;
+esac

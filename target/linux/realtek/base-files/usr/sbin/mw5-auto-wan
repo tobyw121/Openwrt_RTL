@@ -1,0 +1,105 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Tenda Nova MW5 Auto-WAN selector.
+# v44.65.16: non-destructive carrier-first auto mode plus an initial-settle marker. The LAN jack is never
+# detached for DHCP probing unless the user explicitly enables allow_swap_probe.
+set -u
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+STATE_DIR=/tmp/mw5-webui
+STATE_FILE=$STATE_DIR/auto-wan.state
+LOG_FILE=$STATE_DIR/auto-wan.log
+LOCK_DIR=$STATE_DIR/auto-wan.lock
+READY_FILE=$STATE_DIR/auto-wan-initialized
+DOWN_FILE=$STATE_DIR/auto-wan-down-since
+PROBE_TIMEOUT=4
+RESCAN_INTERVAL=60
+LINK_LOSS_GRACE=20
+
+log() { mkdir -p "$STATE_DIR"; msg="$(date +%s 2>/dev/null || echo 0) $*"; echo "$msg" >"$STATE_FILE"; echo "$msg" >>"$LOG_FILE"; logger -t mw5-auto-wan "$*" 2>/dev/null || true; }
+is_mw5() { case "$(board_name 2>/dev/null) $(cat /tmp/sysinfo/board_name 2>/dev/null) $(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)" in *tenda,nova-mw5*|*nova-mw5*) return 0 ;; esac; return 1; }
+mode() { mw5-portmode show 2>/dev/null | sed -n 's/^mode=//p' | head -n1; }
+effective() { mw5-portmode show 2>/dev/null | sed -n 's/^effective_mode=//p' | head -n1; }
+carrier() { cat "/sys/class/net/$1/carrier" 2>/dev/null || echo 0; }
+allow_swap_probe() { [ "$(uci -q get mw5webui.system.allow_swap_probe 2>/dev/null || echo 0)" = 1 ]; }
+
+acquire_lock() {
+	mkdir -p "$STATE_DIR"
+	if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+		pid="$(cat "$LOCK_DIR/pid" 2>/dev/null || true)"
+		case "$pid" in ''|*[!0-9]*) stale=1 ;; *) kill -0 "$pid" 2>/dev/null && return 1 || stale=1 ;; esac
+		[ "${stale:-0}" = 1 ] && rm -rf "$LOCK_DIR" 2>/dev/null || true
+		mkdir "$LOCK_DIR" 2>/dev/null || return 1
+	fi
+	echo $$ >"$LOCK_DIR/pid"; trap 'rm -rf "$LOCK_DIR" 2>/dev/null || true' EXIT INT TERM; return 0
+}
+release_lock() { rm -rf "$LOCK_DIR" 2>/dev/null || true; trap - EXIT INT TERM; }
+
+# Legacy swapped-upstream detection is opt-in only. It may temporarily detach
+# the physical LAN port and therefore must never run in the factory default.
+probe_dhcp_swap() {
+	allow_swap_probe || return 1
+	[ -e /sys/class/net/lan ] || return 1
+	[ "$(carrier lan)" = 1 ] || return 1
+	command -v udhcpc >/dev/null 2>&1 || return 1
+	was_bridge=0
+	[ -L /sys/class/net/lan/master ] && [ "$(basename "$(readlink /sys/class/net/lan/master 2>/dev/null)")" = br-lan ] && was_bridge=1
+	ip link set dev lan nomaster >/dev/null 2>&1 || true
+	ip addr flush dev lan scope global >/dev/null 2>&1 || true
+	ip link set dev lan up >/dev/null 2>&1 || true
+	probe_log="$STATE_DIR/probe-lan.log"; : >"$probe_log"
+	if udhcpc -q -n -t 2 -T "$PROBE_TIMEOUT" -i lan -s /bin/true -p "$STATE_DIR/udhcpc-lan.pid" >"$probe_log" 2>&1; then rc=0; else rc=1; fi
+	rm -f "$STATE_DIR/udhcpc-lan.pid" 2>/dev/null || true
+	if [ "$was_bridge" = 1 ]; then ip link set dev lan master br-lan >/dev/null 2>&1 || true; ip link set dev lan up >/dev/null 2>&1 || true; fi
+	return "$rc"
+}
+
+select_effective() {
+	want="$1"; cur="$(effective)"; [ "$cur" = "$want" ] && return 0
+	if ! mw5-portmode auto-select "$want" >>"$LOG_FILE" 2>&1; then sleep 2; mw5-portmode auto-select "$want" >>"$LOG_FILE" 2>&1 || { log "select-$want-failed"; return 1; }; fi
+	rm -f "$DOWN_FILE" 2>/dev/null || true; log "selected-$want carrier-first"
+}
+
+wan_route_ready() { dev="$(uci -q get network.wan.device 2>/dev/null || true)"; [ -n "$dev" ] || return 1; ip -4 addr show dev "$dev" 2>/dev/null | grep -q ' inet ' || return 1; ip -4 route show default 2>/dev/null | grep -qw "dev $dev"; }
+renew_wan_in_place() { wan_route_ready && return 0; ifup wan >/dev/null 2>&1 || true; log "renew-wan-in-place effective=$(effective)"; }
+
+link_loss_expired() {
+	selected_dev="$1"; now="$(date +%s 2>/dev/null || echo 0)"
+	if [ "$(carrier "$selected_dev")" = 1 ]; then rm -f "$DOWN_FILE" 2>/dev/null || true; return 1; fi
+	if [ ! -s "$DOWN_FILE" ]; then echo "$now" >"$DOWN_FILE"; log "link-loss-start dev=$selected_dev grace=${LINK_LOSS_GRACE}s"; return 1; fi
+	down="$(cat "$DOWN_FILE" 2>/dev/null || echo 0)"; case "$down:$now" in *[!0-9:]*) echo "$now" >"$DOWN_FILE"; return 1 ;; esac
+	[ $((now-down)) -ge "$LINK_LOSS_GRACE" ]
+}
+
+scan_locked() {
+	[ "$(mode)" = auto ] || { log "scan-skip mode=$(mode)"; return 0; }
+	cur="$(effective)"; wan_up="$(carrier wan)"; lan_up="$(carrier lan)"
+	case "$cur" in
+		router) if [ "$wan_up" = 1 ]; then rm -f "$DOWN_FILE"; renew_wan_in_place; log 'keep-router wan_carrier=1'; return 0; fi; link_loss_expired wan || return 0 ;;
+		swap) if [ "$lan_up" = 1 ]; then rm -f "$DOWN_FILE"; renew_wan_in_place; log 'keep-swap lan_carrier=1'; return 0; fi; link_loss_expired lan || return 0 ;;
+	esac
+	if [ "$wan_up" = 1 ]; then select_effective router; return $?; fi
+	if [ "$lan_up" = 1 ] && allow_swap_probe && probe_dhcp_swap; then select_effective swap; return $?; fi
+	[ "$cur" = safe ] || select_effective safe || true
+	log "safe-no-upstream wan_carrier=$wan_up lan_carrier=$lan_up swap_probe=$(allow_swap_probe && echo 1 || echo 0)"
+}
+
+scan() { acquire_lock || return 0; scan_locked; rc=$?; release_lock; return "$rc"; }
+run_daemon() {
+	is_mw5 || exit 0
+	mkdir -p "$STATE_DIR"
+	rm -f "$READY_FILE" 2>/dev/null || true
+	log 'daemon-start v44.65.16-wlan-reopen-safe-auto'
+	sleep 2
+	# Complete the first carrier/port-mode decision before WiFi is allowed to
+	# start.  This prevents netifd bridge reloads racing rtl8192cd AP open.
+	if [ "$(mode)" = auto ]; then scan || true; else log "daemon-idle mode=$(mode)"; fi
+	: >"$READY_FILE"
+	log 'initial-port-mode-settled'
+	while :; do
+		sleep "$RESCAN_INTERVAL"
+		if [ "$(mode)" = auto ]; then scan || true; else log "daemon-idle mode=$(mode)"; fi
+	done
+}
+status() { [ -r "$STATE_FILE" ] && cat "$STATE_FILE" || echo 'no-state'; mw5-portmode show 2>/dev/null || true; echo "rescan_interval=$RESCAN_INTERVAL"; echo "link_loss_grace=$LINK_LOSS_GRACE"; echo "allow_swap_probe=$(allow_swap_probe && echo 1 || echo 0)"; }
+cmd="${1:-scan}"; shift || true
+case "$cmd" in scan|check) scan ;; daemon) run_daemon ;; status) status ;; *) echo 'Usage: mw5-auto-wan scan|daemon|status' >&2; exit 2 ;; esac

@@ -1,0 +1,12 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Compatibility shim. Legacy MW5 acceleration controls were retired in v44.65.17.
+case "${1:-show}" in
+	show|status) exec /usr/sbin/mw5-accel status ;;
+	verify) exec /usr/sbin/mw5-accel verify ;;
+	*)
+		echo 'mw5-hwaccel legacy controls are disabled by v44.65.17.' >&2
+		echo 'Use: mw5-accel on|off|software on|off|hardware on|off' >&2
+		exit 1
+		;;
+esac

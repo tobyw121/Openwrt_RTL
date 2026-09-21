@@ -1,0 +1,38 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+echo "=== MW5 access status ==="
+echo "dsa_tag_expected=rtl8_4"
+legacy_tx_layout="$(cat /sys/module/tag_rtl4_9/parameters/tx_layout 2>/dev/null || echo not-loaded)"
+echo "legacy_tx_layout=$legacy_tx_layout"
+cpu_decode="$(grep '^cpu_tag_decode ' /proc/mw5-rtl8367 2>/dev/null || true)"
+echo "cpu_tag_decode=${cpu_decode#cpu_tag_decode }"
+host_link="$(grep '^mw5_dsa_host_vlan ' /proc/rd05-rtknet 2>/dev/null || true)"
+echo "mw5_dsa_host_vlan=${host_link#mw5_dsa_host_vlan }"
+case "$cpu_decode" in
+	*format8b=1*) echo "cpu_tag_state=OK-rtl8_4-p0" ;;
+	*) echo "cpu_tag_state=ERROR-expected-format8b" ;;
+esac
+echo "portmode=$(uci -q get mw5webui.system.port_mode || echo unknown)"
+echo "br_lan_ports=$(uci -q get network.br_lan.ports || echo none)"
+echo "lan_ip=$(uci -q get network.lan.ipaddr || ip -4 addr show br-lan 2>/dev/null | awk '/inet /{print $2}' | head -1)"
+echo "dropbear_init=$([ -x /etc/init.d/dropbear ] && echo present || echo missing)"
+echo "dropbear_pid=$(pidof dropbear 2>/dev/null || echo none)"
+echo "dropbear_bind=$(uci -q get dropbear.@dropbear[0].DirectInterface || echo all)"
+echo "dropbear_port=$(uci -q get dropbear.@dropbear[0].Port || echo 22)"
+echo "dropbear_hostkey=$(uci -q get dropbear.@dropbear[0].keyfile || echo none)"
+if [ -s /tmp/dropbear/dropbear_ed25519_host_key ]; then
+	echo "volatile_hostkey=present size=$(wc -c </tmp/dropbear/dropbear_ed25519_host_key 2>/dev/null || echo 0)"
+else
+	echo "volatile_hostkey=missing"
+fi
+if [ -r /tmp/mw5-webui/access.log ]; then
+	echo "access_log_tail:"
+	tail -n 30 /tmp/mw5-webui/access.log
+fi
+echo "uhttpd_init=$([ -x /etc/init.d/uhttpd ] && echo present || echo missing)"
+echo "uhttpd_pid=$(pidof uhttpd 2>/dev/null || echo none)"
+echo "listeners:"
+netstat -lntp 2>/dev/null | grep -E '(:22|:80)' || ss -lntp 2>/dev/null | grep -E '(:22|:80)' || true
+echo "packages:"
+opkg list-installed 2>/dev/null | grep -E '^(dropbear|uhttpd) ' || true

@@ -1,0 +1,3 @@
+#!/bin/sh
+# v43.35 ultraslim: no boot diagnostic daemon.
+exit 0

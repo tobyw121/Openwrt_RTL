@@ -1,0 +1,119 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Tenda Nova MW5 RTL8367/RTL8197F read-only switch live audit.
+# v44.65.25: no raw writes, no blind SMI sweep, no debugfs regmap scan.
+
+umask 077
+ROOT="${MW5_SWITCH_AUDIT_DIR:-/tmp/mw5-switch-audit}"
+
+stamp() { date +%Y%m%d-%H%M%S 2>/dev/null || echo unknown; }
+sanitize() { printf '%s' "$1" | tr -cd 'A-Za-z0-9._-'; }
+have() { command -v "$1" >/dev/null 2>&1; }
+
+is_mw5()
+{
+	case "$(cat /tmp/sysinfo/board_name 2>/dev/null) $(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)" in
+		*tenda,nova-mw5*|*nova-mw5*) return 0 ;;
+	esac
+	return 1
+}
+
+dump_proc()
+{
+	out="$1"
+	for f in \
+		/proc/mw5-rtl8367 \
+		/proc/mw5-rtl8367-regs \
+		/proc/mw5-rtl8367-mib \
+		/proc/mw5-rtl8367-ports \
+		/proc/mw5-rtl8367-flowctrl \
+		/proc/rd05-rtknet
+	do
+		[ -r "$f" ] || continue
+		cat "$f" > "$out/$(basename "$f").txt" 2>&1 || true
+	done
+}
+
+dump_net()
+{
+	out="$1"
+	cat /proc/net/dev > "$out/proc-net-dev.txt" 2>&1 || true
+	cat /proc/net/softnet_stat > "$out/softnet.txt" 2>&1 || true
+	cat /proc/interrupts > "$out/interrupts.txt" 2>&1 || true
+	ip -d -s link show > "$out/ip-link.txt" 2>&1 || true
+	ip addr show > "$out/ip-addr.txt" 2>&1 || true
+	ip -4 route show table all > "$out/route4.txt" 2>&1 || true
+	ip -6 route show table all > "$out/route6.txt" 2>&1 || true
+	ip neigh show > "$out/neigh.txt" 2>&1 || true
+	if have bridge; then
+		bridge -d -s link show > "$out/bridge-link.txt" 2>&1 || true
+		bridge -d vlan show > "$out/bridge-vlan.txt" 2>&1 || true
+		bridge -d fdb show > "$out/bridge-fdb.txt" 2>&1 || true
+		bridge -d mdb show > "$out/bridge-mdb.txt" 2>&1 || true
+	fi
+	if have ethtool; then
+		mkdir -p "$out/ethtool"
+		for dev in eth0 lan wan br-lan wlan0 wlan1; do
+			ip link show dev "$dev" >/dev/null 2>&1 || continue
+			ethtool "$dev" > "$out/ethtool/$dev.txt" 2>&1 || true
+			ethtool -S "$dev" > "$out/ethtool/$dev.stats.txt" 2>&1 || true
+			ethtool -a "$dev" > "$out/ethtool/$dev.pause.txt" 2>&1 || true
+			ethtool --show-eee "$dev" > "$out/ethtool/$dev.eee.txt" 2>&1 || true
+		done
+	fi
+	if have nft; then nft list ruleset > "$out/nft.txt" 2>&1 || true; fi
+	if have conntrack; then
+		conntrack -S > "$out/conntrack-stats.txt" 2>&1 || true
+		conntrack -C > "$out/conntrack-count.txt" 2>&1 || true
+	fi
+}
+
+snapshot()
+{
+	label="$(sanitize "${1:-snapshot}")"
+	[ -n "$label" ] || label=snapshot
+	out="$ROOT/$(stamp)-$label"
+	mkdir -p "$out"
+	date -Iseconds > "$out/time.txt" 2>/dev/null || date > "$out/time.txt"
+	dump_proc "$out"
+	printf "%s\n" "debugfs regmap scan disabled: use curated /proc/mw5-rtl8367-* views" > "$out/regmap-disabled.txt"
+	dump_net "$out"
+	dmesg > "$out/dmesg.txt" 2>&1 || true
+	if have logread; then logread > "$out/logread.txt" 2>&1 || true; fi
+	dmesg | grep -E 'RTL836|realtek-smi|CPU tag|CPU egress|isolation|threshold|SSC|RGMII|rtl865x|cpuidma|mw5 dsa-rx|RX drop untagged|Link is' \
+		> "$out/switch-focus.txt" 2>&1 || true
+	echo "$out"
+}
+
+status()
+{
+	for f in /proc/mw5-rtl8367 /proc/mw5-rtl8367-ports /proc/mw5-rtl8367-flowctrl /proc/mw5-rtl8367-mib; do
+		if [ -r "$f" ]; then
+			echo "===== $f ====="
+			cat "$f"
+		fi
+	done
+}
+
+compare()
+{
+	a="$1"; b="$2"
+	[ -d "$a" ] || { echo "missing: $a" >&2; exit 2; }
+	[ -d "$b" ] || { echo "missing: $b" >&2; exit 2; }
+	for name in mw5-rtl8367.txt mw5-rtl8367-regs.txt mw5-rtl8367-mib.txt mw5-rtl8367-ports.txt mw5-rtl8367-flowctrl.txt rd05-rtknet.txt proc-net-dev.txt; do
+		[ -r "$a/$name" ] && [ -r "$b/$name" ] || continue
+		echo "===== DIFF $name ====="
+		diff -u "$a/$name" "$b/$name" 2>/dev/null || true
+	done
+}
+
+is_mw5 || { echo 'This tool is for Tenda Nova MW5 only.' >&2; exit 1; }
+mkdir -p "$ROOT"
+
+case "${1:-status}" in
+	status) status ;;
+	snapshot) snapshot "${2:-manual}" ;;
+	compare) [ $# -eq 3 ] || { echo "usage: $0 compare SNAPSHOT_A SNAPSHOT_B" >&2; exit 2; }; compare "$2" "$3" ;;
+	list) find "$ROOT" -mindepth 1 -maxdepth 1 -type d -print 2>/dev/null | sort ;;
+	*) echo "usage: $0 {status|snapshot [label]|list|compare DIR_A DIR_B}" >&2; exit 2 ;;
+esac

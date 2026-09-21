@@ -1,0 +1,4 @@
+#!/bin/sh
+[ -x /usr/sbin/mw5-auto-wan ] || exit 0
+case "$(board_name 2>/dev/null) $(cat /tmp/sysinfo/board_name 2>/dev/null)" in *nova-mw5*) ;; *) exit 0 ;; esac
+case "${INTERFACE:-}" in lan|wan) /usr/sbin/mw5-auto-wan scan >/dev/null 2>&1 & ;; esac

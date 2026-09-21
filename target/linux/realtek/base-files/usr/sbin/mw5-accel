@@ -1,0 +1,119 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# MW5 unified accelerator release v44.65.25
+set -u
+
+PROC=/proc/rd05-rtknet
+MOD=/sys/module/rtl8197f_rtknet/parameters
+CFG=mw5_accel.core
+
+is_mw5() {
+	case "$(board_name 2>/dev/null) $(cat /tmp/sysinfo/board_name 2>/dev/null) $(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)" in
+		*tenda,nova-mw5*|*nova-mw5*) return 0 ;;
+		*) return 1 ;;
+	esac
+}
+
+proc_cmd() {
+	[ -w "$PROC" ] || { echo "$PROC is not writable" >&2; return 1; }
+	printf '%s\n' "$1" > "$PROC"
+}
+
+uci_bool() {
+	v="$(uci -q get "$1" 2>/dev/null || echo "$2")"
+	case "$v" in 1|on|true|yes|enabled) echo 1 ;; *) echo 0 ;; esac
+}
+
+set_firewall_flow() {
+	on="$1"
+	command -v uci >/dev/null 2>&1 || return 0
+	if [ "$on" = 1 ]; then
+		uci -q set firewall.@defaults[0].flow_offloading='1'
+		# v44.65.21 stability default: use Linux nf_flow_table software
+		# offload, but do not request netdev/TC hardware rule delivery yet.
+		# v44.65.20 observed bind/unbind but no FLOW_CLS_REPLACE, so the
+		# custom exact-flow cache remains fail-closed/idle until retested.
+		uci -q set firewall.@defaults[0].flow_offloading_hw='0'
+	else
+		uci -q set firewall.@defaults[0].flow_offloading='0'
+		uci -q set firewall.@defaults[0].flow_offloading_hw='0'
+	fi
+	uci -q commit firewall
+	[ -x /etc/init.d/firewall ] && /etc/init.d/firewall reload >/dev/null 2>&1 || true
+}
+
+apply() {
+	is_mw5 || return 0
+	enabled="$(uci_bool "$CFG.enabled" 1)"
+	sw="$(uci_bool "$CFG.software" 1)"
+	hw="$(uci_bool "$CFG.hardware" 1)"
+
+	if [ "$enabled" != 1 ]; then
+		proc_cmd accel-off || true
+		set_firewall_flow 0
+		return 0
+	fi
+
+	# Start from the unified ownership state. The driver hard-disables all
+	# retired Realtek WFO/HWNAT/HWLOOKUP/EXT_PORT and old NIC offload knobs.
+	proc_cmd accel-on || return 1
+	[ "$sw" = 1 ] || proc_cmd accel-sw-off || true
+	[ "$hw" = 1 ] || proc_cmd accel-hw-off || true
+
+	# v44.65.21: Linux software flow offload is the default fast path while
+	# TC_SETUP_FT/netdev offload is kept disabled. The custom cache remains
+	# enabled but idle/fail-closed; legacy RTL865x autonomous L34 is still off.
+	if [ "$sw" = 1 ]; then set_firewall_flow 1; else set_firewall_flow 0; fi
+}
+
+status() {
+	echo 'MW5 unified accelerator release v44.65.25 (rtknet core v44.65.25)'
+	if [ -r "$PROC" ]; then
+		grep -E '^(driver=|mw5_accel |mw5_accel_sw |tc_flow |mw5_rx_recovery |mw5_tx_dma |mw5_legacy_accel |hwaccel_rx |hwaccel_tx |napt |tx_bql |irq |napi_detail |rx_poll |rings )' "$PROC" 2>/dev/null || true
+	else
+		echo "$PROC unavailable"
+	fi
+	if command -v uci >/dev/null 2>&1; then
+		echo "config_enabled=$(uci -q get $CFG.enabled 2>/dev/null || echo 1)"
+		echo "config_software=$(uci -q get $CFG.software 2>/dev/null || echo 1)"
+		echo "config_hardware=$(uci -q get $CFG.hardware 2>/dev/null || echo 1)"
+		echo "flow_offloading=$(uci -q get firewall.@defaults[0].flow_offloading 2>/dev/null || echo unknown)"
+		echo "flow_offloading_hw=$(uci -q get firewall.@defaults[0].flow_offloading_hw 2>/dev/null || echo unknown)"
+	fi
+	for p in mw5_accel_enable mw5_accel_sw_enable mw5_accel_hw_enable mw5_hwlookup_enable mw5_hw_napt_enable mw5_extport_wlan_enable; do
+		[ -r "$MOD/$p" ] && echo "$p=$(cat "$MOD/$p")"
+	done
+}
+
+verify() {
+	status
+	p="$(cat "$PROC" 2>/dev/null || true)"
+	printf '%s\n' "$p" | grep -q '^mw5_accel enabled=1 sw=1 hw=1 ' && echo 'accelerator_core=PASS' || echo 'accelerator_core=CHECK'
+	printf '%s\n' "$p" | grep -q '^mw5_legacy_accel .*hwlookup=0 .*napt=0 .*extport=0 .*retired=1' && echo 'legacy_fastpaths=OFF' || echo 'legacy_fastpaths=CHECK'
+	printf '%s\n' "$p" | grep -q '^mw5_accel .*coherent_rx=1 page_pool=0 ' && echo 'hardware_dma=PASS' || echo 'hardware_dma=CHECK'
+	printf '%s\n' "$p" | grep -q '^mw5_accel .*asic_l34_safe=0 ' && echo 'rtl865x_l34=FAIL_CLOSED_PROTOCOL9' || echo 'rtl865x_l34=CHECK'
+}
+
+set_cfg() {
+	key="$1" val="$2"
+	command -v uci >/dev/null 2>&1 || return 1
+	uci -q set "$CFG.$key=$val"
+	uci -q commit mw5_accel
+	apply
+}
+
+case "${1:-status}" in
+	boot|apply) apply ;;
+	status|show) status ;;
+	verify) verify ;;
+	on) set_cfg enabled 1 ;;
+	off) set_cfg enabled 0 ;;
+	software)
+		case "${2:-}" in on) set_cfg software 1 ;; off) set_cfg software 0 ;; *) echo 'usage: mw5-accel software on|off' >&2; exit 2 ;; esac ;;
+	hardware)
+		case "${2:-}" in on) set_cfg hardware 1 ;; off) set_cfg hardware 0 ;; *) echo 'usage: mw5-accel hardware on|off' >&2; exit 2 ;; esac ;;
+	*)
+		echo 'usage: mw5-accel {status|verify|apply|on|off|software on|off|hardware on|off}' >&2
+		exit 2
+		;;
+esac

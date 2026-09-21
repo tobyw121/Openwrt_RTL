@@ -1,0 +1,2408 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Tenda MW5 cfg80211/nl80211 AP front-end for rtl8192cd Linux-6.6 port.
+set -u
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+VERSION='v44.65.16-wlan-reopen-panic-fix'
+LOG_DIR=/tmp/mw5-webui
+LOG_FILE=$LOG_DIR/wlan-apply.log
+RUNTIME_FILE=$LOG_DIR/mw5wifi.env
+RUN_DIR=/var/run/mw5-wifi
+DEFAULT_KEY='12345678!'
+WIFI2G_SUCCESS_LOG=$LOG_DIR/2g-success.log
+WIFI2G_SUCCESS_ENV=$LOG_DIR/2g-success.env
+WIFI2G_SUCCESS_PERSIST=/etc/mw5wifi-2g-last-success.conf
+WIFI2G_VERIFY_SECONDS=15
+mkdir -p "$LOG_DIR" "$RUN_DIR"
+
+log() { logger -t mw5-wifi "$*" 2>/dev/null || true; echo "$*" >>"$LOG_FILE"; }
+sanitize_bool() { case "${1:-0}" in 1|on|yes|true|enabled) echo 1 ;; *) echo 0 ;; esac; }
+sanitize_num() { case "${1:-}" in ''|*[!0-9]*) echo "$2" ;; *) echo "$1" ;; esac; }
+sanitize_regdomain() {
+	v="$(printf '%s' "${1:-00}" | tr 'a-z' 'A-Z')"
+	case "$v" in 00|[A-Z][A-Z]) echo "$v" ;; *) echo 00 ;; esac
+}
+sanitize_width() { case "${1:-}" in 20|40|80) echo "$1" ;; *) echo "$2" ;; esac; }
+sanitize_enc() { case "${1:-}" in open|psk|psk2|mixed) echo "$1" ;; *) echo psk2 ;; esac; }
+sanitize_2g_profile() { case "${1:-auto}" in auto|g-ht20|g-legacy-wmm|g-legacy|g-long|b-legacy) echo "${1:-auto}" ;; *) echo auto ;; esac; }
+sanitize_2g_init() { case "${1:-managed-cycle}" in managed-cycle|hostapd-only|ap-pretype) echo "${1:-managed-cycle}" ;; *) echo managed-cycle ;; esac; }
+sanitize_text() { printf '%s' "${1:-}" | sed 's/[[:cntrl:]]//g' | cut -c 1-"$2"; }
+sq() { printf "%s" "$1" | sed "s/'/'\\''/g"; }
+
+set_defaults() {
+	MW5_DEFAULT_2G_SSID="${MW5_DEFAULT_2G_SSID:-Openwrt_2,4GHz}"
+	MW5_DEFAULT_5G_SSID="${MW5_DEFAULT_5G_SSID:-Openwrt_5GHz}"
+	# v44.62.13: both MW5 radios are enabled and automatically brought up on boot.
+	# The dedicated mw5-wifi rc service is the single boot-time apply owner.
+	ENABLED='1'; AUTOLOAD='1'; REGDOMAIN='00'; BRIDGE='br-lan'
+	R2_ENABLED='1'; R2_SSID="$MW5_DEFAULT_2G_SSID"; R2_CHANNEL='6'; R2_WIDTH='20'; R2_PROFILE='auto'; R2_INIT_METHOD='managed-cycle'; R2_ENCRYPTION='psk2'; R2_KEY="$DEFAULT_KEY"
+	R5_ENABLED='1'; R5_SSID="$MW5_DEFAULT_5G_SSID"; R5_CHANNEL='40'; R5_WIDTH='80'; R5_ENCRYPTION='psk2'; R5_KEY="$DEFAULT_KEY"
+	MESH_ENABLED='0'; MESH_MODE='prepared'; MESH_ID='MW5-MESH'; MESH_BACKHAUL='5g'; MESH_PAIRING='manual'; MESH_KEY="$DEFAULT_KEY"
+	LAST_APPLY_RC='none'; LAST_APPLY_MSG=''
+}
+
+uci_get() { uci -q get "mw5wifi.$1" 2>/dev/null || true; }
+load_config() {
+	set_defaults
+	[ -r "$RUNTIME_FILE" ] && . "$RUNTIME_FILE" 2>/dev/null || true
+	for spec in \
+		ENABLED:general.enabled AUTOLOAD:general.autoload REGDOMAIN:general.regdomain BRIDGE:general.bridge \
+		LAST_APPLY_RC:general.last_apply_rc LAST_APPLY_MSG:general.last_apply_msg \
+		R2_ENABLED:radio2g.enabled R2_SSID:radio2g.ssid R2_CHANNEL:radio2g.channel R2_WIDTH:radio2g.width R2_PROFILE:radio2g.profile R2_INIT_METHOD:radio2g.init_method R2_ENCRYPTION:radio2g.encryption R2_KEY:radio2g.key \
+		R5_ENABLED:radio5g.enabled R5_SSID:radio5g.ssid R5_CHANNEL:radio5g.channel R5_WIDTH:radio5g.width R5_ENCRYPTION:radio5g.encryption R5_KEY:radio5g.key \
+		MESH_ENABLED:mesh.enabled MESH_MODE:mesh.mode MESH_ID:mesh.mesh_id MESH_BACKHAUL:mesh.backhaul MESH_PAIRING:mesh.pairing MESH_KEY:mesh.key; do
+		var=${spec%%:*}; key=${spec#*:}; val="$(uci_get "$key")"
+		[ -n "$val" ] && eval "$var=\$(printf '%s' \"\$val\")"
+	done
+}
+
+write_runtime() {
+	cat >"$RUNTIME_FILE" <<EOF_RUNTIME
+ENABLED='$(sq "$ENABLED")'
+AUTOLOAD='$(sq "$AUTOLOAD")'
+REGDOMAIN='$(sq "$REGDOMAIN")'
+BRIDGE='$(sq "$BRIDGE")'
+R2_ENABLED='$(sq "$R2_ENABLED")'
+R2_SSID='$(sq "$R2_SSID")'
+R2_CHANNEL='$(sq "$R2_CHANNEL")'
+R2_WIDTH='$(sq "$R2_WIDTH")'
+R2_PROFILE='$(sq "$R2_PROFILE")'
+R2_INIT_METHOD='$(sq "$R2_INIT_METHOD")'
+R2_ENCRYPTION='$(sq "$R2_ENCRYPTION")'
+R2_KEY='$(sq "$R2_KEY")'
+R5_ENABLED='$(sq "$R5_ENABLED")'
+R5_SSID='$(sq "$R5_SSID")'
+R5_CHANNEL='$(sq "$R5_CHANNEL")'
+R5_WIDTH='$(sq "$R5_WIDTH")'
+R5_ENCRYPTION='$(sq "$R5_ENCRYPTION")'
+R5_KEY='$(sq "$R5_KEY")'
+MESH_ENABLED='$(sq "$MESH_ENABLED")'
+MESH_MODE='$(sq "$MESH_MODE")'
+MESH_ID='$(sq "$MESH_ID")'
+MESH_BACKHAUL='$(sq "$MESH_BACKHAUL")'
+MESH_PAIRING='$(sq "$MESH_PAIRING")'
+MESH_KEY='$(sq "$MESH_KEY")'
+LAST_APPLY_RC='$(sq "$LAST_APPLY_RC")'
+LAST_APPLY_MSG='$(sq "$LAST_APPLY_MSG")'
+EOF_RUNTIME
+}
+
+write_config_file() {
+	mkdir -p /etc/config
+	write_runtime
+	cat >/etc/config/mw5wifi <<EOF_UCI
+config general 'general'
+	option version '$VERSION'
+	option enabled '$(sq "$ENABLED")'
+	option autoload '$(sq "$AUTOLOAD")'
+	option regdomain '$(sq "$REGDOMAIN")'
+	option bridge '$(sq "$BRIDGE")'
+	option last_apply_rc '$(sq "$LAST_APPLY_RC")'
+	option last_apply_msg '$(sq "$LAST_APPLY_MSG")'
+
+config radio 'radio2g'
+	option enabled '$(sq "$R2_ENABLED")'
+	option ssid '$(sq "$R2_SSID")'
+	option channel '$(sq "$R2_CHANNEL")'
+	option width '$(sq "$R2_WIDTH")'
+	option profile '$(sq "$R2_PROFILE")'
+	option init_method '$(sq "$R2_INIT_METHOD")'
+	option encryption '$(sq "$R2_ENCRYPTION")'
+	option key '$(sq "$R2_KEY")'
+
+config radio 'radio5g'
+	option enabled '$(sq "$R5_ENABLED")'
+	option ssid '$(sq "$R5_SSID")'
+	option channel '$(sq "$R5_CHANNEL")'
+	option width '$(sq "$R5_WIDTH")'
+	option encryption '$(sq "$R5_ENCRYPTION")'
+	option key '$(sq "$R5_KEY")'
+
+config mesh 'mesh'
+	option enabled '$(sq "$MESH_ENABLED")'
+	option mode '$(sq "$MESH_MODE")'
+	option mesh_id '$(sq "$MESH_ID")'
+	option backhaul '$(sq "$MESH_BACKHAUL")'
+	option pairing '$(sq "$MESH_PAIRING")'
+	option key '$(sq "$MESH_KEY")'
+EOF_UCI
+	# Keep /etc/config/wireless informational: AP control is hostapd/nl80211,
+	# not the old rtl8192cd WEXT/netifd shim.
+	cat >/etc/config/wireless <<EOF_WIRELESS
+config mw5_cfg80211 'mw5_cfg80211'
+	option version '$VERSION'
+	option driver 'rtl8192cd-cfg80211'
+	option radio5g 'wlan0'
+	option radio2g 'wlan1'
+	option manager '/usr/sbin/mw5-wifi'
+EOF_WIRELESS
+}
+
+ensure_config() {
+	load_config
+	write_config_file >/dev/null 2>&1 || write_runtime
+}
+
+save_settings() {
+	load_config
+	while [ $# -gt 0 ]; do
+		case "$1" in
+			--enabled) ENABLED="$(sanitize_bool "${2:-0}")"; shift 2 ;;
+			--autoload) AUTOLOAD="$(sanitize_bool "${2:-0}")"; shift 2 ;;
+			--regdomain) REGDOMAIN="$(sanitize_regdomain "${2:-00}")"; shift 2 ;;
+			--bridge) BRIDGE="$(sanitize_text "${2:-br-lan}" 16)"; shift 2 ;;
+			--2g-enabled) R2_ENABLED="$(sanitize_bool "${2:-0}")"; shift 2 ;;
+			--2g-ssid) R2_SSID="$(sanitize_text "${2:-Openwrt_2,4GHz}" 32)"; shift 2 ;;
+			--2g-channel) R2_CHANNEL="$(sanitize_num "${2:-6}" 6)"; shift 2 ;;
+			--2g-width) R2_WIDTH="$(sanitize_width "${2:-20}" 20)"; shift 2 ;;
+			--2g-profile) R2_PROFILE="$(sanitize_2g_profile "${2:-auto}")"; shift 2 ;;
+			--2g-init-method) R2_INIT_METHOD="$(sanitize_2g_init "${2:-managed-cycle}")"; shift 2 ;;
+			--2g-encryption) R2_ENCRYPTION="$(sanitize_enc "${2:-psk2}")"; shift 2 ;;
+			--2g-key) v="$(sanitize_text "${2:-}" 63)"; [ -n "$v" ] && R2_KEY="$v"; shift 2 ;;
+			--5g-enabled) R5_ENABLED="$(sanitize_bool "${2:-0}")"; shift 2 ;;
+			--5g-ssid) R5_SSID="$(sanitize_text "${2:-Openwrt_5GHz}" 32)"; shift 2 ;;
+			--5g-channel) R5_CHANNEL="$(sanitize_num "${2:-40}" 40)"; shift 2 ;;
+			--5g-width) R5_WIDTH="$(sanitize_width "${2:-80}" 80)"; shift 2 ;;
+			--5g-encryption) R5_ENCRYPTION="$(sanitize_enc "${2:-psk2}")"; shift 2 ;;
+			--5g-key) v="$(sanitize_text "${2:-}" 63)"; [ -n "$v" ] && R5_KEY="$v"; shift 2 ;;
+			--mesh-enabled) MESH_ENABLED="$(sanitize_bool "${2:-0}")"; shift 2 ;;
+			--mesh-mode) MESH_MODE="$(sanitize_text "${2:-prepared}" 24)"; shift 2 ;;
+			--mesh-id) MESH_ID="$(sanitize_text "${2:-MW5-MESH}" 32)"; shift 2 ;;
+			--mesh-backhaul) MESH_BACKHAUL="$(sanitize_text "${2:-5g}" 8)"; shift 2 ;;
+			--mesh-pairing) MESH_PAIRING="$(sanitize_text "${2:-manual}" 16)"; shift 2 ;;
+			--mesh-key) v="$(sanitize_text "${2:-}" 63)"; [ -n "$v" ] && MESH_KEY="$v"; shift 2 ;;
+			*) echo "Unknown option: $1" >&2; return 2 ;;
+		esac
+	done
+	write_config_file
+	echo "saved enabled=$ENABLED autoload=$AUTOLOAD 2g=$R2_ENABLED 5g=$R5_ENABLED driver=cfg80211"
+}
+
+stop_hostapd_band() {
+	band="$1"
+	pidfile="$RUN_DIR/hostapd-$band.pid"
+	ctrl="$RUN_DIR/ctrl-$band"
+	ifname=wlan1
+	[ "$band" = 5g ] && ifname=wlan0
+	pid="$(cat "$pidfile" 2>/dev/null || true)"
+	if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+		if command -v hostapd_cli >/dev/null 2>&1 && [ -d "$ctrl" ]; then
+			hostapd_cli -p "$ctrl" -i "$ifname" terminate >>"$LOG_FILE" 2>&1 || true
+		fi
+		n=0
+		while kill -0 "$pid" 2>/dev/null && [ "$n" -lt 4 ]; do sleep 1; n=$((n + 1)); done
+		if kill -0 "$pid" 2>/dev/null; then
+			kill "$pid" 2>/dev/null || true
+			n=0
+			while kill -0 "$pid" 2>/dev/null && [ "$n" -lt 3 ]; do sleep 1; n=$((n + 1)); done
+		fi
+		if kill -0 "$pid" 2>/dev/null; then
+			kill -9 "$pid" 2>/dev/null || true
+		fi
+	fi
+	rm -f "$pidfile"
+	rm -rf "$ctrl"
+}
+
+stop_hostapd() {
+	stop_hostapd_band 2g
+	stop_hostapd_band 5g
+}
+
+valid_psk() { [ "${#1}" -ge 8 ] && [ "${#1}" -le 63 ]; }
+
+write_security() {
+	enc="$1"; key="$2"
+	case "$enc" in
+		open)
+			echo 'auth_algs=1'
+			;;
+		psk)
+			valid_psk "$key" || key="$DEFAULT_KEY"
+			echo 'wpa=1'; echo 'wpa_key_mgmt=WPA-PSK'; echo 'wpa_pairwise=TKIP CCMP'; echo "wpa_passphrase=$key"
+			;;
+		mixed)
+			valid_psk "$key" || key="$DEFAULT_KEY"
+			echo 'wpa=3'; echo 'wpa_key_mgmt=WPA-PSK'; echo 'wpa_pairwise=TKIP CCMP'; echo 'rsn_pairwise=CCMP'; echo "wpa_passphrase=$key"
+			;;
+		*)
+			valid_psk "$key" || key="$DEFAULT_KEY"
+			echo 'wpa=2'; echo 'wpa_key_mgmt=WPA-PSK'; echo 'rsn_pairwise=CCMP'; echo "wpa_passphrase=$key"
+			;;
+	esac
+}
+
+vht_center80() {
+	case "$1" in
+		36|40|44|48) echo 42 ;; 52|56|60|64) echo 58 ;;
+		100|104|108|112) echo 106 ;; 116|120|124|128) echo 122 ;;
+		132|136|140|144) echo 138 ;; 149|153|157|161) echo 155 ;;
+		*) echo 0 ;;
+	esac
+}
+
+write_hostapd_config() {
+	band="$1"; ifname="$2"; ssid="$3"; channel="$4"; width="$5"; enc="$6"; key="$7"; conf="$8"; ctrl="${9:-$RUN_DIR/ctrl-$band}"
+	{
+		echo "interface=$ifname"
+		echo 'driver=nl80211'
+		[ -d "/sys/class/net/$BRIDGE" ] && echo "bridge=$BRIDGE"
+		echo "ctrl_interface=$ctrl"
+		echo "ssid=$ssid"
+		echo "channel=$channel"
+		# v44.55: explicit conservative beacon timing for both vendor radios.
+		echo 'beacon_int=100'
+		echo 'dtim_period=2'
+		if [ "$band" = 2g ]; then
+			profile="$(sanitize_2g_profile "${R2_PROFILE:-auto}")"
+			case "$profile" in
+				b-legacy) echo 'wmm_enabled=0'; echo 'preamble=0' ;;
+				g-legacy) echo 'wmm_enabled=0'; echo 'preamble=1' ;;
+				g-long) echo 'wmm_enabled=0'; echo 'preamble=0' ;;
+				*) echo 'wmm_enabled=1'; echo 'preamble=1' ;;
+			esac
+			# v44.59: the Linux-6 vendor port does not expose reliable ACK
+			# accounting for RTL8197FS either. Keep WPA-authorized stations
+			# while the RX path recovers instead of hostapd low-ACK eviction.
+			echo 'disassoc_low_ack=0'
+			echo 'ap_max_inactivity=600'
+		else
+			echo 'wmm_enabled=1'
+			# RTL8812BRH/8822B does not provide fully trustworthy ACK accounting
+			# on this Linux-6.6 vendor-HAL port. Do not let hostapd tear down a
+			# healthy 5 GHz station solely because of low-ACK heuristics.
+			echo 'disassoc_low_ack=0'
+			echo 'ap_max_inactivity=600'
+		fi
+		if [ "$REGDOMAIN" != 00 ]; then
+			echo "country_code=$REGDOMAIN"
+			echo 'ieee80211d=1'
+			[ "$band" = 5g ] && echo 'ieee80211h=1'
+		fi
+		if [ "$band" = 2g ]; then
+			profile="$(sanitize_2g_profile "${R2_PROFILE:-auto}")"
+			case "$profile" in
+				b-legacy)
+					echo 'hw_mode=b'
+					;;
+				g-legacy-wmm|g-legacy|g-long)
+					echo 'hw_mode=g'
+					;;
+				*)
+					echo 'hw_mode=g'; echo 'ieee80211n=1'
+					if [ "$width" = 40 ]; then
+						case "$channel" in 1|2|3|4|5|6|7) echo 'ht_capab=[HT40+]' ;; *) echo 'ht_capab=[HT40-]' ;; esac
+					fi
+					;;
+			esac
+		else
+			echo 'hw_mode=a'; echo 'ieee80211n=1'; echo 'ieee80211ac=1'
+			if [ "$width" = 40 ]; then
+				case "$channel" in 36|44|52|60|100|108|116|124|132|140|149|157) echo 'ht_capab=[HT40+]' ;; *) echo 'ht_capab=[HT40-]' ;; esac
+			elif [ "$width" = 80 ]; then
+				center="$(vht_center80 "$channel")"
+				case "$channel" in
+					36|44|52|60|100|108|116|124|132|140|149|157) echo 'ht_capab=[HT40+]' ;;
+					*) echo 'ht_capab=[HT40-]' ;;
+				esac
+				if [ "$center" != 0 ]; then
+					echo 'vht_oper_chwidth=1'; echo "vht_oper_centr_freq_seg0_idx=$center"
+				fi
+			fi
+		fi
+		write_security "$enc" "$key"
+	} >"$conf"
+}
+
+
+bridge_member_ok() {
+	bm_if="$1"; bm_bridge="$2"
+	[ -L "/sys/class/net/$bm_if/master" ] || return 1
+	[ "$(basename "$(readlink "/sys/class/net/$bm_if/master" 2>/dev/null)")" = "$bm_bridge" ]
+}
+
+ensure_bridge_member() {
+	eb_if="$1"; eb_bridge="$2"
+	[ -n "$eb_bridge" ] || return 0
+	[ -d "/sys/class/net/$eb_if" ] || return 0
+	[ -d "/sys/class/net/$eb_bridge" ] || { log "v44.55 bridge $eb_bridge missing for $eb_if"; return 0; }
+	bridge_member_ok "$eb_if" "$eb_bridge" && return 0
+	ip link set dev "$eb_if" master "$eb_bridge" >>"$LOG_FILE" 2>&1 || {
+		log "v44.55 unable to enslave $eb_if to $eb_bridge"
+		return 0
+	}
+	log "v44.55 bridge membership repaired if=$eb_if bridge=$eb_bridge"
+}
+
+mw5_rtknet_reseed() {
+	mr_phase="${1:-runtime}"
+	for mr_node in /proc/rd05-rtknet /proc/rtl8197f-rtknet; do
+		[ -w "$mr_node" ] || continue
+		printf '%s\n' reseed >"$mr_node" 2>>"$LOG_FILE" || true
+		log "v44.65.15 RTL865x L2/netif reseed phase=$mr_phase node=$mr_node"
+		return 0
+	done
+	return 0
+}
+
+mw5_factory_base_mac() {
+	. /lib/functions/system.sh 2>/dev/null || true
+	mtd_get_mac_ascii factory HW_NIC0_ADDR 2>/dev/null || true
+}
+
+mw5_effective_port_mode() {
+	mg_mode="$(uci -q get mw5webui.system.effective_port_mode 2>/dev/null || true)"
+	[ -n "$mg_mode" ] || mg_mode="$(uci -q get mw5webui.system.port_mode 2>/dev/null || true)"
+	case "$mg_mode" in
+		auto|'') echo safe ;;
+		isolated|setup|both-lan|rescue) echo offline ;;
+		bridge) echo ap ;;
+		static) echo router-static ;;
+		*) echo "$mg_mode" ;;
+	esac
+}
+
+# Keep Ethernet ownership stable while the vendor WLAN driver performs its
+# close/open configuration cycles.  In the normal safe/router topology WAN is
+# never a br-lan member.  Explicit AP and swap modes retain their intended
+# topology.  Finally pin br-lan to the factory base identity and re-seed only
+# the RTL865x L2/netif tables (the RESEED command does not rewind RX DMA).
+mw5_network_guard() {
+	mg_phase="${1:-runtime}"
+	command -v ip >/dev/null 2>&1 || { mw5_rtknet_reseed "$mg_phase"; return 0; }
+	mg_mode="$(mw5_effective_port_mode)"
+
+	case "$mg_mode" in
+		safe|router|router-static|offline)
+		[ ! -d /sys/class/net/wan ] || ip link set dev wan nomaster >>"$LOG_FILE" 2>&1 || true
+		ensure_bridge_member lan br-lan
+		;;
+		ap)
+		ensure_bridge_member lan br-lan
+		ensure_bridge_member wan br-lan
+		;;
+		swap)
+		[ ! -d /sys/class/net/lan ] || ip link set dev lan nomaster >>"$LOG_FILE" 2>&1 || true
+		ensure_bridge_member wan br-lan
+		;;
+	esac
+
+	mg_base="$(mw5_factory_base_mac)"
+	if [ -n "$mg_base" ] && [ -d /sys/class/net/br-lan ]; then
+		mg_cur="$(cat /sys/class/net/br-lan/address 2>/dev/null || true)"
+		if [ "$mg_cur" != "$mg_base" ]; then
+			ip link set dev br-lan address "$mg_base" >>"$LOG_FILE" 2>&1 || true
+			log "v44.65.15 pinned br-lan MAC phase=$mg_phase old=${mg_cur:-unknown} new=$mg_base"
+		fi
+	fi
+	mw5_rtknet_reseed "$mg_phase"
+	mg_route="$(ip -4 route show default 2>/dev/null | head -n1 || true)"
+	log "v44.65.15 network guard phase=$mg_phase mode=$mg_mode default=${mg_route:-none}"
+}
+
+wait_radio() {
+	ifname="$1"; n=0
+	while [ ! -d "/sys/class/net/$ifname" ] && [ "$n" -lt 10 ]; do sleep 1; n=$((n + 1)); done
+	[ -d "/sys/class/net/$ifname" ]
+}
+
+beacon_debug_dir_for_if() {
+	bd_if="$1"
+	case "$bd_if" in wlan0) bd_idx=0 ;; wlan1) bd_idx=1 ;; *) return 1 ;; esac
+	if ! grep -q ' /sys/kernel/debug debugfs ' /proc/mounts 2>/dev/null; then
+		mkdir -p /sys/kernel/debug 2>/dev/null || true
+		mount -t debugfs debugfs /sys/kernel/debug 2>/dev/null || true
+	fi
+	for bd_d in /sys/kernel/debug/rtl8192cd/*; do
+		[ -d "$bd_d" ] || continue
+		[ -r "$bd_d/radio_index" ] || continue
+		[ "$(cat "$bd_d/radio_index" 2>/dev/null)" = "$bd_idx" ] || continue
+		echo "$bd_d"
+		return 0
+	done
+	return 1
+}
+
+beacon_ok_read() {
+	bo_dir="$(beacon_debug_dir_for_if "$1" 2>/dev/null || true)"
+	[ -n "$bo_dir" ] && [ -r "$bo_dir/beacon_ok" ] || return 1
+	cat "$bo_dir/beacon_ok" 2>/dev/null
+}
+
+beacon_len_read() {
+	bl_dir="$(beacon_debug_dir_for_if "$1" 2>/dev/null || true)"
+	[ -n "$bl_dir" ] && [ -r "$bl_dir/beacon_len" ] || return 1
+	cat "$bl_dir/beacon_len" 2>/dev/null
+}
+
+# v44.42: common 2.4 GHz link proof used by apply, sniffing and 2g-alltest.
+# A station-table entry is the hard success criterion. AUTH/ASSOC markers and
+# data counters are recorded as supporting evidence; an ASSOC marker alone is
+# deliberately not treated as a completed client connection.
+two_g_station_first() {
+	command -v iw >/dev/null 2>&1 || return 1
+	iw dev wlan1 station dump 2>/dev/null | awk '/^Station / {print $2; exit}'
+}
+
+two_g_station_count() {
+	command -v iw >/dev/null 2>&1 || { echo 0; return; }
+	iw dev wlan1 station dump 2>/dev/null | awk '/^Station / {n++} END {print n+0}'
+}
+
+two_g_station_present() {
+	peer="$1"
+	[ -n "$peer" ] || return 1
+	command -v iw >/dev/null 2>&1 || return 1
+	iw dev wlan1 station get "$peer" >/dev/null 2>&1
+}
+
+two_g_station_metric() {
+	peer="$1"; metric="$2"
+	command -v iw >/dev/null 2>&1 || return 1
+	case "$metric" in
+		rx_packets) pat='rx packets:'; field=3 ;;
+		tx_packets) pat='tx packets:'; field=3 ;;
+		rx_bytes) pat='rx bytes:'; field=3 ;;
+		tx_bytes) pat='tx bytes:'; field=3 ;;
+		signal) pat='signal:'; field=2 ;;
+		*) return 1 ;;
+	esac
+	iw dev wlan1 station get "$peer" 2>/dev/null | awk -v p="$pat" -v f="$field" 'index($0,p) {print $f; exit}'
+}
+
+two_g_record_success() {
+	source="$1"; peer="${2:-}"; detail="${3:-}"
+	[ -d /sys/class/net/wlan1 ] || return 1
+	[ -n "$peer" ] || peer="$(two_g_station_first 2>/dev/null || true)"
+	[ -n "$peer" ] || return 1
+	# v44.52: Report17 caught a transient ASSOC entry, waited two seconds, then
+	# recorded WIFI2G_OK even though the station had already disappeared.  Do
+	# not turn AUTH/ASSOC churn into a false connected verdict.
+	two_g_station_present "$peer" || return 1
+	stamp="$(date +%s 2>/dev/null || echo 0)"
+	ssid="$(iw dev wlan1 info 2>/dev/null | sed -n 's/^[[:space:]]*ssid //p' | head -n 1)"
+	channel="$(iw dev wlan1 info 2>/dev/null | awk '/channel / {print $2; exit}')"
+	stations="$(two_g_station_count 2>/dev/null || echo 0)"
+	rx_packets="$(two_g_station_metric "$peer" rx_packets 2>/dev/null || echo 0)"
+	tx_packets="$(two_g_station_metric "$peer" tx_packets 2>/dev/null || echo 0)"
+	rx_bytes="$(two_g_station_metric "$peer" rx_bytes 2>/dev/null || echo 0)"
+	tx_bytes="$(two_g_station_metric "$peer" tx_bytes 2>/dev/null || echo 0)"
+	signal="$(two_g_station_metric "$peer" signal 2>/dev/null || echo NA)"
+	net_rx="$(cat /sys/class/net/wlan1/statistics/rx_packets 2>/dev/null || echo 0)"
+	net_tx="$(cat /sys/class/net/wlan1/statistics/tx_packets 2>/dev/null || echo 0)"
+	auth_rx_seen="$(dmesg 2>/dev/null | grep -c "MW5-AUTH-RX if=wlan1 peer=$peer" 2>/dev/null || true)"
+	assoc_rx_seen="$(dmesg 2>/dev/null | grep -c "MW5-ASSOC-RX if=wlan1 peer=$peer" 2>/dev/null || true)"
+	case "$auth_rx_seen" in ''|*[!0-9]*) auth_rx_seen=0 ;; esac
+	case "$assoc_rx_seen" in ''|*[!0-9]*) assoc_rx_seen=0 ;; esac
+	case "$rx_packets" in ''|*[!0-9]*) rx_packets=0 ;; esac
+	case "$tx_packets" in ''|*[!0-9]*) tx_packets=0 ;; esac
+	data_ok=0; [ "$rx_packets" -gt 0 ] 2>/dev/null && data_ok=1
+	msg="WIFI2G_OK source=$source peer=$peer ssid=${ssid:-unknown} channel=${channel:-unknown} stations=$stations auth_assoc=1 auth_rx_seen=$auth_rx_seen assoc_rx_seen=$assoc_rx_seen data_rx=$data_ok sta_rx_packets=$rx_packets sta_tx_packets=$tx_packets signal=${signal:-NA} detail=$detail"
+	logger -t mw5-wifi "$msg" 2>/dev/null || true
+	printf '%s %s\n' "$stamp" "$msg" >>"$WIFI2G_SUCCESS_LOG"
+	printf '%s\n' "$msg" >>"$LOG_FILE"
+	tmp="$WIFI2G_SUCCESS_ENV.tmp.$$"
+	cat >"$tmp" <<EOF_2G_OK
+MW5_2G_LINK_OK='1'
+MW5_2G_SOURCE='$(sq "$source")'
+MW5_2G_PEER='$(sq "$peer")'
+MW5_2G_SSID='$(sq "${ssid:-unknown}")'
+MW5_2G_CHANNEL='$(sq "${channel:-unknown}")'
+MW5_2G_STATIONS='$(sq "$stations")'
+MW5_2G_AUTH_ASSOC='1'
+MW5_2G_AUTH_RX_SEEN='$auth_rx_seen'
+MW5_2G_ASSOC_RX_SEEN='$assoc_rx_seen'
+MW5_2G_DATA_RX='$data_ok'
+MW5_2G_STA_RX_PACKETS='$(sq "$rx_packets")'
+MW5_2G_STA_TX_PACKETS='$(sq "$tx_packets")'
+MW5_2G_STA_RX_BYTES='$(sq "${rx_bytes:-0}")'
+MW5_2G_STA_TX_BYTES='$(sq "${tx_bytes:-0}")'
+MW5_2G_SIGNAL_DBM='$(sq "${signal:-NA}")'
+MW5_2G_NETDEV_RX_PACKETS='$(sq "$net_rx")'
+MW5_2G_NETDEV_TX_PACKETS='$(sq "$net_tx")'
+MW5_2G_DETAIL='$(sq "$detail")'
+MW5_2G_TIMESTAMP='$stamp'
+EOF_2G_OK
+	mv "$tmp" "$WIFI2G_SUCCESS_ENV"
+	mkdir -p /etc 2>/dev/null || true
+	ptmp="$WIFI2G_SUCCESS_PERSIST.tmp.$$"
+	cp "$WIFI2G_SUCCESS_ENV" "$ptmp" 2>/dev/null || true
+	if [ -s "$ptmp" ]; then
+		if ! cmp -s "$ptmp" "$WIFI2G_SUCCESS_PERSIST" 2>/dev/null; then mv "$ptmp" "$WIFI2G_SUCCESS_PERSIST"; else rm -f "$ptmp"; fi
+	else
+		rm -f "$ptmp"
+	fi
+	return 0
+}
+
+two_g_wait_for_client() {
+	source="$1"; seconds="${2:-$WIFI2G_VERIFY_SECONDS}"; detail="${3:-}"
+	case "$seconds" in ''|*[!0-9]*) seconds=$WIFI2G_VERIFY_SECONDS ;; esac
+	i=0
+	while [ "$i" -lt "$seconds" ]; do
+		sleep 1; i=$((i + 1))
+		peer="$(two_g_station_first 2>/dev/null || true)"
+		if [ -n "$peer" ]; then
+			# Give DHCP/ARP/ICMP generated by the ESP32 tester a short window to
+			# reach the AP data path before snapshotting station counters.
+			sleep 2
+			if two_g_record_success "$source" "$peer" "$detail waited=${i}s stable_after_2s=1"; then
+				return 0
+			fi
+			printf '%s\n' "WIFI2G_TRANSIENT_ASSOC source=$source peer=$peer vanished_before_stable_proof=1" >>"$LOG_FILE"
+		fi
+	done
+	msg="WIFI2G_WAIT_TIMEOUT source=$source seconds=$seconds no_station=1 detail=$detail"
+	logger -t mw5-wifi "$msg" 2>/dev/null || true
+	printf '%s\n' "$msg" >>"$LOG_FILE"
+	return 1
+}
+
+start_radio() {
+	band="$1"; ifname="$2"; enabled="$3"; ssid="$4"; channel="$5"; width="$6"; enc="$7"; key="$8"
+	[ "$enabled" = 1 ] || return 0
+	wait_radio "$ifname" || { log "$band: $ifname fehlt nach Treiber-Probe"; echo "FAIL: $band $ifname missing"; return 1; }
+	conf="$RUN_DIR/hostapd-$band.conf"; pidfile="$RUN_DIR/hostapd-$band.pid"; ctrl="$RUN_DIR/ctrl-$band"
+	rm -rf "$ctrl"; mkdir -p "$ctrl"
+	write_hostapd_config "$band" "$ifname" "$ssid" "$channel" "$width" "$enc" "$key" "$conf" "$ctrl"
+	beacon_before="$(beacon_ok_read "$ifname" 2>/dev/null || true)"
+	if [ "$band" = 2g ]; then
+		init_method="$(sanitize_2g_init "${R2_INIT_METHOD:-managed-cycle}")"
+		case "$init_method" in
+			hostapd-only)
+				ip link set dev "$ifname" down 2>/dev/null || true
+				;;
+			ap-pretype)
+				ip link set dev "$ifname" down 2>/dev/null || true
+				command -v iw >/dev/null 2>&1 && iw dev "$ifname" set type __ap >>"$LOG_FILE" 2>&1 || true
+				ip link set dev "$ifname" up 2>/dev/null || true
+				;;
+			*)
+				ip link set dev "$ifname" down 2>/dev/null || true
+				command -v iw >/dev/null 2>&1 && iw dev "$ifname" set type managed >>"$LOG_FILE" 2>&1 || true
+				ip link set dev "$ifname" up 2>/dev/null || true
+				;;
+		esac
+	else
+		ip link set dev "$ifname" down 2>/dev/null || true
+		command -v iw >/dev/null 2>&1 && iw dev "$ifname" set type managed >>"$LOG_FILE" 2>&1 || true
+		ip link set dev "$ifname" up 2>/dev/null || true
+	fi
+	if ! hostapd -B -P "$pidfile" "$conf" >>"$LOG_FILE" 2>&1; then
+		log "$band: hostapd/nl80211 Start fehlgeschlagen ($ifname)"
+		echo "FAIL: $band hostapd start failed on $ifname; see $LOG_FILE"
+		return 1
+	fi
+	sleep 3
+	pid="$(cat "$pidfile" 2>/dev/null || true)"
+	if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
+		log "$band: hostapd exited during startup validation ($ifname)"
+		echo "FAIL: $band hostapd exited during startup validation; see $LOG_FILE"
+		return 1
+	fi
+	info="$(iw dev "$ifname" info 2>/dev/null || true)"
+	printf '%s\n' "$info" >>"$LOG_FILE"
+	printf '%s\n' "$info" | grep -q 'type AP' || { log "$band: $ifname did not enter AP mode"; echo "FAIL: $band $ifname not in AP mode"; return 1; }
+	if [ "$band" = 5g ] && [ "$width" = 80 ]; then
+		printf '%s\n' "$info" | grep -q 'width: 80 MHz' || { log "$band: $ifname did not enter requested VHT80"; echo "FAIL: 5g $ifname not at 80 MHz"; return 1; }
+	fi
+	# hostapd bridge= normally does this. Verify and repair it explicitly so
+	# DHCP/DNS/NAT work identically on wlan0 and wlan1 after netifd changes.
+	ensure_bridge_member "$ifname" "$BRIDGE"
+	beacon_len="$(beacon_len_read "$ifname" 2>/dev/null || true)"
+	beacon_after="$(beacon_ok_read "$ifname" 2>/dev/null || true)"
+	# v44.22: v44.20 hardware testing proved ext_stats.beacon_ok is not a
+	# reliable over-the-air indicator on this vendor HAL: the externally
+	# visible RTL8812BRH AP also remains at 0->0.  Keep it as diagnostics only.
+	case "$beacon_len" in
+		''|*[!0-9]*)
+			log "$band: invalid/unavailable beacon descriptor length len=$beacon_len"
+			echo "FAIL: $band $ifname beacon descriptor was not built"
+			return 1
+			;;
+		0)
+			log "$band: zero-length beacon descriptor on $ifname"
+			echo "FAIL: $band $ifname beacon descriptor length is zero"
+			return 1
+			;;
+	esac
+	echo "INFO: $band $ifname beacon descriptor armed len=$beacon_len beacon_ok=${beacon_before:-na}->${beacon_after:-na} (counter diagnostic-only)"
+	log "$band: hostapd/nl80211 aktiv auf $ifname SSID=$ssid channel=$channel width=$width"
+	echo "PASS: $band AP active on $ifname SSID=$ssid channel=$channel width=$width"
+}
+
+probe_driver() {
+	modprobe rtl8192cd >>"$LOG_FILE" 2>&1 || { log 'modprobe rtl8192cd fehlgeschlagen'; return 1; }
+	return 0
+}
+
+apply_cfg80211() {
+	load_config
+	: >"$LOG_FILE"
+	echo "MW5 $VERSION: applying persistent cfg80211/hostapd AP configuration"
+	[ "$ENABLED" = 1 ] || { stop_hostapd; LAST_APPLY_RC=0; LAST_APPLY_MSG='disabled'; write_config_file; return 0; }
+	command -v hostapd >/dev/null 2>&1 || { LAST_APPLY_RC=127; LAST_APPLY_MSG='hostapd missing'; write_config_file; log "$LAST_APPLY_MSG"; return 127; }
+	# Establish the intended L2 ownership before the WLAN module touches the SoC.
+	mw5_network_guard pre-driver
+	probe_driver || { LAST_APPLY_RC=1; LAST_APPLY_MSG='driver probe failed'; write_config_file; return 1; }
+	# Repair/reseed immediately after module registration before AP open cycles.
+	mw5_network_guard post-driver
+	REGDOMAIN="$(sanitize_regdomain "$REGDOMAIN")"
+	command -v iw >/dev/null 2>&1 && iw reg set "$REGDOMAIN" >>"$LOG_FILE" 2>&1 || true
+	if [ "${MW5_ONLY_2G:-0}" = 1 ]; then stop_hostapd_band 2g; else stop_hostapd; fi
+	rc=0
+	start_radio 2g wlan1 "$R2_ENABLED" "$R2_SSID" "$R2_CHANNEL" "$R2_WIDTH" "$R2_ENCRYPTION" "$R2_KEY" || rc=1
+	mw5_network_guard post-2g
+	if [ "${MW5_ONLY_2G:-0}" != 1 ]; then
+		start_radio 5g wlan0 "$R5_ENABLED" "$R5_SSID" "$R5_CHANNEL" "$R5_WIDTH" "$R5_ENCRYPTION" "$R5_KEY" || rc=1
+		mw5_network_guard post-5g
+	fi
+	# v44.58: repair 2G membership once both radios are up, before the real
+	# client proof. This closes the netifd window observed in Report21.
+	if [ "$rc" = 0 ]; then
+		[ "$R2_ENABLED" = 1 ] && ensure_bridge_member wlan1 "$BRIDGE"
+		[ "$R5_ENABLED" = 1 ] && ensure_bridge_member wlan0 "$BRIDGE"
+	fi
+	if [ "$rc" = 0 ] && [ "$R2_ENABLED" = 1 ]; then
+		echo "2G-LINK-PROOF: waiting ${WIFI2G_VERIFY_SECONDS}s for a real wlan1 client (ESP32 tester recommended)..."
+		if two_g_wait_for_client apply "$WIFI2G_VERIFY_SECONDS" "profile=$R2_PROFILE init=$R2_INIT_METHOD"; then
+			echo "PASS: 2.4GHz client connected; $(tail -n 1 "$WIFI2G_SUCCESS_LOG" 2>/dev/null || true)"
+		else
+			echo "INFO: no 2.4GHz client observed during apply verification window; AP remains running"
+		fi
+	fi
+	# v44.58: network reloads are asynchronous.  Report21 caught wlan1 losing
+	# br-lan after 2G had already started while wlan0, started later, remained
+	# bridged.  Re-check both APs at the end and once more after a short settle.
+	if [ "$rc" = 0 ]; then
+		[ "$R2_ENABLED" = 1 ] && ensure_bridge_member wlan1 "$BRIDGE"
+		[ "$R5_ENABLED" = 1 ] && ensure_bridge_member wlan0 "$BRIDGE"
+		sleep 1
+		[ "$R2_ENABLED" = 1 ] && ensure_bridge_member wlan1 "$BRIDGE"
+		[ "$R5_ENABLED" = 1 ] && ensure_bridge_member wlan0 "$BRIDGE"
+	fi
+	# Final post-hostapd repair protects the working WAN/LAN path from any
+	# late bridge-MAC selection or vendor WLAN close/open side effect.
+	mw5_network_guard final
+	LAST_APPLY_RC="$rc"
+	if [ "$rc" = 0 ]; then LAST_APPLY_MSG='cfg80211/hostapd applied'; else LAST_APPLY_MSG='one or more APs failed'; fi
+	[ "$MESH_ENABLED" = 0 ] || log 'Mesh settings are stored but v44 AP bring-up does not enable 802.11s.'
+	write_config_file >/dev/null 2>&1 || write_runtime
+	if [ "$rc" = 0 ]; then
+		echo "PASS: persistent dual-band AP configuration applied"
+	else
+		echo "FAIL: one or more persistent APs failed; see $LOG_FILE"
+	fi
+	show_status
+	return "$rc"
+}
+
+stop_all() {
+	stop_hostapd
+	ip link set dev wlan0 down 2>/dev/null || true
+	ip link set dev wlan1 down 2>/dev/null || true
+	log 'cfg80211 APs stopped'
+}
+
+show_status() {
+	load_config
+	echo "version=$VERSION enabled=$ENABLED autoload=$AUTOLOAD driver=cfg80211/nl80211"
+	echo "2g enabled=$R2_ENABLED ifname=wlan1 ssid=$R2_SSID channel=$R2_CHANNEL width=$R2_WIDTH profile=$R2_PROFILE init_method=$R2_INIT_METHOD encryption=$R2_ENCRYPTION"
+	echo "5g enabled=$R5_ENABLED ifname=wlan0 ssid=$R5_SSID channel=$R5_CHANNEL width=$R5_WIDTH encryption=$R5_ENCRYPTION"
+	echo "last_apply_rc=$LAST_APPLY_RC last_apply_msg=$LAST_APPLY_MSG"
+	if [ -r "$WIFI2G_SUCCESS_ENV" ]; then
+		. "$WIFI2G_SUCCESS_ENV" 2>/dev/null || true
+		echo "2g_link_ok=${MW5_2G_LINK_OK:-0} last_peer=${MW5_2G_PEER:-none} last_source=${MW5_2G_SOURCE:-none} last_ssid=${MW5_2G_SSID:-unknown} last_channel=${MW5_2G_CHANNEL:-unknown} data_rx=${MW5_2G_DATA_RX:-0} timestamp=${MW5_2G_TIMESTAMP:-0}"
+	else
+		echo '2g_link_ok=0 last_peer=none'
+	fi
+	for i in wlan1 wlan0; do
+		if [ -d "/sys/class/net/$i" ]; then
+			state="$(cat "/sys/class/net/$i/operstate" 2>/dev/null || echo unknown)"
+			addr="$(cat "/sys/class/net/$i/address" 2>/dev/null || echo unknown)"
+			echo "$i present=1 state=$state mac=$addr"
+		else echo "$i present=0"; fi
+	done
+	command -v iw >/dev/null 2>&1 && iw dev 2>/dev/null || true
+}
+
+get_value() {
+	load_config
+	case "$1" in
+		general.enabled) echo "$ENABLED" ;; general.autoload) echo "$AUTOLOAD" ;; general.regdomain) echo "$REGDOMAIN" ;; general.bridge) echo "$BRIDGE" ;;
+		radio2g.enabled) echo "$R2_ENABLED" ;; radio2g.ssid) echo "$R2_SSID" ;; radio2g.channel) echo "$R2_CHANNEL" ;; radio2g.width) echo "$R2_WIDTH" ;; radio2g.profile) echo "$R2_PROFILE" ;; radio2g.init_method) echo "$R2_INIT_METHOD" ;; radio2g.encryption) echo "$R2_ENCRYPTION" ;; radio2g.key) echo "$R2_KEY" ;;
+		radio5g.enabled) echo "$R5_ENABLED" ;; radio5g.ssid) echo "$R5_SSID" ;; radio5g.channel) echo "$R5_CHANNEL" ;; radio5g.width) echo "$R5_WIDTH" ;; radio5g.encryption) echo "$R5_ENCRYPTION" ;; radio5g.key) echo "$R5_KEY" ;;
+		mesh.enabled) echo "$MESH_ENABLED" ;; mesh.mode) echo "$MESH_MODE" ;; mesh.mesh_id) echo "$MESH_ID" ;; mesh.backhaul) echo "$MESH_BACKHAUL" ;; mesh.pairing) echo "$MESH_PAIRING" ;; mesh.key) echo "$MESH_KEY" ;;
+		*) uci_get "$1" ;;
+	esac
+}
+
+
+# Fully automatic MW5 diagnostic + temporary WLAN test runner.
+# It never writes test SSIDs/keys to UCI.  It may temporarily stop an AP
+# started by this wrapper, but restores it at the end when possible.
+ALLTEST_LOG=$LOG_DIR/wlan-alltest.log
+ALLTEST_SUMMARY=$LOG_DIR/wlan-alltest-summary.txt
+ALLTEST_DIR=$LOG_DIR/alltest
+ALLTEST_BUNDLE=/tmp/mw5-alltest-report.tar.gz
+ALLTEST_KEY='MW5-AllTest-1234'
+ALLTEST_2G_SSID='MW5-ALLTEST-2G'
+ALLTEST_5G_SSID='MW5-ALLTEST-5G'
+
+at_out() {
+	printf '%s\n' "$*" | tee -a "$ALLTEST_LOG"
+}
+
+at_section() {
+	at_out ''
+	at_out "===== $* ====="
+}
+
+at_cmd() {
+	at_out "+ $*"
+	sh -c "$*" >>"$ALLTEST_LOG" 2>&1
+	at_rc=$?
+	at_out "[rc=$at_rc]"
+	return "$at_rc"
+}
+
+at_pass() {
+	AT_PASS=$((AT_PASS + 1))
+	at_out "PASS: $*"
+}
+
+at_fail() {
+	AT_FAIL=$((AT_FAIL + 1))
+	at_out "FAIL: $*"
+}
+
+at_warn() {
+	AT_WARN=$((AT_WARN + 1))
+	at_out "WARN: $*"
+}
+
+at_skip() {
+	AT_SKIP=$((AT_SKIP + 1))
+	at_out "SKIP: $*"
+}
+
+at_have() { command -v "$1" >/dev/null 2>&1; }
+
+at_sanitized_config() {
+	if at_have uci; then
+		uci -q show mw5wifi 2>/dev/null | sed "s/\.key='[^']*'/.key='<redacted>'/g"
+	else
+		echo 'uci unavailable'
+	fi
+}
+
+at_mount_debugfs() {
+	grep -q ' /sys/kernel/debug debugfs ' /proc/mounts 2>/dev/null && return 0
+	mkdir -p /sys/kernel/debug 2>/dev/null || true
+	mount -t debugfs debugfs /sys/kernel/debug 2>/dev/null || true
+}
+
+at_collect_debugfs() {
+	at_section 'rtl8192cd debugfs / board data'
+	at_mount_debugfs
+	if [ ! -d /sys/kernel/debug/rtl8192cd ]; then
+		at_out 'debugfs: /sys/kernel/debug/rtl8192cd not present'
+		return 0
+	fi
+	find /sys/kernel/debug/rtl8192cd -type f 2>/dev/null | sort | while read -r at_f; do
+		[ -n "$at_f" ] || continue
+		at_out "--- $at_f"
+		sed -n '1,128p' "$at_f" >>"$ALLTEST_LOG" 2>&1 || true
+	done
+}
+
+at_check_mw5_rf_profile() {
+	at_section 'MW5 v44.48 RTL8197FS beacon-DMA + RTL8822B frame-local EAPOL TX proof profile'
+	at_rf_ok=1
+	at_soc=/sys/kernel/debug/rtl8192cd/18640000.wifi
+	at_pci=/sys/kernel/debug/rtl8192cd/0000:00:00.0
+
+	# Use | delimiters: the PCI debugfs directory contains ':' characters.
+	for at_spec in "$at_soc|5|RTL8197FS/RFE5" "$at_pci|6|RTL8812BRH/RFE6"; do
+		at_dir=${at_spec%%|*}; at_rest=${at_spec#*|}; at_rfe=${at_rest%%|*}; at_name=${at_rest#*|}
+		if [ ! -d "$at_dir" ]; then
+			at_fail "$at_name debugfs directory missing: $at_dir"; at_rf_ok=0; continue
+		fi
+		at_active="$(cat "$at_dir/active_rfe_type" 2>/dev/null || echo missing)"
+		at_trsw="$(cat "$at_dir/trswitch" 2>/dev/null || echo missing)"
+		at_gpio="$(cat "$at_dir/gpio_muxcfg" 2>/dev/null || echo missing)"
+		at_pa="$(cat "$at_dir/use_ext_pa" 2>/dev/null || echo missing)"
+		at_lna="$(cat "$at_dir/use_ext_lna" 2>/dev/null || echo missing)"
+		at_mimo="$(cat "$at_dir/mimo_mode" 2>/dev/null || echo missing)"
+		at_tx2="$(cat "$at_dir/tx2path" 2>/dev/null || echo missing)"
+		at_off="$(cat "$at_dir/txpower_offset" 2>/dev/null || echo missing)"
+		at_maps="$(cat "$at_dir/rx_dma_maps" 2>/dev/null || echo missing)"
+		at_unmaps="$(cat "$at_dir/rx_dma_unmaps" 2>/dev/null || echo missing)"
+		at_maperr="$(cat "$at_dir/rx_dma_map_errors" 2>/dev/null || echo missing)"
+		at_direct="$(cat "$at_dir/rx_direct_bus" 2>/dev/null || echo missing)"
+		at_dsyncdev="$(cat "$at_dir/rx_direct_sync_device" 2>/dev/null || echo missing)"
+		at_dsynccpu="$(cat "$at_dir/rx_direct_sync_cpu" 2>/dev/null || echo missing)"
+		at_irq="$(cat "$at_dir/irq_count" 2>/dev/null || echo missing)"
+		at_rxirq="$(cat "$at_dir/rx_irq_count" 2>/dev/null || echo missing)"
+		at_ns="$(cat "$at_dir/napi_schedules" 2>/dev/null || echo missing)"
+		at_np="$(cat "$at_dir/napi_polls" 2>/dev/null || echo missing)"
+		at_fb="$(cat "$at_dir/rx_irq_fallback_count" 2>/dev/null || echo missing)"
+		at_fbs="$(cat "$at_dir/rx_irq_fallback_suppressed" 2>/dev/null || echo missing)"
+		at_rpc="$(cat "$at_dir/rx_pending_checks" 2>/dev/null || echo missing)"
+		at_work="$(cat "$at_dir/napi_work_done" 2>/dev/null || echo missing)"
+		at_rcr="$(cat "$at_dir/rcr_after_init" 2>/dev/null || echo missing)"
+		at_map0="$(cat "$at_dir/rxfltmap0_after_init" 2>/dev/null || echo missing)"
+		at_map2="$(cat "$at_dir/rxfltmap2_after_init" 2>/dev/null || echo missing)"
+		at_rxbd_dma="$(cat "$at_dir/rxbd_dma_base" 2>/dev/null || echo missing)"
+		at_rxbd_hw="$(cat "$at_dir/rxbd_hw_base" 2>/dev/null || echo missing)"
+		at_cr="$(cat "$at_dir/cr_after_init" 2>/dev/null || echo missing)"
+		at_sysfunc="$(cat "$at_dir/sys_func_en_after_init" 2>/dev/null || echo missing)"
+		at_rfctrl="$(cat "$at_dir/rf_ctrl_after_init" 2>/dev/null || echo missing)"
+		at_afe78="$(cat "$at_dir/afe_ctrl4_after_init" 2>/dev/null || echo missing)"
+		at_afe20="$(cat "$at_dir/afe_ldo_ctrl_after_init" 2>/dev/null || echo missing)"
+		at_rxidx="$(cat "$at_dir/rxbd_idx_after_init" 2>/dev/null || echo missing)"
+		at_rxbd0dw0="$(cat "$at_dir/rxbd0_dw0" 2>/dev/null || echo missing)"
+		at_rxbd0dw1="$(cat "$at_dir/rxbd0_dw1" 2>/dev/null || echo missing)"
+		at_txbd_dma="$(cat "$at_dir/txbd_dma_base" 2>/dev/null || echo missing)"
+		at_txbd_hw="$(cat "$at_dir/txbd_hw_base" 2>/dev/null || echo missing)"
+		at_txdesc_dma="$(cat "$at_dir/txdesc_dma_base" 2>/dev/null || echo missing)"
+		at_bcnbd_dma="$(cat "$at_dir/bcnbd_dma_base" 2>/dev/null || echo missing)"
+		at_bcnbd_hw="$(cat "$at_dir/bcnbd_hw_base" 2>/dev/null || echo missing)"
+		at_bcndesc_dma="$(cat "$at_dir/bcndesc_dma_base" 2>/dev/null || echo missing)"
+		at_mgq_idx="$(cat "$at_dir/mgq_idx_after_init" 2>/dev/null || echo missing)"
+		at_txmaps="$(cat "$at_dir/tx_dma_maps" 2>/dev/null || echo missing)"
+		at_txunmaps="$(cat "$at_dir/tx_dma_unmaps" 2>/dev/null || echo missing)"
+		at_txmaperr="$(cat "$at_dir/tx_dma_map_errors" 2>/dev/null || echo missing)"
+		at_txmgtmaps="$(cat "$at_dir/tx_dma_mgt_maps" 2>/dev/null || echo missing)"
+		at_txdatamaps="$(cat "$at_dir/tx_dma_data_maps" 2>/dev/null || echo missing)"
+		at_mgntdok="$(cat "$at_dir/mgntdok_irq_count" 2>/dev/null || echo missing)"
+		at_highdok="$(cat "$at_dir/highdok_irq_count" 2>/dev/null || echo missing)"
+		at_hi0tx="$(cat "$at_dir/critical_hi0_tx" 2>/dev/null || echo missing)"
+		at_reclaim="$(cat "$at_dir/tx_reclaim_kicks" 2>/dev/null || echo missing)"
+		at_reclaim_tx="$(cat "$at_dir/tx_reclaim_tx_kicks" 2>/dev/null || echo missing)"
+		at_data_submits="$(cat "$at_dir/tx_data_submits" 2>/dev/null || echo missing)"
+		at_reclaim_data="$(cat "$at_dir/tx_reclaim_data_kicks" 2>/dev/null || echo missing)"
+		at_redoorbell="$(cat "$at_dir/tx_redoorbell_kicks" 2>/dev/null || echo missing)"
+		at_mgt_redoorbell="$(cat "$at_dir/tx_mgt_redoorbell_kicks" 2>/dev/null || echo missing)"
+		at_data_redoorbell="$(cat "$at_dir/tx_data_redoorbell_kicks" 2>/dev/null || echo missing)"
+		at_bkq_rw="$(cat "$at_dir/bkq_rwptr" 2>/dev/null || echo missing)"
+		at_beq_rw="$(cat "$at_dir/beq_rwptr" 2>/dev/null || echo missing)"
+		at_viq_rw="$(cat "$at_dir/viq_rwptr" 2>/dev/null || echo missing)"
+		at_voq_rw="$(cat "$at_dir/voq_rwptr" 2>/dev/null || echo missing)"
+		at_mgq_rw="$(cat "$at_dir/mgq_rwptr" 2>/dev/null || echo missing)"
+		at_hi0_rw="$(cat "$at_dir/hi0_rwptr" 2>/dev/null || echo missing)"
+		at_trswfix="$(cat "$at_dir/trsw_reasserts" 2>/dev/null || echo missing)"
+		at_eapolmgt="$(cat "$at_dir/eapol_mgt_redirects" 2>/dev/null || echo missing)"
+		at_eapoloem="$(cat "$at_dir/eapol_oem_tx" 2>/dev/null || echo missing)"
+		at_eapoldesc="$(cat "$at_dir/eapol_desc_fills" 2>/dev/null || echo missing)"
+		at_txagc="$(cat "$at_dir/txagc_e00" 2>/dev/null || echo missing)/$(cat "$at_dir/txagc_e04" 2>/dev/null || echo missing)/$(cat "$at_dir/txagc_e08" 2>/dev/null || echo missing)/$(cat "$at_dir/txagc_830" 2>/dev/null || echo missing)/$(cat "$at_dir/txagc_834" 2>/dev/null || echo missing)/$(cat "$at_dir/txagc_838" 2>/dev/null || echo missing)/$(cat "$at_dir/txagc_86c" 2>/dev/null || echo missing)"
+		at_txdmaerr="$(cat "$at_dir/txdma_errors" 2>/dev/null || echo missing)"
+		at_qseldiff="$(cat "$at_dir/txdma_qsel_diff" 2>/dev/null || echo missing)"
+		at_txdmalast="$(cat "$at_dir/txdma_last_status" 2>/dev/null || echo missing)"
+		at_bu="$(cat "$at_dir/beacon_dma_updates" 2>/dev/null || echo missing)"
+		at_be="$(cat "$at_dir/beacon_dma_alloc_errors" 2>/dev/null || echo missing)"
+		at_bs="$(cat "$at_dir/beacon_dma_size" 2>/dev/null || echo missing)"
+		at_out "$at_name active_rfe=$at_active trswitch=$at_trsw gpio_muxcfg=$at_gpio ext_pa=$at_pa ext_lna=$at_lna mimo_mode=$at_mimo tx2path=$at_tx2 txpower_offset=$at_off rx_dma_maps=$at_maps rx_dma_unmaps=$at_unmaps rx_dma_map_errors=$at_maperr rx_direct_bus=$at_direct rx_direct_sync_device=$at_dsyncdev rx_direct_sync_cpu=$at_dsynccpu irq_count=$at_irq rx_irq_count=$at_rxirq napi_schedules=$at_ns napi_polls=$at_np rx_irq_fallback_count=$at_fb rx_irq_fallback_suppressed=$at_fbs rx_pending_checks=$at_rpc napi_work_done=$at_work rcr_after_init=$at_rcr rxfltmap0=$at_map0 rxfltmap2=$at_map2 rxbd_dma_base=$at_rxbd_dma rxbd_hw_base=$at_rxbd_hw cr_after_init=$at_cr sys_func_en_after_init=$at_sysfunc rf_ctrl_after_init=$at_rfctrl afe_ctrl4_after_init=$at_afe78 afe_ldo_ctrl_after_init=$at_afe20 rxbd_idx=$at_rxidx rxbd0=$at_rxbd0dw0/$at_rxbd0dw1 txbd_dma_base=$at_txbd_dma txbd_hw_base=$at_txbd_hw txdesc_dma_base=$at_txdesc_dma bcnbd_dma_base=$at_bcnbd_dma bcnbd_hw_base=$at_bcnbd_hw bcndesc_dma_base=$at_bcndesc_dma mgq_idx=$at_mgq_idx tx_dma_maps=$at_txmaps tx_dma_unmaps=$at_txunmaps tx_dma_map_errors=$at_txmaperr tx_dma_mgt_maps=$at_txmgtmaps tx_dma_data_maps=$at_txdatamaps mgntdok_irq_count=$at_mgntdok highdok_irq_count=$at_highdok critical_hi0_tx=$at_hi0tx tx_reclaim_kicks=$at_reclaim tx_reclaim_tx_kicks=$at_reclaim_tx tx_data_submits=$at_data_submits tx_reclaim_data_kicks=$at_reclaim_data tx_redoorbell_kicks=$at_redoorbell tx_mgt_redoorbell_kicks=$at_mgt_redoorbell tx_data_redoorbell_kicks=$at_data_redoorbell mgq_rwptr=$at_mgq_rw bkq_rwptr=$at_bkq_rw beq_rwptr=$at_beq_rw viq_rwptr=$at_viq_rw voq_rwptr=$at_voq_rw hi0_rwptr=$at_hi0_rw trsw_reasserts=$at_trswfix eapol_mgt_redirects=$at_eapolmgt eapol_oem_tx=$at_eapoloem eapol_desc_fills=$at_eapoldesc txagc=$at_txagc txdma_errors=$at_txdmaerr txdma_qsel_diff=$at_qseldiff txdma_last_status=$at_txdmalast beacon_dma_updates=$at_bu beacon_dma_alloc_errors=$at_be beacon_dma_size=$at_bs"
+		if [ "$at_active" = "$at_rfe" ] && [ "$at_trsw" = 1 ] && [ "$at_pa" = 1 ] && [ "$at_lna" = 1 ] && [ "$at_tx2" = 1 ] && [ "$at_off" = 2 ]; then
+			at_pass "$at_name OEM FEM runtime profile active (trswitch=1, TXPowerOffset=2)"
+		else
+			at_fail "$at_name OEM FEM runtime profile mismatch"; at_rf_ok=0
+		fi
+		if [ "$at_rfe" = 5 ]; then
+			case "$at_gpio:$at_trswfix" in
+				*[!0-9:]*|'') at_fail "RTL8197FS TRSW0 diagnostics unavailable gpio=$at_gpio reasserts=$at_trswfix"; at_rf_ok=0 ;;
+				*)
+					if [ $((at_gpio & 4)) -eq 4 ] && [ "$at_trswfix" -gt 0 ]; then
+						at_pass "RTL8197FS RFE5 TRSW0 pinmux survives HAL reopen (gpio40=$at_gpio reasserts=$at_trswfix)"
+					else
+						at_fail "RTL8197FS RFE5 TRSW0 pinmux still cleared (gpio40=$at_gpio reasserts=$at_trswfix)"; at_rf_ok=0
+					fi
+					;;
+			esac
+		fi
+		case "$at_maps:$at_unmaps:$at_maperr:$at_direct:$at_dsyncdev:$at_dsynccpu" in
+			*[!0-9:]*|'') at_fail "$at_name RX DMA counters unavailable/invalid"; at_rf_ok=0 ;;
+			*)
+				if [ "$at_rfe" = 5 ]; then
+					if [ "$at_direct" -gt 0 ] && [ "$at_maps" -eq 0 ] && [ "$at_maperr" -eq 0 ] && [ "$at_dsyncdev" -gt 0 ]; then
+						at_pass "$at_name OEM direct RXBD payload address active with Linux6 cache ownership sync (direct=$at_direct devsync=$at_dsyncdev cpusync=$at_dsynccpu)"
+					else
+						at_fail "$at_name direct RX contract mismatch direct=$at_direct maps=$at_maps maperr=$at_maperr devsync=$at_dsyncdev"; at_rf_ok=0
+					fi
+				elif [ "$at_maps" -gt 0 ] && [ "$at_maperr" -eq 0 ]; then
+					at_pass "$at_name Linux6 streaming RX DMA mappings active with zero map errors"
+				else
+					at_fail "$at_name Linux6 RX DMA mapping inactive or failed"; at_rf_ok=0
+				fi
+				;;
+		esac
+
+		case "$at_irq:$at_rxirq:$at_ns:$at_np:$at_fb:$at_work" in
+			*[!0-9:]*|'') at_fail "$at_name IRQ/NAPI counters unavailable/invalid"; at_rf_ok=0 ;;
+			*)
+				if [ "$at_irq" -gt 0 ]; then
+					at_pass "$at_name real hardware IRQ handler entered ($at_irq)"
+				else
+					at_fail "$at_name IRQ handler count is zero after RTL8197F IRR-bank routing fix"; at_rf_ok=0
+				fi
+				if [ "$at_rxirq" -gt 0 ] && [ "$at_work" -gt 0 ]; then
+					at_pass "$at_name RX interrupt + completed RXBD work observed: rx_irq=$at_rxirq work=$at_work"
+				elif [ "$at_rfe" = 5 ] && [ "$at_fb" -gt 0 ] && [ "$at_work" -gt 0 ]; then
+					at_pass "$at_name IRQ-triggered RTL8197FS fallback recovered RXBD frames: fallback=$at_fb work=$at_work"
+				elif [ "$at_rfe" = 5 ] && [ "$at_fb" -gt 0 ]; then
+					at_fail "$at_name fallback NAPI ran but RXBD ring produced zero frames (fallback=$at_fb work=$at_work)"; at_rf_ok=0
+				else
+					at_fail "$at_name no usable RX completion observed"; at_rf_ok=0
+				fi
+				;;
+		esac
+
+		case "$at_rcr" in
+			''|*[!0-9]*) at_fail "$at_name RCR diagnostic unavailable/invalid: $at_rcr"; at_rf_ok=0 ;;
+			*)
+				# v44.38 retains v44.37 BIT_AMF=BIT13, BIT_ADF=BIT11 and AAP=BIT0.
+				if [ $((at_rcr & 10241)) -eq 10241 ]; then
+					at_pass "$at_name RCR management+data+all-unicast receive gates enabled (rcr=$at_rcr)"
+				elif [ "$at_rfe" = 6 ] && [ "$at_rxirq" -gt 0 ] && [ "$at_work" -gt 0 ]; then
+					# The external root/debugfs snapshot can be reset across AP/scan
+					# reopen. Actual RXBD work + cfg80211 scan is authoritative.
+					at_warn "$at_name RCR snapshot is zero/stale after reopen; hardware RX is active (rx_irq=$at_rxirq work=$at_work)"
+				else
+					at_fail "$at_name RCR missing AMF/ADF/AAP receive gate(s): rcr=$at_rcr"; at_rf_ok=0
+				fi
+				;;
+		esac
+
+		if [ "$at_rfe" = 5 ]; then
+			case "$at_cr:$at_sysfunc:$at_rfctrl:$at_rxbd_dma:$at_rxbd_hw:$at_rxbd0dw1" in
+				*[!0-9:]*|'') at_fail 'RTL8197FS post-init RX/RF diagnostics unavailable'; at_rf_ok=0 ;;
+				*)
+					if [ $((at_cr & 138)) -eq 138 ]; then
+						at_pass "RTL8197FS MACRX+RXDMA+HCI_RXDMA enabled after calibration (cr=$at_cr)"
+					else
+						at_fail "RTL8197FS post-init RX enable bits incomplete (cr=$at_cr)"; at_rf_ok=0
+					fi
+					if [ $((at_sysfunc & 8195)) -eq 8195 ] && [ $((at_rfctrl & 7)) -eq 7 ]; then
+						at_pass "RTL8197FS BB/RF power controls enabled after calibration (sys=$at_sysfunc rf=$at_rfctrl)"
+					else
+						at_fail "RTL8197FS BB/RF power controls incomplete after calibration (sys=$at_sysfunc rf=$at_rfctrl)"; at_rf_ok=0
+					fi
+					if [ "$at_rxbd_dma" -gt 0 ] && [ "$at_rxbd_dma" -eq "$at_rxbd_hw" ] && [ "$at_rxbd0dw1" -gt 0 ]; then
+						at_pass "RTL8197FS RXBD coherent base/readback valid dma=$at_rxbd_dma hw=$at_rxbd_hw dw1=$at_rxbd0dw1"
+					else
+						at_fail "RTL8197FS RXBD base/descriptor readback invalid dma=$at_rxbd_dma hw=$at_rxbd_hw dw1=$at_rxbd0dw1"; at_rf_ok=0
+					fi
+					;;
+			esac
+		fi
+
+		case "$at_txbd_dma:$at_txbd_hw:$at_txdesc_dma:$at_bcnbd_dma:$at_bcnbd_hw:$at_bcndesc_dma:$at_txmaperr" in
+			*[!0-9:]*|'') at_fail "$at_name coherent TX-ring diagnostics unavailable"; at_rf_ok=0 ;;
+			*)
+				if [ "$at_txbd_dma" -gt 0 ] && [ "$at_txbd_dma" -eq "$at_txbd_hw" ] && [ "$at_txdesc_dma" -gt 0 ] && [ "$at_txmaperr" -eq 0 ]; then
+					at_pass "$at_name coherent MGT TXBD/TXDESC active dma=$at_txbd_dma hw=$at_txbd_hw txdesc=$at_txdesc_dma"
+				else
+					at_fail "$at_name coherent MGT TX ring invalid dma=$at_txbd_dma hw=$at_txbd_hw txdesc=$at_txdesc_dma maperr=$at_txmaperr"; at_rf_ok=0
+				fi
+				if [ "$at_bcnbd_dma" -gt 0 ] && [ "$at_bcnbd_dma" -eq "$at_bcnbd_hw" ] && [ "$at_bcndesc_dma" -gt 0 ]; then
+					at_pass "$at_name coherent beacon TXBD/TXDESC active dma=$at_bcnbd_dma hw=$at_bcnbd_hw txdesc=$at_bcndesc_dma"
+				else
+					at_fail "$at_name coherent beacon descriptor ring invalid dma=$at_bcnbd_dma hw=$at_bcnbd_hw txdesc=$at_bcndesc_dma"; at_rf_ok=0
+				fi
+				;;
+		esac
+
+		if [ "$at_rfe" = 5 ]; then
+			case "$at_bu:$at_be:$at_bs" in
+				*[!0-9:]*|'') at_fail 'RTL8197FS legacy beacon DMA counters unavailable'; at_rf_ok=0 ;;
+				*)
+					# v44.38 retains v44.37: disables the v44.25-v44.36 second
+					# coherent payload pool and restores the recovered OEM beaconbuf path.
+					if [ "$at_bs" -eq 0 ] && [ "$at_bu" -eq 0 ] && [ "$at_be" -eq 0 ]; then
+						at_pass "RTL8197FS OEM direct beacon payload path active (legacy coherent payload pool disabled)"
+					else
+						at_warn "RTL8197FS legacy beacon DMA pool unexpectedly active size=$at_bs updates=$at_bu alloc_errors=$at_be"
+					fi
+					;;
+			esac
+		fi
+	done
+
+	dmesg >"$ALLTEST_DIR/dmesg-rf-profile.txt" 2>/dev/null || : >"$ALLTEST_DIR/dmesg-rf-profile.txt"
+	if grep -q 'PHY_REG_PG_8197Fmp_Type5' "$ALLTEST_DIR/dmesg-rf-profile.txt"; then
+		at_pass 'RTL8197FS selected PHY_REG_PG_8197Fmp_Type5'
+	else
+		at_fail 'RTL8197FS Type5 PHY power table not observed'; at_rf_ok=0
+	fi
+	if grep -q 'PHY_REG_PG_8822Bmp_Type6' "$ALLTEST_DIR/dmesg-rf-profile.txt"; then
+		at_pass 'RTL8812BRH/8822B selected PHY_REG_PG_8822Bmp_Type6'
+	else
+		at_fail 'RTL8812BRH/8822B Type6 PHY power table not observed'; at_rf_ok=0
+	fi
+	AT_RF_PROFILE_OK=$at_rf_ok
+}
+
+at_collect_irq_controller() {
+	at_section 'RTL8197F ICTL routing (read-only)'
+	at_out 'OEM IRR routing: PCIe/RTL8812BRH ICTL input21 -> CPU5; RTL8197FS ICTL input29 -> CPU6.'
+	if ! at_have devmem; then
+		at_skip 'devmem unavailable; raw RTL8197F ICTL register dump skipped'
+		return 0
+	fi
+	for at_reg in \
+		'GIMR:0x18003000' 'GISR:0x18003004' \
+		'IRR0:0x18003008' 'IRR1:0x1800300c' 'IRR2:0x18003010' 'IRR3:0x18003014' \
+		'GIMR2:0x18003020' 'GISR2:0x18003024' \
+		'IRR4:0x18003028' 'IRR5:0x1800302c' 'IRR6:0x18003030' 'IRR7:0x18003034'; do
+		at_name=${at_reg%%:*}
+		at_addr=${at_reg#*:}
+		at_val="$(devmem "$at_addr" 32 2>&1)"
+		at_rc=$?
+		at_out "$at_name@$at_addr=$at_val rc=$at_rc"
+	done
+}
+
+at_collect_platform() {
+	at_section 'platform/PCI resources'
+	at_out 'OEM WLAN device table reference: entry0 RTL8812BRH (PCI 10ec:b822; vendor 8822B HAL path) cfg=0x18b10000 mmio=0x19000000 irq=5; entry1 RTL8197FS mmio=0x18640000 irq=6'
+	at_out 'PCIe v44.18: OF windows use OEM identity bus addresses; physical RTL8812BRH BAR2 expected 0x19000004 (vendor 8822B HAL path)'
+	if [ -d /sys/bus/platform/drivers/rtl8197f-pcie ]; then
+		at_out 'pcie_host_driver=present (/sys/bus/platform/drivers/rtl8197f-pcie)'
+		find /sys/bus/platform/drivers/rtl8197f-pcie -maxdepth 1 -type l -print >>"$ALLTEST_LOG" 2>&1 || true
+		at_pcie_dev=/sys/bus/platform/devices/18b00000.pcie
+		if [ -d "$at_pcie_dev" ]; then
+			at_pcie_modalias="$(cat "$at_pcie_dev/modalias" 2>/dev/null || true)"
+			at_pcie_override="$(cat "$at_pcie_dev/driver_override" 2>/dev/null || true)"
+			at_pcie_compat="$(tr '\000' ',' < "$at_pcie_dev/of_node/compatible" 2>/dev/null | sed 's/,$//' || true)"
+			at_out "pcie_device_modalias=${at_pcie_modalias:-missing}"
+			at_out "pcie_of_compatible=${at_pcie_compat:-missing}"
+			at_out "pcie_driver_override=${at_pcie_override:-empty}"
+			[ -r "$at_pcie_dev/uevent" ] && {
+				at_out 'pcie_device_uevent:'
+				while IFS= read -r at_line; do at_out "  $at_line"; done < "$at_pcie_dev/uevent"
+			}
+		fi
+
+		if [ -L "$at_pcie_dev/driver" ]; then
+			AT_PCIE_HOST_BOUND=1
+			at_out "pcie_host_bound=yes driver=$(basename "$(readlink "$at_pcie_dev/driver" 2>/dev/null)")"
+		else
+			at_warn 'pcie_host_bound=no for 18b00000.pcie; trying one explicit diagnostic bind'
+			at_pcie_err="$ALLTEST_DIR/pcie-bind.err"
+			at_pcie_out="$ALLTEST_DIR/pcie-bind.out"
+			at_pcie_override_err="$ALLTEST_DIR/pcie-bind-override.err"
+			at_pcie_override_out="$ALLTEST_DIR/pcie-bind-override.out"
+			rm -f "$at_pcie_err" "$at_pcie_out" "$at_pcie_override_err" "$at_pcie_override_out"
+			at_pcie_probe_before="$(dmesg | grep -c 'rtl8197f-pcie.*probe enter' 2>/dev/null || true)"
+			at_pcie_bind_rc=0
+			( printf '%s\n' 18b00000.pcie > /sys/bus/platform/drivers/rtl8197f-pcie/bind ) >"$at_pcie_out" 2>"$at_pcie_err" || at_pcie_bind_rc=$?
+			if [ -s "$at_pcie_err" ]; then
+				at_out 'pcie_bind_stderr:'
+				while IFS= read -r at_line; do at_out "  $at_line"; done < "$at_pcie_err"
+			else
+				at_out 'pcie_bind_stderr=<empty>'
+			fi
+			sleep 1
+			at_pcie_probe_after="$(dmesg | grep -c 'rtl8197f-pcie.*probe enter' 2>/dev/null || true)"
+
+			# If the normal bind never entered probe, force the exact driver once.
+			if [ ! -L "$at_pcie_dev/driver" ] &&
+			   [ "$at_pcie_probe_after" = "$at_pcie_probe_before" ] &&
+			   [ -w "$at_pcie_dev/driver_override" ]; then
+				at_warn 'pcie normal bind did not enter probe; retrying once with driver_override=rtl8197f-pcie'
+				printf '%s\n' rtl8197f-pcie > "$at_pcie_dev/driver_override" 2>"$at_pcie_override_err" || true
+				at_pcie_override_rc=0
+				( printf '%s\n' 18b00000.pcie > /sys/bus/platform/drivers/rtl8197f-pcie/bind ) >>"$at_pcie_override_out" 2>>"$at_pcie_override_err" || at_pcie_override_rc=$?
+				sleep 1
+				printf '\n' > "$at_pcie_dev/driver_override" 2>/dev/null || true
+				at_out "pcie_override_bind_rc=$at_pcie_override_rc"
+				if [ -s "$at_pcie_override_err" ]; then
+					at_out 'pcie_override_bind_stderr:'
+					while IFS= read -r at_line; do at_out "  $at_line"; done < "$at_pcie_override_err"
+				else
+					at_out 'pcie_override_bind_stderr=<empty>'
+				fi
+			fi
+
+			if [ -L "$at_pcie_dev/driver" ]; then
+				AT_PCIE_HOST_BOUND=1
+				at_out "pcie_host_bind_result=bound rc=$at_pcie_bind_rc driver=$(basename "$(readlink "$at_pcie_dev/driver" 2>/dev/null)")"
+			else
+				at_fail "pcie_host_bind_result=unbound rc=$at_pcie_bind_rc"
+			fi
+			at_out 'pcie_bind_dmesg_tail:'
+			dmesg | grep -E 'rtl8197f-pcie|PCIe link|LTSSM|10ec:b822|pci 0000|18b00000|defer' | tail -n 160 |
+				while IFS= read -r at_line; do at_out "  $at_line"; done
+			at_mount_debugfs
+			if [ -r /sys/kernel/debug/devices_deferred ]; then
+				at_out 'devices_deferred:'
+				while IFS= read -r at_line; do at_out "  $at_line"; done < /sys/kernel/debug/devices_deferred
+			fi
+		fi
+	else
+		at_warn 'pcie_host_driver=missing (CONFIG_PCIE_RTL8197F/build integration must be checked)'
+	fi
+	[ -r /proc/kallsyms ] && grep -E 'rtl8197f_pcie_(probe|driver|hw_init)' /proc/kallsyms >>"$ALLTEST_LOG" 2>&1 || true
+	for at_d in /sys/bus/platform/devices/*wifi* /sys/bus/platform/devices/*wlan* /sys/bus/platform/devices/*pcie*; do
+		[ -d "$at_d" ] || continue
+		at_out "--- platform $(basename "$at_d")"
+		[ -r "$at_d/modalias" ] && { printf 'modalias='; cat "$at_d/modalias"; } >>"$ALLTEST_LOG" 2>&1
+		[ -r "$at_d/uevent" ] && sed -n '1,80p' "$at_d/uevent" >>"$ALLTEST_LOG" 2>&1
+		[ -r "$at_d/resource" ] && { echo 'resource:'; cat "$at_d/resource"; } >>"$ALLTEST_LOG" 2>&1
+		[ -r "$at_d/irq" ] && { printf 'irq='; cat "$at_d/irq"; } >>"$ALLTEST_LOG" 2>&1
+		[ -L "$at_d/driver" ] && at_out "driver=$(basename "$(readlink "$at_d/driver" 2>/dev/null)")"
+		[ -L "$at_d/of_node" ] && { at_on="$(readlink -f "$at_d/of_node" 2>/dev/null || true)"; [ -n "$at_on" ] && at_out "of_node=$at_on"; }
+		[ -r "$at_d/power/runtime_status" ] && { printf 'runtime_status='; cat "$at_d/power/runtime_status"; } >>"$ALLTEST_LOG" 2>&1
+	done
+	AT_8812BRH_PCI=0
+	for at_d in /sys/bus/pci/devices/*; do
+		[ -d "$at_d" ] || continue
+		at_vendor="$(cat "$at_d/vendor" 2>/dev/null || echo '?')"
+		at_device="$(cat "$at_d/device" 2>/dev/null || echo '?')"
+		at_irq="$(cat "$at_d/irq" 2>/dev/null || echo '?')"
+		at_out "pci $(basename "$at_d") vendor=$at_vendor device=$at_device irq=$at_irq"
+		[ -r "$at_d/resource" ] && cat "$at_d/resource" >>"$ALLTEST_LOG" 2>&1
+		if [ "$at_vendor" = 0x10ec ] && [ "$at_device" = 0xb822 ]; then AT_8812BRH_PCI=1; fi
+	done
+	if at_have lspci; then at_cmd "lspci -nn -k" || true; else at_out 'lspci not installed; sysfs PCI dump used'; fi
+}
+
+at_collect_dt() {
+	at_section 'device-tree WLAN nodes'
+	[ -d /proc/device-tree ] || { at_out '/proc/device-tree unavailable'; return 0; }
+	find /proc/device-tree -type f -name compatible 2>/dev/null | while read -r at_cf; do
+		[ -n "$at_cf" ] || continue
+		at_compat="$(tr '\000' ' ' <"$at_cf" 2>/dev/null || true)"
+		case "$at_compat" in
+			*rtl8197f*wlan*|*rtl8197f*wmac*|*rtl8197fs*wlan*|*pci10ec,b822*|*rtl8822*|*rtl8197f*pcie*)
+				at_node=${at_cf%/compatible}
+				at_out "--- DT $at_node compatible=$at_compat"
+				for at_prop in status reg interrupts interrupt-parent realtek,radio-index realtek,rfe-type realtek,mac-address-increment nvmem-cell-names; do
+					if [ -r "$at_node/$at_prop" ]; then
+						at_out "property $at_prop:"
+						od -An -tx1 "$at_node/$at_prop" >>"$ALLTEST_LOG" 2>&1 || true
+					fi
+				done
+				;;
+		esac
+	done
+}
+
+at_collect_netdevs() {
+	at_section 'wiphy/netdev state'
+	if at_have iw; then
+		at_cmd "iw reg get" || true
+		at_cmd "iw phy" || true
+		at_cmd "iw dev" || true
+	else
+		at_out 'iw missing'
+	fi
+	if at_have ip; then
+		at_cmd "ip link show" || true
+		at_cmd "ip addr show" || true
+		at_cmd "ip route show" || true
+	fi
+	for at_n in /sys/class/net/wlan*; do
+		[ -d "$at_n" ] || continue
+		at_i=$(basename "$at_n")
+		at_addr="$(cat "$at_n/address" 2>/dev/null || echo '?')"
+		at_state="$(cat "$at_n/operstate" 2>/dev/null || echo '?')"
+		at_phy='?'
+		[ -L "$at_n/phy80211" ] && at_phy="$(basename "$(readlink "$at_n/phy80211" 2>/dev/null)")"
+		at_out "netdev=$at_i phy=$at_phy state=$at_state mac=$at_addr"
+	done
+}
+
+at_iface_supports_band() {
+	at_ib_if="$1"; at_ib_band="$2"
+	[ -d "/sys/class/net/$at_ib_if" ] || return 1
+	[ -L "/sys/class/net/$at_ib_if/phy80211" ] || return 1
+	at_ib_phy="$(basename "$(readlink "/sys/class/net/$at_ib_if/phy80211" 2>/dev/null)")"
+	[ -n "$at_ib_phy" ] || return 1
+	at_have iw || return 1
+	at_ib_info="$ALLTEST_DIR/$at_ib_phy.info"
+	iw phy "$at_ib_phy" info >"$at_ib_info" 2>&1 || return 1
+	case "$at_ib_band" in
+		2g) grep -Eq '24[0-9][0-9](\.0)? MHz' "$at_ib_info" ;;
+		5g) grep -Eq '5[0-9][0-9][0-9](\.0)? MHz' "$at_ib_info" ;;
+		*) return 1 ;;
+	esac
+}
+
+at_find_band_if() {
+	at_fb_band="$1"; at_fb_preferred="$2"
+	if at_iface_supports_band "$at_fb_preferred" "$at_fb_band"; then
+		echo "$at_fb_preferred"
+		return 0
+	fi
+	for at_fb_n in /sys/class/net/wlan*; do
+		[ -d "$at_fb_n" ] || continue
+		at_fb_i=$(basename "$at_fb_n")
+		if at_iface_supports_band "$at_fb_i" "$at_fb_band"; then
+			echo "$at_fb_i"
+			return 0
+		fi
+	done
+	return 1
+}
+
+at_write_test_hostapd() {
+	at_wh_band="$1"; at_wh_if="$2"; at_wh_conf="$3"; at_wh_width="${4:-20}"; at_wh_ctrl="${5:-$ALLTEST_DIR/ctrl-default}"
+	if [ "$at_wh_band" = 2g ]; then
+		at_wh_ssid="$ALLTEST_2G_SSID"; at_wh_channel=6; at_wh_mode=g
+	else
+		at_wh_ssid="$ALLTEST_5G_SSID"; at_wh_channel=40; at_wh_mode=a
+	fi
+	{
+		echo "interface=$at_wh_if"
+		echo 'driver=nl80211'
+		echo "ctrl_interface=$at_wh_ctrl"
+		echo "ssid=$at_wh_ssid"
+		echo "hw_mode=$at_wh_mode"
+		echo "channel=$at_wh_channel"
+		echo 'wmm_enabled=1'
+		echo 'ieee80211n=1'
+		if [ "$at_wh_band" = 5g ]; then
+			echo 'ieee80211ac=1'
+			if [ "$at_wh_width" = 80 ]; then
+				# Primary channel 40 is the upper 20 MHz channel of the 36/40
+				# HT40 pair.  VHT80 36-48 has center channel index 42.
+				echo 'ht_capab=[HT40-]'
+				echo 'vht_oper_chwidth=1'
+				echo 'vht_oper_centr_freq_seg0_idx=42'
+			fi
+		fi
+		if [ "${REGDOMAIN:-00}" != 00 ]; then
+			echo "country_code=$REGDOMAIN"
+			echo 'ieee80211d=1'
+			[ "$at_wh_band" = 5g ] && echo 'ieee80211h=1'
+		fi
+		echo 'auth_algs=1'
+		echo 'wpa=2'
+		echo 'wpa_key_mgmt=WPA-PSK'
+		echo 'rsn_pairwise=CCMP'
+		echo "wpa_passphrase=$ALLTEST_KEY"
+	} >"$at_wh_conf"
+}
+
+at_test_scan() {
+	at_ts_band="$1"; at_ts_if="$2"
+	at_section "$at_ts_band scan test on $at_ts_if"
+	ip link set dev "$at_ts_if" down >>"$ALLTEST_LOG" 2>&1 || true
+	iw dev "$at_ts_if" set type managed >>"$ALLTEST_LOG" 2>&1 || true
+	if ! ip link set dev "$at_ts_if" up >>"$ALLTEST_LOG" 2>&1; then
+		at_fail "$at_ts_band $at_ts_if: ip link UP failed"
+		return 1
+	fi
+	at_pass "$at_ts_band $at_ts_if: netdev UP"
+	sleep 1
+	at_ts_file="$ALLTEST_DIR/scan-$at_ts_band.txt"
+	if at_have timeout; then
+		timeout 20 iw dev "$at_ts_if" scan >"$at_ts_file" 2>&1
+	else
+		iw dev "$at_ts_if" scan >"$at_ts_file" 2>&1
+	fi
+	at_ts_rc=$?
+	at_out "scan rc=$at_ts_rc output(first 160 lines):"
+	sed -n '1,160p' "$at_ts_file" >>"$ALLTEST_LOG" 2>&1 || true
+	if [ "$at_ts_rc" = 0 ]; then
+		at_ts_bss="$(grep -c '^BSS ' "$at_ts_file" 2>/dev/null || true)"
+		case "$at_ts_bss" in ''|*[!0-9]*) at_ts_bss=0 ;; esac
+		if [ "$at_ts_bss" -gt 0 ]; then
+			at_pass "$at_ts_band $at_ts_if: cfg80211 scan received $at_ts_bss BSS entries (OTA RX proven)"
+		else
+			at_warn "$at_ts_band $at_ts_if: scan completed but zero BSS entries; OTA RX not proven"
+		fi
+	else
+		at_fail "$at_ts_band $at_ts_if: cfg80211 scan failed rc=$at_ts_rc"
+	fi
+	ip link set dev "$at_ts_if" down >>"$ALLTEST_LOG" 2>&1 || true
+	return "$at_ts_rc"
+}
+
+at_start_test_ap() {
+	at_sa_band="$1"; at_sa_if="$2"; at_sa_width="${3:-20}"
+	at_sa_key="$at_sa_band-$at_sa_width"
+	at_sa_conf="$ALLTEST_DIR/hostapd-$at_sa_key.conf"
+	at_sa_pid="$ALLTEST_DIR/hostapd-$at_sa_key.pid"
+	at_sa_log="$ALLTEST_DIR/hostapd-$at_sa_key.log"
+	at_sa_dbg="$ALLTEST_DIR/hostapd-$at_sa_key-debug.log"
+	at_sa_ctrl="$ALLTEST_DIR/ctrl-$at_sa_key"
+	# v44.18: each alltest instance owns a private control socket directory.
+	# Stop any previous test daemon before deleting its pid/socket state; this
+	# prevents a successful AP from being misclassified when a later test reuses
+	# the same interface/key.
+	at_stop_test_ap "$at_sa_band" "$at_sa_if" "$at_sa_width" 1
+	rm -f "$at_sa_pid" "$at_sa_log" "$at_sa_dbg"
+	rm -rf "$at_sa_ctrl"
+	mkdir -p "$at_sa_ctrl"
+	at_write_test_hostapd "$at_sa_band" "$at_sa_if" "$at_sa_conf" "$at_sa_width" "$at_sa_ctrl"
+	at_sa_beacon_before="$(beacon_ok_read "$at_sa_if" 2>/dev/null || true)"
+	ip link set dev "$at_sa_if" down >>"$ALLTEST_LOG" 2>&1 || true
+	if ! hostapd -B -P "$at_sa_pid" "$at_sa_conf" >"$at_sa_log" 2>&1; then
+		# v44.16+: older/stale MW5 images can contain hostapd-mini built without
+		# OpenWrt DRIVER_11AC_SUPPORT.  For the baseline 5 GHz/20 diagnostic,
+		# retry once without 11ac so cfg80211/AP can still be exercised.  The
+		# explicit VHT80 test never falls back: it must prove real VHT80.
+		if [ "$at_sa_band" = 5g ] && [ "$at_sa_width" = 20 ] && grep -q "unknown configuration item 'ieee80211ac'" "$at_sa_log" 2>/dev/null; then
+			AT_HOSTAPD_11AC=0
+			cp "$at_sa_log" "$at_sa_log.11ac-parser" 2>/dev/null || true
+			at_out 'hostapd 5g parser lacks ieee80211ac; retrying diagnostic AP as HT20 fallback'
+			grep -v -E '^ieee80211ac=|^vht_oper_|^ht_capab=' "$at_sa_conf" >"$at_sa_conf.tmp" 2>/dev/null || cp "$at_sa_conf" "$at_sa_conf.tmp"
+			mv "$at_sa_conf.tmp" "$at_sa_conf"
+			: >"$at_sa_log"
+			if hostapd -B -P "$at_sa_pid" "$at_sa_conf" >"$at_sa_log" 2>&1; then
+				at_out 'hostapd 5g HT20 fallback accepted; driver AP path can now be tested'
+			else
+				at_out 'hostapd 5g HT20 fallback also failed'
+			fi
+		else
+			[ "$at_sa_band" = 5g ] && AT_HOSTAPD_11AC=1
+		fi
+	fi
+
+	at_sa_p="$(cat "$at_sa_pid" 2>/dev/null || true)"
+	if [ -z "$at_sa_p" ] || ! kill -0 "$at_sa_p" 2>/dev/null; then
+		at_out "hostapd $at_sa_band/$at_sa_width start failed; config + regulatory + foreground debug follow:"
+		{
+			echo '--- hostapd config ---'
+			cat "$at_sa_conf"
+			echo '--- iw reg get ---'
+			iw reg get 2>&1 || true
+			echo '--- iw dev info ---'
+			iw dev "$at_sa_if" info 2>&1 || true
+			if [ -s "$at_sa_log.11ac-parser" ]; then
+				echo '--- original 11ac parser output ---'
+				sed -n '1,120p' "$at_sa_log.11ac-parser" 2>/dev/null || true
+			fi
+			echo '--- daemon start output ---'
+			sed -n '1,200p' "$at_sa_log" 2>/dev/null || true
+		} >>"$ALLTEST_LOG" 2>&1
+		if at_have timeout; then
+			timeout 8 hostapd -dd "$at_sa_conf" >"$at_sa_dbg" 2>&1 || true
+		else
+			hostapd -dd "$at_sa_conf" >"$at_sa_dbg" 2>&1 &
+			at_sa_dbg_pid=$!
+			sleep 5
+			kill "$at_sa_dbg_pid" 2>/dev/null || true
+			wait "$at_sa_dbg_pid" 2>/dev/null || true
+		fi
+		at_out "hostapd $at_sa_band/$at_sa_width foreground debug(first 240 lines):"
+		sed -n '1,240p' "$at_sa_dbg" >>"$ALLTEST_LOG" 2>&1 || true
+		if grep -Eqi "unknown configuration item 'ieee80211ac'|unknown configuration item 'vht_oper_|unknown configuration item 'ht_capab'" "$at_sa_dbg" "$at_sa_log" 2>/dev/null; then
+			at_out "hostapd $at_sa_band/$at_sa_width classification=hostapd-build-missing-11ac-or-vht"
+		elif grep -Eqi 'ctrl_iface exists and seems to be in use|Failed to setup control interface' "$at_sa_dbg" "$at_sa_log" 2>/dev/null; then
+			at_out "hostapd $at_sa_band/$at_sa_width classification=alltest-control-socket-lifetime"
+		elif grep -Eqi 'not allowed|no[- ]?ir|regulatory|country|frequency.*disabled|channel.*disabled' "$at_sa_dbg" 2>/dev/null; then
+			at_out "hostapd $at_sa_band/$at_sa_width classification=regulatory-or-channel-policy"
+		elif grep -Eqi 'hardware does not support|could not select hw_mode|vht|ht cap' "$at_sa_dbg" 2>/dev/null; then
+			at_out "hostapd $at_sa_band/$at_sa_width classification=capability-or-mode"
+		else
+			at_out "hostapd $at_sa_band/$at_sa_width classification=driver-or-unknown"
+		fi
+		return 1
+	fi
+	sleep 8
+	at_sa_p="$(cat "$at_sa_pid" 2>/dev/null || true)"
+	if [ -z "$at_sa_p" ] || ! kill -0 "$at_sa_p" 2>/dev/null; then
+		at_out "hostapd $at_sa_band/$at_sa_width exited; log:"
+		sed -n '1,200p' "$at_sa_log" >>"$ALLTEST_LOG" 2>&1 || true
+		return 1
+	fi
+	if at_have hostapd_cli; then
+		hostapd_cli -p "$at_sa_ctrl" -i "$at_sa_if" status >>"$ALLTEST_LOG" 2>&1 || true
+	fi
+	at_sa_iw="$ALLTEST_DIR/iw-$at_sa_key.txt"
+	iw dev "$at_sa_if" info >"$at_sa_iw" 2>&1 || true
+	cat "$at_sa_iw" >>"$ALLTEST_LOG" 2>&1 || true
+	if ! grep -q 'type AP' "$at_sa_iw" 2>/dev/null; then
+		at_out "$at_sa_band $at_sa_if expected AP mode but iw did not report type AP"
+		return 1
+	fi
+	if [ "$at_sa_band" = 5g ] && [ "$at_sa_width" = 80 ]; then
+		if ! grep -Eq 'width: 80 MHz' "$at_sa_iw" 2>/dev/null; then
+			at_out "5g $at_sa_if expected VHT80 but iw did not report width: 80 MHz"
+			return 1
+		fi
+	fi
+	at_sa_beacon_len="$(beacon_len_read "$at_sa_if" 2>/dev/null || true)"
+	at_sa_beacon_after="$(beacon_ok_read "$at_sa_if" 2>/dev/null || true)"
+	case "$at_sa_beacon_len" in
+		''|*[!0-9]*)
+			at_out "$at_sa_band $at_sa_if beacon descriptor length unavailable/invalid: $at_sa_beacon_len"
+			return 1
+			;;
+		0)
+			at_out "$at_sa_band $at_sa_if beacon descriptor length is zero"
+			return 1
+			;;
+	esac
+	at_out "$at_sa_band $at_sa_if beacon_desc len=$at_sa_beacon_len beacon_ok=${at_sa_beacon_before:-na}->${at_sa_beacon_after:-na} counter=diagnostic-only"
+	if [ "$at_sa_band" = 5g ] && [ "$at_sa_width" = 80 ]; then
+		at_out "5g $at_sa_if vht80_stability=alive_after_8s beacon_desc=armed"
+	else
+		at_out "$at_sa_band $at_sa_if hostapd_stability=alive_after_8s beacon_desc=armed"
+	fi
+	return 0
+}
+
+at_stop_test_ap() {
+	at_sp_band="$1"; at_sp_if="${2:-}"; at_sp_width="${3:-20}"; at_sp_quiet="${4:-0}"
+	at_sp_key="$at_sp_band-$at_sp_width"
+	at_sp_pid="$ALLTEST_DIR/hostapd-$at_sp_key.pid"
+	at_sp_ctrl="$ALLTEST_DIR/ctrl-$at_sp_key"
+	at_sp_p="$(cat "$at_sp_pid" 2>/dev/null || true)"
+
+	# Ask the daemon through its private control socket first.  Fall back to
+	# SIGTERM only when the pid still belongs to a live process.  Wait for exit
+	# before reusing the same interface; the old v44.17 one-second fire-and-forget
+	# cleanup could leave a daemon/socket alive and create a false FAIL.
+	if [ -n "$at_sp_if" ] && at_have hostapd_cli && [ -d "$at_sp_ctrl" ]; then
+		hostapd_cli -p "$at_sp_ctrl" -i "$at_sp_if" terminate >>"$ALLTEST_LOG" 2>&1 || true
+	fi
+	if [ -n "$at_sp_p" ] && kill -0 "$at_sp_p" 2>/dev/null; then
+		kill "$at_sp_p" 2>/dev/null || true
+		at_sp_wait=0
+		while kill -0 "$at_sp_p" 2>/dev/null && [ "$at_sp_wait" -lt 5 ]; do
+			sleep 1
+			at_sp_wait=$((at_sp_wait + 1))
+		done
+		if kill -0 "$at_sp_p" 2>/dev/null; then
+			[ "$at_sp_quiet" = 1 ] || at_out "hostapd $at_sp_band/$at_sp_width did not exit after TERM; forcing stop"
+			kill -9 "$at_sp_p" 2>/dev/null || true
+			sleep 1
+		fi
+	fi
+	rm -f "$at_sp_pid"
+	rm -rf "$at_sp_ctrl"
+	[ -n "$at_sp_if" ] && ip link set dev "$at_sp_if" down >>"$ALLTEST_LOG" 2>&1 || true
+}
+
+at_test_ap() {
+	at_ta_band="$1"; at_ta_if="$2"
+	at_section "$at_ta_band temporary AP test on $at_ta_if"
+	if at_start_test_ap "$at_ta_band" "$at_ta_if" 20; then
+		if [ "$at_ta_band" = 2g ]; then at_pass "2g AP software state started + beacon descriptor armed: $ALLTEST_2G_SSID channel 6/20 (OTA not proven)"; AT_2G_AP_OK=1
+		else at_pass "5g AP software state started + beacon descriptor armed: $ALLTEST_5G_SSID channel 40/20 (client association not proven)"; AT_5G_AP_OK=1; fi
+	else
+		at_fail "$at_ta_band $at_ta_if: hostapd/nl80211 AP start failed"
+	fi
+	at_stop_test_ap "$at_ta_band" "$at_ta_if" 20
+}
+
+at_test_vht80_ap() {
+	at_v8_if="$1"
+	at_section "5g VHT80 AP test on $at_v8_if"
+	if [ "$AT_HOSTAPD_11AC" != 1 ]; then
+		at_skip '5g VHT80 AP test: hostapd 11ac parser unavailable'
+		return 0
+	fi
+	if at_start_test_ap 5g "$at_v8_if" 80; then
+		at_pass "5g VHT80 AP started: $ALLTEST_5G_SSID channel 40/80 center=42"
+		AT_5G_VHT80_OK=1
+	else
+		at_fail "5g $at_v8_if: VHT80 AP start/width validation failed"
+	fi
+	at_stop_test_ap 5g "$at_v8_if" 80
+}
+
+at_test_dual_ap() {
+	[ "$AT_2G_AP_OK" = 1 ] && [ "$AT_5G_AP_OK" = 1 ] || { at_skip 'dual AP test: individual AP tests not both successful'; return 0; }
+	[ -n "$AT_2G_IF" ] && [ -n "$AT_5G_IF" ] && [ "$AT_2G_IF" != "$AT_5G_IF" ] || { at_skip 'dual AP test: two distinct radio interfaces unavailable'; return 0; }
+	at_section 'dual-radio AP concurrency test (20/20)'
+	if ! at_start_test_ap 2g "$AT_2G_IF" 20; then
+		at_fail 'dual AP: 2g start failed'
+		at_stop_test_ap 2g "$AT_2G_IF" 20
+		return 1
+	fi
+	if ! at_start_test_ap 5g "$AT_5G_IF" 20; then
+		at_fail 'dual AP: 5g/20 start failed while 2g active'
+		at_stop_test_ap 5g "$AT_5G_IF" 20
+		at_stop_test_ap 2g "$AT_2G_IF" 20
+		return 1
+	fi
+	sleep 4
+	at_dual_ok=1
+	for at_dual_spec in "2g:$AT_2G_IF" "5g:$AT_5G_IF"; do
+		at_dual_band=${at_dual_spec%%:*}; at_dual_if=${at_dual_spec#*:}
+		if ! iw dev "$at_dual_if" info 2>/dev/null | grep -q 'type AP'; then
+			at_out "$at_dual_band $at_dual_if is not type AP"
+			at_dual_ok=0
+		fi
+	done
+	if [ "$at_dual_ok" = 1 ]; then at_pass 'dual AP concurrency 20/20: both radios stayed in AP mode'; AT_DUAL_AP_OK=1; else at_fail 'dual AP concurrency 20/20 check failed'; fi
+	at_stop_test_ap 5g "$AT_5G_IF" 20
+	at_stop_test_ap 2g "$AT_2G_IF" 20
+}
+
+at_test_dual_vht80() {
+	[ "$AT_2G_AP_OK" = 1 ] && [ "$AT_5G_VHT80_OK" = 1 ] || { at_skip 'dual VHT80 AP test: 2g AP or 5g VHT80 prerequisite failed'; return 0; }
+	[ -n "$AT_2G_IF" ] && [ -n "$AT_5G_IF" ] && [ "$AT_2G_IF" != "$AT_5G_IF" ] || { at_skip 'dual VHT80 AP test: two distinct radio interfaces unavailable'; return 0; }
+	at_section 'dual-radio AP concurrency test (2g/20 + 5g/VHT80)'
+	if ! at_start_test_ap 2g "$AT_2G_IF" 20; then
+		at_fail 'dual VHT80 AP: 2g start failed'
+		at_stop_test_ap 2g "$AT_2G_IF" 20
+		return 1
+	fi
+	if ! at_start_test_ap 5g "$AT_5G_IF" 80; then
+		at_fail 'dual VHT80 AP: 5g/80 start failed while 2g active'
+		at_stop_test_ap 5g "$AT_5G_IF" 80
+		at_stop_test_ap 2g "$AT_2G_IF" 20
+		return 1
+	fi
+	sleep 4
+	at_dual80_ok=1
+	iw dev "$AT_2G_IF" info >"$ALLTEST_DIR/iw-dual-2g-20.txt" 2>&1 || true
+	iw dev "$AT_5G_IF" info >"$ALLTEST_DIR/iw-dual-5g-80.txt" 2>&1 || true
+	cat "$ALLTEST_DIR/iw-dual-2g-20.txt" >>"$ALLTEST_LOG" 2>&1 || true
+	cat "$ALLTEST_DIR/iw-dual-5g-80.txt" >>"$ALLTEST_LOG" 2>&1 || true
+	grep -q 'type AP' "$ALLTEST_DIR/iw-dual-2g-20.txt" 2>/dev/null || at_dual80_ok=0
+	grep -q 'type AP' "$ALLTEST_DIR/iw-dual-5g-80.txt" 2>/dev/null || at_dual80_ok=0
+	grep -Eq 'width: 80 MHz' "$ALLTEST_DIR/iw-dual-5g-80.txt" 2>/dev/null || at_dual80_ok=0
+	if [ "$at_dual80_ok" = 1 ]; then
+		at_pass 'dual AP VHT80 concurrency: 2g/20 and 5g/80 stayed active'
+		AT_DUAL_VHT80_OK=1
+		at_section '20-second persistent dual-AP stability window'
+		# v44.49: Report14 showed a negative dmesg phase-count delta because the
+		# very verbose ring buffer discarded old lines. A full-ring grep is not a
+		# monotonic counter. Prove stability with the actual hostapd PIDs and AP
+		# interface state instead.
+		at_pid2_before="$(cat "$ALLTEST_DIR/hostapd-2g-20.pid" 2>/dev/null || true)"
+		at_pid5_before="$(cat "$ALLTEST_DIR/hostapd-5g-80.pid" 2>/dev/null || true)"
+		at_out "hostapd_pids_before=2g:${at_pid2_before:-none},5g:${at_pid5_before:-none}; waiting 20s"
+		sleep 20
+		at_pid2_after="$(cat "$ALLTEST_DIR/hostapd-2g-20.pid" 2>/dev/null || true)"
+		at_pid5_after="$(cat "$ALLTEST_DIR/hostapd-5g-80.pid" 2>/dev/null || true)"
+		at_stable=1
+		iw dev "$AT_2G_IF" info >"$ALLTEST_DIR/iw-stability-2g.txt" 2>&1 || at_stable=0
+		iw dev "$AT_5G_IF" info >"$ALLTEST_DIR/iw-stability-5g.txt" 2>&1 || at_stable=0
+		grep -q 'type AP' "$ALLTEST_DIR/iw-stability-2g.txt" 2>/dev/null || at_stable=0
+		grep -q 'type AP' "$ALLTEST_DIR/iw-stability-5g.txt" 2>/dev/null || at_stable=0
+		grep -q 'width: 80 MHz' "$ALLTEST_DIR/iw-stability-5g.txt" 2>/dev/null || at_stable=0
+		[ -n "$at_pid2_before" ] && [ "$at_pid2_after" = "$at_pid2_before" ] && kill -0 "$at_pid2_after" 2>/dev/null || at_stable=0
+		[ -n "$at_pid5_before" ] && [ "$at_pid5_after" = "$at_pid5_before" ] && kill -0 "$at_pid5_after" 2>/dev/null || at_stable=0
+		at_out "hostapd_pids_after=2g:${at_pid2_after:-none},5g:${at_pid5_after:-none}"
+		if [ "$at_stable" = 1 ]; then
+			at_pass '20s persistent dual AP stability: hostapd PIDs unchanged and both APs stayed active'
+			AT_LONG_STABILITY_OK=1
+		else
+			at_fail '20s persistent dual AP stability failed: hostapd PID changed/exited or AP state was lost'
+		fi
+	else
+		at_fail 'dual AP VHT80 concurrency check failed'
+	fi
+
+	if [ "$at_dual80_ok" = 1 ]; then
+		# v44.49: Report14 reached this proof window without a client attempt, so no
+		# frame-local EAPOL evidence was generated. Keep the VHT80 AP alive for 30
+		# seconds and preserve the five-second post-association handshake hold.
+		at_section '30-second 5g WPA/EAPOL real-client proof window'
+		at_out 'Connect a 5GHz client NOW; AP stays active for 30s while AUTH/ASSOC/EAPOL completes.'
+		at_5g_dmesg_before="$(dmesg 2>/dev/null | wc -l | tr -d ' ')"
+		case "$at_5g_dmesg_before" in ''|*[!0-9]*) at_5g_dmesg_before=0 ;; esac
+		at_5g_peer=''
+		at_5g_sec=0
+		while [ "$at_5g_sec" -lt 30 ]; do
+			at_5g_peer="$(iw dev "$AT_5G_IF" station dump 2>/dev/null | awk '/^Station / {print $2; exit}')"
+			[ -n "$at_5g_peer" ] && break
+			sleep 1
+			at_5g_sec=$((at_5g_sec + 1))
+		done
+		if [ -n "$at_5g_peer" ]; then
+			at_out "5g station observed peer=$at_5g_peer at ${at_5g_sec}s; holding AP 5s for WPA handshake"
+			sleep 5
+			iw dev "$AT_5G_IF" station dump >"$ALLTEST_DIR/stations-5g-linkproof.txt" 2>&1 || true
+			dmesg >"$ALLTEST_DIR/dmesg-5g-linkproof.txt" 2>&1 || true
+			tail -n +$((at_5g_dmesg_before + 1)) "$ALLTEST_DIR/dmesg-5g-linkproof.txt" >"$ALLTEST_DIR/dmesg-5g-linkproof-new.txt" 2>/dev/null || true
+			cat "$ALLTEST_DIR/stations-5g-linkproof.txt" >>"$ALLTEST_LOG" 2>&1 || true
+			at_5g_authz="$(grep -c 'MW5-CHANGE-STA if=wlan0.*authorized=1' "$ALLTEST_DIR/dmesg-5g-linkproof-new.txt" 2>/dev/null || true)"
+			at_5g_eapoltx="$(grep -c 'v44.48 OEM EAPOL TX if=wlan0' "$ALLTEST_DIR/dmesg-5g-linkproof-new.txt" 2>/dev/null || true)"
+			at_5g_eapolrx="$(grep -c 'EAPOL RX admitted if=wlan0' "$ALLTEST_DIR/dmesg-5g-linkproof-new.txt" 2>/dev/null || true)"
+			at_out "5g WPA proof peer=$at_5g_peer authorized=$at_5g_authz eapol_tx=$at_5g_eapoltx eapol_rx=$at_5g_eapolrx"
+			if [ "$at_5g_authz" -gt 0 ]; then
+				at_pass "5g WPA client authorized after EAPOL window: $at_5g_peer"
+				AT_5G_LINK_OK=1
+			elif grep -q '^Station ' "$ALLTEST_DIR/stations-5g-linkproof.txt" 2>/dev/null; then
+				at_fail "5g client associated but WPA authorization did not complete: $at_5g_peer"
+			else
+				at_fail "5g client disappeared before WPA authorization: $at_5g_peer"
+			fi
+		else
+			at_warn '5g link proof: no client attempted/associated during 30s window'
+		fi
+	else
+		at_skip '5g WPA/EAPOL link proof: VHT80 AP was not active'
+	fi
+	at_stop_test_ap 5g "$AT_5G_IF" 80
+	at_stop_test_ap 2g "$AT_2G_IF" 20
+}
+
+at_collect_irq_delta() {
+	at_section 'IRQ / DMA / failure markers after tests'
+	at_out 'MW5 OEM hardware routing: PCIe/RTL8812BRH ICTL input21 -> CPU5; RTL8197FS ICTL input29 -> CPU6. Linux uses child virqs, not literal IRQ 5/6.'
+	cat /proc/interrupts >>"$ALLTEST_LOG" 2>&1 || true
+	at_out '--- Linux IRQ descriptors owned by wlan0/wlan1'
+	for at_d in /sys/kernel/irq/*; do
+		[ -d "$at_d" ] || continue
+		at_actions="$(cat "$at_d/actions" 2>/dev/null || true)"
+		case "$at_actions" in
+			*wlan0*|*wlan1*)
+				at_irq=${at_d##*/}
+				at_out "linux_irq=$at_irq actions=$at_actions"
+				for at_irq_f in chip_name hwirq name type wakeup; do
+					[ -r "$at_d/$at_irq_f" ] && { printf '%s=' "$at_irq_f"; cat "$at_d/$at_irq_f"; } >>"$ALLTEST_LOG" 2>&1
+				done
+				for at_irq_f in smp_affinity smp_affinity_list node spurious; do
+					[ -r "/proc/irq/$at_irq/$at_irq_f" ] && { printf '%s=' "$at_irq_f"; cat "/proc/irq/$at_irq/$at_irq_f"; } >>"$ALLTEST_LOG" 2>&1
+				done
+				;;
+		esac
+	done
+	[ -r /proc/softirqs ] && cat /proc/softirqs >>"$ALLTEST_LOG" 2>&1 || true
+	dmesg >"$ALLTEST_DIR/dmesg-after.txt" 2>/dev/null || : >"$ALLTEST_DIR/dmesg-after.txt"
+	cat /proc/interrupts >"$ALLTEST_DIR/interrupts-after.txt" 2>/dev/null || true
+	at_after_lines="$(wc -l <"$ALLTEST_DIR/dmesg-after.txt" 2>/dev/null | tr -d ' ')"
+	[ -n "$at_after_lines" ] || at_after_lines=0
+	if [ "$at_after_lines" -ge "${AT_DMESG_BEFORE_LINES:-0}" ]; then
+		at_first=$((AT_DMESG_BEFORE_LINES + 1))
+		tail -n +"$at_first" "$ALLTEST_DIR/dmesg-after.txt" >"$ALLTEST_DIR/dmesg-new.txt" 2>/dev/null || cp "$ALLTEST_DIR/dmesg-after.txt" "$ALLTEST_DIR/dmesg-new.txt"
+	else
+		# Kernel ring wrapped while testing: treat the current ring as new evidence.
+		cp "$ALLTEST_DIR/dmesg-after.txt" "$ALLTEST_DIR/dmesg-new.txt"
+	fi
+	at_out 'new filtered dmesg generated during alltest:'
+	grep -Ei 'rtl8192|rtl8197|8197f-wlan|rtl8197f_soc|rtl8822|cfg80211|nvmem|factory|rfe|dma|rxbd|napi|irq|interrupt|hostapd|error|fail|warn' "$ALLTEST_DIR/dmesg-new.txt" | tail -n 400 >>"$ALLTEST_LOG" 2>&1 || true
+	at_out 'last 250 kernel messages:'
+	tail -n 250 "$ALLTEST_DIR/dmesg-after.txt" >>"$ALLTEST_LOG" 2>&1 || true
+}
+
+
+remove_rtl8192cd_module() {
+	if command -v rmmod >/dev/null 2>&1; then
+		rmmod rtl8192cd
+		return $?
+	fi
+	modprobe -r rtl8192cd
+}
+
+at_restore_state() {
+	at_section 'cleanup / restore'
+	at_stop_test_ap 2g "${AT_2G_IF:-}" 20
+	at_stop_test_ap 5g "${AT_5G_IF:-}" 20
+	at_stop_test_ap 5g "${AT_5G_IF:-}" 80
+	if [ "${AT_AP_WAS_ACTIVE:-0}" = 1 ]; then
+		at_out 'Restoring previously active MW5 AP configuration...'
+		apply_cfg80211 >>"$ALLTEST_LOG" 2>&1 || at_warn 'previous MW5 AP configuration could not be fully restored'
+	elif [ "${AT_DRIVER_WAS_LOADED:-0}" = 0 ]; then
+		ip link set dev wlan0 down >>"$ALLTEST_LOG" 2>&1 || true
+		ip link set dev wlan1 down >>"$ALLTEST_LOG" 2>&1 || true
+		# v44.16: keep the dual-radio module loaded after diagnostics.  Module
+		# removal exercises legacy vendor teardown paths that are unrelated to
+		# normal OpenWrt operation; a v44.14 diagnostic rmmod hit Linux 6.6's
+		# netdev reg_state BUG before the report could be completed.
+		at_out 'rtl8192cd left loaded after alltest (diagnostic cleanup is non-destructive)'
+	else
+		at_out 'rtl8192cd left loaded (it was already loaded before alltest)'
+	fi
+}
+
+alltest_cfg80211() {
+	load_config
+	AT_PASS=0; AT_FAIL=0; AT_WARN=0; AT_SKIP=0
+	AT_2G_IF=''; AT_5G_IF=''; AT_RF_PROFILE_OK=0; AT_2G_AP_OK=0; AT_5G_AP_OK=0; AT_5G_VHT80_OK=0; AT_DUAL_AP_OK=0; AT_DUAL_VHT80_OK=0; AT_LONG_STABILITY_OK=0; AT_5G_LINK_OK=0; AT_8812BRH_PCI=0; AT_PCIE_HOST_BOUND=0; AT_HOSTAPD_11AC=1
+	AT_DRIVER_WAS_LOADED=0; AT_AP_WAS_ACTIVE=0
+	grep -q '^rtl8192cd ' /proc/modules 2>/dev/null && AT_DRIVER_WAS_LOADED=1
+	for at_pf in "$RUN_DIR/hostapd-2g.pid" "$RUN_DIR/hostapd-5g.pid"; do
+		if [ -s "$at_pf" ]; then at_p="$(cat "$at_pf" 2>/dev/null || true)"; [ -n "$at_p" ] && kill -0 "$at_p" 2>/dev/null && AT_AP_WAS_ACTIVE=1; fi
+	done
+
+	rm -rf "$ALLTEST_DIR"
+	mkdir -p "$ALLTEST_DIR" "$LOG_DIR"
+	: >"$ALLTEST_LOG"
+	: >"$ALLTEST_SUMMARY"
+	dmesg >"$ALLTEST_DIR/dmesg-before.txt" 2>/dev/null || : >"$ALLTEST_DIR/dmesg-before.txt"
+	cat /proc/interrupts >"$ALLTEST_DIR/interrupts-before.txt" 2>/dev/null || : >"$ALLTEST_DIR/interrupts-before.txt"
+	AT_DMESG_BEFORE_LINES="$(wc -l <"$ALLTEST_DIR/dmesg-before.txt" 2>/dev/null | tr -d ' ')"
+	[ -n "$AT_DMESG_BEFORE_LINES" ] || AT_DMESG_BEFORE_LINES=0
+	at_out "MW5 ALLTEST $VERSION"
+	at_out "started=$(date 2>/dev/null || echo unknown)"
+	at_out "driver_was_loaded=$AT_DRIVER_WAS_LOADED mw5_ap_was_active=$AT_AP_WAS_ACTIVE"
+	at_out "regdomain=$REGDOMAIN (00=world; alltest does not silently override regulatory policy)"
+	at_out 'MW5 physical BOM: RTL8197FS (2.4G SoC) + RTL8812BRH (5G PCIe, 10ec:b822; vendor 8822B HAL path) + RTL8363NB switch + Winbond W25Q64JVSIQ 8MiB SPI-NOR'
+	at_out 'linux6 legacy auto-netdevs: WDS/mesh disabled; cfg80211 owns visible interface lifetime'
+	at_out 'hostapd profile: v44.50 keeps nl80211/cfg80211; RTL8197FS keeps OEM direct beacon/RFE5/TRSW0/Type5 and exports live PHYDM CCA/CRC/FA proof; RTL8822B keeps exact OEM EAPOL behavior and captures frame-local 802.11 header plus firmware TX reports'
+	at_out "temporary SSIDs: $ALLTEST_2G_SSID / $ALLTEST_5G_SSID"
+	at_out "temporary WPA2 key: $ALLTEST_KEY"
+	at_out 'NOTE: temporary WLAN state is cleaned up automatically; saved UCI WLAN settings are not replaced.'
+
+	at_section 'baseline system'
+	at_cmd "uname -a" || true
+	at_cmd "cat /etc/openwrt_release" || true
+	at_cmd "cat /proc/cmdline" || true
+	at_cmd "uptime" || true
+	at_cmd "free" || true
+	at_cmd "df -h" || true
+	at_cmd "cat /proc/meminfo" || true
+	at_cmd "cat /proc/interrupts" || true
+	at_cmd "cat /proc/iomem" || true
+	at_cmd "cat /proc/modules" || true
+	at_cmd "lsmod" || true
+	at_cmd "cat /proc/net/dev" || true
+	if at_have ubus; then at_cmd "ubus call system board" || true; fi
+	if [ -x /usr/sbin/mw5-portmode ]; then
+		at_out 'MW5 LAN/WAN config status:'
+		/usr/sbin/mw5-portmode show >>"$ALLTEST_LOG" 2>&1 || true
+	fi
+	[ -r /tmp/mw5-webui/network-selfheal.state ] && at_out "network_selfheal=$(cat /tmp/mw5-webui/network-selfheal.state 2>/dev/null)"
+	at_out 'sanitized mw5wifi config:'
+	at_sanitized_config >>"$ALLTEST_LOG" 2>&1 || true
+	at_out 'processes containing hostapd/rtl8192:'
+	ps w 2>/dev/null | grep -E 'hostapd|rtl8192' >>"$ALLTEST_LOG" 2>&1 || true
+
+	# Stop only AP daemons managed by this wrapper so temporary tests own the netdevs.
+	if [ "$AT_AP_WAS_ACTIVE" = 1 ]; then
+		at_out 'Stopping existing MW5 wrapper hostapd instances for temporary tests...'
+		stop_hostapd
+	fi
+
+	at_collect_dt
+	at_collect_irq_controller
+	at_collect_platform
+
+	at_section 'driver probe'
+	if probe_driver; then at_pass 'modprobe rtl8192cd'; else at_fail 'modprobe rtl8192cd'; fi
+	sleep 2
+	if [ -r /sys/bus/pci/devices/0000:00:00.0/irq ]; then
+		at_pci_irq="$(cat /sys/bus/pci/devices/0000:00:00.0/irq 2>/dev/null || echo missing)"
+		at_out "pci_irq_after_modprobe=$at_pci_irq"
+		case "$at_pci_irq" in
+			''|0|255|*[!0-9]*) at_fail "RTL8812BRH has invalid Linux IRQ=$at_pci_irq; expected mapped ICTL input21 -> CPU5" ;;
+			*) at_pass "RTL8812BRH has Linux ICTL child IRQ=$at_pci_irq (hardware input21 -> CPU5)" ;;
+		esac
+	fi
+	at_collect_netdevs
+	at_collect_debugfs
+
+	AT_PHY_COUNT="$(find /sys/class/ieee80211 -maxdepth 1 -type l -name 'phy*' 2>/dev/null | wc -l | tr -d ' ')"
+	[ -n "$AT_PHY_COUNT" ] || AT_PHY_COUNT=0
+	if [ "$AT_PHY_COUNT" -ge 2 ]; then at_pass "wiphy count=$AT_PHY_COUNT (dual radio visible)"; else at_fail "wiphy count=$AT_PHY_COUNT (MW5 expects 2 radios)"; fi
+	if [ "$AT_8812BRH_PCI" = 1 ]; then at_pass 'PCI 10ec:b822 RTL8812BRH enumerated (vendor 8822B HAL path)'; else at_fail 'PCI 10ec:b822 RTL8812BRH not found in sysfs'; fi
+
+	AT_2G_IF="$(at_find_band_if 2g wlan1 2>/dev/null || true)"
+	AT_5G_IF="$(at_find_band_if 5g wlan0 2>/dev/null || true)"
+	if [ -n "$AT_2G_IF" ]; then
+		at_pass "2g radio detected on $AT_2G_IF"
+		[ "$AT_2G_IF" = wlan1 ] || at_warn "2g OEM mapping mismatch: expected wlan1, detected $AT_2G_IF"
+	else
+		at_fail '2g radio interface not detected'
+	fi
+	if [ -n "$AT_5G_IF" ]; then
+		at_pass "5g radio detected on $AT_5G_IF"
+		[ "$AT_5G_IF" = wlan0 ] || at_warn "5g OEM mapping mismatch: expected wlan0, detected $AT_5G_IF"
+	else
+		at_fail '5g radio interface not detected'
+	fi
+
+	if [ -n "$AT_2G_IF" ] && at_have iw && at_have ip; then at_test_scan 2g "$AT_2G_IF" || true; else at_skip '2g scan test unavailable'; fi
+	at_collect_debugfs
+	if [ -n "$AT_2G_IF" ] && at_have hostapd && at_have iw; then at_test_ap 2g "$AT_2G_IF"; else at_skip '2g AP test unavailable'; fi
+
+	if [ -n "$AT_5G_IF" ] && at_have iw && at_have ip; then at_test_scan 5g "$AT_5G_IF" || true; else at_skip '5g scan test unavailable'; fi
+	at_collect_debugfs
+	if [ -n "$AT_5G_IF" ] && at_have hostapd && at_have iw; then
+		at_test_ap 5g "$AT_5G_IF"
+		at_test_vht80_ap "$AT_5G_IF"
+	else
+		at_skip '5g AP test unavailable'
+		at_skip '5g VHT80 AP test unavailable'
+	fi
+
+	at_test_dual_ap
+	at_test_dual_vht80
+	at_check_mw5_rf_profile
+	at_collect_irq_delta
+	if grep -q 'irq-request-failed' "$ALLTEST_DIR/dmesg-new.txt" 2>/dev/null; then at_fail 'new rtl8192cd irq-request-failed marker occurred during alltest'; else at_pass 'no new rtl8192cd irq-request-failed marker during alltest'; fi
+
+	at_restore_state
+	at_section 'final status'
+	show_status >>"$ALLTEST_LOG" 2>&1 || true
+	at_collect_debugfs
+
+	{
+		echo "MW5 ALLTEST $VERSION"
+		echo "PASS=$AT_PASS FAIL=$AT_FAIL WARN=$AT_WARN SKIP=$AT_SKIP"
+		echo "2G_IF=${AT_2G_IF:-missing} 5G_IF=${AT_5G_IF:-missing}"
+		echo "2G_AP_SOFTWARE_OK=$AT_2G_AP_OK 5G_AP_SOFTWARE_OK=$AT_5G_AP_OK 5G_VHT80_SOFTWARE_OK=$AT_5G_VHT80_OK DUAL_AP_SOFTWARE_OK=$AT_DUAL_AP_OK DUAL_VHT80_SOFTWARE_OK=$AT_DUAL_VHT80_OK LONG_STABILITY_OK=$AT_LONG_STABILITY_OK 5G_LINK_OK=$AT_5G_LINK_OK"
+		echo "OTA_2G_BEACON_VISIBLE=UNTESTED OTA_5G_CLIENT_ASSOC=UNTESTED (requires external client)"
+		echo "RF_PROFILE_OK=$AT_RF_PROFILE_OK PCI_8812BRH=$AT_8812BRH_PCI PHY_COUNT=$AT_PHY_COUNT PCIE_HOST_BOUND=$AT_PCIE_HOST_BOUND REGDOMAIN=$REGDOMAIN"
+		echo "DRIVER_LEFT_LOADED=1 LEGACY_AUTO_WDS_MESH=0 HOSTAPD_11AC=$AT_HOSTAPD_11AC"
+		echo "OEM_WLAN_TABLE=pcie:radio0/mmio0x19000000/ictl21->cpu5 soc:radio1/mmio0x18640000/ictl29->cpu6"
+		echo "TEST_2G_SSID=$ALLTEST_2G_SSID channel=6 width=20"
+		echo "TEST_5G_SSID=$ALLTEST_5G_SSID channel=40 width=20"
+		echo "TEST_5G_VHT80_SSID=$ALLTEST_5G_SSID channel=40 width=80 center_seg0=42 ht40=-"
+		echo "TEST_WPA2_KEY=$ALLTEST_KEY"
+		echo "LOG=$ALLTEST_LOG"
+		echo "BUNDLE=$ALLTEST_BUNDLE"
+	} >"$ALLTEST_SUMMARY"
+	cat "$ALLTEST_SUMMARY" | tee -a "$ALLTEST_LOG"
+
+	rm -f "$ALLTEST_BUNDLE"
+	if tar -czf "$ALLTEST_BUNDLE" -C "$LOG_DIR" "$(basename "$ALLTEST_LOG")" "$(basename "$ALLTEST_SUMMARY")" alltest 2>>"$ALLTEST_LOG"; then
+		at_out "report bundle created: $ALLTEST_BUNDLE"
+	else
+		at_warn 'could not create compressed report bundle'
+	fi
+	at_out "finished=$(date 2>/dev/null || echo unknown)"
+	at_out 'ALLTEST COMPLETE - no additional debug commands are required.'
+	[ "$AT_FAIL" = 0 ]
+}
+
+# Short, non-destructive dual-radio communication capture.
+# AP-mode PCAPs contain frames delivered through the wlan netdevs.  802.11
+# management/authentication events that a fullmac/vendor AP netdev does not
+# expose as raw frames are captured in parallel through nl80211/hostapd/kernel
+# logs and the rtl8192cd IRQ/NAPI/DMA debugfs counters.
+SNIFF_SECONDS_DEFAULT=15
+SNIFF_ROOT=$LOG_DIR/wifi-sniffing
+SNIFF_BUNDLE=/tmp/mw5-wifi-sniffing-report.tar.gz
+SNIFF_PIDS=''
+
+sniff_out() {
+	printf '%s\n' "$*" | tee -a "$SNIFF_LOG"
+}
+
+sniff_bg() {
+	"$@" &
+	p=$!
+	SNIFF_PIDS="$SNIFF_PIDS $p"
+}
+
+sniff_cleanup() {
+	for p in $SNIFF_PIDS; do
+		kill "$p" >/dev/null 2>&1 || true
+	done
+	for p in $SNIFF_PIDS; do
+		wait "$p" 2>/dev/null || true
+	done
+	SNIFF_PIDS=''
+}
+
+sniff_debugfs_line() {
+	# v44.59: Report22 showed nearly 10,000 process creations in a 15 s
+	# sniff because every debugfs value used an external `cat` inside command
+	# substitution. Use ash's builtin read and sample only liveness counters.
+	stamp="$(date +%s 2>/dev/null || echo 0)"
+	for spec in '2g|wlan1|/sys/kernel/debug/rtl8192cd/18640000.wifi' '5g|wlan0|/sys/kernel/debug/rtl8192cd/0000:00:00.0'; do
+		band=${spec%%|*}; rest=${spec#*|}; ifname=${rest%%|*}; dir=${rest#*|}
+		printf '%s band=%s if=%s' "$stamp" "$band" "$ifname" >>"$SNIFF_DIR/debugfs-counters.txt"
+		for f in active_rfe_type trswitch irq_count rx_irq_count napi_schedules napi_polls napi_work_done rx_irq_fallback_count rx_irq_fallback_suppressed rx_irq_fallback_probe rx_pending_checks rx_dma_maps rx_dma_unmaps rx_dma_map_errors rx_direct_sync_device rx_direct_sync_cpu rx_icv_errors rx_refill_alloc_failures c2h_oversize_reclassified tx_dma_maps tx_dma_unmaps tx_dma_map_errors tx_dma_mgt_maps tx_dma_data_maps tx_reclaim_kicks tx_reclaim_tx_kicks tx_data_submits tx_reclaim_data_kicks tx_redoorbell_kicks tx_mgt_redoorbell_kicks tx_data_redoorbell_kicks mgq_rwptr bkq_rwptr beq_rwptr viq_rwptr voq_rwptr hi0_rwptr txdma_errors txdma_qsel_diff; do
+			v=NA
+			if [ -r "$dir/$f" ]; then
+				IFS= read -r v <"$dir/$f" || true
+				[ -n "${v:-}" ] || v=0
+			fi
+			printf ' %s=%s' "$f" "$v" >>"$SNIFF_DIR/debugfs-counters.txt"
+		done
+		printf '\n' >>"$SNIFF_DIR/debugfs-counters.txt"
+	done
+}
+
+sniff_collect_radio() {
+	ifname="$1"; band="$2"; tag="${3:-$2}"
+	{
+		echo "===== $band $ifname info ====="
+		iw dev "$ifname" info 2>&1 || true
+		echo "===== $band $ifname link ====="
+		ip -s link show dev "$ifname" 2>&1 || true
+		echo "===== $band $ifname stations ====="
+		iw dev "$ifname" station dump 2>&1 || true
+		echo "===== $band $ifname scan cache (no scan trigger) ====="
+		iw dev "$ifname" scan dump 2>&1 || true
+	} >"$SNIFF_DIR/$ifname-$tag-state.txt"
+
+	ctrl="$RUN_DIR/ctrl-$band"
+	if command -v hostapd_cli >/dev/null 2>&1 && [ -d "$ctrl" ]; then
+		{
+			echo '===== hostapd status ====='
+			hostapd_cli -p "$ctrl" -i "$ifname" status 2>&1 || true
+			echo '===== hostapd all_sta ====='
+			hostapd_cli -p "$ctrl" -i "$ifname" all_sta 2>&1 || true
+			echo '===== hostapd mib ====='
+			hostapd_cli -p "$ctrl" -i "$ifname" mib 2>&1 || true
+		} >"$SNIFF_DIR/hostapd-$tag-state.txt"
+	fi
+}
+
+sniff_sanitize_hostapd() {
+	for f in "$RUN_DIR"/hostapd-*.conf; do
+		[ -r "$f" ] || continue
+		base="$(basename "$f")"
+		sed -e 's/^wpa_passphrase=.*/wpa_passphrase=<redacted>/' -e 's/^wpa_psk=.*/wpa_psk=<redacted>/' "$f" >"$SNIFF_DIR/$base" 2>/dev/null || true
+	done
+	uci -q show mw5wifi 2>/dev/null | sed "s/\.key='[^']*'/.key='<redacted>'/g" >"$SNIFF_DIR/mw5wifi-sanitized.txt" || true
+}
+
+wifi_sniffing() {
+	seconds="${1:-$SNIFF_SECONDS_DEFAULT}"
+	case "$seconds" in ''|*[!0-9]*) seconds=$SNIFF_SECONDS_DEFAULT ;; esac
+	[ "$seconds" -ge 5 ] 2>/dev/null || seconds=5
+	[ "$seconds" -le 60 ] 2>/dev/null || seconds=60
+
+	mkdir -p "$LOG_DIR" "$SNIFF_ROOT"
+	rm -rf "$SNIFF_ROOT"/* "$SNIFF_BUNDLE" 2>/dev/null || true
+	SNIFF_DIR=$SNIFF_ROOT/capture
+	SNIFF_LOG=$SNIFF_ROOT/sniffing.log
+	mkdir -p "$SNIFF_DIR"
+	: >"$SNIFF_LOG"
+	trap 'sniff_cleanup' INT TERM EXIT
+
+	sniff_out "MW5 WIFI SNIFFING $VERSION"
+	sniff_out "duration=${seconds}s"
+	sniff_out 'radios: wlan1=2.4GHz RTL8197FS/RFE5, wlan0=5GHz RTL8812BRH/RFE6'
+	sniff_out 'Capture is non-destructive: no monitor interface, channel switch, scan trigger or AP restart is performed.'
+	sniff_out 'PCAPs contain AP-netdev Ethernet frames and may contain user traffic; 802.11 management is logged separately via nl80211/hostapd/kernel.'
+	sniff_out 'WPA keys are not copied into the text report.'
+
+	if ! lsmod 2>/dev/null | grep -q '^rtl8192cd '; then
+		sniff_out 'rtl8192cd not loaded; loading driver for diagnostics'
+		modprobe rtl8192cd >>"$SNIFF_LOG" 2>&1 || sniff_out 'WARN: modprobe rtl8192cd failed'
+		sleep 1
+	fi
+
+	at_mount_debugfs
+	dmesg >"$SNIFF_DIR/dmesg-before.txt" 2>/dev/null || true
+	cat /proc/interrupts >"$SNIFF_DIR/interrupts-before.txt" 2>/dev/null || true
+	cat /proc/stat >"$SNIFF_DIR/proc-stat-before.txt" 2>/dev/null || true
+	cat /proc/softirqs >"$SNIFF_DIR/softirqs-before.txt" 2>/dev/null || true
+	cat /proc/meminfo >"$SNIFF_DIR/meminfo-before.txt" 2>/dev/null || true
+	cat /proc/loadavg >"$SNIFF_DIR/loadavg-before.txt" 2>/dev/null || true
+	cat /proc/net/dev >"$SNIFF_DIR/proc-net-dev-before.txt" 2>/dev/null || true
+	iw reg get >"$SNIFF_DIR/iw-reg.txt" 2>&1 || true
+	iw dev >"$SNIFF_DIR/iw-dev-before.txt" 2>&1 || true
+	iw phy >"$SNIFF_DIR/iw-phy.txt" 2>&1 || true
+	sniff_sanitize_hostapd
+	sniff_collect_radio wlan1 2g
+	sniff_collect_radio wlan0 5g
+
+	if command -v iw >/dev/null 2>&1; then
+		sniff_bg sh -c "exec iw event -t >'$SNIFF_DIR/iw-events.txt' 2>&1"
+	else
+		sniff_out 'WARN: iw unavailable; nl80211 event capture skipped'
+	fi
+	if command -v logread >/dev/null 2>&1; then
+		sniff_bg sh -c "exec logread -f >'$SNIFF_DIR/logread-live.txt' 2>&1"
+	fi
+
+	if command -v mw5-pcap >/dev/null 2>&1; then
+		for spec in 'wlan1|2g' 'wlan0|5g'; do
+			ifname=${spec%%|*}; band=${spec#*|}
+			if [ -e "/sys/class/net/$ifname" ]; then
+				sniff_out "starting tiny PCAP capture: $ifname ($band)"
+				sniff_bg mw5-pcap "$ifname" "$SNIFF_DIR/$ifname-$band.pcap" "$seconds" 2>"$SNIFF_DIR/mw5-pcap-$band.log"
+			else
+				sniff_out "WARN: $ifname missing; $band PCAP skipped"
+			fi
+		done
+	else
+		sniff_out 'WARN: mw5-pcap unavailable; raw netdev PCAP capture skipped, event/debug capture continues'
+	fi
+
+	sniff_out "capturing for ${seconds}s..."
+	sniff_2g_seen_peer=''
+	i=0
+	while [ "$i" -lt "$seconds" ]; do
+		sniff_debugfs_line
+		peer_now="$(two_g_station_first 2>/dev/null || true)"
+		if [ -n "$peer_now" ] && [ -z "$sniff_2g_seen_peer" ]; then
+			sniff_2g_seen_peer="$peer_now"
+			two_g_record_success sniffing "$peer_now" "duration=${seconds}s observed_at=${i}s" || true
+			sniff_out "WIFI2G_OK: observed associated wlan1 client=$peer_now at ${i}s"
+		fi
+		sleep 1
+		i=$((i + 1))
+	done
+
+	# mw5-pcap uses a bounded duration; give its final poll cycle time to flush the PCAP/stat line.
+	sleep 1
+	sniff_cleanup
+	trap - INT TERM EXIT
+
+	dmesg >"$SNIFF_DIR/dmesg-after.txt" 2>/dev/null || true
+	cat /proc/interrupts >"$SNIFF_DIR/interrupts-after.txt" 2>/dev/null || true
+	cat /proc/stat >"$SNIFF_DIR/proc-stat-after.txt" 2>/dev/null || true
+	cat /proc/softirqs >"$SNIFF_DIR/softirqs-after.txt" 2>/dev/null || true
+	cat /proc/meminfo >"$SNIFF_DIR/meminfo-after.txt" 2>/dev/null || true
+	cat /proc/loadavg >"$SNIFF_DIR/loadavg-after.txt" 2>/dev/null || true
+	cat /proc/net/dev >"$SNIFF_DIR/proc-net-dev-after.txt" 2>/dev/null || true
+	iw dev >"$SNIFF_DIR/iw-dev-after.txt" 2>&1 || true
+	sniff_collect_radio wlan1 2g 2g-after
+	sniff_collect_radio wlan0 5g 5g-after
+	grep -E 'rtl8192cd|rtl8197f-wlan|wlan0|wlan1|hostapd|cfg80211|MW5-(AUTH|ASSOC|ADD-KEY|CHANGE-STA)|AP-STA-' "$SNIFF_DIR/logread-live.txt" 2>/dev/null >"$SNIFF_DIR/wifi-events-filtered.txt" || true
+	grep -E 'rtl8192cd|rtl8197f-wlan|wlan0|wlan1|cfg80211|MW5-(AUTH|ASSOC|ADD-KEY|CHANGE-STA)' "$SNIFF_DIR/dmesg-after.txt" 2>/dev/null >"$SNIFF_DIR/dmesg-wifi-filtered.txt" || true
+
+	sniff_2g_peer="$(two_g_station_first 2>/dev/null || true)"
+	[ -n "$sniff_2g_peer" ] || sniff_2g_peer="$sniff_2g_seen_peer"
+	sniff_2g_ok=0
+	if [ -n "$sniff_2g_peer" ]; then
+		sniff_2g_ok=1
+		if [ -n "$(two_g_station_first 2>/dev/null || true)" ]; then
+			two_g_record_success sniffing "$sniff_2g_peer" "duration=${seconds}s end_of_window=1" || true
+			sniff_out "WIFI2G_OK: client=$sniff_2g_peer associated during sniffing and still present at end"
+		else
+			sniff_out "WIFI2G_OK: client=$sniff_2g_peer was associated during sniffing but left before the end"
+		fi
+	else
+		sniff_out 'WIFI2G_NOT_PROVEN: no wlan1 station observed during sniffing window'
+	fi
+
+	{
+		echo "MW5 WIFI SNIFFING $VERSION"
+		echo "duration=${seconds}s"
+		echo 'capture_mode=mw5-pcap-AF_PACKET+nl80211+hostapd+kernel+debugfs'
+		for f in "$SNIFF_DIR"/*.pcap; do
+			[ -f "$f" ] || continue
+			echo "pcap=$(basename "$f") bytes=$(wc -c <"$f" 2>/dev/null || echo 0)"
+		done
+		echo "auth_rx=$(grep -c 'MW5-AUTH-RX' "$SNIFF_DIR/dmesg-wifi-filtered.txt" 2>/dev/null || true)"
+		echo "assoc_rx=$(grep -c 'MW5-ASSOC-RX' "$SNIFF_DIR/dmesg-wifi-filtered.txt" 2>/dev/null || true)"
+		echo "add_key=$(grep -c 'MW5-ADD-KEY' "$SNIFF_DIR/wifi-events-filtered.txt" 2>/dev/null || true)"
+		echo "sta_connected=$(grep -c 'AP-STA-CONNECTED' "$SNIFF_DIR/wifi-events-filtered.txt" 2>/dev/null || true)"
+		echo "2g_auth_rx=$(grep -c 'MW5-AUTH-RX if=wlan1' "$SNIFF_DIR/dmesg-wifi-filtered.txt" 2>/dev/null || true)"
+		echo "2g_assoc_rx=$(grep -c 'MW5-ASSOC-RX if=wlan1' "$SNIFF_DIR/dmesg-wifi-filtered.txt" 2>/dev/null || true)"
+		echo "2g_assoc_resp_tx=$(grep -c 'v44.54 MW5 AP-SME ASSOC-RESP TX if=wlan1' "$SNIFF_DIR/dmesg-wifi-filtered.txt" 2>/dev/null || true)"
+		echo "2g_rx_irq_fallback_count=$(cat /sys/kernel/debug/rtl8192cd/18640000.wifi/rx_irq_fallback_count 2>/dev/null || echo NA)"
+		echo "2g_rx_irq_fallback_suppressed=$(cat /sys/kernel/debug/rtl8192cd/18640000.wifi/rx_irq_fallback_suppressed 2>/dev/null || echo NA)"
+		echo "2g_rx_irq_fallback_probe=$(cat /sys/kernel/debug/rtl8192cd/18640000.wifi/rx_irq_fallback_probe 2>/dev/null || echo NA)"
+		echo "2g_rx_pending_checks=$(cat /sys/kernel/debug/rtl8192cd/18640000.wifi/rx_pending_checks 2>/dev/null || echo NA)"
+		echo "2g_rx_icv_errors=$(cat /sys/kernel/debug/rtl8192cd/18640000.wifi/rx_icv_errors 2>/dev/null || echo NA)"
+		echo "2g_rx_refill_alloc_failures=$(cat /sys/kernel/debug/rtl8192cd/18640000.wifi/rx_refill_alloc_failures 2>/dev/null || echo NA)"
+		echo "2g_c2h_oversize_reclassified=$(cat /sys/kernel/debug/rtl8192cd/18640000.wifi/c2h_oversize_reclassified 2>/dev/null || echo NA)"
+		echo "5g_rx_icv_errors=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/rx_icv_errors 2>/dev/null || echo NA)"
+		echo "5g_rx_refill_alloc_failures=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/rx_refill_alloc_failures 2>/dev/null || echo NA)"
+		echo "5g_c2h_oversize_reclassified=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/c2h_oversize_reclassified 2>/dev/null || echo NA)"
+		echo "5g_auth_rx=$(grep -c 'MW5-AUTH-RX if=wlan0' "$SNIFF_DIR/dmesg-wifi-filtered.txt" 2>/dev/null || true)"
+		echo "5g_assoc_rx=$(grep -c 'MW5-ASSOC-RX if=wlan0' "$SNIFF_DIR/dmesg-wifi-filtered.txt" 2>/dev/null || true)"
+		echo "5g_assoc_resp_tx=$(grep -c 'v44.54 MW5 AP-SME ASSOC-RESP TX if=wlan0' "$SNIFF_DIR/dmesg-wifi-filtered.txt" 2>/dev/null || true)"
+		echo "5g_auth_resp_hi0=$(grep -c 'v44.54 MW5 5G AUTH-RESP HI0 if=wlan0' "$SNIFF_DIR/dmesg-wifi-filtered.txt" 2>/dev/null || true)"
+		echo "5g_hi0_txdesc=$(grep -c 'v44.54 MW5 5G critical HI0 TXDESC if=wlan0' "$SNIFF_DIR/dmesg-wifi-filtered.txt" 2>/dev/null || true)"
+		echo "5g_tx_dma_maps=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/tx_dma_maps 2>/dev/null || echo NA)"
+		echo "5g_tx_dma_unmaps=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/tx_dma_unmaps 2>/dev/null || echo NA)"
+		echo "5g_tx_reclaim_kicks=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/tx_reclaim_kicks 2>/dev/null || echo NA)"
+		echo "5g_tx_reclaim_tx_kicks=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/tx_reclaim_tx_kicks 2>/dev/null || echo NA)"
+		echo "5g_tx_data_submits=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/tx_data_submits 2>/dev/null || echo NA)"
+		echo "5g_tx_reclaim_data_kicks=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/tx_reclaim_data_kicks 2>/dev/null || echo NA)"
+		echo "5g_tx_redoorbell_kicks=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/tx_redoorbell_kicks 2>/dev/null || echo NA)"
+		echo "5g_tx_mgt_redoorbell_kicks=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/tx_mgt_redoorbell_kicks 2>/dev/null || echo NA)"
+		echo "5g_tx_data_redoorbell_kicks=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/tx_data_redoorbell_kicks 2>/dev/null || echo NA)"
+		echo "5g_mgq_rwptr=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/mgq_rwptr 2>/dev/null || echo NA)"
+		echo "5g_bkq_rwptr=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/bkq_rwptr 2>/dev/null || echo NA)"
+		echo "5g_beq_rwptr=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/beq_rwptr 2>/dev/null || echo NA)"
+		echo "5g_viq_rwptr=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/viq_rwptr 2>/dev/null || echo NA)"
+		echo "5g_voq_rwptr=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/voq_rwptr 2>/dev/null || echo NA)"
+		echo "5g_hi0_rwptr=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/hi0_rwptr 2>/dev/null || echo NA)"
+		echo "5g_mgntdok_irq_count=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/mgntdok_irq_count 2>/dev/null || echo NA)"
+		echo "5g_highdok_irq_count=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/highdok_irq_count 2>/dev/null || echo NA)"
+		echo "5g_eapol_rx=$(grep -c 'EAPOL RX admitted if=wlan0' "$SNIFF_DIR/wifi-events-filtered.txt" 2>/dev/null || true)"
+		echo "5g_eapol_tx=$(grep -c 'OEM EAPOL TX if=wlan0' "$SNIFF_DIR/dmesg-wifi-filtered.txt" 2>/dev/null || true)"
+		echo "5g_eapol_mgt_redirects=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_mgt_redirects 2>/dev/null || echo NA)"
+		echo "5g_eapol_oem_tx=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_oem_tx 2>/dev/null || echo NA)"
+		echo "5g_eapol_desc_fills=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_desc_fills 2>/dev/null || echo NA)"
+		echo "5g_eapol_syncs=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_syncs 2>/dev/null || echo NA)"
+		echo "5g_eapol_host_fill=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_host_before_fill 2>/dev/null || echo NA)->$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_host_after_fill 2>/dev/null || echo NA)"
+		echo "5g_eapol_host_sync=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_host_before_sync 2>/dev/null || echo NA)->$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_host_after_sync 2>/dev/null || echo NA)"
+		echo "5g_eapol_hw_sync=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_hw_before_sync 2>/dev/null || echo NA)->$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_hw_after_sync 2>/dev/null || echo NA)"
+		echo "5g_eapol_rwptr=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_rwptr_before_sync 2>/dev/null || echo NA)->$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_rwptr_after_sync 2>/dev/null || echo NA)"
+		echo "5g_eapol_desc_q=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_desc_q 2>/dev/null || echo NA)"
+		echo "5g_eapol_desc_idx=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_desc_idx 2>/dev/null || echo NA)"
+		echo "5g_eapol_desc_dw=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_desc_dw0 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_desc_dw1 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_desc_dw2 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_desc_dw3 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_desc_dw4 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_desc_dw5 2>/dev/null || echo NA)"
+		echo "5g_eapol_frame=macid:$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_last_macid 2>/dev/null || echo NA) tid:$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_last_tid 2>/dev/null || echo NA) ack:$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_need_ack 2>/dev/null || echo NA) hdr:$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_last_hdr_len 2>/dev/null || echo NA)+$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_last_llc_len 2>/dev/null || echo NA) payload:$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_last_payload_len 2>/dev/null || echo NA)"
+		echo "5g_eapol_hdr=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_hdr_dw0 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_hdr_dw1 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_hdr_dw2 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_hdr_dw3 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_hdr_dw4 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_hdr_dw5 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_hdr_dw6 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_hdr_dw7 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_hdr_dw8 2>/dev/null || echo NA)"
+		echo "5g_eapol_payload0=$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_payload_dw0 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_payload_dw1 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_payload_dw2 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_payload_dw3 2>/dev/null || echo NA)"
+		echo "5g_eapol_txrpt=reports:$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_txrpt_reports 2>/dev/null || echo NA) txok_sum:$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_txrpt_txok_sum 2>/dev/null || echo NA) txfail_sum:$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_txrpt_txfail_sum 2>/dev/null || echo NA) last_macid:$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_txrpt_last_macid 2>/dev/null || echo NA) last:$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_txrpt_last_txok 2>/dev/null || echo NA)/$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_txrpt_last_txfail 2>/dev/null || echo NA) rate:$(cat /sys/kernel/debug/rtl8192cd/0000:00:00.0/eapol_txrpt_last_rate 2>/dev/null || echo NA)"
+		echo "2g_link_ok=$sniff_2g_ok"
+		echo "2g_peer=${sniff_2g_peer:-none}"
+		if [ "$sniff_2g_ok" = 1 ]; then
+			echo "2g_sta_rx_packets=$(two_g_station_metric "$sniff_2g_peer" rx_packets 2>/dev/null || echo 0)"
+			echo "2g_sta_tx_packets=$(two_g_station_metric "$sniff_2g_peer" tx_packets 2>/dev/null || echo 0)"
+		fi
+		echo "DIR=$SNIFF_DIR"
+		echo "BUNDLE=$SNIFF_BUNDLE"
+	} >"$SNIFF_ROOT/summary.txt"
+	cat "$SNIFF_ROOT/summary.txt" | tee -a "$SNIFF_LOG"
+	cp "$SNIFF_LOG" "$SNIFF_DIR/sniffing.log" 2>/dev/null || true
+	if tar -czf "$SNIFF_BUNDLE" -C "$SNIFF_ROOT" capture summary.txt sniffing.log 2>>"$SNIFF_LOG"; then
+		sniff_out "report bundle created: $SNIFF_BUNDLE"
+	else
+		sniff_out 'WARN: report bundle creation failed'
+	fi
+	sniff_out 'MW5 WIFI SNIFFING COMPLETE - no additional diagnostic commands are required.'
+}
+
+
+# v44.42: exhaustive 2.4 GHz visibility/association matrix with shared link proof.  The test AP is
+# intentionally OPEN so the result measures RTL8197FS beacon/RX/association,
+# not the still-separate WPA/EAPOL problem.  wlan0/5 GHz is never stopped.
+T2_ROOT=$LOG_DIR/2g-alltest
+T2_DIR=$T2_ROOT/attempts
+T2_LOG=$T2_ROOT/2g-alltest.log
+T2_SUMMARY=$T2_ROOT/summary.txt
+T2_BUNDLE=/tmp/mw5-2g-alltest-report.tar.gz
+T2_METHOD_FILE=/etc/mw5wifi-2g-method.conf
+T2_WAIT=15
+T2_SSID='MW5-2G-ALLTEST'
+T2_CTRL=$RUN_DIR/ctrl-2g-alltest
+T2_PID=$RUN_DIR/hostapd-2g-alltest.pid
+T2_CONF=$RUN_DIR/hostapd-2g-alltest.conf
+
+
+t2_out() { printf '%s\n' "$*" | tee -a "$T2_LOG"; }
+
+t2_debug_dir() { beacon_debug_dir_for_if wlan1 2>/dev/null || true; }
+
+t2_counter() {
+	d="$(t2_debug_dir)"; [ -n "$d" ] && [ -r "$d/$1" ] && cat "$d/$1" 2>/dev/null || echo 0
+}
+
+t2_stop_test_ap() {
+	p="$(cat "$T2_PID" 2>/dev/null || true)"
+	if [ -n "$p" ] && kill -0 "$p" 2>/dev/null; then
+		if command -v hostapd_cli >/dev/null 2>&1 && [ -d "$T2_CTRL" ]; then
+			hostapd_cli -p "$T2_CTRL" -i wlan1 terminate >/dev/null 2>&1 || true
+		fi
+		n=0; while kill -0 "$p" 2>/dev/null && [ "$n" -lt 3 ]; do sleep 1; n=$((n + 1)); done
+		kill "$p" >/dev/null 2>&1 || true
+	fi
+	rm -f "$T2_PID" "$T2_CONF"
+	rm -rf "$T2_CTRL"
+}
+
+t2_station_mac() {
+	iw dev wlan1 station dump 2>/dev/null | awk '/^Station / {print $2; exit}'
+}
+
+t2_write_conf() {
+	profile="$1"; channel="$2"; out="$3"
+	saved_profile="${R2_PROFILE:-auto}"
+	R2_PROFILE="$profile"
+	write_hostapd_config 2g wlan1 "$T2_SSID" "$channel" 20 open '' "$out" "$T2_CTRL"
+	R2_PROFILE="$saved_profile"
+	# Make every test explicitly visible and deterministic.
+	{
+		echo 'ignore_broadcast_ssid=0'
+		echo 'beacon_int=100'
+		echo 'dtim_period=1'
+	} >>"$out"
+}
+
+t2_save_method() {
+	init_method="$1"; profile="$2"; channel="$3"; peer="$4"; attempt="$5"
+	mkdir -p /etc
+	cat >"$T2_METHOD_FILE" <<EOF_T2_METHOD
+# Generated by mw5-wifi 2g-alltest $VERSION
+MW5_2G_METHOD_VERSION='1'
+MW5_2G_RESULT='associated'
+MW5_2G_INIT_METHOD='$(sq "$init_method")'
+MW5_2G_PROFILE='$(sq "$profile")'
+MW5_2G_CHANNEL='$(sq "$channel")'
+MW5_2G_WIDTH='20'
+MW5_2G_TEST_SSID='$T2_SSID'
+MW5_2G_PEER='$(sq "$peer")'
+MW5_2G_ATTEMPT='$(sq "$attempt")'
+MW5_2G_WAIT_SECONDS='$T2_WAIT'
+MW5_2G_SAVED_AT='$(date +%s 2>/dev/null || echo 0)'
+EOF_T2_METHOD
+	R2_INIT_METHOD="$init_method"
+	R2_PROFILE="$profile"
+	R2_CHANNEL="$channel"
+	R2_WIDTH=20
+	write_config_file >/dev/null 2>&1 || write_runtime
+}
+
+t2_restore_original() {
+	t2_stop_test_ap
+	if [ "${T2_ORIGINAL_ACTIVE:-0}" = 1 ]; then
+		R2_INIT_METHOD="$T2_ORIG_INIT_METHOD"; R2_PROFILE="$T2_ORIG_PROFILE"; R2_CHANNEL="$T2_ORIG_CHANNEL"; R2_WIDTH="$T2_ORIG_WIDTH"
+		start_radio 2g wlan1 "$R2_ENABLED" "$R2_SSID" "$R2_CHANNEL" "$R2_WIDTH" "$R2_ENCRYPTION" "$R2_KEY" >>"$T2_LOG" 2>&1 || true
+	else
+		ip link set dev wlan1 down >/dev/null 2>&1 || true
+	fi
+}
+
+t2_restore_saved() {
+	t2_stop_test_ap
+	start_radio 2g wlan1 "$R2_ENABLED" "$R2_SSID" "$R2_CHANNEL" "$R2_WIDTH" "$R2_ENCRYPTION" "$R2_KEY" >>"$T2_LOG" 2>&1 || true
+}
+
+two_g_alltest() {
+	load_config
+	command -v hostapd >/dev/null 2>&1 || { echo 'FAIL: hostapd missing'; return 127; }
+	command -v iw >/dev/null 2>&1 || { echo 'FAIL: iw missing'; return 127; }
+	mkdir -p "$T2_DIR" "$RUN_DIR"
+	rm -rf "$T2_ROOT" "$T2_BUNDLE" 2>/dev/null || true
+	mkdir -p "$T2_DIR" "$RUN_DIR"
+	: >"$T2_LOG"
+
+	T2_ORIG_PROFILE="${R2_PROFILE:-auto}"; T2_ORIG_INIT_METHOD="${R2_INIT_METHOD:-managed-cycle}"; T2_ORIG_CHANNEL="$R2_CHANNEL"; T2_ORIG_WIDTH="$R2_WIDTH"
+	T2_ORIGINAL_ACTIVE=0
+	p="$(cat "$RUN_DIR/hostapd-2g.pid" 2>/dev/null || true)"
+	[ -n "$p" ] && kill -0 "$p" 2>/dev/null && T2_ORIGINAL_ACTIVE=1
+
+	t2_out "MW5 2G ALLTEST $VERSION"
+	t2_out "SSID=$T2_SSID security=OPEN wait_per_attempt=${T2_WAIT}s"
+	t2_out 'Keep the v44.50 ESP32 tester running. It BLIND-connects on explicit 2.4GHz channels and does not depend on scan results. 5 GHz remains running.'
+	t2_out 'Matrix: cfg80211 managed-cycle on currently AP-allowed canonical channels from 1/6/11 x 5 PHY profiles; NO-IR/disabled channels are skipped, not misreported as driver START-FAIL.'
+	t2_out 'Success criterion: a real wlan1 station-table entry is observed. AUTH/ASSOC-only markers are logged but do not stop the matrix; station data counters are saved as ping/DHCP evidence.'
+
+	if ! grep -q '^rtl8192cd ' /proc/modules 2>/dev/null; then
+		t2_out 'rtl8192cd not loaded; probing driver'
+		probe_driver >>"$T2_LOG" 2>&1 || { t2_out 'FAIL: driver probe failed'; return 1; }
+	fi
+	wait_radio wlan1 || { t2_out 'FAIL: wlan1 missing'; return 1; }
+	stop_hostapd_band 2g
+	ip link set dev wlan1 down >/dev/null 2>&1 || true
+	iw dev wlan1 set type managed >/dev/null 2>&1 || true
+	ip link set dev wlan1 up >/dev/null 2>&1 || true
+
+	trap 't2_out "INTERRUPTED: restoring original 2g AP"; t2_restore_original; trap - INT TERM; exit 130' INT TERM
+
+	attempt=0; winner_init=''; winner_profile=''; winner_channel=''; winner_peer=''; auth_seen_total=0; assoc_seen_total=0; rx_progress_total=0
+	# v44.48: cfg80211 lifecycle is already proven to complete; stop spending 20+
+	# minutes on legacy lifecycle/profile noise. Probe the three canonical channels
+	# while the blind ESP32 actively sends authentication frames.
+	for pass in managed-common; do
+		init_method=managed-cycle
+		channels=''
+		t2_phy_num="$(iw dev wlan1 info 2>/dev/null | awk '/^[[:space:]]*wiphy / {print $2; exit}')"
+		for t2_ch in 1 6 11; do
+			t2_line=''
+			[ -n "$t2_phy_num" ] && t2_line="$(iw phy "phy$t2_phy_num" info 2>/dev/null | grep -F "[$t2_ch]" | head -n 1 || true)"
+			case "$t2_line" in
+				*disabled*|*'no IR'*|*NO-IR*) t2_out "SKIP channel=$t2_ch regulatory=${t2_line#*\* }" ;;
+				*) channels="$channels $t2_ch" ;;
+			esac
+		done
+		channels="${channels# }"
+		[ -n "$channels" ] || { t2_out 'FAIL: none of canonical channels 1/6/11 is currently permitted for AP initiation'; break; }
+		t2_total=0; for t2_ch in $channels; do t2_total=$((t2_total + 5)); done
+		t2_out "AP-allowed test channels=$channels planned_attempts=$t2_total"
+		for channel in $channels; do
+			for profile in g-ht20 g-legacy-wmm g-legacy g-long b-legacy; do
+				attempt=$((attempt + 1))
+				tag="$(printf '%02d' "$attempt")-${init_method}-ch${channel}-${profile}"
+				adir="$T2_DIR/$tag"; mkdir -p "$adir"
+				t2_stop_test_ap
+				R2_INIT_METHOD="$init_method"
+				rm -rf "$T2_CTRL"; mkdir -p "$T2_CTRL"
+				t2_write_conf "$profile" "$channel" "$T2_CONF"
+				cp "$T2_CONF" "$adir/hostapd.conf" 2>/dev/null || true
+				dmesg >"$adir/dmesg-before.txt" 2>/dev/null || true
+				rx0="$(t2_counter napi_work_done)"; cpu0="$(t2_counter rx_direct_sync_cpu)"; irq0="$(t2_counter rx_irq_count)"
+				t2_out "ATTEMPT $attempt/$t2_total init=$init_method channel=$channel profile=$profile: starting $T2_SSID"
+				# Apply exactly the lifecycle under test, then let hostapd own AP setup.
+				case "$init_method" in
+					hostapd-only) ip link set dev wlan1 down >/dev/null 2>&1 || true ;;
+					ap-pretype) ip link set dev wlan1 down >/dev/null 2>&1 || true; iw dev wlan1 set type __ap >/dev/null 2>&1 || true; ip link set dev wlan1 up >/dev/null 2>&1 || true ;;
+					*) ip link set dev wlan1 down >/dev/null 2>&1 || true; iw dev wlan1 set type managed >/dev/null 2>&1 || true; ip link set dev wlan1 up >/dev/null 2>&1 || true ;;
+				esac
+				if ! hostapd -B -P "$T2_PID" "$T2_CONF" >"$adir/hostapd-start.log" 2>&1; then
+					t2_out "  START-FAIL init=$init_method channel=$channel profile=$profile"
+					continue
+				fi
+				success=0; peer=''; sec=0
+				cca_peak=0; cck_cca_peak=0; ofdm_cca_peak=0; crc_ok_peak=0; crc_err_peak=0; fa_peak=0
+				while [ "$sec" -lt "$T2_WAIT" ]; do
+					sleep 1; sec=$((sec + 1))
+					m="$(t2_station_mac)"
+					if [ -n "$m" ]; then success=1; [ -n "$peer" ] || peer="$m"; fi
+					for pv in phydm_cca_all phydm_cck_cca phydm_ofdm_cca phydm_crc_ok_all phydm_crc_err_all phydm_fa_all; do
+						val="$(t2_counter "$pv")"; case "$val" in ''|*[!0-9]*) val=0 ;; esac
+						case "$pv" in
+							phydm_cca_all) [ "$val" -le "$cca_peak" ] || cca_peak="$val" ;;
+							phydm_cck_cca) [ "$val" -le "$cck_cca_peak" ] || cck_cca_peak="$val" ;;
+							phydm_ofdm_cca) [ "$val" -le "$ofdm_cca_peak" ] || ofdm_cca_peak="$val" ;;
+							phydm_crc_ok_all) [ "$val" -le "$crc_ok_peak" ] || crc_ok_peak="$val" ;;
+							phydm_crc_err_all) [ "$val" -le "$crc_err_peak" ] || crc_err_peak="$val" ;;
+							phydm_fa_all) [ "$val" -le "$fa_peak" ] || fa_peak="$val" ;;
+						esac
+					done
+				done
+				iw dev wlan1 station dump >"$adir/stations-after.txt" 2>&1 || true
+				dmesg >"$adir/dmesg-after.txt" 2>/dev/null || true
+				before_lines="$(wc -l <"$adir/dmesg-before.txt" 2>/dev/null | tr -d ' ')"; case "$before_lines" in ''|*[!0-9]*) before_lines=0 ;; esac
+				after_lines="$(wc -l <"$adir/dmesg-after.txt" 2>/dev/null | tr -d ' ')"; case "$after_lines" in ''|*[!0-9]*) after_lines=0 ;; esac
+				if [ "$after_lines" -ge "$before_lines" ]; then tail -n +$((before_lines + 1)) "$adir/dmesg-after.txt" >"$adir/dmesg-new.txt" 2>/dev/null || true; else cp "$adir/dmesg-after.txt" "$adir/dmesg-new.txt"; fi
+				auth="$(grep -c 'MW5-AUTH-RX if=wlan1' "$adir/dmesg-new.txt" 2>/dev/null || true)"; assoc="$(grep -c 'MW5-ASSOC-RX if=wlan1' "$adir/dmesg-new.txt" 2>/dev/null || true)"
+				case "$auth" in ''|*[!0-9]*) auth=0 ;; esac; case "$assoc" in ''|*[!0-9]*) assoc=0 ;; esac
+				[ "$auth" -gt 0 ] && auth_seen_total=$((auth_seen_total + 1))
+				[ "$assoc" -gt 0 ] && assoc_seen_total=$((assoc_seen_total + 1))
+				rx1="$(t2_counter napi_work_done)"; cpu1="$(t2_counter rx_direct_sync_cpu)"; irq1="$(t2_counter rx_irq_count)"
+				case "$rx1" in ''|*[!0-9]*) rx1=0 ;; esac; case "$rx0" in ''|*[!0-9]*) rx0=0 ;; esac
+				if [ "$rx1" -gt "$rx0" ]; then rx_progress_total=$((rx_progress_total + 1)); fi
+				{
+					echo "attempt=$attempt init_method=$init_method channel=$channel profile=$profile success=$success peer=${peer:-none} auth_rx=$auth assoc_rx=$assoc"
+					echo "napi_work_done=$rx0->$rx1 rx_direct_sync_cpu=$cpu0->$cpu1 rx_irq_count=$irq0->$irq1"
+					echo "phydm_peaks cca=$cca_peak cck_cca=$cck_cca_peak ofdm_cca=$ofdm_cca_peak crc_ok=$crc_ok_peak crc_err=$crc_err_peak fa=$fa_peak"
+					echo '--- iw info ---'; iw dev wlan1 info 2>&1 || true
+					echo '--- stations ---'; cat "$adir/stations-after.txt" 2>/dev/null || true
+					echo '--- debugfs ---'; d="$(t2_debug_dir)"; [ -n "$d" ] && for f in active_rfe_type trswitch trsw_reasserts txagc_e00 txagc_e04 txagc_e08 txagc_e10 txagc_e14 txagc_e18 txagc_e1c txagc_830 txagc_834 txagc_838 txagc_83c txagc_848 txagc_84c txagc_868 txagc_86c phydm_board_type phydm_ext_trsw phydm_fa_all phydm_ofdm_fail phydm_cck_fail phydm_cca_all phydm_ofdm_cca phydm_cck_cca phydm_cck_crc_ok phydm_cck_crc_err phydm_ofdm_crc_ok phydm_ofdm_crc_err phydm_ht_crc_ok phydm_ht_crc_err phydm_crc_ok_all phydm_crc_err_all mw5_binary_pwrseq pwrseq_a0 pwrseq_a1 pwrseq_a3 pwrseq_05 pwrseq_06 soc_wlan_gate gpio_muxcfg txpause bb40 bb4c bb64 rf18_a rf18_b rf30_a rf30_b rf31_a rf31_b rf32_a rf32_b irq_count rx_irq_count napi_work_done rx_irq_fallback_count rx_direct_bus rx_direct_sync_device rx_direct_sync_cpu rcr_after_init rxfltmap0_after_init rxfltmap2_after_init rxbd_dma_base rxbd_hw_base rxbd_idx_after_init rxbd0_dw0 rxbd0_dw1 beacon_len beacon_ok beacon_dma_updates beacon_dma_alloc_errors beacon_dma_size beacon_payload_mode beacon_payload_bus beacon_txbd0_dw0 beacon_txbd0_dw1 beacon_txbd1_dw0 beacon_txbd1_dw1 beacon_txdesc_dw0 beacon_txdesc_dw1 beacon_txdesc_dw2 beacon_txdesc_dw3 beacon_txdesc_dw4 beacon_txdesc_dw5 beacon_signins beacon_enable_calls beacon_disable_calls beacon_hw_consume_seen beacon_last_action beacon_own_at_signin beacon_own_before_set beacon_own_after_set beacon_pslen beacon_txbd_bus beacon_txdesc_bus beacon_bcnq_desa; do printf '%s=' "$f"; cat "$d/$f" 2>/dev/null || echo NA; done
+				} >"$adir/result.txt"
+				t2_out "  RESULT init=$init_method channel=$channel profile=$profile station=${peer:-none} auth_rx=$auth assoc_rx=$assoc napi=$rx0->$rx1 cca_peak=$cca_peak crc_ok_peak=$crc_ok_peak crc_err_peak=$crc_err_peak fa_peak=$fa_peak"
+				if [ "$success" = 1 ] && [ -n "$peer" ]; then
+					winner_init="$init_method"; winner_profile="$profile"; winner_channel="$channel"; winner_peer="$peer"
+					t2_out "SUCCESS: real wlan1 station connected init=$winner_init channel=$winner_channel profile=$winner_profile peer=$winner_peer"
+					two_g_record_success 2g-alltest "$winner_peer" "attempt=$attempt init=$winner_init profile=$winner_profile channel=$winner_channel auth_rx=$auth assoc_rx=$assoc" || true
+					t2_save_method "$winner_init" "$winner_profile" "$winner_channel" "$winner_peer" "$attempt"
+					break 3
+				fi
+			done
+		done
+	done
+
+	t2_stop_test_ap
+	trap - INT TERM
+	if [ -n "$winner_profile" ]; then
+		t2_restore_saved
+		result=PASS
+	else
+		t2_restore_original
+		result=FAIL
+	fi
+	{
+		echo "MW5 2G ALLTEST $VERSION"
+		echo "result=$result attempts=$attempt wait_per_attempt=$T2_WAIT"
+		echo "winner_init_method=${winner_init:-none} winner_profile=${winner_profile:-none} winner_channel=${winner_channel:-none} winner_peer=${winner_peer:-none}"
+		echo "auth_attempt_windows=$auth_seen_total assoc_windows=$assoc_seen_total rx_progress_windows=$rx_progress_total"
+		echo "saved_method=$T2_METHOD_FILE"
+		echo "link_proof_log=$WIFI2G_SUCCESS_LOG"
+		echo "link_proof_snapshot=$WIFI2G_SUCCESS_ENV"
+		echo "link_proof_persistent=$WIFI2G_SUCCESS_PERSIST"
+		echo "report=$T2_BUNDLE"
+	} >"$T2_SUMMARY"
+	cat "$T2_SUMMARY" | tee -a "$T2_LOG"
+	if tar -czf "$T2_BUNDLE" -C "$T2_ROOT" 2g-alltest.log summary.txt attempts 2>>"$T2_LOG"; then
+		t2_out "report bundle created: $T2_BUNDLE"
+	else
+		t2_out 'WARN: report bundle creation failed'
+	fi
+	[ "$result" = PASS ]
+}
+
+case "${1:-}" in
+	init) ensure_config ;;
+	init-defaults) set_defaults; write_config_file; echo 'cfg80211 defaults written' ;;
+	save) shift; save_settings "$@" ;;
+	apply) apply_cfg80211 ;;
+	apply-config) ensure_config; echo 'configuration written; AP state unchanged' ;;
+	stop) stop_all ;;
+	status) show_status ;;
+	get) [ $# -eq 2 ] || exit 2; get_value "$2" ;;
+	pairing-toggle) load_config; [ "$MESH_ENABLED" = 1 ] && MESH_ENABLED=0 || MESH_ENABLED=1; write_config_file; echo "$MESH_ENABLED" ;;
+	alltest) alltest_cfg80211 ;;
+	2g-alltest) two_g_alltest ;;
+	sniffing) shift || true; wifi_sniffing "${1:-$SNIFF_SECONDS_DEFAULT}" ;;
+	apply-driver-2g|apply-driver-2g-real|apply-driver-dual|trace-gpio-2g|trace-core-2g|trace-table-2g|trace-preinitone-2g|trace-initone-entry-2g)
+		: >"$LOG_FILE"; probe_driver; echo 'legacy WEXT phase command mapped to cfg80211 driver probe'; command -v iw >/dev/null 2>&1 && iw phy 2>/dev/null || true ;;
+	start-2g-real|apply-ap-2g) MW5_ONLY_2G=1 apply_cfg80211 ;;
+	unload-driver) stop_all; remove_rtl8192cd_module 2>/dev/null || true ;;
+	*) echo "Usage: mw5-wifi init|init-defaults|save|apply|apply-config|stop|status|get KEY|pairing-toggle|alltest|2g-alltest|sniffing [SECONDS]" >&2; exit 2 ;;
+esac

@@ -1,0 +1,10 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Prepare WPS/mesh button events for later Tenda Nova pairing validation.
+[ "${ACTION:-}" = pressed ] || exit 0
+case "${BUTTON:-}" in
+	wps|reset|mesh|pair|BTN_0|BTN_1)
+		/usr/sbin/mw5-wifi pairing-toggle >/dev/null 2>&1 || true
+		logger -t mw5-mesh-pair "button=$BUTTON action=$ACTION pairing event stored" 2>/dev/null || true
+		;;
+esac

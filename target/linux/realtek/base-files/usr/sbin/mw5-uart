@@ -1,0 +1,57 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# RTL8197F/MW5 serial-console helper.  Keep the RX FIFO trigger low so long
+# paste bursts are drained early, especially while the Ethernet IRQ load is high.
+set -u
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+is_mw5() {
+	case "$(cat /tmp/sysinfo/board_name 2>/dev/null) $(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)" in
+		*tenda,nova-mw5*|*nova-mw5*) return 0 ;;
+		*) return 1 ;;
+	esac
+}
+
+rx_trigger_paths() {
+	for p in \
+		/sys/class/tty/ttyS0/rx_trig_bytes \
+		/sys/class/tty/ttyS0/device/rx_trig_bytes
+	do
+		[ -e "$p" ] && printf '%s\n' "$p"
+	done
+}
+
+tune() {
+	is_mw5 || { echo 'mw5-uart: not a Tenda Nova MW5' >&2; return 1; }
+	found=0
+	for p in $(rx_trigger_paths); do
+		found=1
+		if [ -w "$p" ]; then
+			echo 1 > "$p" || return 1
+		fi
+	done
+	[ "$found" -eq 1 ] || {
+		echo 'mw5-uart: rx_trig_bytes sysfs attribute not available yet' >&2
+		return 1
+	}
+	return 0
+}
+
+status() {
+	echo 'MW5 RTL8197F UART v44.65.14'
+	printf 'device='; [ -e /dev/ttyS0 ] && echo ttyS0 || echo missing
+	printf 'console='; cat /sys/class/tty/console/active 2>/dev/null || true
+	printf 'irq='; cat /sys/class/tty/ttyS0/device/irq 2>/dev/null || echo unknown
+	for p in $(rx_trigger_paths); do
+		printf 'rx_trigger_bytes='; cat "$p" 2>/dev/null || echo unknown
+		printf 'rx_trigger_path=%s\n' "$p"
+		break
+	done
+	grep -E '^0:' /proc/tty/driver/serial 2>/dev/null || true
+}
+
+case "${1:-status}" in
+	status) status ;;
+	tune) tune; status ;;
+	*) echo 'usage: mw5-uart status|tune' >&2; exit 2 ;;
+esac

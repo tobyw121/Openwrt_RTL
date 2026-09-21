@@ -1,0 +1,31 @@
+#!/bin/sh /etc/rc.common
+# SPDX-License-Identifier: GPL-2.0-or-later
+# MW5 cfg80211/hostapd bring-up. v44.65.16: WiFi is ON by default;
+# auto-WAN completes its first topology decision before rtl8192cd is opened.
+START=98
+STOP=15
+
+boot() {
+	[ -x /usr/sbin/mw5-wifi ] || return 0
+	/usr/sbin/mw5-wifi init >/dev/null 2>&1 || return 0
+	autoload="$(/usr/sbin/mw5-wifi get general.autoload 2>/dev/null || echo 0)"
+	[ "$autoload" = 1 ] || return 0
+	mkdir -p /tmp/mw5-webui
+	# Do not race the first auto-WAN network reload against rtl8192cd's AP
+	# close/open sequence.  The timeout keeps WiFi available even if the
+	# auto-WAN daemon is disabled or fails before publishing its marker.
+	(
+		n=0
+		while [ ! -e /tmp/mw5-webui/auto-wan-initialized ] && [ "$n" -lt 25 ]; do
+			sleep 1; n=$((n + 1))
+		done
+		sleep 1
+		/usr/sbin/mw5-wifi apply >/tmp/mw5-webui/boot-wifi.log 2>&1
+	) &
+}
+
+start() { boot; }
+
+stop() {
+	[ -x /usr/sbin/mw5-wifi ] && /usr/sbin/mw5-wifi stop >/dev/null 2>&1 || true
+}

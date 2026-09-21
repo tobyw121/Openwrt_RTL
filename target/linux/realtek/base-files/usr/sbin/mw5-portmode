@@ -1,0 +1,755 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Tenda Nova MW5 port-mode helper.
+# v44.61: safe routed Internet by default, deterministic explicit port modes,
+# single-owner WebUI confirmation/rollback and post-apply verification. Low-level DSA/CPU-tag programming
+# v44.66.10 keeps routed semantics and uses the rtl8365mb native eight-byte
+# protocol-4 DSA tag over transparent RTL8197F P0/RGMII. The SoC P0 router
+# mode and descriptor DVID are disabled in production; tag_rtl4_9 is diagnostic.
+set -u
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+VERSION='v44.66.10-rtl8367-rtl8_4-p0-transparent-egress'
+STATE_DIR=/tmp/mw5-webui
+RUNTIME_FILE=$STATE_DIR/portmode.env
+DEFAULT_TIMEOUT=300
+APPLIED_MODE=''
+REQUESTED_MODE=''
+LAN_MAC=''
+WAN_MAC=''
+WAN_IP_OPT=''
+WAN_NETMASK_OPT=''
+WAN_GATEWAY_OPT=''
+WAN_DNS_OPT=''
+WEB_MODE=0
+WEB_ROLLBACK=1
+WEB_TIMEOUT=$DEFAULT_TIMEOUT
+
+log() { logger -t mw5-portmode "$*" 2>/dev/null || true; }
+err() { echo "$*" >&2; }
+
+is_mw5() {
+	case "$(board_name 2>/dev/null) $(cat /tmp/sysinfo/board_name 2>/dev/null) $(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)" in
+		*tenda,nova-mw5*|*nova-mw5*) return 0 ;;
+	esac
+	return 1
+}
+
+mac_add() {
+	. /lib/functions/system.sh 2>/dev/null || true
+	if command -v macaddr_add >/dev/null 2>&1; then macaddr_add "$1" "$2"; else echo "$1"; fi
+}
+
+read_macs() {
+	. /lib/functions/system.sh 2>/dev/null || true
+	LAN_MAC="$(mtd_get_mac_ascii factory HW_NIC0_ADDR 2>/dev/null || true)"
+	[ -n "$LAN_MAC" ] || LAN_MAC="$(cat /sys/class/net/eth0/address 2>/dev/null || echo cc:2d:21:9e:70:c0)"
+	WAN_MAC="$(mac_add "$LAN_MAC" 7)"
+}
+
+persistent_writable() {
+	t=/etc/config/.mw5-write-test.$$
+	if ( : >"$t" ) 2>/dev/null; then rm -f "$t" 2>/dev/null || true; return 0; fi
+	return 1
+}
+
+commit_if_writable() {
+	local ci_pkg
+	persistent_writable || return 0
+	for ci_pkg in "$@"; do uci -q commit "$ci_pkg" >/dev/null 2>&1 || return 1; done
+	return 0
+}
+
+verify_rtl8367_cputag_tx() {
+	# Production DSA tag selection belongs to rtl8365mb (rtl8_4). Never mutate
+	# the legacy tag_rtl4_9 module parameter from a port-mode transition.
+	if [ -r /proc/mw5-rtl8367 ]; then
+		grep -q 'cpu_tag_decode .*format8b=1' /proc/mw5-rtl8367 2>/dev/null || 			log 'warning: RTL8367 CPU tag is not in expected 8-byte mode'
+	fi
+}
+
+reseed_rtknet() {
+	for rr_node in /proc/rd05-rtknet /proc/rtl8197f-rtknet; do
+		[ -w "$rr_node" ] || continue
+		printf '%s\n' reseed >"$rr_node" 2>/dev/null || true
+		log "v44.65.15 reseeded RTL865x L2/netif after port/network transition"
+		break
+	done
+}
+
+runtime_set() {
+	mkdir -p "$STATE_DIR"
+	cat >"$RUNTIME_FILE" <<EOR
+MW5_PORT_MODE='$1'
+MW5_PORT_EFFECTIVE='$2'
+MW5_PORT_VERSION='$VERSION'
+MW5_PORT_CHANGED='$(date +%s 2>/dev/null || echo 0)'
+EOR
+}
+
+backup_config() {
+	local bc_dir bc_pkg
+	bc_dir="$1"
+	mkdir -p "$bc_dir"
+	: >"$bc_dir/present.list"
+	for bc_pkg in network dhcp firewall mw5webui; do
+		if [ -f "/etc/config/$bc_pkg" ]; then
+			cp -p "/etc/config/$bc_pkg" "$bc_dir/$bc_pkg.conf" 2>/dev/null || return 1
+			echo "$bc_pkg" >>"$bc_dir/present.list"
+		fi
+	done
+	[ -f "$RUNTIME_FILE" ] && cp -p "$RUNTIME_FILE" "$bc_dir/portmode.env" 2>/dev/null || true
+}
+
+restore_config() {
+	local rc_dir rc_pkg
+	rc_dir="$1"; [ -d "$rc_dir" ] || return 1
+	persistent_writable || { err 'Cannot restore /etc/config: overlay is not writable'; return 1; }
+	for rc_pkg in network dhcp firewall mw5webui; do
+		if grep -qx "$rc_pkg" "$rc_dir/present.list" 2>/dev/null && [ -f "$rc_dir/$rc_pkg.conf" ]; then
+			cp -p "$rc_dir/$rc_pkg.conf" "/etc/config/$rc_pkg" 2>/dev/null || return 1
+		else
+			rm -f "/etc/config/$rc_pkg" 2>/dev/null || true
+		fi
+	done
+	if [ -f "$rc_dir/portmode.env" ]; then cp -p "$rc_dir/portmode.env" "$RUNTIME_FILE" 2>/dev/null || true; else rm -f "$RUNTIME_FILE" 2>/dev/null || true; fi
+	return 0
+}
+
+reset_net_sections() {
+	# Do not delete unrelated anonymous device sections. Removing every @device
+	# made mode changes fragile and could destroy board/network state owned by
+	# other OpenWrt components. Only replace the MW5 sections we own.
+	for s in eth0_dev lan_dev lan2_dev br_lan lan wan_dev wan wan6; do uci -q delete "network.$s" >/dev/null 2>&1 || true; done
+}
+
+ensure_loopback_config() {
+	# v44.65.11: some MW5 images already ship a non-empty network config, so
+	# config_generate exits before creating OpenWrt's normal loopback section.
+	# Keep loopback explicit in every port-mode rewrite.
+	uci -q set network.loopback='interface'
+	uci -q set network.loopback.device='lo'
+	uci -q set network.loopback.proto='static'
+	uci -q set network.loopback.ipaddr='127.0.0.1'
+	uci -q set network.loopback.netmask='255.0.0.0'
+}
+
+ensure_loopback_live() {
+	command -v ip >/dev/null 2>&1 || return 0
+	ip link set dev lo up >/dev/null 2>&1 || true
+	ip -4 addr show dev lo 2>/dev/null | grep -q '127\.0\.0\.1/8' || \
+		ip addr replace 127.0.0.1/8 dev lo >/dev/null 2>&1 || true
+}
+
+set_master_device() {
+	# v44.62.8: the RTL865x CPU/L2 tables are seeded from eth0->dev_addr.
+	# Keep the DSA master on the MW5 factory base MAC instead of a random
+	# alloc_etherdev address so local LAN/WAN CPU entries remain deterministic.
+	uci -q set network.eth0_dev='device'
+	uci -q set network.eth0_dev.name='eth0'
+	uci -q set network.eth0_dev.macaddr="$LAN_MAC"
+}
+
+set_lan_common() {
+	local ports proto sl_port
+	ports="$1"; proto="$2"
+	uci -q set network.br_lan='device'
+	uci -q set network.br_lan.name='br-lan'
+	uci -q set network.br_lan.type='bridge'
+	uci -q set network.br_lan.stp='0'
+	uci -q set network.br_lan.igmp_snooping='0'
+	uci -q set network.br_lan.macaddr="$LAN_MAC"
+	uci -q delete network.br_lan.ports >/dev/null 2>&1 || true
+	for sl_port in $ports; do
+		uci -q add_list network.br_lan.ports="$sl_port"
+		case "$sl_port" in
+			lan) sl_sec='lan_dev' ;;
+			wan) sl_sec='lan2_dev' ;;
+			*) sl_sec='' ;;
+		esac
+		if [ -n "$sl_sec" ]; then
+			uci -q set "network.$sl_sec=device"
+			uci -q set "network.$sl_sec.name=$sl_port"
+			uci -q set "network.$sl_sec.macaddr=$LAN_MAC"
+		fi
+	done
+	uci -q set network.lan='interface'
+	uci -q set network.lan.device='br-lan'
+	uci -q set network.lan.proto="$proto"
+	uci -q set network.lan.macaddr="$LAN_MAC"
+	if [ "$proto" = static ]; then
+		uci -q set network.lan.ipaddr='192.168.1.1'
+		uci -q set network.lan.netmask='255.255.255.0'
+		uci -q set network.lan.ip6assign='60'
+	else
+		uci -q delete network.lan.ipaddr >/dev/null 2>&1 || true
+		uci -q delete network.lan.netmask >/dev/null 2>&1 || true
+		uci -q delete network.lan.gateway >/dev/null 2>&1 || true
+	fi
+}
+
+set_wan_device() {
+	dev="$1"
+	uci -q set network.wan_dev='device'
+	uci -q set network.wan_dev.name="$dev"
+	uci -q set network.wan_dev.ipv6='0'
+	uci -q set network.wan_dev.macaddr="$WAN_MAC"
+	uci -q set network.wan='interface'
+	uci -q set network.wan.device="$dev"
+	uci -q set network.wan.macaddr="$WAN_MAC"
+	uci -q set network.wan.delegate='0'
+	uci -q delete network.wan6 >/dev/null 2>&1 || true
+}
+
+set_wan_none() {
+	set_wan_device "$1"
+	uci -q set network.wan.proto='none'
+	uci -q set network.wan.defaultroute='0'
+	uci -q set network.wan.peerdns='0'
+	uci -q delete network.wan.ipaddr >/dev/null 2>&1 || true
+	uci -q delete network.wan.netmask >/dev/null 2>&1 || true
+	uci -q delete network.wan.gateway >/dev/null 2>&1 || true
+	uci -q delete network.wan.dns >/dev/null 2>&1 || true
+}
+
+set_wan_dhcp() {
+	set_wan_device "$1"
+	uci -q set network.wan.proto='dhcp'
+	uci -q set network.wan.defaultroute='1'
+	uci -q set network.wan.peerdns='1'
+	uci -q set network.wan.metric='10'
+	# Clear stale static values when returning from router-static.
+	uci -q delete network.wan.ipaddr >/dev/null 2>&1 || true
+	uci -q delete network.wan.netmask >/dev/null 2>&1 || true
+	uci -q delete network.wan.gateway >/dev/null 2>&1 || true
+	uci -q delete network.wan.dns >/dev/null 2>&1 || true
+}
+
+ipv4_ok() {
+	ip="$1"
+	case "$ip" in ''|*[!0-9.]*|.*|*..*|*.) return 1 ;; esac
+	oldifs=$IFS; IFS=.; set -- $ip; IFS=$oldifs
+	[ "$#" -eq 4 ] || return 1
+	for oct in "$@"; do case "$oct" in ''|*[!0-9]*) return 1 ;; esac; [ "$oct" -le 255 ] 2>/dev/null || return 1; done
+	return 0
+}
+
+set_wan_static() {
+	dev="$1"; ip="$2"; mask="$3"; gw="$4"; dns="$5"
+	ipv4_ok "$ip" || { err "Invalid WAN IPv4 address: $ip"; return 2; }
+	ipv4_ok "$mask" || { err "Invalid WAN netmask: $mask"; return 2; }
+	[ -z "$gw" ] || ipv4_ok "$gw" || { err "Invalid WAN gateway: $gw"; return 2; }
+	for d in $dns; do ipv4_ok "$d" || { err "Invalid WAN DNS address: $d"; return 2; }; done
+	set_wan_device "$dev"
+	uci -q set network.wan.proto='static'
+	uci -q set network.wan.ipaddr="$ip"
+	uci -q set network.wan.netmask="$mask"
+	uci -q set network.wan.defaultroute='1'
+	uci -q set network.wan.peerdns='0'
+	uci -q set network.wan.metric='10'
+	[ -n "$gw" ] && uci -q set network.wan.gateway="$gw" || uci -q delete network.wan.gateway >/dev/null 2>&1 || true
+	uci -q delete network.wan.dns >/dev/null 2>&1 || true
+	for d in $dns; do uci -q add_list network.wan.dns="$d"; done
+}
+
+set_dhcp_lan_on() {
+	uci -q set dhcp.lan='dhcp'
+	uci -q set dhcp.lan.interface='lan'
+	uci -q set dhcp.lan.start='100'
+	uci -q set dhcp.lan.limit='150'
+	uci -q set dhcp.lan.leasetime='12h'
+	uci -q delete dhcp.lan.ignore >/dev/null 2>&1 || true
+	uci -q set dhcp.wan='dhcp'
+	uci -q set dhcp.wan.interface='wan'
+	uci -q set dhcp.wan.ignore='1'
+}
+
+set_dhcp_lan_off() {
+	uci -q set dhcp.lan='dhcp'
+	uci -q set dhcp.lan.interface='lan'
+	uci -q set dhcp.lan.ignore='1'
+	uci -q set dhcp.wan='dhcp'
+	uci -q set dhcp.wan.interface='wan'
+	uci -q set dhcp.wan.ignore='1'
+}
+
+firewall_zone_section() {
+	fz_name="$1"
+	for fz_sec in $(uci -q show firewall 2>/dev/null | sed -n "s/^firewall\.\([^=]*\)=zone$/\1/p"); do
+		[ "$(uci -q get firewall.$fz_sec.name 2>/dev/null || true)" = "$fz_name" ] && { echo "$fz_sec"; return 0; }
+	done
+	return 1
+}
+
+firewall_forward_section() {
+	ff_src="$1"; ff_dest="$2"
+	for ff_sec in $(uci -q show firewall 2>/dev/null | sed -n "s/^firewall\.\([^=]*\)=forwarding$/\1/p"); do
+		[ "$(uci -q get firewall.$ff_sec.src 2>/dev/null || true)" = "$ff_src" ] || continue
+		[ "$(uci -q get firewall.$ff_sec.dest 2>/dev/null || true)" = "$ff_dest" ] && { echo "$ff_sec"; return 0; }
+	done
+	return 1
+}
+
+ensure_base_firewall() {
+	if ! uci -q get firewall.@defaults[0] >/dev/null 2>&1; then
+		uci -q set firewall.mw5_defaults='defaults'
+		uci -q set firewall.mw5_defaults.input='REJECT'
+		uci -q set firewall.mw5_defaults.output='ACCEPT'
+		uci -q set firewall.mw5_defaults.forward='REJECT'
+	fi
+	# v44.65.21: firewall/conntrack remains authoritative. Use Linux software
+	# flow offload by default; netdev/TC HW rule delivery stays fail-closed.
+	uci -q set firewall.@defaults[0].flow_offloading='1'
+	uci -q set firewall.@defaults[0].flow_offloading_hw='0'
+
+	fz_lan="$(firewall_zone_section lan 2>/dev/null || true)"
+	if [ -z "$fz_lan" ]; then fz_lan="$(uci -q add firewall zone)"; uci -q set firewall.$fz_lan.name='lan'; fi
+	uci -q set firewall.$fz_lan.input='ACCEPT'
+	uci -q set firewall.$fz_lan.output='ACCEPT'
+	uci -q set firewall.$fz_lan.forward='ACCEPT'
+	uci -q delete firewall.$fz_lan.network >/dev/null 2>&1 || true
+	uci -q add_list firewall.$fz_lan.network='lan'
+
+	fz_wan="$(firewall_zone_section wan 2>/dev/null || true)"
+	if [ -z "$fz_wan" ]; then fz_wan="$(uci -q add firewall zone)"; uci -q set firewall.$fz_wan.name='wan'; fi
+	uci -q set firewall.$fz_wan.input='REJECT'
+	uci -q set firewall.$fz_wan.output='ACCEPT'
+	uci -q set firewall.$fz_wan.forward='REJECT'
+	uci -q set firewall.$fz_wan.mtu_fix='1'
+	uci -q delete firewall.$fz_wan.network >/dev/null 2>&1 || true
+	uci -q add_list firewall.$fz_wan.network='wan'
+}
+
+remove_lan_wan_forwarding() {
+	while :; do
+		ff="$(firewall_forward_section lan wan 2>/dev/null || true)"
+		[ -n "$ff" ] || break
+		uci -q delete firewall.$ff >/dev/null 2>&1 || break
+	done
+}
+
+ensure_isolated_firewall() {
+	ensure_base_firewall
+	fz_wan="$(firewall_zone_section wan 2>/dev/null || true)"
+	[ -z "$fz_wan" ] || uci -q set firewall.$fz_wan.masq='0'
+	remove_lan_wan_forwarding
+}
+
+ensure_router_firewall() {
+	ensure_base_firewall
+	fz_wan="$(firewall_zone_section wan 2>/dev/null || true)"
+	[ -z "$fz_wan" ] || uci -q set firewall.$fz_wan.masq='1'
+	ff="$(firewall_forward_section lan wan 2>/dev/null || true)"
+	if [ -z "$ff" ]; then ff="$(uci -q add firewall forwarding)"; uci -q set firewall.$ff.src='lan'; uci -q set firewall.$ff.dest='wan'; fi
+}
+
+resolve_static_options() {
+	[ -n "$WAN_IP_OPT" ] || WAN_IP_OPT="$(uci -q get mw5webui.system.wan_ip 2>/dev/null || true)"
+	[ -n "$WAN_NETMASK_OPT" ] || WAN_NETMASK_OPT="$(uci -q get mw5webui.system.wan_netmask 2>/dev/null || true)"
+	[ -n "$WAN_GATEWAY_OPT" ] || WAN_GATEWAY_OPT="$(uci -q get mw5webui.system.wan_gateway 2>/dev/null || true)"
+	[ -n "$WAN_DNS_OPT" ] || WAN_DNS_OPT="$(uci -q get mw5webui.system.wan_dns 2>/dev/null || true)"
+	[ -n "$WAN_NETMASK_OPT" ] || WAN_NETMASK_OPT='255.255.255.0'
+	[ -n "$WAN_IP_OPT" ] || { err 'router-static requires --wan-ip'; return 2; }
+}
+
+set_mode_config() {
+	mode="$1"; requested="$2"
+	read_macs
+	[ "$mode" != router-static ] || resolve_static_options || return $?
+	reset_net_sections
+	ensure_loopback_config
+	set_master_device
+	case "$mode" in
+		safe)
+			# Safe means L3 isolation, not no Internet: WAN is a DHCP CLIENT,
+			# never part of br-lan, while LAN/WLAN keep the MW5 DHCP server.
+			set_lan_common 'lan' static; set_wan_dhcp 'wan'; set_dhcp_lan_on; ensure_router_firewall ;;
+		offline)
+			set_lan_common 'lan' static; set_wan_none 'wan'; set_dhcp_lan_on; ensure_isolated_firewall ;;
+		router)
+			# Compatibility alias for the same isolated routed topology as safe.
+			set_lan_common 'lan' static; set_wan_dhcp 'wan'; set_dhcp_lan_on; ensure_router_firewall ;;
+		router-static)
+			set_lan_common 'lan' static; set_wan_static 'wan' "$WAN_IP_OPT" "$WAN_NETMASK_OPT" "$WAN_GATEWAY_OPT" "$WAN_DNS_OPT" || return $?; set_dhcp_lan_on; ensure_router_firewall ;;
+		ap)
+			set_lan_common 'lan wan' dhcp; set_dhcp_lan_off; ensure_isolated_firewall ;;
+		swap)
+			set_lan_common 'wan' static; set_wan_dhcp 'lan'; set_dhcp_lan_on; ensure_router_firewall ;;
+		*) return 2 ;;
+	esac
+	uci -q set mw5webui.system='system'
+	uci -q set mw5webui.system.version="$VERSION"
+	uci -q set mw5webui.system.port_mode="$requested"
+	uci -q set mw5webui.system.effective_port_mode="$mode"
+	uci -q set mw5webui.system.last_change="$(date +%s 2>/dev/null || echo 0)"
+	if [ "$mode" = router-static ]; then
+		uci -q set mw5webui.system.wan_ip="$WAN_IP_OPT"
+		uci -q set mw5webui.system.wan_netmask="$WAN_NETMASK_OPT"
+		uci -q set mw5webui.system.wan_gateway="$WAN_GATEWAY_OPT"
+		uci -q set mw5webui.system.wan_dns="$WAN_DNS_OPT"
+	fi
+	commit_if_writable network dhcp firewall mw5webui || true
+	verify_rtl8367_cputag_tx
+	runtime_set "$requested" "$mode"
+	APPLIED_MODE="$mode"; REQUESTED_MODE="$requested"
+}
+
+link_exists() { [ -e "/sys/class/net/$1" ]; }
+live_nomaster() { link_exists "$1" && ip link set dev "$1" nomaster >/dev/null 2>&1 || true; }
+live_master() { link_exists "$1" && link_exists "$2" && ip link set dev "$1" master "$2" >/dev/null 2>&1 || true; }
+live_up() { link_exists "$1" && ip link set dev "$1" up >/dev/null 2>&1 || true; }
+
+ensure_wifi_bridge_live() {
+	link_exists br-lan || return 0
+	for wb_if in wlan1 wlan0; do
+		link_exists "$wb_if" || continue
+		if command -v iw >/dev/null 2>&1; then iw dev "$wb_if" info 2>/dev/null | grep -q 'type AP' || continue; fi
+		if [ ! -L "/sys/class/net/$wb_if/master" ] || [ "$(basename "$(readlink "/sys/class/net/$wb_if/master" 2>/dev/null)")" != br-lan ]; then
+			ip link set dev "$wb_if" master br-lan >/dev/null 2>&1 || true
+			log "reattached $wb_if to br-lan after network transition"
+		fi
+		ip link set dev "$wb_if" up >/dev/null 2>&1 || true
+	done
+}
+
+settle_wifi_bridge_live() {
+	sw_n=0
+	while [ "$sw_n" -lt 3 ]; do ensure_wifi_bridge_live; sleep 1; sw_n=$((sw_n + 1)); done
+}
+
+apply_live_mode() {
+	mode="$1"; command -v ip >/dev/null 2>&1 || return 0
+	ensure_loopback_live
+	live_up br-lan
+	case "$mode" in
+		safe|offline|router|router-static)
+			live_nomaster lan; live_nomaster wan; live_master lan br-lan; live_up lan; live_up wan; live_up br-lan ;;
+		ap)
+			live_nomaster lan; live_nomaster wan; live_master lan br-lan; live_master wan br-lan; live_up lan; live_up wan; live_up br-lan ;;
+		swap)
+			live_nomaster lan; live_nomaster wan; live_master wan br-lan; live_up wan; live_up lan; live_up br-lan ;;
+	esac
+	ensure_wifi_bridge_live
+	verify_rtl8367_cputag_tx
+}
+
+wait_wan_ipv4() {
+	ww_mode="$1"
+	case "$ww_mode" in safe|router|router-static|swap) ;; *) return 0 ;; esac
+	ifup wan >/dev/null 2>&1 || true
+	ww_n=0
+	while [ "$ww_n" -lt 12 ]; do
+		ww_dev="$(uci -q get network.wan.device 2>/dev/null || true)"
+		if [ -n "$ww_dev" ] && ip -4 addr show dev "$ww_dev" 2>/dev/null | grep -q ' inet '; then
+			if [ "$ww_mode" = router-static ] || ip -4 route show default 2>/dev/null | grep -qw "dev $ww_dev"; then log "WAN IPv4 ready device=$ww_dev after=${ww_n}s"; return 0; fi
+		fi
+		sleep 1; ww_n=$((ww_n + 1))
+	done
+	log "WAN IPv4 still pending after ${ww_n}s mode=$ww_mode"
+	return 0
+}
+
+reload_network() {
+	mode="$1"
+	/etc/init.d/network reload >/dev/null 2>&1 || /etc/init.d/network restart >/dev/null 2>&1 || true
+	sleep 2
+	apply_live_mode "$mode"
+	reseed_rtknet
+	wait_wan_ipv4 "$mode"
+	/etc/init.d/dnsmasq restart >/dev/null 2>&1 || true
+	/etc/init.d/firewall restart >/dev/null 2>&1 || /etc/init.d/firewall reload >/dev/null 2>&1 || true
+	settle_wifi_bridge_live
+	reseed_rtknet
+	# Do not restart Dropbear/uhttpd here. Existing management TCP sessions must
+	# survive port-mode changes whenever the LAN address itself did not change.
+	pidof dropbear >/dev/null 2>&1 || /etc/init.d/dropbear start >/dev/null 2>&1 || true
+	pidof uhttpd >/dev/null 2>&1 || /etc/init.d/uhttpd start >/dev/null 2>&1 || true
+}
+
+apply_requested() {
+	req="$1"
+	case "$req" in
+		safe) req=safe; mode=safe ;;
+		offline|isolated|setup|both-lan|rescue) req=offline; mode=offline ;;
+		auto) mode=safe ;;
+		router|router-dhcp) req=router; mode=router ;;
+		router-static|static) req=router-static; mode=router-static ;;
+		ap|bridge) req=ap; mode=ap ;;
+		swap) mode=swap ;;
+		*) err "Unknown mode: $req"; return 2 ;;
+	esac
+	set_mode_config "$mode" "$req"
+}
+
+auto_select() {
+	mode="$1"
+	case "$mode" in safe|router|swap) ;; *) return 2 ;; esac
+	set_mode_config "$mode" auto || return $?
+	log "auto selected effective=$mode raw-tx=2"
+}
+
+current_mode() {
+	m="$(uci -q get mw5webui.system.port_mode 2>/dev/null || true)"
+	[ -n "$m" ] && { echo "$m"; return; }
+	if [ -r "$RUNTIME_FILE" ]; then . "$RUNTIME_FILE" 2>/dev/null || true; [ -n "${MW5_PORT_MODE:-}" ] && { echo "$MW5_PORT_MODE"; return; }; fi
+	echo safe
+}
+
+current_effective() {
+	m="$(uci -q get mw5webui.system.effective_port_mode 2>/dev/null || true)"
+	[ -n "$m" ] && { echo "$m"; return; }
+	if [ -r "$RUNTIME_FILE" ]; then . "$RUNTIME_FILE" 2>/dev/null || true; [ -n "${MW5_PORT_EFFECTIVE:-}" ] && { echo "$MW5_PORT_EFFECTIVE"; return; }; fi
+	echo safe
+}
+
+list_has_word() {
+	lh_list="$1"; lh_word="$2"
+	case " $lh_list " in *" $lh_word "*) return 0 ;; *) return 1 ;; esac
+}
+
+mode_config_ok() {
+	mc_mode="$1"
+	mc_ports="$(uci -q get network.br_lan.ports 2>/dev/null || true)"
+	mc_lan_proto="$(uci -q get network.lan.proto 2>/dev/null || true)"
+	mc_wan_dev="$(uci -q get network.wan.device 2>/dev/null || true)"
+	mc_wan_proto="$(uci -q get network.wan.proto 2>/dev/null || true)"
+	mc_dhcp_ignore="$(uci -q get dhcp.lan.ignore 2>/dev/null || echo 0)"
+	case "$mc_mode" in
+		safe|router)
+			[ "$mc_lan_proto" = static ] && list_has_word "$mc_ports" lan && ! list_has_word "$mc_ports" wan && [ "$mc_wan_dev" = wan ] && [ "$mc_wan_proto" = dhcp ] && [ "$mc_dhcp_ignore" != 1 ] ;;
+		offline)
+			[ "$mc_lan_proto" = static ] && list_has_word "$mc_ports" lan && ! list_has_word "$mc_ports" wan && [ "$mc_wan_dev" = wan ] && [ "$mc_wan_proto" = none ] && [ "$mc_dhcp_ignore" != 1 ] ;;
+		router-static)
+			[ "$mc_lan_proto" = static ] && list_has_word "$mc_ports" lan && ! list_has_word "$mc_ports" wan && [ "$mc_wan_dev" = wan ] && [ "$mc_wan_proto" = static ] && [ "$mc_dhcp_ignore" != 1 ] ;;
+		ap)
+			[ "$mc_lan_proto" = dhcp ] && list_has_word "$mc_ports" lan && list_has_word "$mc_ports" wan && [ "$mc_dhcp_ignore" = 1 ] ;;
+		swap)
+			[ "$mc_lan_proto" = static ] && list_has_word "$mc_ports" wan && ! list_has_word "$mc_ports" lan && [ "$mc_wan_dev" = lan ] && [ "$mc_wan_proto" = dhcp ] ;;
+		*) return 1 ;;
+	esac
+}
+
+live_wan_ipv4() {
+	lw_dev="$(uci -q get network.wan.device 2>/dev/null || true)"
+	[ -n "$lw_dev" ] || return 0
+	ip -4 addr show dev "$lw_dev" 2>/dev/null | sed -n 's/.* inet \([0-9.]*\)\/[0-9]*.*/\1/p' | head -n1
+}
+
+show_status() {
+	eff="$(current_effective)"
+	echo "version=$VERSION"
+	echo "mode=$(current_mode)"
+	echo "effective_mode=$eff"
+	echo "dsa_tag=rtl8_4"
+	echo "dsa_host_link=transparent-p0-no-dvid"
+	grep '^mw5_dsa_host_vlan ' /proc/rd05-rtknet 2>/dev/null || true
+	echo "legacy_tx_layout=$(cat /sys/module/tag_rtl4_9/parameters/tx_layout 2>/dev/null || echo not-loaded)"
+	echo "eth0_mac=$(cat /sys/class/net/eth0/address 2>/dev/null || true)"
+	echo "eth0_config_mac=$(uci -q get network.eth0_dev.macaddr 2>/dev/null || true)"
+	echo "lan_mac=$(cat /sys/class/net/lan/address 2>/dev/null || true)"
+	echo "lan_config_mac=$(uci -q get network.lan_dev.macaddr 2>/dev/null || true)"
+	ports="$(uci -q get network.br_lan.ports 2>/dev/null || true)"
+	echo "br_lan_ports=$ports"
+	echo "lan_proto=$(uci -q get network.lan.proto 2>/dev/null || true)"
+	echo "lan_ip=$(uci -q get network.lan.ipaddr 2>/dev/null || true)"
+	echo "lan_dhcp_server=$([ "$(uci -q get dhcp.lan.ignore 2>/dev/null || echo 0)" = 1 ] && echo off || echo on)"
+	echo "wan_device=$(uci -q get network.wan.device 2>/dev/null || true)"
+	echo "wan_proto=$(uci -q get network.wan.proto 2>/dev/null || true)"
+	echo "wan_ip=$(uci -q get network.wan.ipaddr 2>/dev/null || true)"
+	echo "wan_ipv4_live=$(live_wan_ipv4)"
+	echo "wan_gateway=$(uci -q get network.wan.gateway 2>/dev/null || true)"
+	case "$eff" in safe|router|router-static|swap) echo 'wan_isolation=routed-firewall' ;; offline) echo 'wan_isolation=physical-offline' ;; ap) echo 'wan_isolation=off-explicit-bridge' ;; *) echo 'wan_isolation=unknown' ;; esac
+	mode_config_ok "$eff" && echo 'config_consistent=1' || echo 'config_consistent=0'
+	ip -4 route show default 2>/dev/null | head -n1 | sed 's/^/default_route=/'
+	echo "auto_swap_probe=$(uci -q get mw5webui.system.allow_swap_probe 2>/dev/null || echo 0)"
+	echo "flow_offloading=$(uci -q get firewall.@defaults[0].flow_offloading 2>/dev/null || echo 0)"
+	echo "flow_offloading_hw=$(uci -q get firewall.@defaults[0].flow_offloading_hw 2>/dev/null || echo 0)"
+	for d in lan wan br-lan; do [ -e "/sys/class/net/$d" ] && echo "${d}_carrier=$(cat /sys/class/net/$d/carrier 2>/dev/null || echo 0)"; done
+}
+
+repair_firewall() {
+	is_mw5 || return 2
+	case "$(current_effective)" in safe|router|router-static|swap) ensure_router_firewall ;; *) ensure_isolated_firewall ;; esac
+	commit_if_writable firewall || true
+	/etc/init.d/firewall restart >/dev/null 2>&1 || /etc/init.d/firewall reload >/dev/null 2>&1 || true
+	echo 'firewall=mode-consistent'
+}
+
+repair_loopback() {
+	is_mw5 || return 2
+	ensure_loopback_config
+	commit_if_writable network || true
+	ensure_loopback_live
+	echo 'loopback=127.0.0.1/8-up'
+}
+
+valid_token() { case "$1" in ''|*[!A-Za-z0-9_-]*) return 1 ;; esac; return 0; }
+rollback_dir() { echo "$STATE_DIR/rollback-$1"; }
+pending_file() { echo "$STATE_DIR/pending-$1"; }
+pid_file() { echo "$STATE_DIR/rollback-$1.pid"; }
+
+new_token() { echo "$(date +%s 2>/dev/null || echo 0)-$$"; }
+
+cancel_watcher() {
+	local cw_token cw_pidfile cw_pid
+	cw_token="$1"; cw_pidfile="$(pid_file "$cw_token")"
+	if [ -s "$cw_pidfile" ]; then cw_pid="$(cat "$cw_pidfile" 2>/dev/null || true)"; case "$cw_pid" in ''|*[!0-9]*) ;; *) [ "$cw_pid" = "$$" ] || kill "$cw_pid" >/dev/null 2>&1 || true ;; esac; fi
+	rm -f "$cw_pidfile" 2>/dev/null || true
+}
+
+clear_all_pending() {
+	local cp_file cp_token
+	mkdir -p "$STATE_DIR"
+	for cp_file in "$STATE_DIR"/pending-*; do
+		[ -f "$cp_file" ] || continue
+		cp_token="${cp_file##*/pending-}"
+		cancel_watcher "$cp_token"
+		rm -f "$cp_file" 2>/dev/null || true
+		rm -rf "$(rollback_dir "$cp_token")" 2>/dev/null || true
+		log "previous pending WebUI change accepted before new apply token=$cp_token"
+	done
+}
+
+prepare_web_rollback() {
+	local pr_token pr_timeout pr_backup pr_pending
+	pr_token="$1"; pr_timeout="$2"; pr_backup="$(rollback_dir "$pr_token")"; pr_pending="$(pending_file "$pr_token")"
+	clear_all_pending
+	mkdir -p "$STATE_DIR"; rm -rf "$pr_backup"; backup_config "$pr_backup" || return 1
+	cat >"$pr_pending" <<EOP
+created=$(date +%s 2>/dev/null || echo 0)
+timeout=$pr_timeout
+previous_mode=$(current_mode)
+previous_effective=$(current_effective)
+EOP
+	( sleep "$pr_timeout"; [ -f "$pr_pending" ] && /usr/sbin/mw5-portmode rollback "$pr_token" --timeout-fired >/dev/null 2>&1 || true ) &
+	echo $! >"$(pid_file "$pr_token")"
+}
+
+confirm_web() {
+	local cf_token cf_pending
+	cf_token="$1"; valid_token "$cf_token" || { err 'Invalid rollback token'; return 2; }
+	cf_pending="$(pending_file "$cf_token")"; [ -f "$cf_pending" ] || { err 'Rollback token not pending'; return 1; }
+	cf_eff="$(current_effective)"; mode_config_ok "$cf_eff" || { err "Current configuration is inconsistent; refusing confirmation for effective=$cf_eff"; return 1; }
+	cancel_watcher "$cf_token"
+	rm -f "$cf_pending"; rm -rf "$(rollback_dir "$cf_token")"
+	echo "confirmed=$cf_token"
+}
+
+rollback_web() {
+	local rb_token rb_pending rb_backup req eff
+	rb_token="$1"; valid_token "$rb_token" || { err 'Invalid rollback token'; return 2; }
+	rb_pending="$(pending_file "$rb_token")"; rb_backup="$(rollback_dir "$rb_token")"
+	[ -f "$rb_pending" ] && [ -d "$rb_backup" ] || { err 'Rollback token not pending'; return 1; }
+	cancel_watcher "$rb_token"
+	restore_config "$rb_backup" || return 1
+	req="$(uci -q get mw5webui.system.port_mode 2>/dev/null || echo safe)"
+	eff="$(uci -q get mw5webui.system.effective_port_mode 2>/dev/null || echo safe)"
+	runtime_set "$req" "$eff"
+	reload_network "$eff"
+	rm -f "$rb_pending"; rm -rf "$rb_backup"
+	echo "rolled_back=$rb_token mode=$req effective=$eff"
+}
+
+repair_current() {
+	is_mw5 || return 2
+	rc_req="$(current_mode)"
+	apply_requested "$rc_req" || return $?
+	reload_network "$APPLIED_MODE"
+	runtime_set "$REQUESTED_MODE" "$APPLIED_MODE"
+	if mode_config_ok "$APPLIED_MODE"; then
+		echo "repaired=$REQUESTED_MODE effective=$APPLIED_MODE verified=1"
+		return 0
+	fi
+	err "repair-current verification failed mode=$REQUESTED_MODE effective=$APPLIED_MODE"
+	return 1
+}
+
+parse_options() {
+	while [ "$#" -gt 0 ]; do
+		case "$1" in
+			--web) WEB_MODE=1 ;;
+			--no-rollback) WEB_ROLLBACK=0 ;;
+			--timeout) shift; WEB_TIMEOUT="${1:-$DEFAULT_TIMEOUT}" ;;
+			--wan-ip) shift; WAN_IP_OPT="${1:-}" ;;
+			--wan-netmask) shift; WAN_NETMASK_OPT="${1:-}" ;;
+			--wan-gateway) shift; WAN_GATEWAY_OPT="${1:-}" ;;
+			--wan-dns) shift; WAN_DNS_OPT="${1:-}" ;;
+			--timeout-fired) ;;
+			*) err "Unknown option: $1"; return 2 ;;
+		esac
+		shift || true
+	done
+	case "$WEB_TIMEOUT" in ''|*[!0-9]*) WEB_TIMEOUT=$DEFAULT_TIMEOUT ;; esac
+	[ "$WEB_TIMEOUT" -ge 30 ] 2>/dev/null || WEB_TIMEOUT=30
+	[ "$WEB_TIMEOUT" -le 1800 ] 2>/dev/null || WEB_TIMEOUT=1800
+}
+
+usage() {
+	cat <<'EOU'
+Usage:
+  mw5-portmode show
+  mw5-portmode repair-firewall
+  mw5-portmode repair-loopback
+  mw5-portmode repair-bridge
+  mw5-portmode repair-current
+  mw5-portmode prepare safe|offline|auto|router|router-static|ap|swap [WAN options]
+  mw5-portmode apply safe|offline|auto|router|router-static|ap|swap [--web] [--timeout SEC] [--no-rollback] [WAN options]
+  mw5-portmode confirm TOKEN
+  mw5-portmode rollback TOKEN
+  mw5-portmode auto-select safe|router|swap
+
+Modes:
+  safe          Default: isolated routed Internet. WAN is DHCP CLIENT + NAT/firewall; MW5 DHCP serves LAN/WLAN only.
+  offline       Rescue/offline: LAN + WLAN only; WAN is isolated with proto none.
+  auto          Compatibility mode: starts safe and may renew/select the physical WAN without probing LAN.
+  router        Compatibility alias for routed/NAT DHCP WAN (same topology as safe).
+  router-static Routed/NAT WAN without DHCP client. Options: --wan-ip, --wan-netmask, --wan-gateway, --wan-dns.
+  ap            Explicit bridge/AP: LAN + WAN + WLAN bridge, MW5 DHCP server off; upstream/main network supplies DHCP.
+  swap          Explicit compatibility mode: physical LAN is DHCP WAN, physical WAN is local LAN.
+EOU
+}
+
+cmd="${1:-show}"; shift || true
+case "$cmd" in
+	show) show_status ;;
+	repair-firewall) repair_firewall ;;
+	repair-loopback) repair_loopback ;;
+	repair-bridge) settle_wifi_bridge_live; echo 'bridge=wifi-membership-checked' ;;
+	prepare)
+		is_mw5 || exit 2
+		mode_arg="${1:-safe}"; shift || true; parse_options "$@" || exit $?
+		apply_requested "$mode_arg" ;;
+	apply|force)
+		is_mw5 || exit 2
+		mode_arg="${1:-safe}"; shift || true; parse_options "$@" || exit $?
+		token=''
+		# A new WebUI apply always owns the only pending transaction. Otherwise an
+		# older 300s watcher can unexpectedly restore stale network/firewall files.
+		[ "$WEB_MODE" = 1 ] && clear_all_pending
+		if [ "$WEB_MODE" = 1 ] && [ "$WEB_ROLLBACK" = 1 ]; then token="$(new_token)"; prepare_web_rollback "$token" "$WEB_TIMEOUT" || exit 1; fi
+		if ! apply_requested "$mode_arg"; then [ -n "$token" ] && rollback_web "$token" >/dev/null 2>&1 || true; exit 2; fi
+		reload_network "$APPLIED_MODE"
+		runtime_set "$REQUESTED_MODE" "$APPLIED_MODE"
+		if mode_config_ok "$APPLIED_MODE"; then verified=1; else verified=0; fi
+		echo "applied=$REQUESTED_MODE"
+		echo "effective=$APPLIED_MODE"
+		echo "verified=$verified"
+		[ -n "$token" ] && echo "token=$token"
+		[ "$WEB_MODE" = 1 ] && [ "$WEB_ROLLBACK" = 0 ] && echo 'rollback=disabled-by-user' || true
+		if [ "$verified" != 1 ]; then
+			err "post-apply verification failed for mode=$APPLIED_MODE"
+			[ -n "$token" ] && rollback_web "$token" >/dev/null 2>&1 || true
+			exit 1
+		fi ;;
+	confirm)
+		confirm_web "${1:-}" ;;
+	rollback)
+		rollback_web "${1:-}" ;;
+	auto-select)
+		is_mw5 || exit 2
+		auto_select "${1:-safe}" || exit $?
+		reload_network "$APPLIED_MODE"
+		runtime_set auto "$APPLIED_MODE"
+		mode_config_ok "$APPLIED_MODE" || exit 1
+		echo "mode=auto effective=$APPLIED_MODE" ;;
+	*) usage >&2; exit 2 ;;
+esac
