@@ -1,0 +1,16 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+case "$(cat /tmp/sysinfo/board_name 2>/dev/null)" in
+	tenda,ac23|tenda,lynx-rtl8197f) ;;
+	*) exit 0 ;;
+esac
+
+# nftables software flowtable is valid with the mainline DSA topology.
+# Hardware flow offload stays off: rtknet has no Linux 6.6 rtl865x NAPT
+# encoder or neighbour/route lifetime integration yet.
+uci -q set firewall.@defaults[0].flow_offloading='1'
+uci -q set firewall.@defaults[0].flow_offloading_hw='0'
+uci -q commit firewall
+exit 0
+

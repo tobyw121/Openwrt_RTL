@@ -1,0 +1,32 @@
+# Tenda Nova MW5 v44.65.16 safe routed baseline.
+# LAN/WLAN stay on br-lan (192.168.1.1/24).  Physical WAN is a separate
+# DHCP client behind OpenWrt firewall/NAT.  Port-mode helper may deliberately
+# change this only for explicit AP/swap modes.
+
+config interface 'loopback'
+	option device 'lo'
+	option proto 'static'
+	option ipaddr '127.0.0.1'
+	option netmask '255.0.0.0'
+
+config device 'br_lan'
+	option name 'br-lan'
+	option type 'bridge'
+	option stp '0'
+	option igmp_snooping '0'
+	list ports 'lan'
+
+config interface 'lan'
+	option device 'br-lan'
+	option proto 'static'
+	option ipaddr '192.168.1.1'
+	option netmask '255.255.255.0'
+	option ip6assign '60'
+
+config interface 'wan'
+	option device 'wan'
+	option proto 'dhcp'
+	option defaultroute '1'
+	option peerdns '1'
+	option metric '10'
+	option delegate '0'

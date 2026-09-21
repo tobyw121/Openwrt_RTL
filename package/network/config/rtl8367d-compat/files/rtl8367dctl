@@ -1,0 +1,191 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# rtl8367dctl - Linux/OpenWrt 24.10 translation layer for Realtek SDK control
+# workflows on RTL8197F/RD05 + RTL8367D.
+#
+# Translation model:
+#   swconfig VLAN/ports      -> DSA netdevs + bridge vlan/fdb
+#   private Realtek IOCTLs   -> rd05-ioctl SIOCDEVPRIVATE + ethtool/ip/bridge/tc/nft
+#   Realtek FastPath/HWNAT   -> nftables flowtable + Linux flow offload request
+#   ACL table programming    -> tc flower plus SDK-style driver table reseed
+#
+# RD05 v9 is intentionally vendor-tolerant: rd05-vendor-reseed calls the native
+# driver private ioctl to replay SDK SWCORE/PCR/ACL/L2/CPU-DMA bring-up.
+
+set -eu
+DSA_PORTS="lan1 lan2 wan lan3 lan4"
+DEFAULT_BR="br-lan"
+
+usage() {
+	cat <<'EOF'
+Usage: rtl8367dctl <command> [args]
+
+Status / diagnostics:
+  show                         DSA links, bridge VLAN/FDB, tc, nft flow status
+  stats [DEV]                  ethtool/ip counters for eth0/ports or one device
+  regs [DEV]                   ethtool register dump if supported
+  ports                        DSA port carrier/speed/bridge summary
+  mib [DEV]                    SDK-style MIB view translated to ethtool -S
+  cpu-path                     Show CPU-port evidence: eth0 tc/RX + port MIB
+  rd05-vendor-reseed           Private ioctl: replay SDK SWCORE/L2/ACL/CPUIF init
+  rd05-rxstart                 Private ioctl: replay SDK sidebands and kick RX/TRXRDY
+  rgmii [ARGS...]               Run rd05-rgmii-calibrate (status/apply/tx-auto/rx-auto/save)
+
+swconfig replacement:
+  bridge-init [BR]             Create/enable bridge VLAN filtering on BR
+  vlan-add VID PORTSPEC...     Add VID membership: 9 lan1:u lan2:u wan:t
+  vlan-del VID PORT...         Remove VID from ports
+  pvid PORT VID                Set a DSA port PVID/untagged VLAN
+  swconfig-show                SDK/swconfig-like overview
+  swconfig-vlan VID PORTSPEC... Compatibility alias for vlan-add
+
+FastPath/NAT replacement:
+  flow on|off                  Toggle OpenWrt nftables software flow offload
+  flow-hw on|off               Toggle firewall HW offload request
+  flow-status                  Show firewall/nft flowtable state
+  nat-status                   Show conntrack/nft/flow offload summary
+
+ACL/offload replacement for private IOCTLs:
+  acl-drop DEV MATCH...        tc flower drop rule
+  acl-trap DEV MATCH...        tc flower trap-to-host probe (skip_sw)
+  acl-mirror DEV TO_DEV MATCH  tc flower mirror rule
+  acl-list DEV                 List tc flower rules
+  acl-flush DEV                Remove clsact rules on DEV
+
+Private-IOCTL compatibility aliases:
+  ioctl get_port_status [DEV]
+  ioctl get_mib [DEV]
+  ioctl set_vlan VID PORTSPEC...
+  ioctl set_fastpath on|off
+  ioctl set_hwfastpath on|off
+  ioctl acl_drop DEV MATCH...
+  ioctl acl_trap DEV MATCH...
+  ioctl rd05_reseed
+  ioctl rd05_rxstart
+
+MATCH syntax is native tc flower syntax, e.g.:
+  ether_type arp
+  ip_proto udp dst_port 67 src_port 68
+  vlan_id 9 ip_proto tcp dst_port 22
+EOF
+}
+
+need() { command -v "$1" >/dev/null 2>&1 || { echo "missing required tool: $1" >&2; exit 127; }; }
+port_base() { echo "${1%%:*}"; }
+port_mode() { case "$1" in *:t) echo tagged ;; *:u|*) echo untagged ;; esac; }
+
+cmd_show() {
+	need ip; need bridge
+	echo "== links =="; ip -br link || true
+	echo; echo "== addresses =="; ip -br addr || true
+	echo; echo "== bridge links =="; bridge link || true
+	echo; echo "== bridge vlan =="; bridge vlan show || true
+	echo; echo "== bridge fdb =="; bridge fdb show || true
+	echo; echo "== tc flower =="
+	for d in eth0 $DSA_PORTS; do [ -e "/sys/class/net/$d" ] && tc filter show dev "$d" ingress 2>/dev/null || true; done
+	echo; echo "== flow offload =="; "$0" flow-status || true
+}
+
+cmd_stats() {
+	need ethtool; need ip
+	if [ $# -gt 0 ]; then set -- "$1"; else set -- eth0 $DSA_PORTS "$DEFAULT_BR"; fi
+	for d in "$@"; do
+		[ -e "/sys/class/net/$d" ] || continue
+		echo "== $d =="
+		ip -s link show "$d" || true
+		ethtool "$d" 2>/dev/null || true
+		ethtool -S "$d" 2>/dev/null || true
+		echo
+	done
+}
+
+cmd_regs() { need ethtool; d="${1:-eth0}"; ethtool -d "$d" 2>/dev/null || { echo "register dump not supported for $d" >&2; exit 95; }; }
+cmd_mib() { d="${1:-lan2}"; ethtool -S "$d" 2>/dev/null | sed 's/^/  /' || true; }
+
+cmd_ports() {
+	need ethtool; need bridge
+	for d in eth0 $DSA_PORTS "$DEFAULT_BR"; do
+		[ -e "/sys/class/net/$d" ] || continue
+		printf '%-7s carrier=%s oper=%s ' "$d" \
+			"$(cat /sys/class/net/$d/carrier 2>/dev/null || echo -)" \
+			"$(cat /sys/class/net/$d/operstate 2>/dev/null || echo -)"
+		ethtool "$d" 2>/dev/null | awk '/Speed:|Duplex:|Link detected:/ {printf "%s ", $0} END {print ""}'
+	done
+	bridge link || true
+}
+
+cmd_rd05_vendor_reseed() { need rd05-ioctl; rd05-ioctl eth0 reseed; dmesg | grep -E 'rd05 vendor datapath v9|rd05 private ioctl/proc v10|rd05 private ioctl v9' | tail -20; }
+cmd_rd05_rxstart() { need rd05-ioctl; rd05-ioctl eth0 rxstart; dmesg | grep -E 'rd05 vendor datapath v9|rd05 private ioctl/proc v10|rd05 private ioctl v9' | tail -20; }
+cmd_rgmii() { need rd05-rgmii-calibrate; rd05-rgmii-calibrate "$@"; }
+
+cmd_cpu_path() {
+	echo "== eth0 RX/tc evidence =="
+	ethtool -S eth0 2>/dev/null | grep -E 'rd05_rx_|tc_|rxtrace|p0[567]_|p07_|reg_cpui|rx_desc|tx_desc' || true
+	echo; echo "== DSA port MIBs =="
+	for d in $DSA_PORTS; do [ -e "/sys/class/net/$d" ] && { echo "-- $d"; ethtool -S "$d" 2>/dev/null | grep -E 'ifIn|ifOut|Broadcast|Multicast|Discards|Drop|rx_|tx_' || true; }; done
+}
+
+cmd_bridge_init() { need ip; br="${1:-$DEFAULT_BR}"; ip link show "$br" >/dev/null 2>&1 || ip link add name "$br" type bridge; ip link set dev "$br" type bridge vlan_filtering 1; ip link set dev "$br" up; }
+cmd_vlan_add() { need bridge; [ $# -ge 2 ] || { usage; exit 2; }; vid="$1"; shift; for spec in "$@"; do p="$(port_base "$spec")"; mode="$(port_mode "$spec")"; [ -e "/sys/class/net/$p" ] || { echo "skip missing port $p" >&2; continue; }; if [ "$mode" = tagged ]; then bridge vlan add dev "$p" vid "$vid" 2>/dev/null || true; else bridge vlan add dev "$p" vid "$vid" pvid untagged 2>/dev/null || true; fi; done; bridge vlan show; }
+cmd_vlan_del() { need bridge; [ $# -ge 2 ] || { usage; exit 2; }; vid="$1"; shift; for p in "$@"; do p="$(port_base "$p")"; [ -e "/sys/class/net/$p" ] && bridge vlan del dev "$p" vid "$vid" 2>/dev/null || true; done; bridge vlan show; }
+cmd_pvid() { need bridge; [ $# -eq 2 ] || { usage; exit 2; }; bridge vlan add dev "$1" vid "$2" pvid untagged; bridge vlan show dev "$1"; }
+cmd_swconfig_show() { echo "Global attributes:"; echo "\tenable_vlan: $(cat /sys/class/net/$DEFAULT_BR/bridge/vlan_filtering 2>/dev/null || echo 0)"; echo "Ports:"; cmd_ports; echo "VLANs:"; bridge vlan show || true; }
+
+cmd_flow() { [ $# -eq 1 ] || { usage; exit 2; }; case "$1" in on) v=1 ;; off) v=0 ;; *) usage; exit 2 ;; esac; uci -q set firewall.@defaults[0].flow_offloading="$v"; uci -q commit firewall; /etc/init.d/firewall reload 2>/dev/null || true; cmd_flow_status; }
+cmd_flow_hw() { [ $# -eq 1 ] || { usage; exit 2; }; case "$1" in on) v=1 ;; off) v=0 ;; *) usage; exit 2 ;; esac; uci -q set firewall.@defaults[0].flow_offloading_hw="$v"; uci -q commit firewall; /etc/init.d/firewall reload 2>/dev/null || true; cmd_flow_status; }
+cmd_flow_status() { echo "firewall flow_offloading=$(uci -q get firewall.@defaults[0].flow_offloading || echo unset)"; echo "firewall flow_offloading_hw=$(uci -q get firewall.@defaults[0].flow_offloading_hw || echo unset)"; command -v nft >/dev/null 2>&1 && nft list ruleset 2>/dev/null | grep -Ei 'flowtable|flow add|offload' || true; ethtool -S eth0 2>/dev/null | grep -E 'tc_setup|tc_ft|tc_cls|tc_unsupported' || true; }
+cmd_nat_status() { command -v conntrack >/dev/null 2>&1 && conntrack -S 2>/dev/null || true; cmd_flow_status; }
+
+ensure_clsact() { tc qdisc add dev "$1" clsact 2>/dev/null || true; }
+cmd_acl_drop() { need tc; [ $# -ge 2 ] || { usage; exit 2; }; dev="$1"; shift; ensure_clsact "$dev"; tc filter add dev "$dev" ingress protocol all pref 100 flower skip_sw "$@" action drop; }
+cmd_acl_trap() { need tc; [ $# -ge 2 ] || { usage; exit 2; }; dev="$1"; shift; ensure_clsact "$dev"; tc filter add dev "$dev" ingress protocol all pref 100 flower skip_sw "$@" action trap; }
+cmd_acl_mirror() { need tc; [ $# -ge 3 ] || { usage; exit 2; }; dev="$1"; to="$2"; shift 2; ensure_clsact "$dev"; tc filter add dev "$dev" ingress protocol all pref 100 flower skip_sw "$@" action mirred egress mirror dev "$to"; }
+cmd_acl_list() { need tc; tc filter show dev "${1:-lan2}" ingress || true; }
+cmd_acl_flush() { need tc; [ $# -eq 1 ] || { usage; exit 2; }; tc qdisc del dev "$1" clsact 2>/dev/null || true; }
+
+cmd_ioctl() {
+	op="${1:-}"; shift || true
+	case "$op" in
+		get_port_status) cmd_ports "$@" ;;
+		get_mib) cmd_mib "${1:-lan2}" ;;
+		set_vlan) cmd_vlan_add "$@" ;;
+		set_fastpath) cmd_flow "$@" ;;
+		set_hwfastpath) cmd_flow_hw "$@" ;;
+		acl_drop) cmd_acl_drop "$@" ;;
+		acl_trap) cmd_acl_trap "$@" ;;
+		rd05_reseed) cmd_rd05_vendor_reseed ;;
+		rd05_rxstart) cmd_rd05_rxstart ;;
+		*) echo "unsupported private-ioctl alias: $op" >&2; usage; exit 2 ;;
+	esac
+}
+
+cmd="${1:-help}"; shift || true
+case "$cmd" in
+	show) cmd_show "$@" ;;
+	stats) cmd_stats "$@" ;;
+	regs) cmd_regs "$@" ;;
+	ports) cmd_ports "$@" ;;
+	mib) cmd_mib "$@" ;;
+	cpu-path) cmd_cpu_path "$@" ;;
+	rd05-vendor-reseed) cmd_rd05_vendor_reseed "$@" ;;
+	rd05-rxstart) cmd_rd05_rxstart "$@" ;;
+	rgmii) cmd_rgmii "$@" ;;
+	bridge-init) cmd_bridge_init "$@" ;;
+	vlan-add) cmd_vlan_add "$@" ;;
+	vlan-del) cmd_vlan_del "$@" ;;
+	pvid) cmd_pvid "$@" ;;
+	swconfig-show) cmd_swconfig_show "$@" ;;
+	swconfig-vlan) cmd_vlan_add "$@" ;;
+	flow) cmd_flow "$@" ;;
+	flow-hw) cmd_flow_hw "$@" ;;
+	flow-status) cmd_flow_status "$@" ;;
+	nat-status) cmd_nat_status "$@" ;;
+	acl-drop) cmd_acl_drop "$@" ;;
+	acl-trap) cmd_acl_trap "$@" ;;
+	acl-mirror) cmd_acl_mirror "$@" ;;
+	acl-list) cmd_acl_list "$@" ;;
+	acl-flush) cmd_acl_flush "$@" ;;
+	ioctl) cmd_ioctl "$@" ;;
+	help|-h|--help) usage ;;
+	*) echo "unknown command: $cmd" >&2; usage; exit 2 ;;
+esac
