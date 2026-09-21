@@ -36,3 +36,4 @@ git-src
 .ccache
 .vscode*
 github_uploader.sh
+.github/
