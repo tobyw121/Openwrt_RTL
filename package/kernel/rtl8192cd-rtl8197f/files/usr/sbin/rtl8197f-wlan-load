@@ -1,0 +1,152 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Controlled rtl8192cd load helper for MW5 bring-up.
+# v43.50 follows the OEM MW5 WLAN order: wlan0=RTL8822B/5GHz, wlan1=RTL8197FS/2.4GHz.
+# The diagnostic ladder remains safe; real 2G now initializes OEM wlan_device[1]/wlan1.
+set -u
+mode=blocked
+force=0
+integrated_first=0
+oem_2g_only=0
+root_only=0
+external=0
+probe_only=0
+skip_init_one=0
+stop_after_phase=-1
+risk_ack=0
+for arg in "$@"; do
+	case "$arg" in
+		--module-probe|--probe-only|--no-hw-init|--nohw|--module-only)
+			mode=module_probe; probe_only=1; skip_init_one=1; stop_after_phase=10 ;;
+		--table-probe|--scan-table-only|--no-init-one)
+			mode=table_probe; integrated_first=0; oem_2g_only=1; root_only=1; external=0; skip_init_one=1; stop_after_phase=42 ;;
+		--stop-gpio|--gpio-probe|--phase-gpio)
+			mode=gpio_probe; integrated_first=0; oem_2g_only=1; root_only=1; external=0; skip_init_one=1; stop_after_phase=20 ;;
+		--stop-vendor|--vendor-probe|--phase-vendor|--core-probe)
+			mode=vendor_probe; integrated_first=0; oem_2g_only=1; root_only=1; external=0; skip_init_one=1; stop_after_phase=30 ;;
+		--pre-init-one|--stop-pre-init-one|--preinitone-probe)
+			mode=preinitone_probe; integrated_first=0; oem_2g_only=1; root_only=1; external=0; skip_init_one=0; stop_after_phase=60 ;;
+		--initone-entry-probe|--stop-initone-entry)
+			mode=initone_entry_probe; integrated_first=0; oem_2g_only=1; root_only=1; external=0; skip_init_one=0; stop_after_phase=100 ;;
+		--integrated-first|--legacy-integrated-first)
+			mode=integrated_real; integrated_first=1; root_only=1; external=0 ;;
+		--oem-2g-real|--integrated-oem-order|--integrated|--2g-only|--safe|--no-external)
+			mode=integrated_real; integrated_first=0; oem_2g_only=1; root_only=1; external=0 ;;
+		--dual|--unsafe-dual)
+			mode=dual_real; integrated_first=0; root_only=0; external=1 ;;
+		--stop-after=*) stop_after_phase="${arg#--stop-after=}" ;;
+		--force-reload) force=1 ;;
+		--i-accept-hardhang|--really-risk-hang) risk_ack=1 ;;
+		--probe|--info-only|--dry-run) mode=info_only ;;
+		-h|--help)
+			cat <<USAGE
+Usage: rtl8197f-wlan-load MODE [--force-reload]
+Safe diagnostic modes:
+  --module-probe          Load rtl8192cd with probe_only=1, return before GPIO/HW.
+  --stop-gpio             Run until GPIO hook setup marker, then return.
+  --stop-vendor           Enter vendor core, then return.
+  --table-probe           Scan MW5 OEM table, skip rtl8192cd_init_one hardware init.
+  --pre-init-one          Stop at integrated-radio-init-one marker.
+  --initone-entry-probe   Enter rtl8192cd_init_one, stop before netdev allocation.
+Risky modes:
+  --oem-2g-real --i-accept-hardhang     OEM wlan1/RTL8197FS 2.4GHz only
+  --integrated-first --i-accept-hardhang Legacy diagnostic: RTL8197FS as wlan0
+  --dual --i-accept-hardhang             OEM dual order: wlan0 5GHz + wlan1 2.4GHz
+USAGE
+			exit 0 ;;
+	esac
+done
+board="$(cat /tmp/sysinfo/board_name 2>/dev/null || true)"
+case "$board" in
+	tenda,nova-mw5) profile=mw5; bond=3 ;;
+	xiaomi,r4-rd05) profile=rd05; bond=1 ;;
+	tenda,ac23|tenda,lynx-rtl8197f) profile=ac23; bond=1 ;;
+	iball,wrd12gn) profile=wrd12gn; bond=2 ;;
+	*) echo "Refusing WLAN load on unsupported board '$board'" >&2; exit 2 ;;
+esac
+
+echo "board=$board profile=$profile mode=$mode force=$force integrated_first=$integrated_first oem_2g_only=$oem_2g_only root_only=$root_only external=$external probe_only=$probe_only skip_init_one=$skip_init_one stop_after=$stop_after_phase"
+echo 'PCI inventory:'
+cat /proc/bus/pci/devices 2>/dev/null || true
+command -v lspci >/dev/null 2>&1 && lspci -nn 2>/dev/null || true
+[ "$mode" = info_only ] && exit 0
+if [ "$mode" = blocked ]; then
+	echo 'Refusing rtl8192cd load: v43.50 blocks blind hardware init.' >&2
+	echo 'Use --module-probe first. Real init requires --i-accept-hardhang.' >&2
+	exit 3
+fi
+case "$mode" in
+	integrated_real|dual_real)
+		if [ "$risk_ack" != 1 ]; then
+			echo "Refusing risky mode '$mode' without --i-accept-hardhang" >&2
+			exit 4
+		fi ;;
+esac
+
+if grep -q '^rtl8192cd ' /proc/modules 2>/dev/null; then
+	if [ "$force" = 1 ]; then
+		echo 'rtl8192cd already loaded; force reload requested'
+		rmmod rtl8192cd 2>/tmp/rtl8192cd-rmmod.err || true
+		sleep 2
+		if grep -q '^rtl8192cd ' /proc/modules 2>/dev/null; then
+			echo 'rtl8192cd force reload failed: module still loaded' >&2
+			cat /tmp/rtl8192cd-rmmod.err >&2 2>/dev/null || true
+			exit 5
+		fi
+		if [ -d /sys/class/net/wlan0 ] || [ -d /sys/class/net/wlan1 ]; then
+			echo 'rtl8192cd force reload left a stale wlan netdev; refusing to insert a new module over it' >&2
+			ip link show wlan0 2>/dev/null >&2 || true
+			ip link show wlan1 2>/dev/null >&2 || true
+			exit 6
+		fi
+	else
+		echo 'rtl8192cd already loaded'
+		exit 0
+	fi
+fi
+
+case "$mode" in
+	module_probe)
+		echo 'STAGE1A module-probe: loading rtl8192cd but returning before GPIO/HW init.' ;;
+	gpio_probe)
+		echo 'STAGE1B gpio-probe: stop after GPIO hook setup marker.' ;;
+	vendor_probe)
+		echo 'STAGE1C vendor-probe: stop at vendor core entry.' ;;
+	table_probe)
+		echo 'STAGE1D table-probe: scan MW5 OEM-order device table but skip rtl8192cd_init_one.' ;;
+	preinitone_probe)
+		echo 'STAGE1E pre-init-one: stop before rtl8192cd_init_one.' ;;
+	initone_entry_probe)
+		echo 'STAGE1F initone-entry: enter rtl8192cd_init_one and stop before netdev allocation.' ;;
+	integrated_real|dual_real)
+		echo 'STAGE1R RISKY real hardware init: OEM 2G expects wlan1; this can hard-hang the router.' ;;
+esac
+
+echo 'STAGE1 before insmod/modprobe rtl8192cd' >/dev/console 2>/dev/null || true
+sync 2>/dev/null || true
+# Prefer insmod with the real module path so BusyBox modprobe does not hide where
+# the hang occurs.  Fallback to modprobe only if the ko path is not available.
+ko="$(find /lib/modules/$(uname -r) -name 'rtl8192cd.ko' 2>/dev/null | head -n 1)"
+if [ -n "$ko" ]; then
+	insmod "$ko" board_profile="$profile" bond_option="$bond" external_radio="$external" integrated_first="$integrated_first" oem_2g_only="$oem_2g_only" root_only="$root_only" probe_only="$probe_only" skip_init_one="$skip_init_one" stop_after_phase="$stop_after_phase"
+	rc=$?
+else
+	modprobe rtl8192cd board_profile="$profile" bond_option="$bond" external_radio="$external" integrated_first="$integrated_first" oem_2g_only="$oem_2g_only" root_only="$root_only" probe_only="$probe_only" skip_init_one="$skip_init_one" stop_after_phase="$stop_after_phase"
+	rc=$?
+fi
+echo 'STAGE1 after insmod/modprobe rtl8192cd returned' >/dev/console 2>/dev/null || true
+sleep 1
+for p in /sys/module/rtl8192cd/parameters/init_phase \
+	/sys/module/rtl8192cd/parameters/last_phase \
+	/sys/module/rtl8192cd/parameters/init_rc \
+	/sys/module/rtl8192cd/parameters/external_radio \
+	/sys/module/rtl8192cd/parameters/integrated_first \
+	/sys/module/rtl8192cd/parameters/oem_2g_only \
+	/sys/module/rtl8192cd/parameters/root_only \
+	/sys/module/rtl8192cd/parameters/probe_only \
+	/sys/module/rtl8192cd/parameters/skip_init_one \
+	/sys/module/rtl8192cd/parameters/stop_after_phase; do
+	[ -e "$p" ] && echo "$(basename "$p")=$(cat "$p")"
+done
+dmesg | grep -Ei 'rtl8197f-wlan|rtl8192cd|8197f|8822|8812f|8814b|phydm|halmac|firmware|efuse|iqk|lck|irq|dma|netdev' | tail -n 220 || true
+exit "$rc"
