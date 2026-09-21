@@ -1,0 +1,11 @@
+MW5 Live Audit v3 Safe Hotfix
+
+Important:
+- removes all /sys/kernel/debug/regmap/*/registers reads;
+- uses only curated read-only /proc/mw5-rtl8367-* diagnostics;
+- adds guarded collector startup with timeout;
+- no router reflash required when v44.65.24.1 is already installed.
+
+Run:
+  chmod +x mw5-pc-audit-interactive.sh mw5-router-audit.sh
+  sudo bash mw5-pc-audit-interactive.sh
