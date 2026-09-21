@@ -1,0 +1,324 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+/*
+ * Tenda Nova MW5
+ *
+ * Reconstructed from the running Linux 3.10.90 vendor system and a verified
+ * byte-for-byte 8 MiB SPI-NOR dump.  The external switch uses the rtl8367c
+ * SDK family.  The observed copper ports are physical ports 1 (LAN) and 3
+ * (WAN); the CPU path is EXT0 / physical port 6.
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+
+#include "rtl8197f.dtsi"
+
+/ {
+	compatible = "tenda,nova-mw5", "realtek,rtl8197fs", "realtek,rtl8197f-soc";
+	model = "Tenda Nova MW5";
+
+	aliases {
+		serial0 = &uart0;
+	};
+
+	chosen {
+		bootargs = "console=ttyS0,115200n8 lpj=5000000 rootfstype=squashfs,jffs2 clk_ignore_unused";
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x00000000 0x08000000>;
+	};
+
+	/* OEM /etc_ro/gpio_conf assigns gpio_index 0 (red status LED) to
+	 * GPIO33 and gpio_index 5 (reset key) to GPIO54.  Both functions are
+	 * active-low on the vendor gpio controller.
+	 */
+	leds {
+		compatible = "gpio-leds";
+		status = "okay";
+
+		led_status: status {
+			label = "red:status";
+			gpios = <&gpio0 33 GPIO_ACTIVE_LOW>;
+			default-state = "keep";
+		};
+	};
+
+	keys {
+		compatible = "gpio-keys";
+		status = "okay";
+
+		reset {
+			label = "reset";
+			gpios = <&gpio0 54 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_RESTART>;
+			debounce-interval = <60>;
+		};
+	};
+
+	rtl836x_smi: switch {
+		compatible = "realtek,rtl8363nb", "realtek,rtl8367c", "realtek,rtl8365mb";
+		mdc-gpios = <&gpio0 18 GPIO_ACTIVE_HIGH>;  /* GPIO C2 */
+		mdio-gpios = <&gpio0 19 GPIO_ACTIVE_HIGH>; /* GPIO C3 */
+		realtek,rtl8197f-mw5-oem-init;
+		realtek,mw5-cpu-cascade;
+		realtek,disable-leds;
+		status = "okay";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			/* Runtime PVID/link observations identify physical 1 as LAN and
+			 * physical 3 as WAN.  Other copper indices are not bonded on the
+			 * 2-port MW5 switch package and remain absent from DSA.
+			 */
+			port@1 {
+				reg = <1>;
+				label = "lan";
+				phy-handle = <&swphy1>;
+			};
+
+			port@3 {
+				reg = <3>;
+				label = "wan";
+				phy-handle = <&swphy3>;
+			};
+
+			port@6 {
+				reg = <6>;
+				label = "cpu";
+				ethernet = <&ethernet0>;
+				phy-mode = "rgmii";
+				tx-internal-delay-ps = <0>;
+				rx-internal-delay-ps = <1500>;
+
+				fixed-link {
+					speed = <1000>;
+					full-duplex;
+					pause;
+				};
+			};
+		};
+
+		mdio {
+			compatible = "realtek,smi-mdio";
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			swphy1: ethernet-phy@1 {
+				reg = <1>;
+				eee-broken-100tx;
+				eee-broken-1000t;
+			};
+
+			swphy3: ethernet-phy@3 {
+				reg = <3>;
+				eee-broken-100tx;
+				eee-broken-1000t;
+			};
+		};
+	};
+};
+
+&gpio0 {
+	/delete-property/ interrupt-controller;
+	/delete-property/ #interrupt-cells;
+	/delete-property/ interrupt-parent;
+	/delete-property/ interrupts;
+	status = "okay";
+};
+
+&uart0 {
+	/* RTL8197FS uses byte-wide 16550 registers at four-byte spacing. The
+	 * normal receive/transmit data register is the vendor RBR/THR alias at
+	 * +0x24, while DLL remains at +0x00 when DLAB is set. The OEM BSP routes
+	 * UART0 through ICTL input 9 (IRR value 2 -> output-index 1). Keep the
+	 * interrupt active so long TTL paste bursts are drained from the 16-byte
+	 * FIFO instead of relying on the Linux polling fallback.
+	 */
+	reg-io-width = <1>;
+	fifo-size = <16>;
+	realtek,rx-alias-offset = <0x24>;
+	realtek,tx-alias-offset = <0x24>;
+	interrupt-parent = <&intc>;
+	interrupts = <9 1>;
+};
+
+&spi0 {
+	status = "disabled";
+};
+
+&spirom0 {
+	status = "okay";
+	reg = <0x10000000 0x00800000>;
+	erase-size = <0x10000>;
+	/* MW5 auto-map byte addresses already match the OEM flash coordinate
+	 * system.  Subtracting one corrupts cr6c/hsqs reads through MTD.
+	 */
+	realtek,read-shift = <0>;
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "boot";
+			reg = <0x000000 0x020000>;
+			read-only;
+		};
+
+		factory: partition@20000 {
+			compatible = "nvmem-cells";
+			label = "factory";
+			reg = <0x020000 0x010000>;
+			read-only;
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			/* Tenda NUL-separated KEY=value store.  The driver parses the
+			 * selected WLAN0/WLAN1 keys into the existing eFuse shadow map. */
+			mw5_factory: factory@0 {
+				reg = <0x0000 0x10000>;
+			};
+		};
+
+		firmware: partition@30000 {
+			/* OpenWrt mtdsplit selects firmware parsers by the partition
+			 * name.  A compatible property here suppresses that path in
+			 * mtd_partition_split(), so keep this node name-based.
+			 */
+			label = "firmware";
+			reg = <0x030000 0x590000>;
+		};
+
+		partition@5c0000 {
+			label = "cfm";
+			reg = <0x5c0000 0x010000>;
+			read-only;
+		};
+
+		partition@5d0000 {
+			label = "cfm_backup";
+			reg = <0x5d0000 0x010000>;
+			read-only;
+		};
+
+		partition@5e0000 {
+			label = "log";
+			reg = <0x5e0000 0x210000>;
+			read-only;
+		};
+
+		partition@7f0000 {
+			label = "env";
+			reg = <0x7f0000 0x010000>;
+			read-only;
+		};
+	};
+};
+
+&ethdiag0 {
+	status = "disabled";
+};
+
+&ethernet0 {
+	/* v44.65.15: provide the raw MW5 factory store to rtknet so it can parse
+	 * HW_NIC0_ADDR before its first ndo_open/RTL865x table seed. */
+	nvmem-cells = <&mw5_factory>;
+	nvmem-cell-names = "factory";
+
+	/* The RTL8363/RTL8367 CPU port 6 is the switch-side endpoint.  The
+	 * RTL8197FS-side endpoint is physical P0/RGMII, exactly as in the SDK
+	 * CONFIG_RTL_8367R_SUPPORT path.  DMA descriptors must therefore target
+	 * P0 directly rather than rtl865x extension-port bit 6.
+	 */
+	realtek,tx-port-mask = <0x1>;
+	realtek,tx-dp-ext = <0x0>;
+	realtek,tx-extspa = <0x0>;
+	/* RTL8197FS non-VG SDK: six dwords / 24-byte CPU DMA descriptors. */
+	realtek,descriptor-dwords = <6>;
+	/* V212 /proc/rtl865x ring dump: OEM ring0 is RX=900 and TX=768.
+	 * Keep the smaller auxiliary OEM rings out of this first reconstruction;
+	 * the Linux master currently exposes one CPU DMA ring in each direction.
+	 */
+	realtek,rx-ring-size = <900>;
+	realtek,tx-ring-size = <768>;
+	/* OEM descriptor topology: LAN VID9 -> P1, WAN VID8 -> P3. */
+	realtek,lan-vid = <9>;
+	realtek,wan-vid = <8>;
+	realtek,p0-cpu-tag-pass-through;
+	realtek,legacy-rd05-sdk-pipeline;
+	realtek,rx-poll-fallback;
+	/* v44.62.8: 10 ms is only the pre-IRQ bring-up interval.  After the first
+	 * proven RX interrupt the driver automatically backs this off to a 1-second
+	 * lost-IRQ watchdog, avoiding a permanent 100-Hz timer on the single CPU.
+	 */
+	realtek,rx-poll-ms = <10>;
+	realtek,sdk-cpuicr1-init;
+	realtek,sdk-swcore-init;
+	realtek,sdk-crc-lengths;
+	realtek,sdk-trxrdy;
+	status = "okay";
+};
+
+/*
+ * v44.28 WLAN IRQ correction.
+ *
+ * The OEM IRR table routes exactly one ICTL input to CPU5 (input 21) and one
+ * to CPU6 (input 29).  These are the PCIe/RTL8812BRH and integrated RTL8197FS
+ * WLAN sources.  The vendor wlan_device[] values 5/6 describe the final CPU
+ * routing line, not a bypass around the RTL8197F ICTL.  Describing them as
+ * direct cpuintc IRQs made request_irq() succeed while leaving the ICTL GIMR
+ * sources masked, which is exactly the v44.26.1 irq_count=0 failure.
+ *
+ * Keep all five ICTL parents from rtl8197f.dtsi and bind the WLAN sources to
+ * their actual ICTL inputs/output domains: input21 -> CPU5 (output-index 4),
+ * input29 -> CPU6 (output-index 5).  Patch 316 also selects the RTL8197F
+ * BSP's linear IRR-bank layout.  The inherited RTL83xx reverse-bank formula
+ * was why v44.27 could request the child IRQs but never enter either ISR.
+ */
+&wlan {
+	/* Integrated RTL8197FS 2.4 GHz: ICTL input29 routed to OEM CPU IRQ6. */
+	interrupt-parent = <&intc>;
+	interrupts = <29 5>;
+	compatible = "realtek,rtl8197fs-wlan", "realtek,rtl8197f-wmac";
+	realtek,radio-index = <1>;
+	realtek,rfe-type = <5>;
+	realtek,mac-address-increment = <1>;
+	nvmem-cells = <&mw5_factory>;
+	nvmem-cell-names = "factory";
+	status = "okay";
+};
+
+&pcie0 {
+	/* RTL8812BRH/PCIe interrupt source is ICTL input21 -> OEM CPU IRQ5. */
+	interrupt-parent = <&intc>;
+	interrupts = <21 4>;
+
+	/*
+	 * The recovered MW5 OEM init for the physical RTL8812BRH programs BAR2 to 0x19000004.
+	 * Keep PCI child bus addresses identical to the RTL8197F outbound CPU
+	 * apertures so generic Linux resource assignment preserves that BAR.
+	 */
+	ranges = <0x01000000 0 0x18c00000 0x00c00000 0 0x00200000>,
+		 <0x02000000 0 0x19000000 0x01000000 0 0x01000000>;
+
+	/* Stock boot discovers 10ec:b822 at bus 0 / slot 0.  Attaching the
+	 * factory NVMEM reference to the PCI child makes the same board data
+	 * available through pdev->dev to the rtl8822b_pci compatibility backend. */
+	status = "okay";
+
+	wifi@0,0 {
+		compatible = "pci10ec,b822";
+		reg = <0x00000000 0 0 0 0>;
+		realtek,radio-index = <0>;
+		realtek,rfe-type = <6>;
+		realtek,mac-address-increment = <4>;
+		nvmem-cells = <&mw5_factory>;
+		nvmem-cell-names = "factory";
+	};
+};
