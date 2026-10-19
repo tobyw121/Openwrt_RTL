@@ -145,7 +145,10 @@ def main():
     ap.add_argument('--output', required=True, type=Path, help='JSON metadata/symbol output')
     ap.add_argument('--filter', default=r'^(?:RTL83XX_init|rtk_switch_|switch_phy_status_get|'
                     r'curLinkPortMask$|one_sec_timer$|rtl_get_8367r_port_link_status$|'
-                    r'rtl_check_swCore_tx_hang$|PatchChipData$|dal_rtl8367[cd]_init$)')
+                    r'rtl_check_swCore_tx_hang$|New_check_tx_done_desc_swCore_own$|'
+                    r'rtl865x_reinitSwitchCore$|rtl_check_tx_hang_flag$|'
+                    r'rtl_check_swCore_tx_hang_interval$|rtl_reinit_swCore_threshold$|'
+                    r'PatchChipData$|dal_rtl8367[cd]_init$)')
     ap.add_argument('--all-symbols', action='store_true')
     args = ap.parse_args()
     if args.kernel.resolve() == args.output.resolve():

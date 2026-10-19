@@ -136,6 +136,33 @@
           "span_sha256": "32037f2bafe1fd858fbcc3879eddecd8cb3b14806a49ec7a6bd8dac294e97a6b",
           "pair_count": 210,
           "applicability": "OEM rtk_switch_init selector 1 (RTL8370B), not the logged MW5 0x6367 selector 0"
+        },
+        "New_check_tx_done_desc_swCore_own": {
+          "address": 2149211800,
+          "type": "T",
+          "span": 72,
+          "span_sha256": "4d19ab9f4498b4133b7d4afa102bffdc8f1377e2e519974386cb4035be2a45d4"
+        },
+        "rtl865x_reinitSwitchCore": {
+          "address": 2149160020,
+          "type": "T",
+          "span": 288,
+          "span_sha256": "c33cb37cefe13dd9637c9112e98db9970bd45e6df8f43d772232f3a81679ef0d"
+        },
+        "rtl_check_tx_hang_flag": {
+          "address": 2153247604,
+          "type": "d",
+          "initial_u32_value": 1
+        },
+        "rtl_check_swCore_tx_hang_interval": {
+          "address": 2153247276,
+          "type": "d",
+          "initial_u32_value": 30
+        },
+        "rtl_reinit_swCore_threshold": {
+          "address": 2153247280,
+          "type": "d",
+          "initial_u32_value": 6
         }
       }
     },
@@ -271,6 +298,18 @@
           "span_sha256": "32037f2bafe1fd858fbcc3879eddecd8cb3b14806a49ec7a6bd8dac294e97a6b",
           "pair_count": 210,
           "applicability": "OEM rtk_switch_init selector 1 (RTL8370B), not the logged MW5 0x6367 selector 0"
+        },
+        "New_check_tx_done_desc_swCore_own": {
+          "address": 2149189916,
+          "type": "T",
+          "span": 100,
+          "span_sha256": "f511ab4f331f4ddec9f5855a1be5734c4c9c63ff55e310b58ef449ff16c3e2da"
+        },
+        "rtl865x_reinitSwitchCore": {
+          "address": 2149135712,
+          "type": "T",
+          "span": 368,
+          "span_sha256": "c589fa6260e5d86518966cbbf6688ea15d69ddaad956bca1b8334d559f9e2c8d"
         }
       }
     },
@@ -382,6 +421,18 @@
           "type": "T",
           "span": 192,
           "span_sha256": "921ad2cd1089a20ee55acecba7c19a6b33d359eeac9db114b08ab2f863889208"
+        },
+        "New_check_tx_done_desc_swCore_own": {
+          "address": 2150341332,
+          "type": "T",
+          "span": 92,
+          "span_sha256": "fa9187fd40bf87aabdc5126d134b329cb55f539d6d8524701e067fb4123e1e38"
+        },
+        "rtl865x_reinitSwitchCore": {
+          "address": 2150264080,
+          "type": "T",
+          "span": 324,
+          "span_sha256": "30686cb22fe53df305a4891b484c1eecba470e09f20da75f40b5a44d870964d4"
         }
       }
     }
@@ -493,5 +544,124 @@
     ],
     "live_log_sha256": "c1912fb73806e8063a8079da1614a19126c51975458ee4b81b32d3b0b64fd3db",
     "live_log_filename": "LOG_MW5.txt"
+  },
+  "tx_progress_evidence": {
+    "descriptor_checks": {
+      "mw5": {
+        "function_address": "0x801a5e98",
+        "instruction_words_le": [
+          "0x3c0280a5",
+          "0x8c43e1c8",
+          "0x3c0280a5",
+          "0x8c45e1a8",
+          "0x00033140",
+          "0x000310c0",
+          "0x00c21023",
+          "0x00a21021",
+          "0x3c052000",
+          "0x00451025",
+          "0x8c450000",
+          "0x30a50001",
+          "0x10a00003",
+          "0x2402ffff",
+          "0xac830000",
+          "0x00001021",
+          "0x03e00008",
+          "0x00000000"
+        ],
+        "descriptor_stride_bytes": 24,
+        "ownership_bit": 0,
+        "done_index_address": "0x80a4e1c8",
+        "ring_pointer_address": "0x80a4e1a8",
+        "current_index_address": null,
+        "meaning": "Returns 0 and stores the done index when the oldest descriptor is owned. Otherwise returns -1; does not test done == current."
+      },
+      "ac23": {
+        "function_address": "0x801a091c",
+        "instruction_words_le": [
+          "0x3c0280d8",
+          "0x8c43f128",
+          "0x3c0280d8",
+          "0x8c45f108",
+          "0x00033140",
+          "0x000310c0",
+          "0x00c21023",
+          "0x00a21021",
+          "0x3c052000",
+          "0x00451025",
+          "0x8c420000",
+          "0x30420001",
+          "0x10400004",
+          "0x00000000",
+          "0xac830000",
+          "0x03e00008",
+          "0x00001021",
+          "0x3c0280d8",
+          "0x8c45f118",
+          "0x10650003",
+          "0x2402ffff",
+          "0xac830000",
+          "0x00001021",
+          "0x03e00008",
+          "0x00000000"
+        ],
+        "descriptor_stride_bytes": 24,
+        "ownership_bit": 0,
+        "done_index_address": "0x80d7f128",
+        "ring_pointer_address": "0x80d7f108",
+        "current_index_address": "0x80d7f118",
+        "meaning": "Returns 0 and stores the done index when the oldest descriptor is owned; also when done != current. Otherwise returns -1."
+      },
+      "rd05": {
+        "function_address": "0x802b9ad4",
+        "instruction_words_le": [
+          "0x3c028097",
+          "0x8c434f30",
+          "0x3c028097",
+          "0x8c424f50",
+          "0x00032940",
+          "0x00451021",
+          "0x3c052000",
+          "0x00451025",
+          "0x8c420000",
+          "0x30420001",
+          "0x14400005",
+          "0x00000000",
+          "0x3c028097",
+          "0x8c424f40",
+          "0x10620004",
+          "0x00000000",
+          "0xac830000",
+          "0x03e00008",
+          "0x00001025",
+          "0x03e00008",
+          "0x2402ffff",
+          "0x00000000",
+          "0x00000000"
+        ],
+        "descriptor_stride_bytes": 32,
+        "ownership_bit": 0,
+        "done_index_address": "0x80974f30",
+        "ring_pointer_address": "0x80974f50",
+        "current_index_address": "0x80974f40",
+        "meaning": "Returns 0 and stores the done index when the oldest descriptor is owned; also when done != current. Otherwise returns -1."
+      }
+    },
+    "mw5_caller": {
+      "function": "rtl_check_swCore_tx_hang",
+      "call_pc": "0x80195248",
+      "call_word": "0x0c0697a6",
+      "timer_reinit_tail_call_pc": "0x80199760",
+      "timer_reinit_tail_call_word": "0x08066515",
+      "observed_timer_rearm_ticks": 100,
+      "limits": "OEM static interval=30 and threshold=6 are sample counters. Actual runtime overrides and complete recovery safety are not established; they are not copied as milliseconds."
+    },
+    "linux_policy": {
+      "board": "mw5",
+      "stall_ms": 5000,
+      "action": "Rate-limited TRXRDY/TXFD retry of an owned pending TX ring with valid stationary CDP and no descriptor reclamation progress.",
+      "completion": "Valid CDP past the software tail AND OWN cleared; elapsed time never permits DMA reuse.",
+      "excluded": "No descriptor/base-pointer rewrites, DMA unmap/free, RX reset, switch reset or DSA/L2 table replay."
+    }
   }
 }

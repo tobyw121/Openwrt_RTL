@@ -148,6 +148,12 @@ Firmware-/MODPOST-Build und Tests auf den Geräten wurden nicht durchgeführt.
    acht belegte Schwellenwerte ausschließlich für diese MW5-Identität;
    siehe `OEM_SWITCH_REVERSE.md`. Vollständige Kaltstart-Parität bleibt
    auf Hardware zu prüfen. AC23-Portplan und RD05-Switchbezeichnung live bestätigen.
+   Der MW5-TX-Watchdog beobachtet zusätzlich ausstehende OWN-Deskriptoren:
+   Nach fünf Sekunden ohne CDP-/Freigabefortschritt stößt er TX begrenzt
+   erneut an, ohne Ring-/RX-/Switch-Reset. `ethtool -S` zeigt
+   `tx_watchdog_rekicks`; ein steigender Zähler ist Anlass zur Untersuchung,
+   kein Beleg für einen behobenen Hardwarestillstand. Dieser neue Retry-Pfad
+   ist für AC23/RD05 nicht aktiviert.
 5. Je Band WPA2/CCMP-Verbindungsaufbau, DHCP, Bridging, Routing, Reconnect und
    Neustart testen. Danach parallelen LAN/WAN- und WLAN-Verkehr mit einem
    zweiten Rechner erzeugen; mindestens 30 Minuten bidirektional, anschließend

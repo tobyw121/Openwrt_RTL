@@ -6,6 +6,7 @@ Exercises progress with no diagnostic process or proc-file reads. This is a
 logic/ordering regression test, not an emulation of the MW5 hardware.
 """
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import unittest
@@ -20,22 +21,28 @@ class EthernetWatchdogTests(unittest.TestCase):
         signatures = [
             "static void rtl8197f_rtk_write_control(",
             "static bool rtl8197f_rtk_tx_cdp_index_value(",
-            "static bool rtl8197f_rtk_mw5_tx_napi_ready(",
             "static void rtl8197f_rtk_enable_irq(",
             "static void rtl8197f_rtk_disable_irq(",
             "static void rtl8197f_rtk_kick_rx(",
             "static void rtl8197f_rtk_tx_doorbell(",
+            "static bool rtl8197f_rtk_mw5_tx_watchdog(",
             "static int rtl8197f_rtk_poll(",
             "static bool rtl8197f_rtk_mw5_runout_guard_active(",
             "static void rtl8197f_rtk_rx_poll_timer(",
         ]
         functions = "\n".join(c_function(DRIVER, signature) for signature in signatures)
+        constants = "\n".join(re.findall(
+            r"^#define (?:RTL_RTK_DESC_OWN\s+BIT\(\d+\)|"
+            r"RTL_RTK_MW5_(?:RX_WATCHDOG_MS|RX_RUNOUT_RECHECK_MS|"
+            r"RX_PUBLISH_RECHECK_MS|TX_STALL_MS)\s+\d+U)",
+            DRIVER.read_text(), re.MULTILINE))
         program = r'''
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+#include <limits.h>
 typedef uint32_t u32;
 typedef uint64_t u64;
 #define READ_ONCE(x) (x)
@@ -47,7 +54,8 @@ typedef uint64_t u64;
 #define from_timer(p,t,m) container_of(t,struct rtl8197f_rtknet_priv,m)
 #define time_before(a,b) ((long)((a)-(b)) < 0)
 #define msecs_to_jiffies(x) (x)
-#define RTL_RTK_DESC_OWN (1U << 31)
+#define BIT(n) (1U << (n))
+DRIVER_CONSTANTS
 #define RTL_RTK_CPUIIMR 0
 #define RTL_RTK_CPUICR 1
 #define RTL_RTK_CPUTPDCR0 2
@@ -55,9 +63,6 @@ typedef uint64_t u64;
 #define RTL_RTK_CPUICR_RXCMD 1U
 #define RTL_RTK_CPUICR_TXCMD 2U
 #define RTL_RTK_CPUICR_TXFD 4U
-#define RTL_RTK_MW5_RX_WATCHDOG_MS 1000U
-#define RTL_RTK_MW5_RX_RUNOUT_RECHECK_MS 10U
-#define RTL_RTK_MW5_RX_PUBLISH_RECHECK_MS 1U
 struct timer_list { unsigned long expires; int arms; };
 struct napi_struct { int schedules; };
 struct net_device { bool running; };
@@ -76,6 +81,10 @@ struct rtl8197f_rtknet_priv {
     u64 rx_publish_timer_runs, rx_runout_fast_timer_runs;
     u64 rx_poll_irq_progress_skips, rx_poll_fallback_schedules;
     u64 rx_runout_fast_schedules, tx_watchdog_schedules;
+    bool tx_watchdog_armed;
+    u32 tx_watchdog_last_cdp;
+    u64 tx_watchdog_last_completed, mw5_tx_own_completed, tx_watchdog_rekicks;
+    unsigned long tx_watchdog_last_progress;
     u64 napi_polls, napi_rx_work, napi_tx_clean, napi_zero_rx_polls;
     u64 napi_budget_polls, rx_runout_trxrdy_writes, rx_runout_recoveries;
     u64 napi_rearm_race, hw_rx_restarts, tx_kicks;
@@ -134,6 +143,7 @@ static struct rtl8197f_rtknet_priv fresh(struct net_device *d, struct rtl8197f_r
     reads=writes=ready_calls=tx_clean_calls=rx_poll_calls=completions=trx_calls=0;
     rx_ready=discover_publication=tx_locked=false;
     allow_schedule=true; pending_reg=-1; supplied_rx_work=0;
+    jiffies=100;
     return p;
 }
 static void cdp(struct rtl8197f_rtknet_priv *p, u32 index)
@@ -160,20 +170,100 @@ int main(void)
 
     /* Only valid CDP progress plus OWN release can request TX reclamation. */
     p=fresh(&d,ring); p.tx_tail=1; p.tx_head=3; cdp(&p,2);
-    assert(rtl8197f_rtk_mw5_tx_napi_ready(&p));
+    assert(rtl8197f_rtk_mw5_tx_watchdog(&p));
     assert(p.tx_tail == 1 && p.tx_head == 3 && !tx_locked);
     ring[1].opts1=RTL_RTK_DESC_OWN;
-    assert(!rtl8197f_rtk_mw5_tx_napi_ready(&p));
+    assert(!rtl8197f_rtk_mw5_tx_watchdog(&p));
     ring[1].opts1=0;
-    cdp(&p,1); assert(!rtl8197f_rtk_mw5_tx_napi_ready(&p));
-    cdp(&p,4); assert(!rtl8197f_rtk_mw5_tx_napi_ready(&p));
-    regs[RTL_RTK_CPUTPDCR0]=0x1001; assert(!rtl8197f_rtk_mw5_tx_napi_ready(&p));
-    regs[RTL_RTK_CPUTPDCR0]=0; assert(!rtl8197f_rtk_mw5_tx_napi_ready(&p));
+    cdp(&p,1); assert(!rtl8197f_rtk_mw5_tx_watchdog(&p));
+    cdp(&p,4); assert(!rtl8197f_rtk_mw5_tx_watchdog(&p));
+    regs[RTL_RTK_CPUTPDCR0]=0x1001; assert(!rtl8197f_rtk_mw5_tx_watchdog(&p));
+    regs[RTL_RTK_CPUTPDCR0]=0; assert(!rtl8197f_rtk_mw5_tx_watchdog(&p));
     p.tx_tail=6; p.tx_head=1; cdp(&p,0);
-    assert(rtl8197f_rtk_mw5_tx_napi_ready(&p)); /* ring wrap */
-    cdp(&p,2); assert(!rtl8197f_rtk_mw5_tx_napi_ready(&p));
-    p.tx_tail=p.tx_head; assert(!rtl8197f_rtk_mw5_tx_napi_ready(&p));
-    p.tx_desc=NULL; assert(!rtl8197f_rtk_mw5_tx_napi_ready(&p));
+    assert(rtl8197f_rtk_mw5_tx_watchdog(&p)); /* ring wrap */
+    cdp(&p,2); assert(!rtl8197f_rtk_mw5_tx_watchdog(&p));
+    p.tx_tail=p.tx_head; assert(!rtl8197f_rtk_mw5_tx_watchdog(&p));
+    p.tx_desc=NULL; assert(!rtl8197f_rtk_mw5_tx_watchdog(&p));
+
+    /* A single owned packet can stall without filling/stopping the queue.
+     * RX IRQs and new submissions must not postpone the bounded TX retry.
+     */
+    p=fresh(&d,ring); p.irq_rx_done=1; p.tx_tail=1; p.tx_head=2; cdp(&p,1);
+    ring[1].opts1=RTL_RTK_DESC_OWN | 0x12340000;
+    rtl8197f_rtk_rx_poll_timer(&p.rx_poll_timer);
+    assert(p.tx_watchdog_armed && p.tx_watchdog_rekicks == 0);
+    jiffies+=4999; p.irq_rx_done++; p.tx_head=3;
+    rtl8197f_rtk_rx_poll_timer(&p.rx_poll_timer);
+    assert(p.tx_watchdog_rekicks == 0 && !trx_calls && !writes);
+    jiffies++; p.irq_rx_done++;
+    rtl8197f_rtk_rx_poll_timer(&p.rx_poll_timer);
+    assert(p.tx_watchdog_rekicks == 1 && trx_calls == 1 && p.tx_kicks == 1);
+    assert(regs[RTL_RTK_CPUICR] == 7 && pending_reg == -1);
+    assert(!p.napi.schedules && !tx_clean_calls && !rx_poll_calls);
+    assert(p.tx_tail == 1 && p.tx_head == 3);
+    assert(ring[1].opts1 == (RTL_RTK_DESC_OWN | 0x12340000));
+    jiffies+=4999;
+    rtl8197f_rtk_rx_poll_timer(&p.rx_poll_timer);
+    assert(p.tx_watchdog_rekicks == 1);
+    jiffies++;
+    rtl8197f_rtk_rx_poll_timer(&p.rx_poll_timer);
+    assert(p.tx_watchdog_rekicks == 2 && trx_calls == 2);
+    /* The completion remains subject to CDP and OWN even after retrying. */
+    cdp(&p,2);
+    rtl8197f_rtk_rx_poll_timer(&p.rx_poll_timer);
+    assert(!p.napi.schedules && p.tx_watchdog_rekicks == 2);
+    ring[1].opts1 &= ~RTL_RTK_DESC_OWN;
+    rtl8197f_rtk_rx_poll_timer(&p.rx_poll_timer);
+    assert(p.napi.schedules == 1 && !p.tx_watchdog_armed);
+
+    /* CDP progress and complete ring wraps both restart the observation.
+     * A monotonic count distinguishes wrap from a stationary tail/CDP.
+     */
+    p=fresh(&d,ring); p.tx_tail=6; p.tx_head=2; cdp(&p,6);
+    ring[6].opts1=RTL_RTK_DESC_OWN;
+    assert(!rtl8197f_rtk_mw5_tx_watchdog(&p));
+    jiffies+=5000; cdp(&p,7);
+    assert(!rtl8197f_rtk_mw5_tx_watchdog(&p) && !p.tx_watchdog_rekicks);
+    jiffies+=5000; p.mw5_tx_own_completed+=8;
+    assert(!rtl8197f_rtk_mw5_tx_watchdog(&p) && !p.tx_watchdog_rekicks);
+    jiffies+=4999;
+    assert(!rtl8197f_rtk_mw5_tx_watchdog(&p) && !p.tx_watchdog_rekicks);
+    jiffies++;
+    assert(!rtl8197f_rtk_mw5_tx_watchdog(&p) && p.tx_watchdog_rekicks == 1);
+
+    /* Invalid/outside-pending CDP, idle and released OWN disarm retries.
+     * Returning to an owned ring starts a full new interval.
+     */
+    for (int condition=0; condition<4; condition++) {
+        p=fresh(&d,ring); p.tx_tail=1; p.tx_head=3; cdp(&p,1);
+        ring[1].opts1=RTL_RTK_DESC_OWN;
+        assert(!rtl8197f_rtk_mw5_tx_watchdog(&p) && p.tx_watchdog_armed);
+        jiffies+=5000;
+        if (condition == 0) regs[RTL_RTK_CPUTPDCR0]=0x1001;
+        if (condition == 1) cdp(&p,4);
+        if (condition == 2) p.tx_head=p.tx_tail;
+        if (condition == 3) ring[1].opts1=0; /* OWN alone cannot reclaim. */
+        assert(!rtl8197f_rtk_mw5_tx_watchdog(&p) && !p.tx_watchdog_armed);
+        assert(!writes && !trx_calls);
+        p.tx_head=3; cdp(&p,1); ring[1].opts1=RTL_RTK_DESC_OWN;
+        assert(!rtl8197f_rtk_mw5_tx_watchdog(&p));
+        assert(p.tx_watchdog_armed && !p.tx_watchdog_rekicks);
+    }
+    p.is_mw5=false; reads=0; jiffies+=5000;
+    assert(!rtl8197f_rtk_mw5_tx_watchdog(&p));
+    assert(!reads && !writes && !p.tx_watchdog_rekicks);
+
+    /* Deadline arithmetic is valid when jiffies wraps (also zero start). */
+    for (int wrap=0; wrap<2; wrap++) {
+        p=fresh(&d,ring); p.tx_tail=1; p.tx_head=2; cdp(&p,1);
+        ring[1].opts1=RTL_RTK_DESC_OWN;
+        jiffies=wrap ? ULONG_MAX-2000UL : 0;
+        assert(!rtl8197f_rtk_mw5_tx_watchdog(&p));
+        jiffies+=4999;
+        assert(!rtl8197f_rtk_mw5_tx_watchdog(&p) && !p.tx_watchdog_rekicks);
+        jiffies++;
+        assert(!rtl8197f_rtk_mw5_tx_watchdog(&p) && p.tx_watchdog_rekicks == 1);
+    }
 
     /* Recent RX interrupts must not hide the final missed RX/TX interrupt. */
     p=fresh(&d,ring); p.irq_rx_done=1; p.tx_tail=1; p.tx_head=3; cdp(&p,2);
@@ -233,7 +323,7 @@ int main(void)
     assert(!completions && p.napi_budget_polls == 1);
     return 0;
 }
-'''.replace("FUNCTIONS", functions)
+'''.replace("FUNCTIONS", functions).replace("DRIVER_CONSTANTS", constants)
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp) / "watchdog.c"
             binary = Path(tmp) / "watchdog"

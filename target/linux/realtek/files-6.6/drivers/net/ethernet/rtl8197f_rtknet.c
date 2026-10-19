@@ -61,7 +61,7 @@
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.35-mw5-independent-watchdog-v44.66.13"
+#define DRV_VERSION			"1.8.36-mw5-tx-progress-v44.66.14"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -73,6 +73,7 @@
 #define RTL_RTK_MW5_GRO_FLUSH_NS	0UL
 #define RTL_RTK_MW5_NAPI_DEFER_HARD_IRQS	0
 #define RTL_RTK_MW5_RX_WATCHDOG_MS	1000U
+#define RTL_RTK_MW5_TX_STALL_MS		5000U
 #define RTL_RTK_MW5_RX_RUNOUT_RECHECK_MS	10U
 #define RTL_RTK_MW5_RX_PUBLISH_RECHECK_MS	1U
 #define RTL_RTK_MW5_RX_RUNOUT_GUARD_MS	500U
@@ -1033,6 +1034,12 @@ struct rtl8197f_rtknet_priv {
 	u64 rx_poll_irq_progress_skips;
 	u64 rx_poll_fallback_schedules;
 	u64 tx_watchdog_schedules;
+	/* TX progress and retry state are protected by tx_lock. */
+	bool tx_watchdog_armed;
+	u32 tx_watchdog_last_cdp;
+	u64 tx_watchdog_last_completed;
+	unsigned long tx_watchdog_last_progress;
+	u64 tx_watchdog_rekicks;
 	u64 sw_trxrdy_writes;
 	u64 cpuicr1_sdk_writes;
 	u64 swcore_sdk_writes;
@@ -1455,6 +1462,7 @@ enum rtl8197f_rtk_stat {
 	RTL_RTK_STAT_REG_DMA_CR4,
 	RTL_RTK_STAT_REG_CPUIIMR,
 	RTL_RTK_STAT_REG_CPUIISR,
+	RTL_RTK_STAT_TX_WATCHDOG_REKICKS,
 };
 
 static const char rtl8197f_rtk_gstrings_stats[][ETH_GSTRING_LEN] = {
@@ -1619,6 +1627,7 @@ static const char rtl8197f_rtk_gstrings_stats[][ETH_GSTRING_LEN] = {
 	[RTL_RTK_STAT_REG_DMA_CR4]	= "reg_dma_cr4",
 	[RTL_RTK_STAT_REG_CPUIIMR]	= "reg_cpuiimr",
 	[RTL_RTK_STAT_REG_CPUIISR]	= "reg_cpuiisr",
+	[RTL_RTK_STAT_TX_WATCHDOG_REKICKS]	= "tx_watchdog_rekicks",
 };
 
 #define RTL_RTK_NUM_STATS	ARRAY_SIZE(rtl8197f_rtk_gstrings_stats)
@@ -1938,40 +1947,6 @@ static unsigned int rtl8197f_rtk_tx_avail(struct rtl8197f_rtknet_priv *priv)
 		priv->tx_ring_size;
 }
 
-static bool rtl8197f_rtk_mw5_tx_napi_ready(struct rtl8197f_rtknet_priv *priv)
-{
-	unsigned long flags;
-	u32 idx, head, hw_idx, pending, completed, cdp;
-	struct rtl8197f_rtk_desc *desc;
-	bool ready = false;
-
-	if (!priv->is_mw5 || !priv->tx_desc || !priv->tx_ring_size)
-		return false;
-
-	/* Mirror tx_clean's completion contract under the same lock. The timer
-	 * only requests NAPI; it never frees DMA buffers or guesses completion
-	 * from elapsed time. RX progress does not imply TX completion IRQ delivery.
-	 */
-	spin_lock_irqsave(&priv->tx_lock, flags);
-	idx = priv->tx_tail;
-	head = priv->tx_head;
-	if (idx == head)
-		goto out;
-	cdp = rtl8197f_rtk_read(priv, RTL_RTK_CPUTPDCR0);
-	if (!rtl8197f_rtk_tx_cdp_index_value(priv, cdp, &hw_idx))
-		goto out;
-	pending = (head + priv->tx_ring_size - idx) % priv->tx_ring_size;
-	completed = (hw_idx + priv->tx_ring_size - idx) % priv->tx_ring_size;
-	if (!completed || completed > pending)
-		goto out;
-	desc = rtl8197f_rtk_tx_desc(priv, idx);
-	dma_rmb();
-	ready = !(le32_to_cpu(READ_ONCE(desc->opts1)) & RTL_RTK_DESC_OWN);
-out:
-	spin_unlock_irqrestore(&priv->tx_lock, flags);
-	return ready;
-}
-
 static void rtl8197f_rtk_enable_irq(struct rtl8197f_rtknet_priv *priv)
 {
 	rtl8197f_rtk_write_control(priv, RTL_RTK_CPUIIMR, RTL_RTK_INT_ENABLE_MASK);
@@ -2018,6 +1993,73 @@ static void rtl8197f_rtk_tx_doorbell(struct rtl8197f_rtknet_priv *priv)
 	cpuicr |= RTL_RTK_CPUICR_TXFD | RTL_RTK_CPUICR_TXCMD | RTL_RTK_CPUICR_RXCMD;
 	rtl8197f_rtk_write_control(priv, RTL_RTK_CPUICR, cpuicr);
 	priv->tx_kicks++;
+}
+
+static bool rtl8197f_rtk_mw5_tx_watchdog(struct rtl8197f_rtknet_priv *priv)
+{
+	unsigned long flags;
+	u32 idx, head, hw_idx, pending, completed, cdp, opts1;
+	struct rtl8197f_rtk_desc *desc;
+	bool ready = false;
+
+	if (!priv->is_mw5 || !priv->tx_desc || !priv->tx_ring_size)
+		return false;
+
+	/* OEM New_check_tx_done_desc_swCore_own inspects the oldest pending
+	 * descriptor, independently of RX/link progress. Keep our stricter
+	 * CDP + OWN completion contract: the timer never releases DMA buffers.
+	 */
+	spin_lock_irqsave(&priv->tx_lock, flags);
+	idx = priv->tx_tail;
+	head = priv->tx_head;
+	if (idx == head)
+		goto disarm;
+	cdp = rtl8197f_rtk_read(priv, RTL_RTK_CPUTPDCR0);
+	if (!rtl8197f_rtk_tx_cdp_index_value(priv, cdp, &hw_idx))
+		goto disarm;
+	pending = (head + priv->tx_ring_size - idx) % priv->tx_ring_size;
+	completed = (hw_idx + priv->tx_ring_size - idx) % priv->tx_ring_size;
+	if (completed > pending)
+		goto disarm;
+	desc = rtl8197f_rtk_tx_desc(priv, idx);
+	dma_rmb();
+	opts1 = le32_to_cpu(READ_ONCE(desc->opts1));
+	if (!(opts1 & RTL_RTK_DESC_OWN)) {
+		ready = completed != 0;
+		goto disarm;
+	}
+
+	/* A monotonic completion count also detects entire ring wraps between
+	 * samples. New submissions or RX activity must not hide a stuck tail.
+	 * Five seconds is our Linux retry policy, not an OEM timing constant.
+	 */
+	if (!priv->tx_watchdog_armed ||
+	    priv->tx_watchdog_last_cdp != cdp ||
+	    priv->tx_watchdog_last_completed != priv->mw5_tx_own_completed) {
+		priv->tx_watchdog_armed = true;
+		priv->tx_watchdog_last_cdp = cdp;
+		priv->tx_watchdog_last_completed = priv->mw5_tx_own_completed;
+		priv->tx_watchdog_last_progress = jiffies;
+	} else if (!time_before(jiffies, priv->tx_watchdog_last_progress +
+			       msecs_to_jiffies(RTL_RTK_MW5_TX_STALL_MS))) {
+		/* Retry even if the ring never filled enough to stop the netdev
+		 * queue/trigger ndo_tx_timeout. Preserve all descriptors, mappings,
+		 * RX state and DSA tables; never turn elapsed time into completion.
+		 * The normal IRQ/NAPI path or the next timer pass reclaims later.
+		 */
+		dma_wmb();
+		rtl8197f_rtk_assert_trxrdy(priv);
+		rtl8197f_rtk_tx_doorbell(priv);
+		priv->tx_watchdog_rekicks++;
+		priv->tx_watchdog_last_progress = jiffies;
+	}
+	goto out;
+
+disarm:
+	priv->tx_watchdog_armed = false;
+out:
+	spin_unlock_irqrestore(&priv->tx_lock, flags);
+	return ready;
 }
 
 static void rtl8197f_rtk_deassert_trxrdy(struct rtl8197f_rtknet_priv *priv)
@@ -6006,7 +6048,7 @@ static void rtl8197f_rtk_rx_poll_timer(struct timer_list *t)
 	}
 
 	pending = priv->rx_restart_pending || rtl8197f_rtk_rx_napi_ready(priv);
-	tx_ready = rtl8197f_rtk_mw5_tx_napi_ready(priv);
+	tx_ready = rtl8197f_rtk_mw5_tx_watchdog(priv);
 	pending |= tx_ready;
 	/* The readiness check itself can discover an unpublished RX descriptor.
 	 * Arm the quick retry now, rather than waiting another whole second.
@@ -6843,6 +6885,7 @@ unmap_all:
 static int rtl8197f_rtk_open(struct net_device *ndev)
 {
 	struct rtl8197f_rtknet_priv *priv = netdev_priv(ndev);
+	unsigned long flags;
 	int ret;
 
 	/* v44.65.6: page_pool is a reopen-time policy, not a probe-time latch.
@@ -6850,6 +6893,9 @@ static int rtl8197f_rtk_open(struct net_device *ndev)
 	 * map/unmap ownership without requiring a full router reboot. */
 	if (priv->is_mw5) {
 		WRITE_ONCE(priv->rx_publish_wait_pending, false);
+		spin_lock_irqsave(&priv->tx_lock, flags);
+		priv->tx_watchdog_armed = false;
+		spin_unlock_irqrestore(&priv->tx_lock, flags);
 		rtl8197f_rtk_mw5_rx_seq_reset(priv);
 		/* Coherent fixed DMA is now part of the MW5 network baseline rather
 		 * than a competing accelerator. Keep page_pool/streaming ownership
@@ -6896,6 +6942,7 @@ err_free_rings:
 static int rtl8197f_rtk_stop(struct net_device *ndev)
 {
 	struct rtl8197f_rtknet_priv *priv = netdev_priv(ndev);
+	unsigned long flags;
 
 	netif_stop_queue(ndev);
 	if (priv->phydev)
@@ -6903,6 +6950,9 @@ static int rtl8197f_rtk_stop(struct net_device *ndev)
 	netif_carrier_off(ndev);
 	cancel_delayed_work_sync(&priv->rd05_reseed_work);
 	del_timer_sync(&priv->rx_poll_timer);
+	spin_lock_irqsave(&priv->tx_lock, flags);
+	priv->tx_watchdog_armed = false;
+	spin_unlock_irqrestore(&priv->tx_lock, flags);
 	WRITE_ONCE(priv->rx_publish_wait_pending, false);
 	WRITE_ONCE(priv->mw5_rx_catchup_pending, false);
 	priv->mw5_rx_seq_valid = false;
@@ -6935,12 +6985,14 @@ static void rtl8197f_rtk_tx_timeout(struct net_device *ndev,
 	 */
 	if (priv->is_mw5) {
 		unsigned int cleaned, avail, pending;
+		unsigned long flags;
 		u32 cdp;
 
 		netif_stop_queue(ndev);
 		cleaned = rtl8197f_rtk_tx_clean(priv);
-		pending = (READ_ONCE(priv->tx_head) + priv->tx_ring_size -
-			   READ_ONCE(priv->tx_tail)) % priv->tx_ring_size;
+		spin_lock_irqsave(&priv->tx_lock, flags);
+		pending = (priv->tx_head + priv->tx_ring_size -
+			   priv->tx_tail) % priv->tx_ring_size;
 		avail = rtl8197f_rtk_tx_avail(priv);
 		cdp = rtl8197f_rtk_read(priv, RTL_RTK_CPUTPDCR0);
 
@@ -6949,6 +7001,9 @@ static void rtl8197f_rtk_tx_timeout(struct net_device *ndev,
 			rtl8197f_rtk_tx_doorbell(priv);
 			rtl8197f_rtk_assert_trxrdy(priv);
 		}
+		/* Start a fresh observation interval after this explicit retry. */
+		priv->tx_watchdog_armed = false;
+		spin_unlock_irqrestore(&priv->tx_lock, flags);
 
 		if (napi_schedule_prep(&priv->napi)) {
 			rtl8197f_rtk_disable_irq(priv);
@@ -7087,6 +7142,7 @@ static void rtl8197f_rtk_get_ethtool_stats(struct net_device *ndev,
 		rtl8197f_rtk_tx_desc(priv, 0) : NULL;
 	struct rtl8197f_rtk_desc *rx0 = priv->rx_desc ?
 		rtl8197f_rtk_rx_desc(priv, 0) : NULL;
+	unsigned long flags;
 
 	data[RTL_RTK_STAT_IRQ_RX_DONE] = priv->irq_rx_done;
 	data[RTL_RTK_STAT_IRQ_TX_DONE] = priv->irq_tx_done;
@@ -7249,6 +7305,9 @@ static void rtl8197f_rtk_get_ethtool_stats(struct net_device *ndev,
 	data[RTL_RTK_STAT_REG_DMA_CR4] = rtl8197f_rtk_read(priv, RTL_RTK_DMA_CR4);
 	data[RTL_RTK_STAT_REG_CPUIIMR] = rtl8197f_rtk_read(priv, RTL_RTK_CPUIIMR);
 	data[RTL_RTK_STAT_REG_CPUIISR] = rtl8197f_rtk_read(priv, RTL_RTK_CPUIISR);
+	spin_lock_irqsave(&priv->tx_lock, flags);
+	data[RTL_RTK_STAT_TX_WATCHDOG_REKICKS] = priv->tx_watchdog_rekicks;
+	spin_unlock_irqrestore(&priv->tx_lock, flags);
 }
 
 static const struct ethtool_ops rtl8197f_rtk_ethtool_ops = {
@@ -8875,11 +8934,18 @@ static int rtl8197f_rtk_rd05_proc_show(struct seq_file *m, void *v)
 {
 	struct net_device *ndev = m->private;
 	struct rtl8197f_rtknet_priv *priv;
+	unsigned long flags;
+	u64 tx_rekicks;
+	bool tx_armed;
 
 	if (!ndev)
 		return -ENODEV;
 
 	priv = netdev_priv(ndev);
+	spin_lock_irqsave(&priv->tx_lock, flags);
+	tx_rekicks = priv->tx_watchdog_rekicks;
+	tx_armed = priv->tx_watchdog_armed;
+	spin_unlock_irqrestore(&priv->tx_lock, flags);
 	seq_printf(m, "driver=%s version=%s board=%s\n",
 		   DRV_NAME, DRV_VERSION, rtl8197f_rtk_p0_board_name());
 	seq_printf(m, "netdev=%s running=%u carrier=%u\n",
@@ -9195,6 +9261,10 @@ static int rtl8197f_rtk_rd05_proc_show(struct seq_file *m, void *v)
 		   (unsigned long long)priv->tx_bql_sent_bytes,
 		   (unsigned long long)priv->tx_bql_completed_pkts,
 		   (unsigned long long)priv->tx_bql_completed_bytes);
+	seq_printf(m, "tx_progress enabled=%u stall_ms=%u armed=%u rekicks=%llu\n",
+		   priv->is_mw5 && priv->rx_poll_fallback && netif_running(ndev),
+		   RTL_RTK_MW5_TX_STALL_MS, tx_armed,
+		   (unsigned long long)tx_rekicks);
 	seq_printf(m, "irq rx_done=%llu tx_done=%llu rx_err=%llu tx_err=%llu rx_runout=%llu mbuf_runout=%llu napi=%llu\n",
 		   (unsigned long long)priv->irq_rx_done,
 		   (unsigned long long)priv->irq_tx_done,

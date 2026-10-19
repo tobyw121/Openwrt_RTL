@@ -58,7 +58,7 @@ apply() {
 status() {
 	echo 'MW5 unified accelerator release v44.65.25 (rtknet core v44.65.25)'
 	if [ -r "$PROC" ]; then
-		grep -E '^(driver=|mw5_accel |mw5_accel_sw |tc_flow |mw5_rx_recovery |mw5_tx_dma |mw5_legacy_accel |hwaccel_rx |hwaccel_tx |napt |tx_bql |irq |napi_detail |rx_poll |rings )' "$PROC" 2>/dev/null || true
+		grep -E '^(driver=|mw5_accel |mw5_accel_sw |tc_flow |mw5_rx_recovery |mw5_tx_dma |mw5_legacy_accel |hwaccel_rx |hwaccel_tx |napt |tx_bql |tx_progress |irq |napi_detail |rx_poll |rings )' "$PROC" 2>/dev/null || true
 	else
 		echo "$PROC unavailable"
 	fi

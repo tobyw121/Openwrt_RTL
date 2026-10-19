@@ -68,16 +68,75 @@ phy_check.ko
   → bei Link down dynamische RTL865x-Hardware-L2-Einträge leeren
 ```
 
-Das ist eine Teilrekonstruktion der Aufruf- und Datenwege, keine vollständige
-Rekonstruktion aller Timerbedingungen und Recovery-Schritte. Insbesondere
-wird aus dem Funktionsnamen `one_sec_timer` keine ungeprüfte reale Zeitbasis
-abgeleitet. Die genaue Behandlung von Watchdog-Grenzen, Deskriptoren und
-Recovery benötigt weitere Untersuchung.
+Das ist eine Teilrekonstruktion der Aufruf- und Datenwege. Die unten
+beschriebene Deskriptorprüfung ist inzwischen genauer rekonstruiert; nicht
+alle Bedingungen und Folgen der OEM-Reinitialisierung sind geprüft.
+Insbesondere wird aus dem Funktionsnamen `one_sec_timer` keine ungeprüfte
+reale Zeitbasis abgeleitet.
 
 Die OEM-Firmware trennt Hardwarepolling, gecachte Userspace-Meldung und
 TX-Fortschrittskontrolle. Ein weiterlaufender Watchdog oder das Lesen eines
 gecachten proc-Werts beweist keine funktionierende Paketübertragung.
 Der bestehende unabhängige Linux6-DMA/NAPI-Watchdog bleibt erhalten.
+
+### Erweiterung: stehenden MW5-TX-Ring erneut anstoßen
+
+`New_check_tx_done_desc_swCore_own` bei `0x801a5e98` lädt den Software-
+Done-Index aus `0x80a4e1c8` und den Ringzeiger aus `0x80a4e1a8`. Die
+Adressrechnung `(index << 5) - (index << 3)` ergibt 24 Byte pro Deskriptor.
+Nach Wechsel auf den uncached Alias liest die Funktion Wort 0 und testet
+**Bit 0 (OWN)**. Bei gesetztem OWN speichert sie den Done-Index und liefert
+0, andernfalls -1. Sie gibt selbst keinen Puffer frei und prüft hier nicht,
+ob Done- und Current-Index gleich sind.
+
+AC23 besitzt bei `0x801a091c` ebenfalls 24-Byte-Deskriptoren, RD05 bei
+`0x802b9ad4` dagegen 32-Byte-Deskriptoren. Diese beiden Prüffunktionen
+betrachten zusätzlich `done != current`. Die Funktionswörter, Adressen und
+Hashes sind im Abschnitt `tx_progress_evidence` des JSON-Belegs festgehalten.
+Ein gleichnamiger OEM-Helfer bedeutet also keine identische Ringgeometrie.
+
+Der MW5-Aufrufer vergleicht zuvor fünf interne 64-Bit-Ausgabezähler und
+verfolgt bei ausbleibender Ausgabe den Done-Index über mehrere Prüfungen.
+Die im Kernel initialisierten Variablen stehen auf `flag=1`, `interval=30`
+und `threshold=6`. Das sind OEM-Prüfbedingungen/Zähler, keine als
+Millisekunden übernommenen Konstanten. Der Timer plant sich mit
+`jiffies + 100` erneut und verzweigt bei gemeldetem Hang nach
+`rtl865x_reinitSwitchCore`. Dessen gesamte Nebenwirkungen sind nicht
+validiert. Dieser vollständige Reset wird deshalb nicht in unseren
+laufenden MW5-Datenpfad übernommen.
+
+Der Linux6-Treiber ergänzt stattdessen eine begrenzte TX-Wiederanstoßung:
+
+- Der vorhandene unabhängige Timer prüft auch einen einzelnen ausstehenden
+  TX-Deskriptor. Eine volle/gestoppte Linux-Sendequeue ist keine Voraussetzung.
+- Nur bei gültigem CDP innerhalb des ausstehenden Ringbereichs und weiterhin
+  gesetztem OWN wird eine Beobachtung gestartet. CDP-Fortschritt oder eine
+  Änderung des monotonen Freigabezählers beginnt das Intervall neu. Damit
+  bleiben vollständige Ringumläufe zwischen zwei Stichproben erkennbar.
+  Neue Sendungen und RX-Interrupts verdecken keinen stehenden TX-Tail.
+- Nach mindestens fünf Sekunden ohne diesen Fortschritt werden TRXRDY und
+  TXFD erneut gesetzt, frühestens weitere fünf Sekunden später erneut.
+  Fünf Sekunden sind unsere Linux-Retry-Regel, keine rekonstruierte OEM-Zeit.
+  Die tatsächliche Reaktion erfolgt beim nächsten Watchdog-Durchlauf.
+- Leerer Ring, ungültiger/außerhalb liegender CDP oder gelöschtes OWN beenden
+  diese Beobachtung. Nur **CDP vorgerückt und OWN gelöscht** erlaubt weiterhin
+  das Planen der TX-Freigabe durch NAPI. Zeitablauf ersetzt diesen Beleg nicht.
+- Der Timer ändert keine Deskriptoren, DMA-Zuordnungen, Basis-/Ringzeiger,
+  RX-Zustände oder DSA-/L2-Tabellen. Der bestehende explizite TX-Timeout
+  verwendet nun denselben TX-Lock für seinen Anstoß und beginnt anschließend
+  ein neues Beobachtungsintervall. Öffnen/Schließen verwirft alte Beobachtungen.
+
+`tx_watchdog_rekicks` ist über `ethtool -S` sichtbar. Die bestehende
+Treiber-proc-Ansicht meldet zusätzlich
+`tx_progress enabled=… stall_ms=5000 armed=… rekicks=…`.
+Diese Anzeigen starten keine Recovery. AC23/RD05 erhalten durch diese
+Erweiterung keinen neuen automatischen Recovery-Pfad. Die auf MW5 bereits
+deaktivierten Softwarebeschleuniger bleiben deaktiviert.
+`mw5-accel status` zeigt die neue `tx_progress`-Zeile ebenfalls an.
+
+Ein erneuter Anstoß kann eine ausbleibende TX-Aktivierung beheben, garantiert
+aber keine Heilung eines tieferen Hardware-/DMA-Stillstands. Der ursprüngliche
+Netzausfall ist damit weiterhin erst auf dem Router unter Last nachzuprüfen.
 
 ## MW5: Switch-Familie anhand der tatsächlichen ID
 
@@ -172,6 +231,20 @@ gezielt adressierbar, aber noch nicht vollständig rekonstruiert.
 - Die gesamte Host-Regression umfasst jetzt 38 bestandene Tests. Die
   unveränderten WLAN-Varianten wurden in der vorigen Änderung bereits als
   MIPS-Objekte geprüft; sie wurden für diese Switch-Änderung nicht neu gebaut.
+
+Für die TX-Erweiterung führt die Watchdog-Regression die tatsächlichen
+C-Funktionen zusätzlich mit stehendem Einzelpaket, weiterlaufenden RX-IRQs,
+neuen Sendungen, CDP-Fortschritt, kompletten Ringumläufen, fehlerhaftem CDP,
+OWN/CDP-Widerspruch und überlaufenden jiffies aus. Sie prüft die
+Fünf-Sekunden-Grenze und Wiederholungsbegrenzung, ausbleibende Ringänderungen
+sowie die anschließende reguläre NAPI-Freigabe. OWN und Zeitkonstanten stammen
+direkt aus dem Treiber. Das Ethernet-Objekt wird ebenfalls gegen den exakten
+Linux-6.6.114-Kernel für MIPS32R2 Little Endian ohne WEXT gebaut.
+Dabei wird der bereits im Repository vorhandene OpenWrt-Backport 703
+(`flow_rule_has_control_flags`) auf eine separate Kopie von
+`include/net/flow_offload.h` angewendet. Der Kernel-Testbaum bleibt unverändert.
+Boardprofile, klassischer MW5-Routingpfad und der auf den aktuellen
+coherent-DMA-/CLI-Stand angepasste MW5-Baseline-Prüfer bestehen ebenfalls.
 
 Das ist kein vollständiger OpenWrt-Firmware-/MODPOST-Build und kein
 Hardwaretest. Nach einem solchen Build und Flashen: Gerät vollständig vom
