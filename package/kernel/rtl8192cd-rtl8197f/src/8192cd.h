@@ -5816,6 +5816,9 @@ struct priv_shared_info {
 	size_t				linux6_calibration_len;
 	const void			*linux6_factory;
 	size_t				linux6_factory_len;
+	u8				linux6_factory_format;
+	u32				linux6_factory_applied;
+	u32				linux6_factory_rejected;
 	u8				linux6_radio_index;
 	bool				linux6_irq_requested;
 #endif
@@ -9595,6 +9598,7 @@ struct _device_info_ {
 	size_t calibration_len;
 	const void *factory;
 	size_t factory_len;
+	u8 factory_format;
 	u8 radio_index;
 	u8 rfe_type;
 	u8 mac_addr[ETH_ALEN];

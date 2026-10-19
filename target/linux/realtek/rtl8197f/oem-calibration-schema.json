@@ -1,0 +1,311 @@
+{
+  "schema": 1,
+  "description": "Structural OEM APMIB metadata only; no factory values or private images. RD05 offsets feed the Linux6 H601 parser. AC23 uses the Tenda key/value store, not these packed offsets.",
+  "boards": {
+    "rd05": {
+      "library_path": "/usr/lib/libapmib.so",
+      "library_sha256": "bc1f256b52b6d1e51ad4eb26d68031cbb40852527fbf65995182224e1d55e8a4",
+      "hw_setting_size": 6047,
+      "wlan_root_offset": 1033,
+      "radio_count": 2,
+      "radio_stride": 2507,
+      "fields": [
+        {
+          "key": "TX_POWER_CCK_A",
+          "offset": 48,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_CCK_B",
+          "offset": 62,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_HT40_1S_A",
+          "offset": 76,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_HT40_1S_B",
+          "offset": 90,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_HT40_2S",
+          "offset": 104,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_HT20",
+          "offset": 118,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_OFDM",
+          "offset": 132,
+          "size": 14
+        },
+        {
+          "key": "11N_XCAP",
+          "offset": 157,
+          "size": 1
+        },
+        {
+          "key": "11N_TSSI1",
+          "offset": 158,
+          "size": 1
+        },
+        {
+          "key": "11N_TSSI2",
+          "offset": 159,
+          "size": 1
+        },
+        {
+          "key": "11N_THER",
+          "offset": 160,
+          "size": 1
+        },
+        {
+          "key": "11N_THER_2",
+          "offset": 166,
+          "size": 1
+        },
+        {
+          "key": "11N_THER_3",
+          "offset": 167,
+          "size": 1
+        },
+        {
+          "key": "11N_THER_4",
+          "offset": 168,
+          "size": 1
+        },
+        {
+          "key": "TX_POWER_5G_HT40_1S_A",
+          "offset": 173,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_5G_HT40_1S_B",
+          "offset": 369,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_DIFF_5G_HT40_2S",
+          "offset": 565,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_DIFF_5G_HT20",
+          "offset": 761,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_DIFF_5G_OFDM",
+          "offset": 957,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_TSSI_CCK_A",
+          "offset": 1153,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_TSSI_CCK_B",
+          "offset": 1167,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_TSSI_HT40_1S_A",
+          "offset": 1209,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_TSSI_HT40_1S_B",
+          "offset": 1223,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_TSSI_5G_HT40_1S_A",
+          "offset": 1265,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_TSSI_5G_HT40_1S_B",
+          "offset": 1461,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_TSSI_5G_HT40_1S_C",
+          "offset": 1657,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_TSSI_5G_HT40_1S_D",
+          "offset": 1853,
+          "size": 196
+        },
+        {
+          "key": "11N_TSSI_ENABLE",
+          "offset": 2049,
+          "size": 1
+        }
+      ]
+    },
+    "ac23": {
+      "library_path": "/lib/libapmib.so",
+      "library_sha256": "9c2344947e84c0fbd8518117fe2058c19235c39ac1f17a076eae3c36c11d3419",
+      "hw_setting_size": 6929,
+      "wlan_root_offset": 13,
+      "radio_count": 2,
+      "radio_stride": 3395,
+      "fields": [
+        {
+          "key": "TX_POWER_CCK_A",
+          "offset": 48,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_CCK_B",
+          "offset": 62,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_HT40_1S_A",
+          "offset": 76,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_HT40_1S_B",
+          "offset": 90,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_HT40_2S",
+          "offset": 104,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_HT20",
+          "offset": 118,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_OFDM",
+          "offset": 132,
+          "size": 14
+        },
+        {
+          "key": "11N_XCAP",
+          "offset": 149,
+          "size": 1
+        },
+        {
+          "key": "11N_TSSI1",
+          "offset": 150,
+          "size": 1
+        },
+        {
+          "key": "11N_TSSI2",
+          "offset": 151,
+          "size": 1
+        },
+        {
+          "key": "11N_THER",
+          "offset": 152,
+          "size": 1
+        },
+        {
+          "key": "11N_THER_2",
+          "offset": 158,
+          "size": 1
+        },
+        {
+          "key": "11N_THER_3",
+          "offset": 159,
+          "size": 1
+        },
+        {
+          "key": "11N_THER_4",
+          "offset": 160,
+          "size": 1
+        },
+        {
+          "key": "TX_POWER_5G_HT40_1S_A",
+          "offset": 165,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_5G_HT40_1S_B",
+          "offset": 361,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_DIFF_5G_HT40_2S",
+          "offset": 557,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_DIFF_5G_HT20",
+          "offset": 753,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_DIFF_5G_OFDM",
+          "offset": 949,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_TSSI_CCK_A",
+          "offset": 1145,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_TSSI_CCK_B",
+          "offset": 1159,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_TSSI_HT40_1S_A",
+          "offset": 1201,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_TSSI_HT40_1S_B",
+          "offset": 1215,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_TSSI_5G_HT40_1S_A",
+          "offset": 1257,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_TSSI_5G_HT40_1S_B",
+          "offset": 1453,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_TSSI_5G_HT40_1S_C",
+          "offset": 1649,
+          "size": 196
+        },
+        {
+          "key": "TX_POWER_TSSI_5G_HT40_1S_D",
+          "offset": 1845,
+          "size": 196
+        },
+        {
+          "key": "11N_TSSI_ENABLE",
+          "offset": 2041,
+          "size": 1
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "repository": "tobyw121/Openwrt_RTL",
+    "commit": "e6d68e9067f54b695022f61ed52e50dc56c5a7b7",
+    "dump_directory": "openwrt24.10-realtek-rtl8197f-mw5/fullflash-templates"
+  }
+}

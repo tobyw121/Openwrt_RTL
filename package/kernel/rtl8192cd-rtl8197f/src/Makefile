@@ -10,6 +10,7 @@ ifeq ($(CONFIG_RTL8192CD_LINUX6_BUS),y)
 EXTRA_CFLAGS += -DRTK_NL80211
 rtl8192cd-objs += linux6/rtl8192cd_core.o \
 	linux6/rtl8192cd_board.o \
+	linux6/rtl8192cd_factory.o \
 	linux6/rtl8197f_soc.o \
 	linux6/rtl8822b_pci.o
 endif

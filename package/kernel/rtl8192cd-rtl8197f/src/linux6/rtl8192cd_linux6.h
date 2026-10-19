@@ -26,6 +26,7 @@ struct rtl8192cd_linux6_board_data {
 	size_t calibration_len;
 	void *factory;
 	size_t factory_len;
+	u8 factory_format;
 };
 
 struct rtl8192cd_linux6_hw {
@@ -47,6 +48,7 @@ int rtl8192cd_linux6_parse_board_data(struct device *dev,
 				      int default_mac_increment);
 
 int rtl8192cd_linux6_attach(struct rtl8192cd_linux6_hw *hw);
+void rtl8192cd_linux6_apply_factory(struct rtl8192cd_priv *priv);
 void rtl8192cd_linux6_detach(struct rtl8192cd_linux6_hw *hw);
 
 int rtl8197f_soc_register(void);

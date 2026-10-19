@@ -10857,6 +10857,10 @@ do_hw_init:
 		if(GET_CHIP_VER(priv) == VERSION_8192F)
 			hard_code_8192f_mibs(priv);
 #endif
+#ifdef CONFIG_RTL8192CD_LINUX6_BUS
+		/* Board RF values win over vendor defaults on every reopen/recovery. */
+		rtl8192cd_linux6_apply_factory(priv);
+#endif
 		if (IS_ROOT_INTERFACE(priv))
 			rtl8197f_wlan_phase_set(230, "hardware-init-dispatch", 0);
 		rc = rtl8192cd_init_hw_PCI(priv);
@@ -16721,6 +16725,7 @@ void *rtl8192cd_init_one(struct sdio_func *psdio_func, void *ent, struct _device
 			priv->pshare->linux6_calibration_len = wdev->calibration_len;
 			priv->pshare->linux6_factory = wdev->factory;
 			priv->pshare->linux6_factory_len = wdev->factory_len;
+			priv->pshare->linux6_factory_format = wdev->factory_format;
 			priv->pshare->linux6_radio_index = wdev->radio_index;
 			priv->pshare->linux6_root_priv = priv;
 			skb_queue_head_init(&priv->pshare->linux6_rx_delivery);
@@ -18544,50 +18549,15 @@ if (GET_HCI_TYPE(priv) == RTL_HCI_PCIE) {
 			priv->pmib->dot11RFEntry.trswitch = 1;
 		}
 
-		/* v44.33: MW5 OEM RF calibration fallback.  The integrated 8197FS
-		 * does not traverse a usable EfuseCmdInit VERSION_8197F overlay path
-		 * in this Linux6 build.  Preserve the recovered Tenda wlan1 RFE5
-		 * crystal/thermal and per-channel 2.4 GHz tables. */
-		if (wdev->radio_index == 1 && priv->pmib->dot11RFEntry.rfe_type == 5) {
-			static const u8 cck_a[MAX_2G_CHANNEL_NUM] = {
-				0x25,0x25,0x25,0x26,0x26,0x26,0x26,0x26,0x26,0x27,0x27,0x27,0x27,0x27 };
-			static const u8 cck_b[MAX_2G_CHANNEL_NUM] = {
-				0x1f,0x1f,0x1f,0x21,0x21,0x21,0x21,0x21,0x21,0x20,0x20,0x20,0x20,0x20 };
-			static const u8 ht_a[MAX_2G_CHANNEL_NUM] = {
-				0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x21,0x21,0x21,0x21,0x21 };
-			static const u8 ht_b[MAX_2G_CHANNEL_NUM] = {
-				0x1c,0x1c,0x1c,0x1c,0x1c,0x1c,0x1c,0x1c,0x1c,0x1d,0x1d,0x1d,0x1d,0x1d };
-			static const u8 diff_2s[MAX_2G_CHANNEL_NUM] = { 0 };
-			static const u8 diff_20[MAX_2G_CHANNEL_NUM] = {
-				0,0,0,0,0,0,0,0,0,0x11,0x11,0x11,0x11,0 };
-			static const u8 diff_ofdm[MAX_2G_CHANNEL_NUM] = {
-				0x11,0x11,0x11,0x22,0x22,0x22,0x22,0x22,0x22,0x33,0x33,0x33,0x33,0 };
-
-			priv->pmib->dot11RFEntry.xcap = 45;
-			priv->pmib->dot11RFEntry.share_xcap = 1;
-			priv->pmib->dot11RFEntry.ther = 39;
-			/* v44.44: recovered MW5 wlan1 MIB baseline. cfg80211/hostapd may
-			 * subsequently overlay BSS-specific beacon/DTIM values. */
+		/* Keep the MW5 BSS baseline, but obtain RF calibration from this
+		 * device's factory NVMEM rather than another unit's constants. */
+		priv->pmib->dot11RFEntry.share_xcap = 1;
+		if (wdev->radio_index == 1) {
 			priv->pmib->dot11StationConfigEntry.dot11SupportedRates = 0x0fff;
 			priv->pmib->dot11StationConfigEntry.dot11BasicRates = 0x000f;
 			priv->pmib->dot11StationConfigEntry.dot11BeaconPeriod = 100;
 			priv->pmib->dot11StationConfigEntry.dot11DTIMPeriod = 3;
 			priv->pmib->dot11StationConfigEntry.beacon_rate = 0xff;
-			memcpy(priv->pmib->dot11RFEntry.pwrlevelCCK_A, cck_a, sizeof(cck_a));
-			memcpy(priv->pmib->dot11RFEntry.pwrlevelCCK_B, cck_b, sizeof(cck_b));
-			memcpy(priv->pmib->dot11RFEntry.pwrlevelHT40_1S_A, ht_a, sizeof(ht_a));
-			memcpy(priv->pmib->dot11RFEntry.pwrlevelHT40_1S_B, ht_b, sizeof(ht_b));
-			memcpy(priv->pmib->dot11RFEntry.pwrdiffHT40_2S, diff_2s, sizeof(diff_2s));
-			memcpy(priv->pmib->dot11RFEntry.pwrdiffHT20, diff_20, sizeof(diff_20));
-			memcpy(priv->pmib->dot11RFEntry.pwrdiffOFDM, diff_ofdm, sizeof(diff_ofdm));
-			dev_info(wdev->linux_dev,
-				 "MW5-OEM-RFCAL: radio=1 RFE5 xcap=45 ther=39 rates=0xfff/basic=0xf bcn=100/dtim=3 bcnrate=auto 2g-power-table=loaded\n");
-		} else if (wdev->radio_index == 0 && priv->pmib->dot11RFEntry.rfe_type == 6) {
-			priv->pmib->dot11RFEntry.xcap = 34;
-			priv->pmib->dot11RFEntry.share_xcap = 1;
-			priv->pmib->dot11RFEntry.ther = 24;
-			dev_info(wdev->linux_dev,
-				 "MW5-OEM-RFCAL: radio=0 RFE6 xcap=34 ther=24\n");
 		}
 #endif
 		if (wdev->mac_valid) {
@@ -19426,6 +19396,10 @@ if (GET_HCI_TYPE(priv) == RTL_HCI_PCIE) {
 	rc = ReadAdapterInfo8192CE(priv);
 	if (rc)
 		goto err_out_dev;
+#endif
+
+#ifdef CONFIG_RTL8192CD_LINUX6_BUS
+	rtl8192cd_linux6_apply_factory(priv);
 #endif
 
 #ifdef CONFIG_PUMA_UDMA_SUPPORT

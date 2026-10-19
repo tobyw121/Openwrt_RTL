@@ -66,6 +66,7 @@ int rtl8192cd_linux6_attach(struct rtl8192cd_linux6_hw *hw)
 	wdev->calibration_len = hw->board.calibration_len;
 	wdev->factory = hw->board.factory;
 	wdev->factory_len = hw->board.factory_len;
+	wdev->factory_format = hw->board.factory_format;
 	if (hw->board.mac_valid) {
 		ether_addr_copy(wdev->mac_addr, hw->board.mac_addr);
 		wdev->mac_valid = true;
@@ -407,6 +408,10 @@ int rtl8192cd_linux6_attach(struct rtl8192cd_linux6_hw *hw)
 					      &hw->board.calibration_len);
 			debugfs_create_size_t("factory_len", 0444, hw->debugfs_dir,
 					      &hw->board.factory_len);
+			debugfs_create_u32("factory_applied", 0444, hw->debugfs_dir,
+					   &hw->priv->pshare->linux6_factory_applied);
+			debugfs_create_u32("factory_rejected", 0444, hw->debugfs_dir,
+					   &hw->priv->pshare->linux6_factory_rejected);
 			/* v44.20: distinguish cfg80211 AP state from real hardware beacon TX. */
 			debugfs_create_u16("beacon_len", 0444, hw->debugfs_dir,
 					   &hw->priv->tx_beacon_len);

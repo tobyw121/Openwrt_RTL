@@ -291,6 +291,7 @@
 	realtek,mac-address-increment = <1>;
 	nvmem-cells = <&mw5_factory>;
 	nvmem-cell-names = "factory";
+	realtek,factory-format = "tenda-kv";
 	status = "okay";
 };
 
@@ -320,5 +321,6 @@
 		realtek,mac-address-increment = <4>;
 		nvmem-cells = <&mw5_factory>;
 		nvmem-cell-names = "factory";
+	realtek,factory-format = "tenda-kv";
 	};
 };

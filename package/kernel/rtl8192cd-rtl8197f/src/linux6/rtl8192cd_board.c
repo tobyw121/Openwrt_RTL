@@ -7,6 +7,7 @@
 #include <linux/slab.h>
 
 #include "rtl8192cd_linux6.h"
+#include "rtl8192cd_factory_format.h"
 
 static void rtl8192cd_linux6_kfree(void *data)
 {
@@ -67,6 +68,9 @@ static const u8 *rtl8192cd_factory_value(const void *factory, size_t factory_len
 		return NULL;
 
 	for (i = 0; i + key_len + 1 < factory_len; i++) {
+		if (i && buf[i - 1] != '\0' && buf[i - 1] != '\n' &&
+		    buf[i - 1] != '\r')
+			continue;
 		if (memcmp(buf + i, key, key_len) || buf[i + key_len] != '=')
 			continue;
 
@@ -81,15 +85,15 @@ static const u8 *rtl8192cd_factory_value(const void *factory, size_t factory_len
 	return NULL;
 }
 
-static int rtl8192cd_factory_base_mac(const void *factory, size_t factory_len,
-				      u8 *addr)
+static int rtl8192cd_factory_mac(const void *factory, size_t factory_len,
+				 const char *key, u8 *addr)
 {
 	const u8 *value;
 	size_t len;
 	int hi, lo;
 	int i;
 
-	value = rtl8192cd_factory_value(factory, factory_len, "HW_NIC0_ADDR", &len);
+	value = rtl8192cd_factory_value(factory, factory_len, key, &len);
 	if (!value || len != ETH_ALEN * 2)
 		return -ENOENT;
 
@@ -144,6 +148,8 @@ int rtl8192cd_linux6_parse_board_data(struct device *dev,
 				      int default_mac_increment)
 {
 	u32 value;
+	const char *format;
+	char mac_key[32];
 	int mac_inc = default_mac_increment;
 	int ret;
 
@@ -172,17 +178,35 @@ int rtl8192cd_linux6_parse_board_data(struct device *dev,
 	if (!device_property_read_u32(dev, "realtek,mac-address-increment", &value))
 		mac_inc = (int)value;
 
-	/* Read the complete vendor factory store once.  The RF layer consumes its
-	 * radio-specific records through the vendor eFuse command table. */
 	ret = rtl8192cd_linux6_read_cell(dev, "factory",
 					&board->factory, &board->factory_len);
 	if (ret)
 		return ret;
+	if (board->factory_len) {
+		ret = device_property_read_string(dev, "realtek,factory-format", &format);
+		if (ret)
+			return dev_err_probe(dev, ret, "factory requires an explicit format\n");
+		if (!strcmp(format, "tenda-kv"))
+			board->factory_format = RTL_FACTORY_TENDA_KV;
+		else if (!strcmp(format, "rd05-h601"))
+			board->factory_format = RTL_FACTORY_RD05_H601;
+		else
+			return dev_err_probe(dev, -EINVAL, "unknown factory format\n");
+		if (board->factory_len != 0x10000)
+			return dev_err_probe(dev, -EINVAL, "factory cell must be 64 KiB\n");
+	}
 
 	ret = rtl8192cd_linux6_read_mac_cell(dev, board->mac_addr);
-	if (ret == -ENOENT || ret == -ENODEV || ret == -ENODATA) {
-		ret = rtl8192cd_factory_base_mac(board->factory, board->factory_len,
-						 board->mac_addr);
+	if ((ret == -ENOENT || ret == -ENODEV || ret == -ENODATA) &&
+	    board->factory_format == RTL_FACTORY_TENDA_KV) {
+		snprintf(mac_key, sizeof(mac_key), "HW_WLAN%u_WLAN_ADDR", board->radio_index);
+		ret = rtl8192cd_factory_mac(board->factory, board->factory_len,
+					  mac_key, board->mac_addr);
+		if (!ret)
+			mac_inc = 0; /* Already a per-radio address, not NIC0. */
+		else if (ret == -ENOENT)
+			ret = rtl8192cd_factory_mac(board->factory, board->factory_len,
+						  "HW_NIC0_ADDR", board->mac_addr);
 	}
 	if (!ret) {
 		if (mac_inc)

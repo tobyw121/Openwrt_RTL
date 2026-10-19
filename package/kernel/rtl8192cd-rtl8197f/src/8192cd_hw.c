@@ -28183,110 +28183,6 @@ static void efuse_ReadAllMap(struct rtl8192cd_priv *priv, unsigned char *Efuse)
  * 11/13/2008 	MHC		Create Version 0.
  *
  *---------------------------------------------------------------------------*/
-#ifdef CONFIG_RTL8192CD_LINUX6_BUS
-static int rtl8192cd_linux6_factory_efuse_overlay(struct rtl8192cd_priv *priv)
-{
-	const u8 *factory;
-	const char *prefix;
-	size_t factory_len, prefix_len;
-	size_t i;
-	int applied = 0;
-
-	if (!priv->pshare || !priv->pshare->linux6_factory ||
-	    !priv->pshare->linux6_factory_len || !priv->efuseCmd ||
-	    !priv->efuseCmdNum)
-		return 0;
-
-	factory = priv->pshare->linux6_factory;
-	factory_len = priv->pshare->linux6_factory_len;
-	prefix = priv->pshare->linux6_radio_index ? "HW_WLAN1_" : "HW_WLAN0_";
-	prefix_len = strlen(prefix);
-
-	for (i = 0; i + prefix_len + 2 < factory_len; i++) {
-		const u8 *entry, *eq, *end;
-		const char *vendor_name;
-		char generated_name[96];
-		char *line;
-		size_t suffix_len, value_len, name_len;
-		int j;
-
-		if (memcmp(factory + i, prefix, prefix_len))
-			continue;
-
-		entry = factory + i;
-		end = entry;
-		while (end < factory + factory_len && *end != '\0' &&
-		       *end != '\n' && *end != '\r' && *end != 0xff)
-			end++;
-		if (end == factory + factory_len)
-			break;
-
-		eq = memchr(entry, '=', end - entry);
-		if (!eq || eq <= entry + prefix_len || eq + 1 == end) {
-			i = end - factory;
-			continue;
-		}
-
-		suffix_len = eq - (entry + prefix_len);
-		if (suffix_len == strlen("WLAN_ADDR") &&
-		    !memcmp(entry + prefix_len, "WLAN_ADDR", suffix_len)) {
-			/* The vendor command table historically calls the MAC field WLAN0
-			 * even for the second on-chip radio. */
-			vendor_name = "HW_WLAN0_WLAN_ADDR";
-			name_len = strlen(vendor_name);
-		} else {
-			if (suffix_len + 4 >= sizeof(generated_name)) {
-				i = end - factory;
-				continue;
-			}
-			memcpy(generated_name, "HW_", 3);
-			memcpy(generated_name + 3, entry + prefix_len, suffix_len);
-			generated_name[3 + suffix_len] = '\0';
-			vendor_name = generated_name;
-			name_len = 3 + suffix_len;
-		}
-
-		/* Only feed names present in the chip-specific vendor table.  This is
-		 * the safety boundary that preserves Realtek's offset/type mapping. */
-		for (j = 0; j < priv->efuseCmdNum; j++)
-			if (strlen(priv->efuseCmd[j].name) == name_len &&
-			    !memcmp(priv->efuseCmd[j].name, vendor_name, name_len))
-				break;
-		if (j == priv->efuseCmdNum) {
-			i = end - factory;
-			continue;
-		}
-
-		value_len = end - (eq + 1);
-		if (value_len > 2048) {
-			i = end - factory;
-			continue;
-		}
-
-		line = kmalloc(name_len + 1 + value_len + 1, GFP_KERNEL);
-		if (!line)
-			break;
-		memcpy(line, vendor_name, name_len);
-		line[name_len] = '=';
-		memcpy(line + name_len + 1, eq + 1, value_len);
-		line[name_len + 1 + value_len] = '\0';
-		efuse_set(priv, line);
-		kfree(line);
-		applied++;
-		i = end - factory;
-	}
-
-	if (applied) {
-		memcpy(priv->EfuseMap[EFUSE_INIT_MAP],
-		       priv->EfuseMap[EFUSE_MODIFY_MAP], priv->EfuseMapLen);
-		dev_info(priv->pshare->linux_dev,
-			 "applied %d radio%u factory calibration records to eFuse shadow\n",
-			 applied, priv->pshare->linux6_radio_index);
-	}
-
-	return applied;
-}
-#endif
 
 static void EFUSE_ShadowMapUpdate(struct rtl8192cd_priv *priv)
 {
@@ -28318,12 +28214,6 @@ static void EFUSE_ShadowMapUpdate(struct rtl8192cd_priv *priv)
 		memcpy(&priv->EfuseMap[EFUSE_MODIFY_MAP][0],
 		       &priv->EfuseMap[EFUSE_INIT_MAP][0], priv->EfuseMapLen);
 	}
-
-#ifdef CONFIG_RTL8192CD_LINUX6_BUS
-	/* MW5's NVMEM "factory" cell is a Tenda key/value store, not a raw eFuse.
-	 * Overlay only keys recognized by this chip's existing efuseCmd table. */
-	rtl8192cd_linux6_factory_efuse_overlay(priv);
-#endif
 }
 
 #if defined(CONFIG_RTL_88E_SUPPORT) || defined(CONFIG_RTL_8723B_SUPPORT)

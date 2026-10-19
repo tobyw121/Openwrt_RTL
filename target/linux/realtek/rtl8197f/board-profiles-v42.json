@@ -23,7 +23,10 @@
         "OEM /proc/rtl865x and rtl_8367 dumps",
         "RD05 full SPI dump",
         "Realtek RTL8197F and RTL8367D SDK sources"
-      ]
+      ],
+      "factory_format": "rd05-h601",
+      "factory_offset": 262144,
+      "factory_size": 65536
     },
     "tenda,nova-mw5": {
       "confidence": "medium-high",
@@ -102,7 +105,10 @@
       "soc_internal_lan_vid": 9,
       "soc_internal_host_port": 0,
       "soc_internal_pipeline_policy": "OEM-derived rtl865x PVID/VLAN/netif/L2/unknown-to-CPU plus DHCPv4/DHCPv6/PPPoE ingress ACL seed; uses runtime eth0 MAC",
-      "soc_internal_pipeline_evidence": "v42.26 hardware: RTL8363 LAN/WAN counters rise and both links reach forwarding, while eth0 RX remains zero and legacy-pipeline is disabled; Realtek RTL8367R OEM path enables unknown-VID-to-CPU and rtl865x_enableRtl8367ToCpuAcl()."
+      "soc_internal_pipeline_evidence": "v42.26 hardware: RTL8363 LAN/WAN counters rise and both links reach forwarding, while eth0 RX remains zero and legacy-pipeline is disabled; Realtek RTL8367R OEM path enables unknown-VID-to-CPU and rtl865x_enableRtl8367ToCpuAcl().",
+      "factory_format": "tenda-kv",
+      "factory_offset": 131072,
+      "factory_size": 65536
     },
     "tenda,ac23": {
       "confidence": "medium-low",
@@ -121,15 +127,19 @@
         "factory markers and cr6c header",
         "board chip inventory",
         "RTL8197F + RTL8367RB SDK reference designs",
-        "RTL8814B HAL/PHYDM sources"
+        "RTL8814B HAL/PHYDM sources",
+        "OEM libapmib RF field metadata and extracted gpio_conf; nice/Tenda-XZ rootfs at 0x26a012"
       ],
       "unresolved": [
         "RAM size requires UART confirmation",
         "Copper port order and CPU-port wiring require live validation",
         "LED/button/reset GPIOs are not proven",
-        "Stock firmware contains no plain SquashFS magic; OpenWrt combined layout remains hardware-test gated"
+        "OpenWrt combined image layout requires hardware validation; OEM nice/Tenda-XZ rootfs is now readable at 0x26a012"
       ],
-      "flash_erase_size": 65536
+      "flash_erase_size": 65536,
+      "factory_format": "tenda-kv",
+      "factory_offset": 131072,
+      "factory_size": 65536
     },
     "iball,wrd12gn": {
       "confidence": "medium-high",

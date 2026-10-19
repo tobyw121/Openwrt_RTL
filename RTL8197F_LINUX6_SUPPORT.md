@@ -60,6 +60,23 @@ einen anderen CPU-Port oder eine andere Switch-Initialisierung umgestellt.
   Linux6-Paketpfad deaktiviert. Die bestehende MW5-Abschaltung der
   Softwarebeschleuniger bleibt bestehen.
 
+## Aus den OEM-Dumps übernommene Boarddaten
+
+[OEM_DUMP_INTEGRATION.md](OEM_DUMP_INTEGRATION.md) beschreibt den neuen
+Factory-Import und seine Grenzen. MW5 und AC23 lesen begrenzte Tenda-
+Datensätze, RD05 seinen anhand der eigenen OEM-Bibliothek rekonstruierten
+H601-Block einschließlich Prüfsumme. Alle drei DTS binden beide Radios an
+den jeweiligen schreibgeschützten Factory-Bereich an. Einzelfelder werden
+validiert; die individuellen Werte einer Referenzplatine werden nicht mehr
+als MW5-Konstanten eingebaut. Die Daten gelten nach den Standardwerten und
+bei jedem erneuten Hardwarestart. WEXT ist dafür nicht erforderlich.
+
+Die neuen read-only Debugfs-Werte `factory_applied` und `factory_rejected`
+zeigen die übernommenen bzw. verworfenen RF-Felder des letzten Imports.
+Das bestätigt noch keine vollständige Kalibrierung oder bessere Reichweite.
+Nicht zugeordnete AC-Leistungsdifferenzfelder, Regulatory-Verhalten,
+Temperaturregelung und Hardwaretests bleiben offen.
+
 ## Reproduzierbare Prüfungen
 
 Host-Regressionen und Board-Konsistenz:
@@ -111,7 +128,7 @@ zusätzlich geprüft werden. Pro Board einen eigenen Build mit passendem
 
 Ausgeführt in der Cloud: alle vier Varianten als MIPS32R2/Little-Endian-Objekt
 gegen Linux 6.6.114 und die gepatchten OpenWrt-Backports 6.12.96 übersetzt und
-gelinkt; keine unaufgelösten WEXT-Symbole. Außerdem 30 Host-Regressionstests,
+gelinkt; keine unaufgelösten WEXT-Symbole. Außerdem 32 Host-Regressionstests,
 vier DTS-Kompilierungen, Boardprofil- und MW5-Routing-Prüfung bestanden.
 Die SDK-Quellen erzeugen weiterhin Compilerwarnungen. Ein vollständiger
 Firmware-/MODPOST-Build und Tests auf den Geräten wurden nicht durchgeführt.

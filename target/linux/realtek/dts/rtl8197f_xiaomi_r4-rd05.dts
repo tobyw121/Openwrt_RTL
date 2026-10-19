@@ -261,6 +261,15 @@
 			label = "factory";
 			reg = <0x00040000 0x00010000>;
 			read-only;
+
+			nvmem-layout {
+				compatible = "fixed-layout";
+				#address-cells = <1>;
+				#size-cells = <1>;
+				rd05_factory: calibration@0 {
+					reg = <0 0x10000>;
+				};
+			};
 		};
 
 		partition@50000 {
@@ -297,9 +306,10 @@
 	interrupts = <29 5>;
 	realtek,radio-index = <1>;
 	realtek,mac-address-increment = <0>;
-	nvmem-cells = <&wl1_macaddr>;
-	nvmem-cell-names = "mac-address";
-	/* No MW5 RFE or factory format: preserve the vendor/eFuse selection. */
+	nvmem-cells = <&wl1_macaddr>, <&rd05_factory>;
+	nvmem-cell-names = "mac-address", "factory";
+	realtek,factory-format = "rd05-h601";
+	/* RD05 H601 calibration, while preserving the board/eFuse RFE selection. */
 	status = "okay";
 };
 
@@ -322,8 +332,9 @@
 		reg = <0x00000000 0 0 0 0>;
 		realtek,radio-index = <0>;
 		realtek,mac-address-increment = <0>;
-		nvmem-cells = <&wl0_macaddr>;
-		nvmem-cell-names = "mac-address";
+		nvmem-cells = <&wl0_macaddr>, <&rd05_factory>;
+		nvmem-cell-names = "mac-address", "factory";
+		realtek,factory-format = "rd05-h601";
 	};
 };
 

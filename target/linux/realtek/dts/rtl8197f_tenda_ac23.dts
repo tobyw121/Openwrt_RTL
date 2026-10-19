@@ -167,6 +167,15 @@
 			label = "factory";
 			reg = <0x00020000 0x00010000>;
 			read-only;
+
+			nvmem-layout {
+				compatible = "fixed-layout";
+				#address-cells = <1>;
+				#size-cells = <1>;
+				ac23_factory: calibration@0 {
+					reg = <0 0x10000>;
+				};
+			};
 		};
 
 		/* The stock AC23 dump has a valid cr6c image at 0x30000, but no
@@ -220,7 +229,10 @@
 	interrupt-parent = <&intc>;
 	interrupts = <29 5>;
 	realtek,radio-index = <1>;
-	/* Board RFE/calibration must be verified; never borrow MW5 RFE5. */
+	/* Factory RF fields, independent of the MW5 RFE defaults. */
+	nvmem-cells = <&ac23_factory>;
+	nvmem-cell-names = "factory";
+	realtek,factory-format = "tenda-kv";
 	status = "okay";
 };
 
@@ -241,5 +253,8 @@
 		compatible = "pci10ec,b814";
 		reg = <0x00000000 0 0 0 0>;
 		realtek,radio-index = <0>;
+		nvmem-cells = <&ac23_factory>;
+		nvmem-cell-names = "factory";
+		realtek,factory-format = "tenda-kv";
 	};
 };

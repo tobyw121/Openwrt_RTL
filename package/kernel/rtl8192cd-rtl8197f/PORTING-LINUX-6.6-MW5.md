@@ -34,8 +34,8 @@ smoke build without changing the 6.6 contract.
 
 For `CONFIG_RTL8192CD_LINUX6_BUS`, legacy `ndo_do_ioctl`,
 `wireless_handlers`, private write-register ioctl/proc controls and the old
-hostapd private WEXT configuration path are disabled. RD05/AC23 keep their
-legacy WEXT build variant for now; this port changes the MW5 variant only.
+hostapd private WEXT configuration path are disabled on all four package
+variants. See the top-level `RTL8197F_LINUX6_SUPPORT.md` for the chip matrix.
 
 Linux 6.6 treats `net_device::dev_addr` as read-only driver state. The MW5
 path therefore updates interface addresses with `eth_hw_addr_set()` rather
@@ -49,14 +49,18 @@ DT firmware properties:
 - integrated RTL8197FS: radio index 1, RFE 5, factory MAC increment +1;
 - external RTL8822B: radio index 0, RFE 6, factory MAC increment +4.
 
-The final OpenWrt MW5 DTS exposes the complete 64 KiB Tenda `factory` MTD
-partition as an NVMEM cell to both radios. That partition is **not** a raw
-eFuse dump: it is a NUL-separated `KEY=value` store. The Linux-6 board layer
-reads the base `HW_NIC0_ADDR` and applies the DT `realtek,mac-address-increment`.
-The eFuse shadow update then selects only `HW_WLAN1_*` records for radio 1 and
-`HW_WLAN0_*` records for radio 0, maps recognized names through the original
-Realtek eFuse command table, and updates the in-memory shadow map. Unknown keys
-are ignored and no OTP/eFuse programming operation is performed.
+The MW5 and AC23 DTS expose their complete 64 KiB Tenda `factory` MTD
+partition as an NVMEM cell to both radios. This is a delimited `KEY=value`
+store, not a raw eFuse dump. Per-radio MAC records are preferred; the base
+`HW_NIC0_ADDR` plus DT increment remains the fallback.
+
+`linux6/rtl8192cd_factory.c` imports selected, validated RF MIB fields after
+vendor/eFuse defaults and on every hardware reopen. Tenda scalar values are
+decimal; arrays are bounded hex strings. The previous string-to-eFuse
+shadow overlay and fixed per-device MW5 calibration constants were removed.
+RD05 uses its own checksum-validated H601 binary layout instead. See
+`OEM_DUMP_INTEGRATION.md` at the repository root for exact formats,
+recovered structural metadata, diagnostics and remaining RF limitations.
 
 The generic optional `calibration` NVMEM path is retained for other boards. It
 accepts only a complete logical/shadow eFuse map whose size exactly equals the
@@ -76,14 +80,13 @@ build so it uses the target MIPS toolchain and the target `.config`.
 
 ## Validation status
 
-The Linux 6.6.114 source supplied with this task was used as the API reference.
-A complete exact-6.6 target image build cannot be performed in the supplied runtime
-because the OpenWrt host prerequisites/toolchain are incomplete (notably GNU awk and ncurses development files). The
-modified objects have instead been smoke-compiled against the available Linux
-6.12.96 headers, including MODPOST and final `rtl8192cd.ko` link, with version
-guards retaining the verified Linux 6.6 signatures. The host module is not a
-deployable MW5 binary (wrong architecture/vermagic); it is compile validation,
-not hardware validation.
+The package variants are compiled and linked as MIPS32R2/little-endian
+objects against Linux 6.6.114 and the repository-patched OpenWrt backports
+6.12.96, with WEXT disabled. This checks architecture and kernel API use;
+it does not produce a flashable or MODPOST-validated OpenWrt module.
+See the top-level `RTL8197F_LINUX6_SUPPORT.md` for reproducible commands.
+A full target firmware build, image-size check and physical router tests
+remain required.
 
 One deliberate compatibility boundary remains: the old vendor code precreates
 some VAP/VXD netdevs and historically renamed them dynamically. The Linux-6
