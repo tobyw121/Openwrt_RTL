@@ -6232,6 +6232,8 @@ struct priv_shared_info {
 #ifdef CONFIG_RTL8192CD_LINUX6_BUS
 	/* Linux 6.x RX bottom half: one NAPI instance per physical radio. */
 	struct napi_struct linux6_rx_napi;
+	/* Defer stack delivery until the vendor RX locks have been released. */
+	struct sk_buff_head linux6_rx_delivery;
 	struct rtl8192cd_priv *linux6_root_priv;
 	int linux6_rx_budget;
 	int linux6_rx_work_done;

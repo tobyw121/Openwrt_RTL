@@ -296,9 +296,8 @@ ensure_base_firewall() {
 		uci -q set firewall.mw5_defaults.output='ACCEPT'
 		uci -q set firewall.mw5_defaults.forward='REJECT'
 	fi
-	# v44.65.21: firewall/conntrack remains authoritative. Use Linux software
-	# flow offload by default; netdev/TC HW rule delivery stays fail-closed.
-	uci -q set firewall.@defaults[0].flow_offloading='1'
+	# Port changes and firewall repairs must not re-enable flow offloading.
+	uci -q set firewall.@defaults[0].flow_offloading='0'
 	uci -q set firewall.@defaults[0].flow_offloading_hw='0'
 
 	fz_lan="$(firewall_zone_section lan 2>/dev/null || true)"

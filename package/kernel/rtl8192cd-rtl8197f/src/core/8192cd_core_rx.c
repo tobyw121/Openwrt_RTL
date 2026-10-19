@@ -372,6 +372,23 @@ static int search_first_segment(struct rtl8192cd_priv *priv, struct rx_frinfo **
 
 
 
+#if defined(CONFIG_RTL8192CD_LINUX6_BUS) && defined(CONFIG_MW5_ACCEL)
+static void rtl8192cd_mw5_receive(struct rtl8192cd_priv *priv,
+				struct sk_buff *skb)
+{
+	/* Frames already have an Ethernet protocol/header from eth_type_trans().
+	 * Defer delivery until the owning NAPI poll has released the vendor RX
+	 * locks: GRO can synchronously enter the bridge and transmit back into
+	 * this driver. GRO still traverses Linux bridge/firewall/conntrack.
+	 * Reorder timers and other non-poll producers must keep using netif_rx().
+	 */
+	if (priv->pshare->linux6_napi_polling)
+		skb_queue_tail(&priv->pshare->linux6_rx_delivery, skb);
+	else
+		netif_rx(skb);
+}
+#endif
+
 __PE_IMEM__
 void rx_pkt_exception(struct rtl8192cd_priv *priv, unsigned int cmd)
 {
@@ -1404,11 +1421,8 @@ void rtl_netif_rx(struct rtl8192cd_priv *priv, struct sk_buff *pskb, struct stat
 	if (pskb->len == priv->pshare->rf_ft_var.spec_pktsz-4)
 		priv->ext_stats.spec_netif_rx_pkt++;
 #endif
-	/* MW5 v44.62.11: unconditional telemetry for the Linux netif_rx backlog
-	 * producer.  The failing v44.62.10 capture showed almost exactly 64
-	 * processed softnet entries per NET_RX softirq, while eth0 DMA counters
-	 * remained low.  This counter lets /proc/<wlan>/stats prove or exclude
-	 * rtl8192cd as that enqueue source without changing RX behaviour.
+	/* Count stack handoffs, including NAPI/GRO delivery. Retain the historical
+	 * /proc counter name, but do not interpret it as CPU backlog enqueues.
 	 */
 	priv->ext_stats.netif_rx_pkt++;
 
@@ -2098,6 +2112,8 @@ void rtl_netif_rx(struct rtl8192cd_priv *priv, struct sk_buff *pskb, struct stat
 		#else
 			udma_xmit_skb(0, pskb);
 		#endif
+	#elif defined(CONFIG_RTL8192CD_LINUX6_BUS) && defined(CONFIG_MW5_ACCEL)
+		rtl8192cd_mw5_receive(priv, pskb);
 	#elif defined(__LINUX_2_6__) && defined(RX_TASKLET) && !defined(CONFIG_RTL8672)&& !defined(NOT_RTK_BSP)&& !(defined(__LINUX_3_10__) || defined(__LINUX_3_2__))
 		netif_receive_skb(pskb);
 	#elif defined(CONFIG_RG_WLAN_HWNAT_ACCELERATION) && !defined(CONFIG_ARCH_LUNA_SLAVE)

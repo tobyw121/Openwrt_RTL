@@ -609,10 +609,10 @@ static bool mw5_accel_enable = true;
 module_param(mw5_accel_enable, bool, 0644);
 MODULE_PARM_DESC(mw5_accel_enable,
 		 "MW5 unified accelerator master gate (default on; firewall/conntrack remains authoritative)");
-static bool mw5_accel_sw_enable = true;
+static bool mw5_accel_sw_enable;
 module_param(mw5_accel_sw_enable, bool, 0644);
 MODULE_PARM_DESC(mw5_accel_sw_enable,
-		 "MW5 exact-flow software accelerator (default on; only nf_flow_table-authorized IPv4 TCP/UDP NAT)");
+		 "MW5 exact-flow software accelerator (default off pending hardware stress validation)");
 static bool mw5_accel_hw_enable = true;
 module_param(mw5_accel_hw_enable, bool, 0644);
 MODULE_PARM_DESC(mw5_accel_hw_enable,
@@ -9306,9 +9306,9 @@ static ssize_t rtl8197f_rtk_rd05_proc_write(struct file *file,
 		if (!priv->is_mw5)
 			return -EOPNOTSUPP;
 		WRITE_ONCE(mw5_accel_enable, true);
-		WRITE_ONCE(mw5_accel_sw_enable, true);
 		WRITE_ONCE(mw5_accel_hw_enable, true);
-		priv->accel_sw = true;
+		/* Master/hardware setup must not implicitly opt into software NAT. */
+		priv->accel_sw = READ_ONCE(mw5_accel_sw_enable);
 		priv->accel_hw = true;
 		priv->hw_napt = false;
 		priv->tx_hwlookup = false;

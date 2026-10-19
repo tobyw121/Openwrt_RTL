@@ -16721,6 +16721,7 @@ void *rtl8192cd_init_one(struct sdio_func *psdio_func, void *ent, struct _device
 			priv->pshare->linux6_factory_len = wdev->factory_len;
 			priv->pshare->linux6_radio_index = wdev->radio_index;
 			priv->pshare->linux6_root_priv = priv;
+			skb_queue_head_init(&priv->pshare->linux6_rx_delivery);
 			INIT_WORK(&priv->pshare->cfg80211_work, realtek_process_cfg80211_work);
 			netif_napi_add_weight(dev, &priv->pshare->linux6_rx_napi,
 					rtl8192cd_linux6_napi_poll, 64);
@@ -20278,6 +20279,7 @@ if (GET_HCI_TYPE(priv) == RTL_HCI_USB || GET_HCI_TYPE(priv) == RTL_HCI_SDIO) {
 		if (priv->pshare->linux6_napi_added) {
 			netif_napi_del(&priv->pshare->linux6_rx_napi);
 			priv->pshare->linux6_napi_added = false;
+			skb_queue_purge(&priv->pshare->linux6_rx_delivery);
 		}
 	}
 #endif

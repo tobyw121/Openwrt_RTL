@@ -4937,7 +4937,15 @@ int rtl8192cd_linux6_napi_poll(struct napi_struct *napi, int budget)
 	struct priv_shared_info *pshare =
 		container_of(napi, struct priv_shared_info, linux6_rx_napi);
 	struct rtl8192cd_priv *priv = pshare->linux6_root_priv;
+	struct sk_buff *skb;
 	int work_done;
+
+	/* A zero-budget poll is TX-only. Do not enter the RX engine or complete
+	 * NAPI: the vendor fallback limit would otherwise consume RX descriptors
+	 * without charging them to the networking core's budget.
+	 */
+	if (!budget)
+		return 0;
 
 	if (!priv || !IS_DRV_OPEN(priv)) {
 		napi_complete_done(napi, 0);
@@ -4957,13 +4965,19 @@ int rtl8192cd_linux6_napi_poll(struct napi_struct *napi, int budget)
 #if defined(CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE)
 	pshare->linux6_napi_work_done += work_done;
 #endif
-	pshare->linux6_napi_polling = false;
-	pshare->linux6_rx_budget = 0;
-
 	/* Preserve the vendor software RX queues, but execute their drain from
-	 * the NAPI context instead of scheduling another RX tasklet.
+	 * the NAPI context instead of scheduling another RX tasklet. Keep the
+	 * polling flag set until the drain finishes so these frames also enter
+	 * the delivery queue, rather than the CPU backlog.
 	 */
 	schedule_rxq_tasklet(priv, priv->dev);
+	pshare->linux6_napi_polling = false;
+	pshare->linux6_rx_budget = 0;
+	/* GRO may call back into TX via the bridge. No vendor RX lock may be held
+	 * here. Use a separate queue rather than the CPU backlog/extra softirq.
+	 */
+	while ((skb = skb_dequeue(&pshare->linux6_rx_delivery)) != NULL)
+		napi_gro_receive(napi, skb);
 
 #if defined(CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE)
 	/* v44.55 MW5/RTL8812BRH stability: Report19 proves that MGT/HI0 DOK

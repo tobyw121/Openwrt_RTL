@@ -1,5 +1,8 @@
 # OpenWrt
 
+MW5: see [current stability policy and WLAN RX changes](MW5_STABILITY.md) for
+the software-offload defaults, host regression tests and required hardware tests.
+
 ![OpenWrt logo](include/logo.png)
 
 OpenWrt Project is a Linux operating system targeting embedded devices. Instead

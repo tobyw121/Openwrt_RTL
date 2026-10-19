@@ -43,9 +43,8 @@ need(net, "set dhcp.wan.ignore='1'", "MW5 WAN DHCP-server isolation")
 
 # Firewall/NAT must remain standard lan -> wan routing.
 need(fw, "repair-firewall", "MW5 firewall repair")
-# Firewall/conntrack remain authoritative. Software nft flow offload is allowed,
-# while hardware flowtable/NAPT stays disabled until DMA/DSA is hardware-stable.
-need(fw, "flow_offloading='1'", "MW5 software flow offload default")
+# Keep the normal firewall/conntrack path until load tests establish stability.
+need(fw, "flow_offloading='0'", "MW5 software flow offload disabled")
 need(fw, "flow_offloading_hw='0'", "MW5 hardware flow offload disabled")
 
 if errors:

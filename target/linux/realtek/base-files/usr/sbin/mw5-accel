@@ -25,19 +25,9 @@ uci_bool() {
 }
 
 set_firewall_flow() {
-	on="$1"
 	command -v uci >/dev/null 2>&1 || return 0
-	if [ "$on" = 1 ]; then
-		uci -q set firewall.@defaults[0].flow_offloading='1'
-		# v44.65.21 stability default: use Linux nf_flow_table software
-		# offload, but do not request netdev/TC hardware rule delivery yet.
-		# v44.65.20 observed bind/unbind but no FLOW_CLS_REPLACE, so the
-		# custom exact-flow cache remains fail-closed/idle until retested.
-		uci -q set firewall.@defaults[0].flow_offloading_hw='0'
-	else
-		uci -q set firewall.@defaults[0].flow_offloading='0'
-		uci -q set firewall.@defaults[0].flow_offloading_hw='0'
-	fi
+	uci -q set firewall.@defaults[0].flow_offloading='0'
+	uci -q set firewall.@defaults[0].flow_offloading_hw='0'
 	uci -q commit firewall
 	[ -x /etc/init.d/firewall ] && /etc/init.d/firewall reload >/dev/null 2>&1 || true
 }
@@ -45,25 +35,24 @@ set_firewall_flow() {
 apply() {
 	is_mw5 || return 0
 	enabled="$(uci_bool "$CFG.enabled" 1)"
-	sw="$(uci_bool "$CFG.software" 1)"
 	hw="$(uci_bool "$CFG.hardware" 1)"
 
+	# Migrate saved configurations as well as fresh installs. Neither boot,
+	# master-on nor hardware-on may resurrect either software forwarding path.
+	uci -q set "$CFG.software=0"
+	uci -q commit mw5_accel
+	set_firewall_flow
+	proc_cmd accel-sw-off || return 1
+
 	if [ "$enabled" != 1 ]; then
-		proc_cmd accel-off || true
-		set_firewall_flow 0
-		return 0
+		proc_cmd accel-off
+		return $?
 	fi
 
 	# Start from the unified ownership state. The driver hard-disables all
 	# retired Realtek WFO/HWNAT/HWLOOKUP/EXT_PORT and old NIC offload knobs.
 	proc_cmd accel-on || return 1
-	[ "$sw" = 1 ] || proc_cmd accel-sw-off || true
 	[ "$hw" = 1 ] || proc_cmd accel-hw-off || true
-
-	# v44.65.21: Linux software flow offload is the default fast path while
-	# TC_SETUP_FT/netdev offload is kept disabled. The custom cache remains
-	# enabled but idle/fail-closed; legacy RTL865x autonomous L34 is still off.
-	if [ "$sw" = 1 ]; then set_firewall_flow 1; else set_firewall_flow 0; fi
 }
 
 status() {
@@ -75,7 +64,7 @@ status() {
 	fi
 	if command -v uci >/dev/null 2>&1; then
 		echo "config_enabled=$(uci -q get $CFG.enabled 2>/dev/null || echo 1)"
-		echo "config_software=$(uci -q get $CFG.software 2>/dev/null || echo 1)"
+		echo "config_software=$(uci -q get $CFG.software 2>/dev/null || echo 0)"
 		echo "config_hardware=$(uci -q get $CFG.hardware 2>/dev/null || echo 1)"
 		echo "flow_offloading=$(uci -q get firewall.@defaults[0].flow_offloading 2>/dev/null || echo unknown)"
 		echo "flow_offloading_hw=$(uci -q get firewall.@defaults[0].flow_offloading_hw 2>/dev/null || echo unknown)"
@@ -88,9 +77,9 @@ status() {
 verify() {
 	status
 	p="$(cat "$PROC" 2>/dev/null || true)"
-	printf '%s\n' "$p" | grep -q '^mw5_accel enabled=1 sw=1 hw=1 ' && echo 'accelerator_core=PASS' || echo 'accelerator_core=CHECK'
+	printf '%s\n' "$p" | grep -q '^mw5_accel enabled=[01] sw=0 hw=[01] ' && echo 'software_accelerator=OFF' || echo 'software_accelerator=CHECK'
 	printf '%s\n' "$p" | grep -q '^mw5_legacy_accel .*hwlookup=0 .*napt=0 .*extport=0 .*retired=1' && echo 'legacy_fastpaths=OFF' || echo 'legacy_fastpaths=CHECK'
-	printf '%s\n' "$p" | grep -q '^mw5_accel .*coherent_rx=1 page_pool=0 ' && echo 'hardware_dma=PASS' || echo 'hardware_dma=CHECK'
+	printf '%s\n' "$p" | grep -q '^mw5_accel .*coherent_rx=1 .*page_pool=0 ' && echo 'hardware_dma=PASS' || echo 'hardware_dma=CHECK'
 	printf '%s\n' "$p" | grep -q '^mw5_accel .*asic_l34_safe=0 ' && echo 'rtl865x_l34=FAIL_CLOSED_PROTOCOL9' || echo 'rtl865x_l34=CHECK'
 }
 
@@ -109,11 +98,15 @@ case "${1:-status}" in
 	on) set_cfg enabled 1 ;;
 	off) set_cfg enabled 0 ;;
 	software)
-		case "${2:-}" in on) set_cfg software 1 ;; off) set_cfg software 0 ;; *) echo 'usage: mw5-accel software on|off' >&2; exit 2 ;; esac ;;
+		case "${2:-}" in
+			on) echo 'MW5 software acceleration is disabled pending hardware stress validation' >&2; exit 1 ;;
+			off) set_cfg software 0 ;;
+			*) echo 'usage: mw5-accel software off' >&2; exit 2 ;;
+		esac ;;
 	hardware)
 		case "${2:-}" in on) set_cfg hardware 1 ;; off) set_cfg hardware 0 ;; *) echo 'usage: mw5-accel hardware on|off' >&2; exit 2 ;; esac ;;
 	*)
-		echo 'usage: mw5-accel {status|verify|apply|on|off|software on|off|hardware on|off}' >&2
+		echo 'usage: mw5-accel {status|verify|apply|on|off|software off|hardware on|off}' >&2
 		exit 2
 		;;
 esac

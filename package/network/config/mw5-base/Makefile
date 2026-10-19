@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mw5-base
-PKG_RELEASE:=6
+PKG_RELEASE:=7
 PKG_LICENSE:=GPL-2.0-or-later
 
 include $(INCLUDE_DIR)/package.mk
@@ -34,6 +34,7 @@ define Package/mw5-base/install
 	# create these rc.d links. Bake the board-only network services into
 	# squashfs instead; their targets are supplied by realtek base-files.
 	$(INSTALL_DIR) $(1)/etc/rc.d
+	$(LN) ../init.d/mw5-accel $(1)/etc/rc.d/S94mw5-accel
 	$(LN) ../init.d/mw5-network-core $(1)/etc/rc.d/S95mw5-network-core
 	$(LN) ../init.d/mw5-webui $(1)/etc/rc.d/S96mw5-webui
 	$(LN) ../init.d/mw5-auto-wan $(1)/etc/rc.d/S97mw5-auto-wan

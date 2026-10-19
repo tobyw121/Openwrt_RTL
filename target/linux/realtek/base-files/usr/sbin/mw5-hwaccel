@@ -6,7 +6,7 @@ case "${1:-show}" in
 	verify) exec /usr/sbin/mw5-accel verify ;;
 	*)
 		echo 'mw5-hwaccel legacy controls are disabled by v44.65.17.' >&2
-		echo 'Use: mw5-accel on|off|software on|off|hardware on|off' >&2
+		echo 'Use: mw5-accel on|off|software off|hardware on|off' >&2
 		exit 1
 		;;
 esac

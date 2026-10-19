@@ -7,13 +7,13 @@ esac
 
 uci -q set mw5_accel.core='accel'
 uci -q set mw5_accel.core.enabled='1'
-uci -q set mw5_accel.core.software='1'
+uci -q set mw5_accel.core.software='0'
 uci -q set mw5_accel.core.hardware='1'
 uci -q set mw5_accel.core.legacy='0'
 uci -q commit mw5_accel
 
-# Keep standard Linux software flow offload on; TC/HW delivery is stability-gated.
-uci -q set firewall.@defaults[0].flow_offloading='1'
+# Disable both Linux flowtable offload and the custom software flow cache.
+uci -q set firewall.@defaults[0].flow_offloading='0'
 uci -q set firewall.@defaults[0].flow_offloading_hw='0'
 uci -q commit firewall
 
