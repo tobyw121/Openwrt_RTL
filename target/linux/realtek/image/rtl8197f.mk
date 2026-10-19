@@ -85,7 +85,7 @@ define Device/xiaomi_r4_rd05
   RTL8197F_ROOTFS_OFFSET := 0x00350000
   RTL8197F_ROOTFS_DATA_OFFSET := 0x00e60000
   SUPPORTED_DEVICES += xiaomi,r4-rd05
-  DEVICE_PACKAGES += ip-full ip-bridge ethtool dnsmasq odhcpd-ipv6only firewall4 luci uhttpd uhttpd-mod-ubus rpcd rtl8367d-compat rtl8197f-rd05-base kmod-rtl8192cd-rtl8197f-rd05 wireless-tools
+  DEVICE_PACKAGES += ip-full ip-bridge ethtool dnsmasq odhcpd-ipv6only firewall4 luci uhttpd uhttpd-mod-ubus rpcd rtl8367d-compat rtl8197f-rd05-base kmod-rtl8192cd-rtl8197f-rd05 iw wireless-regdb hostapd-mini
   # Keep first-boot images minimal; RTL8197F WLAN/Ethernet need separate drivers.
   # kernel.bin is the raw self-extracting loader payload.
   # kernel-cs6c.bin adds the Realtek/Xiaomi bootmiwifi-style header for
@@ -129,7 +129,7 @@ define Device/tenda_ac23
   RTL8197F_HEADER_SIZE := 60
   RTL8197F_LEN_INCLUDES_HEADER_PAD := 1
   SUPPORTED_DEVICES += tenda,ac23 tenda,lynx-rtl8197f
-  DEVICE_PACKAGES += ip-full ip-bridge ethtool dnsmasq odhcpd-ipv6only firewall4 rtl8197f-tenda-ac23-base kmod-rtl8192cd-rtl8197f-ac23 wireless-tools
+  DEVICE_PACKAGES += ip-full ip-bridge ethtool dnsmasq odhcpd-ipv6only firewall4 rtl8197f-tenda-ac23-base kmod-rtl8192cd-rtl8197f-ac23 iw wireless-regdb hostapd-mini
   # v42 no longer assumes a fixed rootfs at 0x320000.  The combined cr6c image
   # uses IMG_HEADER_T.len and the Realtek/Tenda rootfs checksum trailer.
   IMAGES := sysupgrade.bin firmware-cr6c.bin $(TENDA_AC23_FULLFLASH_IMAGE)

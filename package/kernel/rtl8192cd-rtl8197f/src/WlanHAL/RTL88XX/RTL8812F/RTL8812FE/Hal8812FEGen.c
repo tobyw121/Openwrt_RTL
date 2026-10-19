@@ -22,6 +22,8 @@ Major Change History:
 
 #endif
 
+#include "../../../HalCallbackAdapters.h"
+
 enum rt_status
 InitPON8812FE(
     IN  HAL_PADAPTER Adapter,
@@ -107,7 +109,7 @@ hal_Associate_8812FE(
     //Initialization Related
     //
     pHalData->AccessSwapCtrl        = HAL_ACCESS_SWAP_MEM;
-    pHalFunc->InitPONHandler        = InitPON88XX;
+    pHalFunc->InitPONHandler        = hal_init_pon_88xx;
     pHalFunc->InitMACHandler        = InitMAC88XX;
     pHalFunc->InitFirmwareHandler   = InitMIPSFirmware88XX;
     pHalFunc->InitHCIDMAMemHandler  = InitHCIDMAMem88XX;
@@ -173,7 +175,7 @@ hal_Associate_8812FE(
     pHalFunc->GetShortCutTxBuffSizeHandler  = GetShortCutTxBuffSize88XX_V1;
     pHalFunc->SetShortCutTxBuffSizeHandler  = SetShortCutTxBuffSize88XX_V1;
     pHalFunc->CopyShortCutTxDescHandler     = CopyShortCutTxDesc88XX;
-    pHalFunc->FillShortCutTxHwCtrlHandler   = FillShortCutTxHwCtrl88XX;    
+    pHalFunc->FillShortCutTxHwCtrlHandler   = hal_fill_shortcut_88xx;
 #if CFG_HAL_HW_TX_SHORTCUT_REUSE_TXDESC            
     pHalFunc->FillHwShortCutTxDescHandler   = FillHwShortCutTxDesc88XX_V1;    
 #endif
@@ -254,13 +256,13 @@ hal_Associate_8812FE(
 #endif
     pHalFunc->SetRsvdPageHandler	        = SetRsvdPage88XX;
     pHalFunc->GetRsvdPageLocHandler	        = GetRsvdPageLoc88XX;
-    pHalFunc->DownloadRsvdPageHandler	    = HalGeneralDummy;
+    pHalFunc->DownloadRsvdPageHandler	    = hal_reserved_page_unavailable;
     pHalFunc->C2HHandler                    = HalGeneralDummy;
     pHalFunc->C2HPacketHandler              = C2HPacket88XX;    
     pHalFunc->GetTxRPTHandler               = GetTxRPTBuf88XX;
     pHalFunc->SetTxRPTHandler               = SetTxRPTBuf88XX;    
 #if CFG_HAL_ATM_REPORT        
-    pHalFunc->SetATMReportCfgHandler        = HalGeneralDummy;
+    pHalFunc->SetATMReportCfgHandler        = hal_no_atm_report;
 #endif //#if CFG_HAL_ATM_REPORT       
 #if CFG_HAL_HW_FILL_MACID
     pHalFunc->SetCRC5ToRPTBufferHandler     = SetCRC5ToRPTBuffer88XX;        

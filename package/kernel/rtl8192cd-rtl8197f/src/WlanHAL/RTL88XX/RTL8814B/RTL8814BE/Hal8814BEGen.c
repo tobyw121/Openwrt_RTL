@@ -23,13 +23,15 @@ Major Change History:
 #include "../../../../core/WlanHAL/RTL88XX/RTL8814B/Hal8814HRxDesc_core.h"
 #endif
 
+#include "../../../HalCallbackAdapters.h"
+
 enum rt_status
 InitPON8814BE(
     IN  HAL_PADAPTER Adapter,
     IN  u4Byte     	ClkSel        
 )
 {
-    //use halmac
+    return InitPON88XX(Adapter);
 }
 
 
@@ -105,7 +107,7 @@ hal_Associate_8814BE(
     //Initialization Related
     //
     pHalData->AccessSwapCtrl        = HAL_ACCESS_SWAP_MEM;
-    pHalFunc->InitPONHandler        = InitPON88XX;
+    pHalFunc->InitPONHandler        = hal_init_pon_88xx;
     pHalFunc->InitMACHandler        = InitMAC88XX;
     pHalFunc->InitFirmwareHandler   = InitMIPSFirmware88XX; //halmac have download firmware api can use
     pHalFunc->InitHCIDMAMemHandler  = InitHCIDMAMem88XX;
@@ -127,8 +129,8 @@ hal_Associate_8814BE(
 	pHalFunc->InitMBIDCAMHandler	= InitADDRCAM88XX; //kkbomb
 #endif
     pHalFunc->InitVAPIMRHandler     = InitVAPIMR88XX; //kkbomb
-    pHalFunc->InitLLT_TableHandler  = HalGeneralDummy; //should be done in halmac
-    pHalFunc->SetMBIDCAMHandler     = HalGeneralDummy; //kkbomb
+    pHalFunc->InitLLT_TableHandler  = hal_llt_in_halmac; //should be done in halmac
+    pHalFunc->SetMBIDCAMHandler     = hal_mbidcam_in_addrcam; //kkbomb
 #ifdef ADDRESS_CAM    
     pHalFunc->SetADDRCAMHandler     = SetADDRCAMEntry88XX; //kkbomb
 #endif    
@@ -151,7 +153,7 @@ hal_Associate_8814BE(
     pHalFunc->StopHWHandler         = StopHW88XX;
     pHalFunc->StopSWHandler         = StopSW88XX;
     pHalFunc->DisableVXDAPHandler   = DisableVXDAP88XX;
-    pHalFunc->StopMBIDCAMHandler    = HalGeneralDummy; //kkbomb
+    pHalFunc->StopMBIDCAMHandler    = hal_stop_mbidcam_in_addrcam; //kkbomb
 #ifdef ADDRESS_CAM     
     pHalFunc->ClearADDRCAMHandler    = DelADDRCAMEntry88XX; //kkbomb
 #endif
@@ -203,9 +205,9 @@ hal_Associate_8814BE(
     pHalFunc->GetShortCutTxBuffSizeHandler  = GetShortCutTxBuffSize88XX_V1;
     pHalFunc->SetShortCutTxBuffSizeHandler  = SetShortCutTxBuffSize88XX_V1;
     pHalFunc->CopyShortCutTxDescHandler     = CopyShortCutTxDesc88XX;
-    pHalFunc->FillShortCutTxHwCtrlHandler   = FillShortCutTxHwCtrl88XX;    
+    pHalFunc->FillShortCutTxHwCtrlHandler   = hal_fill_shortcut_88xx;
 #if (CFG_HAL_HW_TX_SHORTCUT_REUSE_TXDESC)
-    pHalFunc->FillHwShortCutTxDescHandler   = HalGeneralDummy;  //8814B IE is shortcut, use FillHwShortCutIE88XX
+    pHalFunc->FillHwShortCutTxDescHandler   = hal_shortcut_in_ie;  //8814B IE is shortcut, use FillHwShortCutIE88XX
 #endif
 #if (CFG_HAL_SUPPORT_TXDESC_IE)
     pHalFunc->FillHwShortCutIEHandler   = FillHwShortCutIE88XX;  //this function uses IE, if need original txdesc, need to update
@@ -241,7 +243,7 @@ hal_Associate_8814BE(
     pHalFunc->GetChipIDMIMOHandler          =   GetChipIDMIMO88XX;
     pHalFunc->SetHwRegHandler               =   SetHwReg88XX; 
     pHalFunc->GetHwRegHandler               =   GetHwReg88XX; 
-    pHalFunc->SetMACIDSleepHandler          =   SetMACIDPauseDriverInfo88XX; //FW need to update, reg changes
+    pHalFunc->SetMACIDSleepHandler          = hal_set_macid_pause_88xx; //FW need to update, reg changes
 	pHalFunc->CheckHangHandler              =   CheckHang88XX; 
     pHalFunc->GetMACIDQueueInTXPKTBUFHandler=   GetMACIDQueueInTXPKTBUF88XX_V2;
 

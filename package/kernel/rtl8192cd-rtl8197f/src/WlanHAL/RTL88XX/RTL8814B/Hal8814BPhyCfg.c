@@ -49,6 +49,7 @@ PHY_QueryRFReg_8814B(
 		HAL_RESTORE_INT(flags);
 		return Readback_Value;
 	}
+	return 0;
 }
 
 u4Byte
@@ -74,6 +75,7 @@ PHY_QueryRFSynReg_8814B(
 		return Readback_Value;
 	}
 
+	return 0;
 }
 
 void

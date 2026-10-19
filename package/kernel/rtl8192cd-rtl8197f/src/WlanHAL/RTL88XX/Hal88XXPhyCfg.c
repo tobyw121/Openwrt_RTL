@@ -899,26 +899,26 @@ void TxLMT_OFDM_Jaguar_NEW(IN  HAL_PADAPTER	Adapter)
 	//unsigned char	idx_ht_mcs15 = 0;
 //	unsigned char	idx_vht_1ss_mcs7 =0;
 //	unsigned char	idx_vht_2ss_mcs7 =0;
-#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814B)	
+#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814BE)
 	unsigned char	idx_vht_3ss_mcs7 =0;    
 	unsigned char	idx_vht_4ss_mcs7 =0; 
 #endif
 	short			lmt_pg_idx_ofdm = 0;
 	short			lmt_pg_idx_ht1s, lmt_pg_idx_ht2s = 0;
 	short			lmt_pg_idx_vht1s, lmt_pg_idx_vht2s = 0;
-#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814B)
+#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814BE)
 	short	        lmt_pg_idx_ht3s, lmt_pg_idx_ht4s = 0;
 	short	        lmt_pg_idx_vht3s, lmt_pg_idx_vht4s = 0;
 #endif
 	char	max_lmt_idx_ofdm = 0;
 	char	max_lmt_idx_ht1s, max_lmt_idx_ht2s = 0;
 	char	max_lmt_idx_vht1s, max_lmt_idx_vht2s = 0;
-#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814B)
+#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814BE)
 	char	max_lmt_idx_ht3s, max_lmt_idx_ht4s = 0;
 	char	max_lmt_idx_vht3s, max_lmt_idx_vht4s = 0;
 #endif
 	unsigned char	tssi_lmt = 0;
-#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814B)
+#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814BE)
 	if(GET_CHIP_VER(Adapter) == VERSION_8198F || GET_CHIP_VER(Adapter) == VERSION_8814B) {
 		start=0;
 		end=3;
@@ -936,13 +936,13 @@ void TxLMT_OFDM_Jaguar_NEW(IN  HAL_PADAPTER	Adapter)
 		lmt_pg_idx_ofdm = Adapter->pshare->txpwr_lmt_OFDM - (Adapter->pshare->tgpwr_HT1S_NEW + Adapter->pshare->phw->OFDMTxAgcOffset[7]);
 		lmt_pg_idx_ht1s = Adapter->pshare->txpwr_lmt_HT1S - Adapter->pshare->tgpwr_HT1S_NEW;
 		lmt_pg_idx_ht2s = Adapter->pshare->txpwr_lmt_HT2S - (Adapter->pshare->tgpwr_HT1S_NEW + Adapter->pshare->phw->MCSTxAgcOffset[15]);
-#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814B)
+#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814BE)
 		lmt_pg_idx_ht3s = Adapter->pshare->txpwr_lmt_HT3S - (Adapter->pshare->tgpwr_HT1S_NEW + Adapter->pshare->phw->MCSTxAgcOffset[23]);
 		lmt_pg_idx_ht4s = Adapter->pshare->txpwr_lmt_HT4S - (Adapter->pshare->tgpwr_HT1S_NEW + Adapter->pshare->phw->MCSTxAgcOffset[31]);
 #endif
 		lmt_pg_idx_vht1s = Adapter->pshare->txpwr_lmt_VHT1S - (Adapter->pshare->tgpwr_HT1S_NEW + Adapter->pshare->phw->VHTTxAgcOffset[7]);
 		lmt_pg_idx_vht2s = Adapter->pshare->txpwr_lmt_VHT2S - (Adapter->pshare->tgpwr_HT1S_NEW + Adapter->pshare->phw->VHTTxAgcOffset[17]);
-#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814B)
+#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814BE)
 		lmt_pg_idx_vht3s = Adapter->pshare->txpwr_lmt_VHT3S - (Adapter->pshare->tgpwr_HT1S_NEW + Adapter->pshare->phw->VHTTxAgcOffset[27]);
 		lmt_pg_idx_vht4s = Adapter->pshare->txpwr_lmt_VHT4S - (Adapter->pshare->tgpwr_HT1S_NEW + Adapter->pshare->phw->VHTTxAgcOffset[37]);
 #endif
@@ -952,13 +952,13 @@ void TxLMT_OFDM_Jaguar_NEW(IN  HAL_PADAPTER	Adapter)
 	lmt_pg_idx_ofdm = Adapter->pshare->txpwr_lmt_OFDM - Adapter->pshare->tgpwr_OFDM_NEW;
 	lmt_pg_idx_ht1s = Adapter->pshare->txpwr_lmt_HT1S - Adapter->pshare->tgpwr_HT1S_NEW;
 	lmt_pg_idx_ht2s = Adapter->pshare->txpwr_lmt_HT2S - Adapter->pshare->tgpwr_HT2S_NEW;
-#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814B)	
+#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814BE)
 	lmt_pg_idx_ht3s = Adapter->pshare->txpwr_lmt_HT3S - Adapter->pshare->tgpwr_HT3S_NEW;
 	lmt_pg_idx_ht4s = Adapter->pshare->txpwr_lmt_HT4S - Adapter->pshare->tgpwr_HT4S_NEW;
 #endif	
 	lmt_pg_idx_vht1s = Adapter->pshare->txpwr_lmt_VHT1S - Adapter->pshare->tgpwr_VHT1S_NEW;
 	lmt_pg_idx_vht2s = Adapter->pshare->txpwr_lmt_VHT2S - Adapter->pshare->tgpwr_VHT2S_NEW;
-#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814B)	
+#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814BE)
 	lmt_pg_idx_vht3s = Adapter->pshare->txpwr_lmt_VHT3S - Adapter->pshare->tgpwr_VHT3S_NEW;
 	lmt_pg_idx_vht4s = Adapter->pshare->txpwr_lmt_VHT4S - Adapter->pshare->tgpwr_VHT4S_NEW;
 #endif
@@ -998,7 +998,7 @@ void TxLMT_OFDM_Jaguar_NEW(IN  HAL_PADAPTER	Adapter)
 
 		max_lmt_idx_ht2s = lmt_pg_idx_ht2s + HAL_VAR_CurrentTxAgcMCS(bPathXEnIdx, TX_AGC_HT_NSS2_MCS15-TX_AGC_HT_NSS1_MCS0);
 		max_lmt_idx_ht2s = POWER_MIN_INDEX(max_lmt_idx_ht2s);
-#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814B)
+#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814BE)
 		max_lmt_idx_ht3s = lmt_pg_idx_ht3s + HAL_VAR_CurrentTxAgcMCS(bPathXEnIdx, TX_AGC_HT_NSS3_MCS23-TX_AGC_HT_NSS1_MCS0);
 		max_lmt_idx_ht3s = POWER_MIN_INDEX(max_lmt_idx_ht3s);
 
@@ -1010,7 +1010,7 @@ void TxLMT_OFDM_Jaguar_NEW(IN  HAL_PADAPTER	Adapter)
 
 		max_lmt_idx_vht2s = lmt_pg_idx_vht2s + HAL_VAR_CurrentTxAgcVHT(bPathXEnIdx, TX_AGC_VHT_NSS2_MCS7-TX_AGC_VHT_NSS1_MCS0);
 		max_lmt_idx_vht2s = POWER_MIN_INDEX(max_lmt_idx_vht2s);
-#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814B)
+#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814BE)
 		max_lmt_idx_vht3s = lmt_pg_idx_vht3s + HAL_VAR_CurrentTxAgcVHT(bPathXEnIdx, TX_AGC_VHT_NSS3_MCS7-TX_AGC_VHT_NSS1_MCS0);
 		max_lmt_idx_vht3s = POWER_MIN_INDEX(max_lmt_idx_vht3s);
 
@@ -1044,7 +1044,7 @@ void TxLMT_OFDM_Jaguar_NEW(IN  HAL_PADAPTER	Adapter)
 		for(rate = ODM_RATEMCS8; rate <= ODM_RATEMCS15; rate++){
 			set_current_tx_agc(Adapter,bPathXEnIdx,rate,POWER_RANGE_CHECK_NEW(POWER_MIN_CHECK(HAL_VAR_CurrentTxAgcMCS(bPathXEnIdx, rate-ODM_RATEMCS0), max_lmt_idx_ht2s)));
 		}
-#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814B)
+#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814BE)
 		for(rate = ODM_RATEMCS16; rate <= ODM_RATEMCS23; rate++){
 			set_current_tx_agc(Adapter,bPathXEnIdx,rate,POWER_RANGE_CHECK_NEW(POWER_MIN_CHECK(HAL_VAR_CurrentTxAgcMCS(bPathXEnIdx, rate-ODM_RATEMCS0), max_lmt_idx_ht3s)));
 		}
@@ -1061,7 +1061,7 @@ void TxLMT_OFDM_Jaguar_NEW(IN  HAL_PADAPTER	Adapter)
 		for(rate = ODM_RATEVHTSS2MCS0; rate <= ODM_RATEVHTSS2MCS9; rate++){
 			set_current_tx_agc(Adapter,bPathXEnIdx,rate,POWER_RANGE_CHECK_NEW(POWER_MIN_CHECK(HAL_VAR_CurrentTxAgcVHT(bPathXEnIdx, rate-ODM_RATEVHTSS1MCS0), max_lmt_idx_vht2s)));
 		}
-#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814B)
+#if defined(CONFIG_WLAN_HAL_8198F) || defined(CONFIG_WLAN_HAL_8814BE)
 		for(rate = ODM_RATEVHTSS3MCS0; rate <= ODM_RATEVHTSS3MCS9; rate++){
 			set_current_tx_agc(Adapter,bPathXEnIdx,rate,POWER_RANGE_CHECK_NEW(POWER_MIN_CHECK(HAL_VAR_CurrentTxAgcVHT(bPathXEnIdx, rate-ODM_RATEVHTSS1MCS0), max_lmt_idx_vht3s)));
 			//printk("max_lmt_idx_ht1s %x , HAL_VAR_CurrentTxAgcMCS(0%x, 0x%x) %x , Min %x \n",max_lmt_idx_ht1s,bPathXEnIdx,rate,HAL_VAR_CurrentTxAgcMCS(bPathXEnIdx, rate),(POWER_MIN_CHECK(HAL_VAR_CurrentTxAgcMCS(bPathXEnIdx, rate), max_lmt_idx_ht1s)));
@@ -1167,14 +1167,7 @@ void TxLMT_OFDM_Jaguar_NEW(IN  HAL_PADAPTER	Adapter)
 			if(GET_CHIP_VER(Adapter) == VERSION_8814B)
 				phydm_write_txagc_1byte_8814b((&(Adapter->pshare->_dmODM)),config_phydm_read_txagc_diff_8814b((&(Adapter->pshare->_dmODM)),rate)-(unsigned char)*(pTxAgcOffset+rate-TX_AGC_HT_NSS1_MCS0)+POWER_MIN_CHECK((unsigned char)*(pTxAgcOffset+rate-TX_AGC_HT_NSS1_MCS0),lmt_pg_idx_ht3s),rate);
 #endif
-#if IS_RTL8812F_SERIES
-			if(GET_CHIP_VER(Adapter) == VERSION_8812F) {
-				if (Adapter->pmib->dot11RFEntry.tssi_enable)
-					phydm_write_txagc_1byte_8812f((&(Adapter->pshare->_dmODM)), POWER_MIN_CHECK((Adapter->pshare->tgpwr_HT1S_NEW + (unsigned char)*(pTxAgcOffset+rate-TX_AGC_HT_NSS1_MCS0)), Adapter->pshare->txpwr_lmt_HT3S) - tssi_lmt, rate);
-				else								
-					phydm_write_txagc_1byte_8812f((&(Adapter->pshare->_dmODM)),config_phydm_read_txagc_diff_8812f((&(Adapter->pshare->_dmODM)),rate)-(unsigned char)*(pTxAgcOffset+rate-TX_AGC_HT_NSS1_MCS0)+POWER_MIN_CHECK((unsigned char)*(pTxAgcOffset+rate-TX_AGC_HT_NSS1_MCS0),lmt_pg_idx_ht3s),rate);
-			}
-#endif
+/* RTL8812F is 2T2R; do not program unsupported HT3S/HT4S rates. */
 		}
 
 		for(rate = ODM_RATEMCS24; rate <= ODM_RATEMCS31; rate++){
@@ -1187,14 +1180,7 @@ void TxLMT_OFDM_Jaguar_NEW(IN  HAL_PADAPTER	Adapter)
 			if(GET_CHIP_VER(Adapter) == VERSION_8814B)
 				phydm_write_txagc_1byte_8814b((&(Adapter->pshare->_dmODM)),config_phydm_read_txagc_diff_8814b((&(Adapter->pshare->_dmODM)),rate)-(unsigned char)*(pTxAgcOffset+rate-TX_AGC_HT_NSS1_MCS0)+POWER_MIN_CHECK((unsigned char)*(pTxAgcOffset+rate-TX_AGC_HT_NSS1_MCS0),lmt_pg_idx_ht4s),rate);
 #endif
-#if IS_RTL8812F_SERIES
-			if(GET_CHIP_VER(Adapter) == VERSION_8812F) {
-				if (Adapter->pmib->dot11RFEntry.tssi_enable)
-					phydm_write_txagc_1byte_8812f((&(Adapter->pshare->_dmODM)), POWER_MIN_CHECK((Adapter->pshare->tgpwr_HT1S_NEW + (unsigned char)*(pTxAgcOffset+rate-TX_AGC_HT_NSS1_MCS0)), Adapter->pshare->txpwr_lmt_HT4S) - tssi_lmt, rate);
-				else			
-					phydm_write_txagc_1byte_8812f((&(Adapter->pshare->_dmODM)),config_phydm_read_txagc_diff_8812f((&(Adapter->pshare->_dmODM)),rate)-(unsigned char)*(pTxAgcOffset+rate-TX_AGC_HT_NSS1_MCS0)+POWER_MIN_CHECK((unsigned char)*(pTxAgcOffset+rate-TX_AGC_HT_NSS1_MCS0),lmt_pg_idx_ht4s),rate);
-			}
-#endif
+/* RTL8812F is 2T2R; do not program unsupported HT3S/HT4S rates. */
 		}
 		/* set VHT 1/2/3/4 SS power index */
 		for(rate = ODM_RATEVHTSS1MCS0; rate <= ODM_RATEVHTSS1MCS9; rate++){
@@ -1539,7 +1525,7 @@ CalOFDMTxPower5G_88XX_AC(
 	s1Byte diff_bw20_2s = 0;
 #if defined(CONFIG_WLAN_HAL_8814AE)|| defined(CONFIG_WLAN_HAL_8814BE)
 	s1Byte diff_bw20_3s = 0;
-#if defined(CONFIG_WLAN_HAL_8814BE)		
+#if defined(CONFIG_WLAN_HAL_8814BE)
 	s1Byte diff_bw20_4s = 0;
 #endif
 #endif	
@@ -1547,7 +1533,7 @@ CalOFDMTxPower5G_88XX_AC(
 	s1Byte diff_bw80_2s = 0;
 #if defined(CONFIG_WLAN_HAL_8814AE)|| defined(CONFIG_WLAN_HAL_8814BE)
 	s1Byte diff_bw80_3s = 0;
-#if defined(CONFIG_WLAN_HAL_8814BE)	
+#if defined(CONFIG_WLAN_HAL_8814BE)
 	s1Byte diff_bw80_4s = 0;
 #endif
 #endif
@@ -1586,7 +1572,7 @@ CalOFDMTxPower5G_88XX_AC(
     s1Byte HAL_VAR_pwrdiff_5G_80BW2S_160BW2S_X[4] = {HAL_VAR_pwrdiff_5G_80BW2S_160BW2S_A(ch_idx), HAL_VAR_pwrdiff_5G_80BW2S_160BW2S_B(ch_idx), 
 		HAL_VAR_pwrdiff_5G_80BW2S_160BW2S_C(ch_idx), HAL_VAR_pwrdiff_5G_80BW2S_160BW2S_D(ch_idx)
 		};	
-#if defined(CONFIG_WLAN_HAL_8814AE)|| defined(CONFIG_WLAN_HAL_8814BE)		
+#if defined(CONFIG_WLAN_HAL_8814AE)|| defined(CONFIG_WLAN_HAL_8814BE)
     s1Byte HAL_VAR_pwrdiff_5G_40BW3S_20BW3S_X[4] = {HAL_VAR_pwrdiff_5G_40BW3S_20BW3S_A(ch_idx), HAL_VAR_pwrdiff_5G_40BW3S_20BW3S_B(ch_idx), HAL_VAR_pwrdiff_5G_40BW3S_20BW3S_C(ch_idx), HAL_VAR_pwrdiff_5G_40BW3S_20BW3S_D(ch_idx)};		
 	s1Byte HAL_VAR_pwrdiff_5G_80BW3S_160BW3S_X[4] = {HAL_VAR_pwrdiff_5G_80BW3S_160BW3S_A(ch_idx), HAL_VAR_pwrdiff_5G_80BW3S_160BW3S_B(ch_idx), HAL_VAR_pwrdiff_5G_80BW3S_160BW3S_C(ch_idx), HAL_VAR_pwrdiff_5G_80BW3S_160BW3S_D(ch_idx)};		
 #endif

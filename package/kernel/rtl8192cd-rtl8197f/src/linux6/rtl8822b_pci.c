@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* MW5 RTL8812BRH PCIe backend using the recovered vendor 8822B HAL path. */
+/* Linux-owned PCIe resources for RTL8822B/8812BRH, RTL8812F and RTL8814B. */
 #include <linux/dma-mapping.h>
 #include <linux/module.h>
+#include <linux/of.h>
 #include <linux/of_irq.h>
 #include <linux/pci.h>
 #include <linux/slab.h>
@@ -10,6 +11,8 @@
 
 #define RTL8822B_PCI_VENDOR_ID 0x10ec
 #define RTL8822B_PCI_DEVICE_ID 0xb822
+#define RTL8812F_PCI_DEVICE_ID 0xf812
+#define RTL8814B_PCI_DEVICE_ID 0xb814
 #define RTL8822B_MW5_BAR2_START 0x19000000UL
 
 static int rtl8822b_find_mmio_bar(struct pci_dev *pdev)
@@ -45,6 +48,11 @@ static int rtl8822b_mw5_host_irq(struct pci_dev *pdev)
 	return irq;
 }
 
+static void rtl8192cd_free_irq_vectors(void *data)
+{
+	pci_free_irq_vectors(data);
+}
+
 static int rtl8822b_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 {
 	struct rtl8192cd_linux6_hw *hw;
@@ -55,6 +63,7 @@ static int rtl8822b_pci_probe(struct pci_dev *pdev, const struct pci_device_id *
 	int bar;
 	int host_irq;
 	int ret;
+	int default_rfe = of_machine_is_compatible("tenda,nova-mw5") ? 6 : -1;
 
 	ret = pcim_enable_device(pdev);
 	if (ret)
@@ -74,8 +83,8 @@ static int rtl8822b_pci_probe(struct pci_dev *pdev, const struct pci_device_id *
 	pci_read_config_dword(pdev, PCI_BASE_ADDRESS_0 + bar * 4, &bar_cfg);
 	pci_read_config_word(pdev, PCI_COMMAND, &command);
 	dev_info(&pdev->dev,
-		 "MW5 PCIe BAR%d: resource=%pa len=%pa cfg=%#010x command=%#06x\n",
-		 bar, &bar_start, &bar_len, bar_cfg, command);
+		 "RTL8192CD PCIe %04x:%04x BAR%d: resource=%pa len=%pa cfg=%#010x command=%#06x\n",
+		 pdev->vendor, pdev->device, bar, &bar_start, &bar_len, bar_cfg, command);
 
 	/*
 	 * The recovered MW5 OEM init for the physical RTL8812BRH programs BAR2 to 0x19000004.
@@ -84,7 +93,7 @@ static int rtl8822b_pci_probe(struct pci_dev *pdev, const struct pci_device_id *
 	 * Refuse to touch MMIO if that invariant is not satisfied; a read from
 	 * the wrongly programmed BAR causes a fatal MIPS data-bus exception.
 	 */
-	if (bar == 2 &&
+	if (of_machine_is_compatible("tenda,nova-mw5") && bar == 2 &&
 	    (bar_start != RTL8822B_MW5_BAR2_START ||
 	     (bar_cfg & PCI_BASE_ADDRESS_MEM_MASK) != RTL8822B_MW5_BAR2_START))
 		return dev_err_probe(&pdev->dev, -ENXIO,
@@ -92,7 +101,7 @@ static int rtl8822b_pci_probe(struct pci_dev *pdev, const struct pci_device_id *
 			&bar_start, bar_cfg);
 	if (!(command & PCI_COMMAND_MEMORY))
 		return dev_err_probe(&pdev->dev, -EIO,
-			"MW5 BAR%d memory decoding disabled (command=%#06x)\n",
+			"BAR%d memory decoding disabled (command=%#06x)\n",
 			bar, command);
 
 	ret = pcim_iomap_regions_request_all(pdev, BIT(bar), "rtl8822b_pci");
@@ -103,14 +112,25 @@ static int rtl8822b_pci_probe(struct pci_dev *pdev, const struct pci_device_id *
 	if (!iomap || !iomap[bar])
 		return dev_err_probe(&pdev->dev, -ENOMEM, "BAR%d mapping missing\n", bar);
 
-	host_irq = rtl8822b_mw5_host_irq(pdev);
+	/* Prefer the PCI core's IRQ mapping. The RTL8197F host can leave 255
+	 * before endpoint probe; resolve that case through the host DT only.
+	 */
+	if (!pdev->irq || pdev->irq == 255) {
+		host_irq = rtl8822b_mw5_host_irq(pdev);
+		if (host_irq < 0)
+			return dev_err_probe(&pdev->dev, host_irq,
+				"cannot resolve PCIe WLAN IRQ from host DT\n");
+		pdev->irq = host_irq;
+	}
+	ret = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_LEGACY);
+	if (ret < 0)
+		return dev_err_probe(&pdev->dev, ret, "cannot allocate PCI IRQ\n");
+	ret = devm_add_action_or_reset(&pdev->dev, rtl8192cd_free_irq_vectors, pdev);
+	if (ret)
+		return ret;
+	host_irq = pci_irq_vector(pdev, 0);
 	if (host_irq < 0)
-		return dev_err_probe(&pdev->dev, host_irq,
-			"cannot resolve MW5 PCIe/WLAN ICTL IRQ from host DT\n");
-	pdev->irq = host_irq;
-	dev_info(&pdev->dev,
-		 "MW5 RTL8812BRH IRQ=%d via RTL8197F ICTL input21 -> CPU5\n",
-		 host_irq);
+		return host_irq;
 
 	hw = devm_kzalloc(&pdev->dev, sizeof(*hw), GFP_KERNEL);
 	if (!hw)
@@ -118,13 +138,15 @@ static int rtl8822b_pci_probe(struct pci_dev *pdev, const struct pci_device_id *
 
 	hw->dev = &pdev->dev;
 	hw->pdev = pdev;
+	hw->pci_id = id;
 	hw->bus_type = RTL8192CD_BUS_PCI;
 	hw->mmio = iomap[bar];
 	hw->mmio_len = pci_resource_len(pdev, bar);
 	hw->irq = host_irq;
 
-	/* MW5: physical RTL8812BRH is wlan0/5 GHz, RFE 6, factory MAC +4. */
-	ret = rtl8192cd_linux6_parse_board_data(&pdev->dev, &hw->board, 0, 6, 4);
+	/* Preserve eFuse RFE on other boards unless DT supplies an override. */
+	ret = rtl8192cd_linux6_parse_board_data(&pdev->dev, &hw->board, 0,
+					     default_rfe, 4);
 	if (ret)
 		return ret;
 
@@ -144,7 +166,15 @@ static void rtl8822b_pci_remove(struct pci_dev *pdev)
 }
 
 static const struct pci_device_id rtl8822b_pci_ids[] = {
+#ifdef CONFIG_WLAN_HAL_8822BE
 	{ PCI_DEVICE(RTL8822B_PCI_VENDOR_ID, RTL8822B_PCI_DEVICE_ID) },
+#endif
+#ifdef CONFIG_WLAN_HAL_8812FE
+	{ PCI_DEVICE(RTL8822B_PCI_VENDOR_ID, RTL8812F_PCI_DEVICE_ID) },
+#endif
+#ifdef CONFIG_WLAN_HAL_8814BE
+	{ PCI_DEVICE(RTL8822B_PCI_VENDOR_ID, RTL8814B_PCI_DEVICE_ID) },
+#endif
 	{ }
 };
 MODULE_DEVICE_TABLE(pci, rtl8822b_pci_ids);

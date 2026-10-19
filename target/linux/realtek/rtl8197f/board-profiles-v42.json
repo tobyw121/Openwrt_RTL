@@ -49,8 +49,7 @@
       "integrated_radio_irq": 6,
       "wlan_rfe": 5,
       "external_radio_candidates": [
-        "RTL8822B PCIe (OEM runtime/PID-confirmed)",
-        "RTL8812BRH (conflicting board inventory only)"
+        "Physical RTL8812BRH (owner inventory), using OEM 8822B HAL at PCI 10ec:b822"
       ],
       "evidence": [
         "OEM Linux 3.10.90 runtime and kallsyms dumps",
@@ -69,7 +68,7 @@
       ],
       "integrated_interface_oem": "wlan1",
       "integrated_radio_rfe": 5,
-      "external_radio": "RTL8822B PCIe",
+      "external_radio": "RTL8812BRH physical / RTL8822B HAL",
       "external_pcie_id": "10ec:b822",
       "external_interface_oem": "wlan0",
       "external_radio_rfe": 6,

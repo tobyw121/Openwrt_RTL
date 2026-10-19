@@ -8,6 +8,7 @@
 
 struct dentry;
 struct pci_dev;
+struct pci_device_id;
 struct rtl8192cd_priv;
 
 enum rtl8192cd_linux6_bus_type {
@@ -18,6 +19,7 @@ enum rtl8192cd_linux6_bus_type {
 struct rtl8192cd_linux6_board_data {
 	u8 radio_index;
 	u8 rfe_type;
+	bool rfe_valid;
 	u8 mac_addr[ETH_ALEN];
 	bool mac_valid;
 	void *calibration;
@@ -29,6 +31,7 @@ struct rtl8192cd_linux6_board_data {
 struct rtl8192cd_linux6_hw {
 	struct device *dev;
 	struct pci_dev *pdev;
+	const struct pci_device_id *pci_id;
 	void __iomem *mmio;
 	resource_size_t mmio_len;
 	int irq;
@@ -40,7 +43,7 @@ struct rtl8192cd_linux6_hw {
 
 int rtl8192cd_linux6_parse_board_data(struct device *dev,
 				      struct rtl8192cd_linux6_board_data *board,
-				      u8 default_radio, u8 default_rfe,
+				      u8 default_radio, int default_rfe,
 				      int default_mac_increment);
 
 int rtl8192cd_linux6_attach(struct rtl8192cd_linux6_hw *hw);

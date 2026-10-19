@@ -13929,6 +13929,8 @@ DelADDRCAMEntry88XX(
 		priv->interface_addrcam_entry = camIdx;
 		SET_ADDR_CAM_USED(priv, camIdx);
 	}
+
+	return RT_STATUS_SUCCESS;
 }
 
 #endif  //#if IS_RTL88XX_MAC_V4

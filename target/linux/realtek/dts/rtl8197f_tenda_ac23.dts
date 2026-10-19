@@ -215,6 +215,15 @@
 };
 
 
+&wlan {
+	compatible = "realtek,rtl8197fh-wlan", "realtek,rtl8197f-wmac";
+	interrupt-parent = <&intc>;
+	interrupts = <29 5>;
+	realtek,radio-index = <1>;
+	/* Board RFE/calibration must be verified; never borrow MW5 RFE5. */
+	status = "okay";
+};
+
 &pcie0 {
 	/* Board inventory identifies an RTL8814BR/RTL8814B-class PCIe radio.
 	 * RTL8197FH/VG SDK boards use the 40 MHz reference-clock tuning.
@@ -222,5 +231,15 @@
 	 */
 	realtek,refclk-40mhz;
 	realtek,rtl8197f-vg;
+	interrupt-parent = <&intc>;
+	interrupts = <21 4>;
+	ranges = <0x01000000 0 0x18c00000 0x00c00000 0 0x00200000>,
+		 <0x02000000 0 0x19000000 0x01000000 0 0x01000000>;
 	status = "okay";
+
+	wifi@0,0 {
+		compatible = "pci10ec,b814";
+		reg = <0x00000000 0 0 0 0>;
+		realtek,radio-index = <0>;
+	};
 };

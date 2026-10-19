@@ -371,6 +371,9 @@ struct survey_info_t {
 };
 
 struct rtknl {
+	/* Stream capabilities belong to this radio, not mutable global templates. */
+	struct ieee80211_supported_band band_2ghz;
+	struct ieee80211_supported_band band_5ghz;
 	struct class *cl;
 	struct device *dev;
 	struct wiphy *wiphy;

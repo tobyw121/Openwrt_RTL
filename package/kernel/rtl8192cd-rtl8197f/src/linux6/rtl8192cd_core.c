@@ -19,10 +19,6 @@ extern int rtl8192cd_init_one(struct pci_dev *pdev,
 			      struct _device_info_ *wdev, int vap_idx);
 extern void rtl8192cd_deinit_one(struct rtl8192cd_priv *priv);
 
-static const struct pci_device_id rtl8822b_id = {
-	PCI_DEVICE(0x10ec, 0xb822)
-};
-
 int rtl8192cd_linux6_attach(struct rtl8192cd_linux6_hw *hw)
 {
 	struct _device_info_ *wdev;
@@ -33,6 +29,13 @@ int rtl8192cd_linux6_attach(struct rtl8192cd_linux6_hw *hw)
 		return -EINVAL;
 	if (hw->board.radio_index >= RTL8192CD_MW5_RADIOS)
 		return -EINVAL;
+	if (hw->bus_type == RTL8192CD_BUS_PCI) {
+		if (!hw->pdev || !hw->pci_id ||
+		    hw->pdev->vendor != hw->pci_id->vendor ||
+		    hw->pdev->device != hw->pci_id->device)
+			return -ENODEV;
+		id = hw->pci_id;
+	}
 
 	wdev = &wlan_device[hw->board.radio_index];
 	if (wdev->priv)
@@ -58,7 +61,7 @@ int rtl8192cd_linux6_attach(struct rtl8192cd_linux6_hw *hw)
 	wdev->linux6_managed = true;
 	wdev->radio_index = hw->board.radio_index;
 	wdev->rfe_type = hw->board.rfe_type;
-	wdev->rfe_valid = true;
+	wdev->rfe_valid = hw->board.rfe_valid;
 	wdev->calibration = hw->board.calibration;
 	wdev->calibration_len = hw->board.calibration_len;
 	wdev->factory = hw->board.factory;
@@ -67,9 +70,6 @@ int rtl8192cd_linux6_attach(struct rtl8192cd_linux6_hw *hw)
 		ether_addr_copy(wdev->mac_addr, hw->board.mac_addr);
 		wdev->mac_valid = true;
 	}
-
-	if (hw->bus_type == RTL8192CD_BUS_PCI)
-		id = &rtl8822b_id;
 
 	dev_info(hw->dev, "attach vendor core: radio=%u bus=%s irq=%d mmio=%p rfe=%u\n",
 		 hw->board.radio_index,

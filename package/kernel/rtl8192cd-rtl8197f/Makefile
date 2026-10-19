@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=rtl8192cd-rtl8197f
-PKG_RELEASE:=96
+PKG_RELEASE:=97
 PKG_LICENSE:=GPL-2.0-only
 PKG_MAINTAINER:=RTL8197F Linux 6.6 cfg80211 port
 PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)
@@ -11,7 +11,7 @@ include $(INCLUDE_DIR)/package.mk
 
 define KernelPackage/rtl8192cd-rtl8197f/Default
   SUBMENU:=Wireless Drivers
-  DEPENDS:=@TARGET_realtek_rtl8197f
+  DEPENDS:=@TARGET_realtek_rtl8197f +kmod-cfg80211 +@DRIVER_11AC_SUPPORT
   FILES:=$(PKG_BUILD_DIR)/rtl8192cd.ko
   KCONFIG:=CONFIG_WIRELESS=y
 endef
@@ -21,30 +21,24 @@ $(call KernelPackage/rtl8192cd-rtl8197f/Default)
   TITLE:=RTL8197FS + RTL8812BRH WLAN bring-up driver for Tenda MW5
   VARIANT:=mw5
   CONFLICTS:=kmod-rtl8192cd-mw5
-  DEPENDS+=+kmod-cfg80211 +@DRIVER_11AC_SUPPORT
 endef
 
 define KernelPackage/rtl8192cd-rtl8197f-rd05
 $(call KernelPackage/rtl8192cd-rtl8197f/Default)
   TITLE:=RTL8197FH/VG + RTL8812F WLAN bring-up driver for Xiaomi RD05
   VARIANT:=rd05
-  DEPENDS+=+wireless-tools
-  KCONFIG+=CONFIG_WIRELESS_EXT=y CONFIG_WEXT_CORE=y CONFIG_WEXT_PRIV=y
 endef
 
 define KernelPackage/rtl8192cd-rtl8197f-ac23
 $(call KernelPackage/rtl8192cd-rtl8197f/Default)
   TITLE:=RTL8197FH + RTL8814B WLAN bring-up driver for Tenda AC23
   VARIANT:=ac23
-  DEPENDS+=+wireless-tools
-  KCONFIG+=CONFIG_WIRELESS_EXT=y CONFIG_WEXT_CORE=y CONFIG_WEXT_PRIV=y
 endef
 
 define KernelPackage/rtl8192cd-rtl8197f-wrd12gn
 $(call KernelPackage/rtl8192cd-rtl8197f/Default)
   TITLE:=RTL8197FH + RTL8812BRH (8822B/HALMAC path) WLAN driver for iBall WRD12GN
   VARIANT:=wrd12gn
-  DEPENDS+=+kmod-cfg80211 +@DRIVER_11AC_SUPPORT
 endef
 
 define KernelPackage/rtl8192cd-rtl8197f-mw5/description
@@ -54,13 +48,13 @@ define KernelPackage/rtl8192cd-rtl8197f-mw5/description
 endef
 
 define KernelPackage/rtl8192cd-rtl8197f-rd05/description
- Linux-6 compatibility port for the RD05 radio pair: integrated RTL8197FH/VG
- 2.4 GHz plus external PCIe RTL8812F 5 GHz. Manual, phase-instrumented load.
+ Linux 6.6 cfg80211/nl80211 control plane for RTL8197FH/VG plus PCIe RTL8812F.
+ RF operation still requires board-specific DT/NVMEM and hardware validation.
 endef
 
 define KernelPackage/rtl8192cd-rtl8197f-ac23/description
- Linux-6 compatibility port for the AC23 radio pair: integrated RTL8197FH
- 2.4 GHz plus external PCIe RTL8814B 5 GHz. Manual, phase-instrumented load.
+ Linux 6.6 cfg80211/nl80211 control plane for RTL8197FH plus PCIe RTL8814B.
+ RF operation still requires board-specific DT/NVMEM and hardware validation.
 endef
 
 define KernelPackage/rtl8192cd-rtl8197f-wrd12gn/description
@@ -92,11 +86,16 @@ RTL8197F_COMMON_VARS:= \
 	CONFIG_RTL_ODM_WLAN_DRIVER=y \
 	CONFIG_WLAN_MACHAL_API=y \
 	CONFIG_OPENWRT_SDK=y \
-	CONFIG_RTL_WDS_SUPPORT=y \
-	CONFIG_RTL_MESH_SUPPORT=y \
-	CONFIG_RTL_MESH_SINGLE_IFACE=y
+	CONFIG_RTL8192CD_LINUX6_BUS=y \
+	CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE=y \
+	CONFIG_MW5_LEGACY_WEXT=n \
+	CONFIG_RTL_COMAPI_WLTOOLS=n \
+	CONFIG_RTL_WDS_SUPPORT=n \
+	CONFIG_RTL_MESH_SUPPORT=n \
+	CONFIG_RTL_MESH_SINGLE_IFACE=n
 
 RTL8197F_VARIANT_VARS_mw5:= \
+	CONFIG_MW5_BOARD_QUIRKS=y \
 	CONFIG_RTL_MESH_SUPPORT=n \
 	CONFIG_RTL_MESH_SINGLE_IFACE=n \
 	CONFIG_WLAN_HAL_8822BE=y \
@@ -129,16 +128,16 @@ RTL8197F_VARIANT_VARS_mw5:= \
 	CONFIG_WLAN_MACHAL_API_V0=y
 
 RTL8197F_VARIANT_VARS_rd05:= \
-	CONFIG_MW5_LEGACY_WEXT=y \
-	CONFIG_RTL_COMAPI_WLTOOLS=y \
+	CONFIG_BAND_5G_ON_WLAN0=y \
+	CONFIG_SOC_WIFI=y \
 	CONFIG_WLAN_HAL_8812FE=y \
 	CONFIG_RTL_8812F_SUPPORT=y \
 	CONFIG_RTL_92F_SUPPORT=n \
 	CONFIG_WLAN_MACHAL_API_V0=y
 
 RTL8197F_VARIANT_VARS_ac23:= \
-	CONFIG_MW5_LEGACY_WEXT=y \
-	CONFIG_RTL_COMAPI_WLTOOLS=y \
+	CONFIG_BAND_5G_ON_WLAN0=y \
+	CONFIG_SOC_WIFI=y \
 	CONFIG_WLAN_HAL_8814BE=y \
 	CONFIG_RTL_8814B_SUPPORT=y \
 	CONFIG_RTL_92F_SUPPORT=n \
@@ -163,7 +162,7 @@ RTL8197F_VARIANT_VARS_wrd12gn:= \
 	CONFIG_PHY_EAT_40MHZ=y \
 	CONFIG_WLAN_MACHAL_API_V0=y
 
-# OpenWrt 24.10 supplies cfg80211 from the mac80211/backports tree.  The MW5
+# OpenWrt 24.10 supplies cfg80211 from the mac80211/backports tree. Each
 # module must compile against those headers rather than the native 6.6 cfg80211
 # headers; the backport API level in this tree is 6.12.96.
 RTL8197F_KBUILD_FLAGS_mw5:= \
@@ -177,6 +176,8 @@ RTL8197F_KBUILD_FLAGS_mw5:= \
 	-DRTL8192CD_CFG80211_BACKPORT_612"
 
 RTL8197F_KBUILD_FLAGS_wrd12gn:=$(RTL8197F_KBUILD_FLAGS_mw5)
+RTL8197F_KBUILD_FLAGS_rd05:=$(RTL8197F_KBUILD_FLAGS_mw5)
+RTL8197F_KBUILD_FLAGS_ac23:=$(RTL8197F_KBUILD_FLAGS_mw5)
 
 define Build/Compile
 	+$(KERNEL_MAKE) M="$(PKG_BUILD_DIR)" \
@@ -188,15 +189,8 @@ define Build/Compile
 endef
 
 define KernelPackage/rtl8192cd-rtl8197f/install-linux6
-	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/usr/bin $(1)/etc
 	$(INSTALL_BIN) ./files/usr/bin/rtl8197f-wlan-check $(1)/usr/bin/
-endef
-
-define KernelPackage/rtl8192cd-rtl8197f/install-legacy
-	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/sbin $(1)/etc
-	$(INSTALL_BIN) ./files/usr/bin/rtl8197f-wlan-check $(1)/usr/bin/
-	$(INSTALL_BIN) ./files/usr/sbin/rtl8197f-wlan-load $(1)/usr/sbin/
-	$(INSTALL_BIN) ./files/usr/sbin/rtl8197f-wlan-ap-test $(1)/usr/sbin/
 	$(INSTALL_CONF) ./files/etc/rtl8197f-wlan-profiles.conf $(1)/etc/
 endef
 
@@ -205,11 +199,11 @@ $(call KernelPackage/rtl8192cd-rtl8197f/install-linux6,$(1))
 endef
 
 define KernelPackage/rtl8192cd-rtl8197f-rd05/install
-$(call KernelPackage/rtl8192cd-rtl8197f/install-legacy,$(1))
+$(call KernelPackage/rtl8192cd-rtl8197f/install-linux6,$(1))
 endef
 
 define KernelPackage/rtl8192cd-rtl8197f-ac23/install
-$(call KernelPackage/rtl8192cd-rtl8197f/install-legacy,$(1))
+$(call KernelPackage/rtl8192cd-rtl8197f/install-linux6,$(1))
 endef
 
 define KernelPackage/rtl8192cd-rtl8197f-wrd12gn/install

@@ -206,8 +206,8 @@ InitPON8197F(
         Adapter->pshare->linux6_pwrseq_a3 = HAL_RTL_R8(0x00a3);
         Adapter->pshare->linux6_pwrseq_05 = HAL_RTL_R8(0x0005);
         Adapter->pshare->linux6_pwrseq_06 = HAL_RTL_R8(0x0006);
-        Adapter->pshare->linux6_mw5_binary_pwrseq = 1;
-        printk(KERN_INFO "rtl8197f-wlan: v44.45.1 MW5 binary power-on flow a0=%02x a1=%02x a3=%02x r05=%02x r06=%02x\n",
+        Adapter->pshare->linux6_mw5_binary_pwrseq = IS_ENABLED(CONFIG_MW5_BOARD_QUIRKS);
+        printk(KERN_INFO "rtl8197f-wlan: power-on flow a0=%02x a1=%02x a3=%02x r05=%02x r06=%02x\n",
                Adapter->pshare->linux6_pwrseq_a0, Adapter->pshare->linux6_pwrseq_a1,
                Adapter->pshare->linux6_pwrseq_a3, Adapter->pshare->linux6_pwrseq_05,
                Adapter->pshare->linux6_pwrseq_06);

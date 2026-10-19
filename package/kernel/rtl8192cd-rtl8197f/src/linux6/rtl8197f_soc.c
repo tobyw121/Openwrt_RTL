@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* RTL8197FS integrated WLAN platform backend for Linux 6.x. */
+/* RTL8197FS/FH integrated WLAN platform backend for Linux 6.x. */
 #include <linux/dma-mapping.h>
 #include <linux/module.h>
 #include <linux/of.h>
@@ -13,6 +13,7 @@ static int rtl8197f_soc_probe(struct platform_device *pdev)
 	struct rtl8192cd_linux6_hw *hw;
 	struct resource *res;
 	int ret;
+	int default_rfe = of_machine_is_compatible("tenda,nova-mw5") ? 5 : -1;
 
 	hw = devm_kzalloc(&pdev->dev, sizeof(*hw), GFP_KERNEL);
 	if (!hw)
@@ -29,15 +30,18 @@ static int rtl8197f_soc_probe(struct platform_device *pdev)
 	if (hw->irq < 0)
 		return hw->irq;
 	dev_info(&pdev->dev,
-		 "MW5 RTL8197FS IRQ=%d via RTL8197F ICTL input29 -> CPU6\n",
+		 "RTL8197F integrated WLAN IRQ=%d from DT\n",
 		 hw->irq);
 
 	ret = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
 	if (ret)
 		return dev_err_probe(&pdev->dev, ret, "32-bit DMA mask unavailable\n");
 
-	/* MW5: integrated RTL8197FS is wlan1/2.4 GHz, RFE 5, factory MAC +1. */
-	ret = rtl8192cd_linux6_parse_board_data(&pdev->dev, &hw->board, 1, 5, 1);
+	/* Only the MW5 RFE5 default is board-proven. FH and other boards use
+	 * explicit DT/NVMEM data or preserve the vendor hardware-eFuse choice.
+	 */
+	ret = rtl8192cd_linux6_parse_board_data(&pdev->dev, &hw->board, 1,
+					     default_rfe, 1);
 	if (ret)
 		return ret;
 
@@ -58,6 +62,7 @@ static void rtl8197f_soc_remove(struct platform_device *pdev)
 
 static const struct of_device_id rtl8197f_soc_of_match[] = {
 	{ .compatible = "realtek,rtl8197fs-wlan" },
+	{ .compatible = "realtek,rtl8197fh-wlan" },
 	{ .compatible = "realtek,rtl8197f-wmac" },
 	{ .compatible = "realtek,rtl8197f-wlan" },
 	{ }

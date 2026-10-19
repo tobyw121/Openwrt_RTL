@@ -448,15 +448,17 @@ extern int rtw_remove_mem_pool_ex(char *name);
 
 struct _device_info_ wlan_device[] = {
 #if defined(CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE)
-	/* v43.33: force the proven MW5 dual-radio table even if the generic
-	 * Realtek config matrix would otherwise produce an empty table.
-	 * wlan0: external PCIe RTL8822B / 5 GHz
-	 * wlan1: integrated RTL8197FS / 2.4 GHz
-	 */
+	/* Linux6 fills addresses and IRQs from its managed PCI/platform probe.
+	 * Do not require an OEM PCI-slot macro to reserve the two radio slots. */
+#ifdef CONFIG_RTL8192CD_LINUX6_BUS
+	{(TYPE_PCI_DIRECT << TYPE_SHIFT) | ACCESS_SWAP_MEM, 0, 0, 0, NULL},
+	{(TYPE_EMBEDDED << TYPE_SHIFT) | ACCESS_SWAP_MEM, 0, 0, 0, NULL},
+#else
 	{(MESH_NUM_CFG << MESH_SHIFT) | (WDS_NUM_CFG << WDS_SHIFT) | (TYPE_PCI_DIRECT << TYPE_SHIFT) | ACCESS_SWAP_MEM,
 	 BSP_PCIE1_D_CFG0, BSP_PCIE1_D_MEM, BSP_PCIE2_IRQ, NULL},
 	{(MESH_NUM_CFG << MESH_SHIFT) | (WDS_NUM_CFG << WDS_SHIFT) | (TYPE_EMBEDDED << TYPE_SHIFT) | ACCESS_SWAP_MEM,
 	 BSP_WLAN_CONF_ADDR, BSP_WLAN_BASE_ADDR, BSP_WLAN_MAC_IRQ, NULL},
+#endif
 #else
 #if defined(CONFIG_RTL8672)
 #if defined(CONFIG_NET_PCI) && !defined(CONFIG_RTL_TRIBAND_SUPPORT) && !defined(CONFIG_RTK_SOC_RTL8198D)
@@ -17251,18 +17253,41 @@ if (GET_HCI_TYPE(priv) == RTL_HCI_PCIE) {
 #ifdef CONFIG_RTL8192CD_LINUX6_BUS
         if (wdev->linux6_managed &&
             ((priv->pshare->type >> TYPE_SHIFT) & TYPE_MASK) == TYPE_PCI_DIRECT) {
+            /* The bus backend matched the physical PCI identity. Never force
+             * a different HAL just because the first Linux6 board was MW5.
+             */
+            if (!pdev || pdev->vendor != PCI_VENDOR_ID_REALTEK) {
+                rc = -ENODEV;
+                goto err_out_free2;
+            }
+            switch (pdev->device) {
 #ifdef CONFIG_WLAN_HAL_8822BE
-            priv->pshare->version_id = VERSION_8822B;
+            case 0xb822:
+                priv->pshare->version_id = VERSION_8822B;
+                priv->pshare->phw->MIMO_TR_hw_support = RF_2T2R;
+                break;
+#endif
+#ifdef CONFIG_WLAN_HAL_8812FE
+            case 0xf812:
+                priv->pshare->version_id = VERSION_8812F;
+                priv->pshare->phw->MIMO_TR_hw_support = RF_2T2R;
+                break;
+#endif
+#ifdef CONFIG_WLAN_HAL_8814BE
+            case 0xb814:
+                priv->pshare->version_id = VERSION_8814B;
+                priv->pshare->phw->MIMO_TR_hw_support = RF_4T4R;
+                break;
+#endif
+            default:
+                rc = -ENODEV;
+                goto err_out_free2;
+            }
             priv->pmib->dot11RFEntry.macPhyMode = SINGLEMAC_SINGLEPHY;
-            priv->pshare->phw->MIMO_TR_hw_support = RF_2T2R;
             if (Wlan_HAL_Link(priv) != SUCCESS) {
                 rc = -ENODEV;
                 goto err_out_free2;
             }
-#else
-            rc = -ENODEV;
-            goto err_out_free2;
-#endif
         } else
 #endif
         if (((priv->pshare->type>>TYPE_SHIFT) & TYPE_MASK) == TYPE_PCI_DIRECT)

@@ -16,9 +16,8 @@ Major Change History:
 	2012-04-11 Filen            Create.	
 --*/
 
-#if defined(__ECOS)
-#include "HalTxDutySetting.h"
-#endif
+/* Used by firmware prototypes, including consumers of Output/HalLib.h. */
+#include "../HalTxDutySetting.h"
 #define H2C_PACKET_PAYLOAD_MAX_SIZE 32
 #define H2C_ENTERY_MAX_NUM          32
 

@@ -1051,6 +1051,7 @@ unsigned int phy_query_rf_syn_reg(struct rtl8192cd_priv *priv, unsigned int eRFP
 	{
 
 	}
+	return 0;
 }
 #endif
 
@@ -16502,7 +16503,6 @@ int set_reg_pg(struct rtl8192cd_priv *priv, unsigned char *data)
 #if CFG_HAL_PWR_REDUCE
 void set_pwr_reduce(struct rtl8192cd_priv *priv, unsigned char *data)
 {
-	unsigned int errorFlag = 0;
 	int i;
 	volatile char tmpbuf[32];
 	u1Byte bEn = 1;
@@ -16510,46 +16510,68 @@ void set_pwr_reduce(struct rtl8192cd_priv *priv, unsigned char *data)
 	u1Byte bForce_duty_cycle = 1;	
     u1Byte NumOfRateSet = 0;
 	u1Byte Loc_Rate2DutyCycleMap = 0;
-	int value = 5;
+
+	if (!data)
+		return;
 
 	if (strlen((char *)data) != 0) {
 		i = 0;
-		while (*data && *data != ',')
+		while (*data && *data != ',') {
+			if ((size_t)i >= sizeof(tmpbuf) - 1) {
+				DEBUG_ERR("power-reduction field too long!\n");
+				return;
+			}
 			tmpbuf[i++] = *data++;
+		}
 		tmpbuf[i] = '\0';
 		if (i==0 || !*data++) {
 			DEBUG_ERR("invalid path!\n");
-			return -1;
+			return;
 		}
 		bEn = _atoi((char *)tmpbuf, 10);
 
 		i = 0;
-		while (*data && *data != ',')
+		while (*data && *data != ',') {
+			if ((size_t)i >= sizeof(tmpbuf) - 1) {
+				DEBUG_ERR("power-reduction field too long!\n");
+				return;
+			}
 			tmpbuf[i++] = *data++;
+		}
 		tmpbuf[i] = '\0';
 		if (i==0 || !*data++) {
 			DEBUG_ERR("invalid offset!\n");
-			return -1;
+			return;
 		}
 		bForce_duty_cycle = _atoi((char *)tmpbuf, 10);
 
 		i = 0;
-		while (*data && *data != ',')
+		while (*data && *data != ',') {
+			if ((size_t)i >= sizeof(tmpbuf) - 1) {
+				DEBUG_ERR("power-reduction field too long!\n");
+				return;
+			}
 			tmpbuf[i++] = *data++;
+		}
 		tmpbuf[i] = '\0';
 		if (i==0 || !*data++) {
 			DEBUG_ERR("invalid offset!\n");
-			return -1;
+			return;
 		}
 		Duty_cycle_by_forced = _atoi((char *)tmpbuf, 10);
 
 		i = 0;
-		while (*data && *data != ',')
+		while (*data && *data != ',') {
+			if ((size_t)i >= sizeof(tmpbuf) - 1) {
+				DEBUG_ERR("power-reduction field too long!\n");
+				return;
+			}
 			tmpbuf[i++] = *data++;
+		}
 		tmpbuf[i] = '\0';
 		if (i==0 || !*data++) {
 			DEBUG_ERR("invalid offset!\n");
-			return -1;
+			return;
 		}
 		NumOfRateSet = _atoi((char *)tmpbuf, 10);
 
@@ -17436,7 +17458,7 @@ int rtl8192cd_init_hw_PCI(struct rtl8192cd_priv *priv)
         #endif //CONFIG_PHY_WLAN_EAT_40MHZ
 #endif //defined(CONFIG_AUTO_PCIE_PHY_SCAN)
 
-#if defined(CONFIG_RTL8192CD_LINUX6_BUS) && defined(CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE)
+#if defined(CONFIG_RTL8192CD_LINUX6_BUS) && defined(CONFIG_MW5_BOARD_QUIRKS)
 		/* v44.51 / MW5: the stock Tenda RTL8197FS path is clocked from 40 MHz.
 		 * OpenWrt's external-module Kbuild did not inherit vendor config.mk, so
 		 * CONFIG_PHY_EAT_40MHZ was previously absent and the 8197F InitPON path

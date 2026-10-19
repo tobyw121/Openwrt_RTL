@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* Linux 6.x DT/NVMEM board-data glue for MW5 RTL8197FS/RTL8812BRH. */
+/* Linux 6.x DT/NVMEM board-data glue for RTL8197F dual-radio boards. */
 #include <linux/device.h>
 #include <linux/etherdevice.h>
 #include <linux/nvmem-consumer.h>
@@ -109,6 +109,7 @@ static int rtl8192cd_linux6_read_mac_cell(struct device *dev, u8 *addr)
 	struct nvmem_cell *cell;
 	void *buf;
 	size_t len;
+	char ascii_mac[18];
 	int ret;
 
 	cell = devm_nvmem_cell_get(dev, "mac-address");
@@ -119,11 +120,18 @@ static int rtl8192cd_linux6_read_mac_cell(struct device *dev, u8 *addr)
 	if (IS_ERR(buf))
 		return PTR_ERR(buf);
 
-	if (len != ETH_ALEN || !is_valid_ether_addr(buf))
-		ret = -EINVAL;
-	else {
+	ret = -EINVAL;
+	if (len == ETH_ALEN) {
 		ether_addr_copy(addr, buf);
-		ret = 0;
+		ret = is_valid_ether_addr(addr) ? 0 : -EINVAL;
+	} else if (len == 17 || (len == 18 && ((char *)buf)[17] == '\0')) {
+		/* U-Boot environment cells on RD05 contain colon-separated text.
+		 * Do not pass an unterminated NVMEM buffer to a string parser.
+		 */
+		memcpy(ascii_mac, buf, 17);
+		ascii_mac[17] = '\0';
+		if (mac_pton(ascii_mac, addr) && is_valid_ether_addr(addr))
+			ret = 0;
 	}
 
 	kfree(buf);
@@ -132,7 +140,7 @@ static int rtl8192cd_linux6_read_mac_cell(struct device *dev, u8 *addr)
 
 int rtl8192cd_linux6_parse_board_data(struct device *dev,
 				      struct rtl8192cd_linux6_board_data *board,
-				      u8 default_radio, u8 default_rfe,
+				      u8 default_radio, int default_rfe,
 				      int default_mac_increment)
 {
 	u32 value;
@@ -141,7 +149,12 @@ int rtl8192cd_linux6_parse_board_data(struct device *dev,
 
 	memset(board, 0, sizeof(*board));
 	board->radio_index = default_radio;
-	board->rfe_type = default_rfe;
+	if (default_rfe >= 0) {
+		if (default_rfe > U8_MAX)
+			return -EINVAL;
+		board->rfe_type = default_rfe;
+		board->rfe_valid = true;
+	}
 
 	if (!device_property_read_u32(dev, "realtek,radio-index", &value)) {
 		if (value > 1)
@@ -153,6 +166,7 @@ int rtl8192cd_linux6_parse_board_data(struct device *dev,
 		if (value > U8_MAX)
 			return dev_err_probe(dev, -EINVAL, "realtek,rfe-type is out of range\n");
 		board->rfe_type = value;
+		board->rfe_valid = true;
 	}
 
 	if (!device_property_read_u32(dev, "realtek,mac-address-increment", &value))
@@ -188,8 +202,8 @@ int rtl8192cd_linux6_parse_board_data(struct device *dev,
 		return ret;
 
 	dev_info(dev,
-		 "board-data: radio=%u rfe=%u mac=%s calibration=%zu factory=%zu bytes\n",
-		 board->radio_index, board->rfe_type,
+		 "board-data: radio=%u rfe=%u override=%u mac=%s calibration=%zu factory=%zu bytes\n",
+		 board->radio_index, board->rfe_type, board->rfe_valid,
 		 board->mac_valid ? "NVMEM/factory" : "vendor/eFuse fallback",
 		 board->calibration_len, board->factory_len);
 	return 0;

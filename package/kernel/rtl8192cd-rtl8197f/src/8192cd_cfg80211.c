@@ -961,6 +961,13 @@ static void rtk_get_band_capa(struct rtl8192cd_priv *priv,BOOLEAN *band_2gig ,BO
 	*band_2gig = true;
 	*band_5gig = false;
 
+	/* These PCIe parts use the board's dedicated 5 GHz front end. */
+	if (GET_CHIP_VER(priv) == VERSION_8812F || GET_CHIP_VER(priv) == VERSION_8814B) {
+		*band_2gig = false;
+		*band_5gig = true;
+		return;
+	}
+
 	if ((GET_CHIP_VER(priv) == VERSION_8812E) || (GET_CHIP_VER(priv) == VERSION_8814A) || (GET_CHIP_VER(priv) == VERSION_8822B))
 	{
 #if defined(CONFIG_WLAN_HAL_8814AE)
@@ -1144,6 +1151,8 @@ int is_support_ac(struct rtl8192cd_priv *priv)
 		case VERSION_8812E:
 		case VERSION_8881A:
 		case VERSION_8822B:
+		case VERSION_8812F:
+		case VERSION_8814B:
 			ret=1;
 			break;
 #if defined(CONFIG_WLAN_HAL_8814AE)
@@ -8052,6 +8061,10 @@ int realtek_cfg80211_init(struct rtknl *rtk,struct rtl8192cd_priv *priv)
 			wiphy->available_antennas_tx = 0x7;
 			wiphy->available_antennas_rx = 0xf;
 			break;
+		case VERSION_8814B:
+			wiphy->available_antennas_tx = 0xf;
+			wiphy->available_antennas_rx = 0xf;
+			break;
 		default:
 			wiphy->available_antennas_tx = 0x3;
 			wiphy->available_antennas_rx = 0x3;
@@ -8115,7 +8128,8 @@ int realtek_cfg80211_init(struct rtknl *rtk,struct rtl8192cd_priv *priv)
 	 */
 	if (band_2gig)
 	{
-		wiphy->bands[IEEE80211_BAND_2GHZ] = &realtek_band_2ghz;
+		rtk->band_2ghz = realtek_band_2ghz;
+		wiphy->bands[IEEE80211_BAND_2GHZ] = &rtk->band_2ghz;
 		switch (get_rf_mimo_mode(priv))
 		{
 		case RF_1T1R:
@@ -8143,7 +8157,8 @@ int realtek_cfg80211_init(struct rtknl *rtk,struct rtl8192cd_priv *priv)
 
 	if (band_5gig)
 	{
-		wiphy->bands[IEEE80211_BAND_5GHZ] = &realtek_band_5ghz;
+		rtk->band_5ghz = realtek_band_5ghz;
+		wiphy->bands[IEEE80211_BAND_5GHZ] = &rtk->band_5ghz;
 		switch (get_rf_mimo_mode(priv))
 		{
 		case RF_1T1R:
@@ -8170,6 +8185,14 @@ int realtek_cfg80211_init(struct rtknl *rtk,struct rtl8192cd_priv *priv)
 			wiphy->bands[IEEE80211_BAND_5GHZ]->vht_cap.vht_mcs.rx_highest = cpu_to_le16(1170);
 			wiphy->bands[IEEE80211_BAND_5GHZ]->vht_cap.vht_mcs.tx_highest = cpu_to_le16(1170);
 			wiphy->bands[IEEE80211_BAND_5GHZ]->vht_cap.cap |= (IEEE80211_VHT_CAP_RXLDPC);
+			break;
+		case RF_4T4R:
+			wiphy->bands[IEEE80211_BAND_5GHZ]->ht_cap.mcs.rx_highest = cpu_to_le16(600);
+			memset(wiphy->bands[IEEE80211_BAND_5GHZ]->ht_cap.mcs.rx_mask, 0xff, 4);
+			wiphy->bands[IEEE80211_BAND_5GHZ]->vht_cap.vht_mcs.rx_mcs_map = cpu_to_le16(0xffaa);
+			wiphy->bands[IEEE80211_BAND_5GHZ]->vht_cap.vht_mcs.tx_mcs_map = cpu_to_le16(0xffaa);
+			wiphy->bands[IEEE80211_BAND_5GHZ]->vht_cap.vht_mcs.rx_highest = cpu_to_le16(1560);
+			wiphy->bands[IEEE80211_BAND_5GHZ]->vht_cap.vht_mcs.tx_highest = cpu_to_le16(1560);
 			break;
 		default:
 			NDEBUG(" Waring, mimo(%d) not support\n", get_rf_mimo_mode(priv));

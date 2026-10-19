@@ -5445,7 +5445,7 @@ SetTxDescQSel88XX_V1(
     u1Byte  q_select;
     //u4Byte  val=0;
 #if CFG_HAL_SUPPORT_TXDESC_IE    
-    u1Byte* IE1_head = ptx_desc+16+8;
+    u1Byte *IE1_head = (u1Byte *)ptx_desc + 16 + 8;
 #endif    
 	switch (queueIndex) {
     	case HCI_TX_DMA_QUEUE_HI0:
@@ -8183,7 +8183,7 @@ SetTxDescQSel88XX_V3(
 {
     u1Byte  q_select;
 #if CFG_HAL_SUPPORT_TXDESC_IE    
-    u1Byte* IE1_head = ptx_desc+16+8;
+    u1Byte *IE1_head = (u1Byte *)ptx_desc + 16 + 8;
 #endif    
 	switch (queueIndex) {    	
         case HCI_TX_DMA_QUEUE_CMD_V2:
@@ -8680,7 +8680,7 @@ printk("ptxdesc_bcn_head:%p, tmp_tx_dma_ring_addr4:%08lx, \n", ptxdesc_bcn_head,
             // beacon...
             for (i = 0; i < 1+HAL_NUM_VWLAN; i++)
             {
-                ptxbd_bcn_cur = (pu1Byte)ptxbd + beacon_offset * i;
+                ptxbd_bcn_cur = (PTX_BUFFER_DESCRIPTOR)((pu1Byte)ptxbd + beacon_offset * i);
                 SET_DESC_FIELD_CLR(ptxbd_bcn_cur->TXBD_ELE[0].Dword0, \
                         bcn_TXDESCSize, \
                         TXBD_DW0_TXBUFSIZE_MSK, TXBD_DW0_TXBUFSIZE_SH);
@@ -9038,7 +9038,7 @@ SetTxDescQSel88XX_V2(
 {
     u1Byte  q_select;
 #if CFG_HAL_SUPPORT_TXDESC_IE    
-    u1Byte* IE1_head = ptx_desc+16+8;
+    u1Byte *IE1_head = (u1Byte *)ptx_desc + 16 + 8;
 #endif    
 	switch (queueIndex) {    	
         case HCI_TX_DMA_QUEUE_CMD_V1:

@@ -5152,13 +5152,10 @@ static inline int is_opt_trapDHCP_set(int val)
 #if !(defined(CONFIG_RTL8192CD_LINUX6_BUS) && defined(CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE))
 #define REPLY_ASSOC_BY_HAPD
 #endif
-/* v44.65.17 MW5 firewall ownership rule. The unified accelerator is the
- * only router-level fast path. WLAN-local descriptor caching/aggregation is
- * radio-internal and retained; bridge/NAT/extension-port shortcuts are not. */
-#ifdef CONFIG_MW5_ACCEL
-/* v44.65.17: one MW5 acceleration owner only.  Keep the WLAN-local descriptor
- * shortcut machinery, but remove every legacy bridge/NAT/extension-port path
- * which can forward before Linux nftables/conntrack. */
+#ifdef CONFIG_RTL8192CD_LINUX6_BUS
+/* Linux6 keeps bridge/firewall ownership in Linux for every board. Retain
+ * WLAN-local descriptor caching and aggregation, but remove bridge/NAT/
+ * extension-port shortcuts which can bypass Linux nftables/conntrack. */
 #ifdef BR_SHORTCUT
 #undef BR_SHORTCUT
 #endif

@@ -18,9 +18,8 @@ OUT="${1:-/tmp/rtl8197f-wlan-check.txt}"
 	command -v lspci >/dev/null 2>&1 && lspci -nnk 2>&1 || true
 	echo '=== interfaces ==='
 	ip link show 2>&1
-	cat /proc/net/wireless 2>/dev/null || true
-	command -v iwconfig >/dev/null 2>&1 && iwconfig 2>&1 || true
-	command -v iwpriv >/dev/null 2>&1 && iwpriv 2>&1 || true
+	command -v iw >/dev/null 2>&1 && iw dev 2>&1 || true
+	command -v iw >/dev/null 2>&1 && iw phy 2>&1 || true
 	echo '=== interrupts ==='
 	grep -Ei 'wlan|wifi|rtl|pcie' /proc/interrupts 2>/dev/null || true
 	echo '=== AP test state ==='
