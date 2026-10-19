@@ -128,7 +128,7 @@ zusätzlich geprüft werden. Pro Board einen eigenen Build mit passendem
 
 Ausgeführt in der Cloud: alle vier Varianten als MIPS32R2/Little-Endian-Objekt
 gegen Linux 6.6.114 und die gepatchten OpenWrt-Backports 6.12.96 übersetzt und
-gelinkt; keine unaufgelösten WEXT-Symbole. Außerdem 32 Host-Regressionstests,
+gelinkt; keine unaufgelösten WEXT-Symbole. Außerdem 38 Host-Regressionstests,
 vier DTS-Kompilierungen, Boardprofil- und MW5-Routing-Prüfung bestanden.
 Die SDK-Quellen erzeugen weiterhin Compilerwarnungen. Ein vollständiger
 Firmware-/MODPOST-Build und Tests auf den Geräten wurden nicht durchgeführt.
@@ -142,10 +142,12 @@ Firmware-/MODPOST-Build und Tests auf den Geräten wurden nicht durchgeführt.
    Lebenszyklen sind noch nicht vollständig portiert. Die MW5-Steuerung
    `mw5-wifi` bleibt boardspezifisch. Sie wird nicht als AC23-/RD05-Steuerung
    installiert. Vorhandene Capability-Anzeigen sind keine Funktionsfreigabe.
-4. Switch-Treiber bleiben Linux DSA/Phylink. Die genaue RTL8363NB-Kaltstart-
-   Registertabelle fehlt im gesammelten SDK; die vorhandene sparse Sequenz ist
-   kein Ersatz für den Nachweis nach vollständigem Stromverlust. AC23-Portplan
-   und die abweichende RD05-Switchbezeichnung am Gerät verifizieren.
+4. Switch-Treiber bleiben Linux DSA/Phylink. Die weitere OEM-Rückentwicklung
+   weist den Common-Init-Zweig und externe Flow-Control-Werte für die im
+   MW5-Log beobachtete ID 0x6367/Revision 0x0060 nach. Patch 332 übernimmt
+   acht belegte Schwellenwerte ausschließlich für diese MW5-Identität;
+   siehe `OEM_SWITCH_REVERSE.md`. Vollständige Kaltstart-Parität bleibt
+   auf Hardware zu prüfen. AC23-Portplan und RD05-Switchbezeichnung live bestätigen.
 5. Je Band WPA2/CCMP-Verbindungsaufbau, DHCP, Bridging, Routing, Reconnect und
    Neustart testen. Danach parallelen LAN/WAN- und WLAN-Verkehr mit einem
    zweiten Rechner erzeugen; mindestens 30 Minuten bidirektional, anschließend

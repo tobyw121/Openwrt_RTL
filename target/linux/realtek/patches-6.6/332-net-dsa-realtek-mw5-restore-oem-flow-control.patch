@@ -1,0 +1,97 @@
+From: OpenAI <noreply@openai.com>
+Subject: [PATCH] net: dsa: realtek: restore verified MW5 external flow control
+
+The exact MW5 SPI kernel contains direct SMI writes of external switch page
+thresholds in RTL83XX_init(). This proves the source of 0x121f..0x1226 and
+supersedes the earlier omission based on ambiguous switchCore diagnostics.
+Apply the eight recovered values only for the MW5 OEM-init property and
+observed chip 0x6367/revision 0x0060. Preserve OEM order and propagate the
+first regmap error. Other boards and switch revisions keep their old writes.
+
+The recovered sequence is not proof of a fix for the network stall; a cold
+boot and sustained hardware load test without netdiag are still required.
+See OEM_SWITCH_REVERSE.md and oem-switch-evidence.json for provenance.
+
+Signed-off-by: OpenAI <noreply@openai.com>
+
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -3047,18 +3047,45 @@
+ 	return regmap_update_bits(priv->map, 0x0078, 0x0300, 0x0300);
+ }
+ 
++/* MW5 OEM Linux 3.10.90 RTL83XX_init(), 0x801d8ca0..0x801d8cfc.
++ * The recovered calls go through rtl8367c_setAsicReg -> smi_write.
++ * These are external switch page thresholds, not RTL8197F switchCore values.
++ * Apply only to the MW5 silicon identity verified in the supplied live log.
++ */
++static int rtl8365mb_mw5_oem_flowctrl_init(struct realtek_priv *priv)
++{
++	struct rtl8365mb *mb = priv->chip_data;
++	static const struct rtl8365mb_jam_tbl_entry thresholds[] = {
++		{ 0x121f, 0x01d0 }, /* system ON */
++		{ 0x1220, 0x01ac }, /* system OFF */
++		{ 0x1221, 0x019e }, /* shared ON */
++		{ 0x1222, 0x017a }, /* shared OFF */
++		{ 0x1223, 0x01d0 }, /* FCOFF system ON */
++		{ 0x1224, 0x01ac }, /* FCOFF system OFF */
++		{ 0x1225, 0x019e }, /* FCOFF shared ON */
++		{ 0x1226, 0x017a }, /* FCOFF shared OFF */
++	};
++	unsigned int i;
++	int ret;
++
++	if (!of_property_read_bool(priv->dev->of_node,
++				   "realtek,rtl8197f-mw5-oem-init") ||
++	    mb->detected_chip_id != 0x6367 || mb->detected_chip_ver != 0x0060)
++		return 0;
++
++	for (i = 0; i < ARRAY_SIZE(thresholds); i++) {
++		ret = regmap_write(priv->map, thresholds[i].reg, thresholds[i].val);
++		if (ret)
++			return ret;
++	}
++
++	dev_info(priv->dev, "restored MW5 OEM external flow-control thresholds (6367/0060)\n");
++	return 0;
++}
++
+ static int rtl8365mb_mw5_board_init(struct realtek_priv *priv)
+ {
+ 	static const struct rtl8365mb_jam_tbl_entry mw5[] = {
+-		{ 0x1b03, 0x0936 },
+-		/* V212 S_DSC/SDC/IQ values come from /proc/rtl865x and describe */
+-		/* the RTL8197F internal switchCore, not this external RTL8367. */
+-		/* Keep 0x121f..0x1226 at SDK/default values until an external */
+-		/* register-to-field mapping is proven from this exact switch. */
+-		/* This deliberately replaces the old copied threshold sequence. */
+-		/* Read-only /proc diagnostics still expose those registers. */
+-		/* No unknown flow-control register is written from V212. */
+-		/* Ethernet stability comes before speculative HW QoS tuning. */
+ 		{ 0x13c3, 0x0000 },
+ 		{ 0x13c4, 0x0000 },
+ 		{ 0x1d53, 0x0001 },
+@@ -3073,6 +3100,14 @@
+ 	int ret;
+ 	unsigned int i;
+ 
++	/* Preserve the OEM order: RGMII setting, thresholds, then SSC. */
++	ret = regmap_write(priv->map, 0x1b03, 0x0936);
++	if (ret)
++		return ret;
++	ret = rtl8365mb_mw5_oem_flowctrl_init(priv);
++	if (ret)
++		return ret;
++
+ 	for (i = 0; i < ARRAY_SIZE(mw5); i++) {
+ 		ret = regmap_write(priv->map, mw5[i].reg, mw5[i].val);
+ 		if (ret)
+@@ -3080,7 +3115,7 @@
+ 	}
+ 
+ 	dev_info(priv->dev,
+-		 "applied Tenda MW5 verified board/SSC sequence; external 0x121f..0x1226 flow-control registers left untouched\n");
++		 "applied Tenda MW5 verified board/SSC sequence\n");
+ 	return 0;
+ }
+ 

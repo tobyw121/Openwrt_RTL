@@ -62,10 +62,11 @@
         "OEM /etc_ro/gpio_conf",
         "verified MW5 8 MiB SPI dump",
         "extracted RTL8197F/RFE5 and RTL8822B firmware tables",
-        "Realtek RTL8197FS SDK sources"
+        "Realtek RTL8197FS SDK sources",
+        "Recovered OEM kallsyms and external switch SMI write sequence; LOG_MW5 chip_id=0x6367 chip_ver=0x0060"
       ],
       "unresolved": [
-        "Exact RTL8363NB cold-start jam table",
+        "Full cold-start equivalence between recovered OEM 6367/0060 init and Linux DSA/platform sequence requires hardware validation",
         "External radio identity should still be read back on the target unit before RF transmission",
         "Board-specific regulatory domain and calibration validity require live validation"
       ],
@@ -108,7 +109,11 @@
       "soc_internal_pipeline_evidence": "v42.26 hardware: RTL8363 LAN/WAN counters rise and both links reach forwarding, while eth0 RX remains zero and legacy-pipeline is disabled; Realtek RTL8367R OEM path enables unknown-VID-to-CPU and rtl865x_enableRtl8367ToCpuAcl().",
       "factory_format": "tenda-kv",
       "factory_offset": 131072,
-      "factory_size": 65536
+      "factory_size": 65536,
+      "switch_chip_id": "0x6367",
+      "switch_revision": "0x0060",
+      "switch_sdk_family": "RTL8367C (OEM selector 0), as reported by the existing MW5 live log",
+      "switch_flowctrl_evidence": "OEM RTL83XX_init direct SMI writes at 0x801d8ca0..0x801d8cfc; patch 332 gated to 6367/0060 and MW5 OEM-init property"
     },
     "tenda,ac23": {
       "confidence": "medium-low",

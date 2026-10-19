@@ -1,0 +1,497 @@
+{
+  "schema": 1,
+  "source_commit": "e6d68e9067f54b695022f61ed52e50dc56c5a7b7",
+  "dump_directory": "openwrt24.10-realtek-rtl8197f-mw5/fullflash-templates",
+  "image_base": 2147483648,
+  "boards": {
+    "mw5": {
+      "kernel_sha256": "11fda4eba4ad3572037fa8ac39c14b28f7535e863e10a01130ea0bb18ff3d6a9",
+      "symbol_count": 29629,
+      "kallsyms_offsets": {
+        "addresses": 4790128,
+        "num_syms": 4908656,
+        "names": 4908672,
+        "markers": 5268912,
+        "token_table": 5269376,
+        "token_index": 5270272
+      },
+      "export_cross_checks": 3672,
+      "selected_symbols": {
+        "_text": {
+          "address": 2147483648,
+          "type": "T",
+          "span": 1024,
+          "span_sha256": "5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+        },
+        "_stext": {
+          "address": 2147484672,
+          "type": "T",
+          "span": 436,
+          "span_sha256": "2e3dda9b4a1a205fad2f8b2433205c4c321c3099b4c0cd720a40cf4f343f608d"
+        },
+        "switch_phy_status_get": {
+          "address": 2149125736,
+          "type": "T",
+          "span": 36,
+          "span_sha256": "d5620a42d09e0f653f6fca5b83e1fd405b920b8613d9e5dcdcbd8db96795f8cf"
+        },
+        "curLinkPortMask": {
+          "address": 2154500060,
+          "type": "b"
+        },
+        "one_sec_timer": {
+          "address": 2149160504,
+          "type": "t",
+          "span": 476,
+          "span_sha256": "552398396f72eae10829eb07d68d59f8b73fb2c50f33b19d0014534e56587c29"
+        },
+        "interrupt_dsr_link": {
+          "address": 2149154960,
+          "type": "t",
+          "span": 192,
+          "span_sha256": "826f871daf122fea64f27e4f7b84cc7cdf167365959a45e63bd8bc2963a2018a"
+        },
+        "rtl_get_8367r_port_link_status": {
+          "address": 2149150196,
+          "type": "T",
+          "span": 132,
+          "span_sha256": "5a050415015cdc731beb748d6dd958fb30337dc943ead991675d6a3342e20051"
+        },
+        "rtl_check_swCore_tx_hang": {
+          "address": 2149142780,
+          "type": "T",
+          "span": 476,
+          "span_sha256": "367dc027316ae00831831e5ca2e1772053f6a55ebbc3d23e0a28eef33966c039"
+        },
+        "check_link_change": {
+          "address": 2149150328,
+          "type": "T",
+          "span": 260,
+          "span_sha256": "b557523be906cf271ed66cf9e62b9a7d0b451088f8589f96833cbe66503d4b71"
+        },
+        "RTL83XX_init": {
+          "address": 2149419968,
+          "type": "T",
+          "span": 580,
+          "span_sha256": "c4907490fa8e428258364b5709dbe7cefd4485cfe7cbd62846d458adf635af8f"
+        },
+        "RTL83XX_init_switch_mode": {
+          "address": 2149420624,
+          "type": "T",
+          "span": 248,
+          "span_sha256": "95b6af9d82bcb897f2680019ca352f0e448fd4edaa4861059de895518ffea9f9"
+        },
+        "rtk_switch_init": {
+          "address": 2149566908,
+          "type": "T",
+          "span": 2468,
+          "span_sha256": "8f82dc1abce7a7fcbba385d69691490a6a6bf54c023a34ab258db87c1ba4ffa0"
+        },
+        "rtk_switch_probe": {
+          "address": 2149566500,
+          "type": "T",
+          "span": 324,
+          "span_sha256": "ad7559e10828adf0efa66ffc73c4ee7a8031dfb9a6ebf857da690eafec38c1c3"
+        },
+        "rtk_port_macStatus_get": {
+          "address": 2149549732,
+          "type": "T",
+          "span": 236,
+          "span_sha256": "26d62cd2bd85304e38e55f2f221c602f448ce19e2dee0bdee70d9ccda09937bb"
+        },
+        "rtl8367c_getAsicPortStatus": {
+          "address": 2149457280,
+          "type": "T",
+          "span": 144,
+          "span_sha256": "9fda35b4a09eb1ec56a949643990835e0527ffb3e934e708d00ca572c51c4833"
+        },
+        "rtl8367c_getAsicReg": {
+          "address": 2149426464,
+          "type": "T",
+          "span": 64,
+          "span_sha256": "421501f8516d754309f45c5f21ad4e8db85d9e8b1e75ecaca6d1769958b2f003"
+        },
+        "rtl8367c_setAsicReg": {
+          "address": 2149426776,
+          "type": "T",
+          "span": 40,
+          "span_sha256": "6c4cbe328a64d117416868e03fa55ffc459ed9d12abefed3c22e4bcf3957754b"
+        },
+        "smi_read": {
+          "address": 2149263060,
+          "type": "T",
+          "span": 396,
+          "span_sha256": "4c10986382fdfcdd7a3e04ff5a9cf96242df5326880c1d3cdab7373aad482a72"
+        },
+        "smi_write": {
+          "address": 2149262616,
+          "type": "T",
+          "span": 444,
+          "span_sha256": "0b2e905d681e89d430fc10a834f8f998688ad553fafa6e129339570e94276694"
+        },
+        "PatchChipData": {
+          "address": 2152222432,
+          "type": "r",
+          "span": 1680,
+          "span_sha256": "32037f2bafe1fd858fbcc3879eddecd8cb3b14806a49ec7a6bd8dac294e97a6b",
+          "pair_count": 210,
+          "applicability": "OEM rtk_switch_init selector 1 (RTL8370B), not the logged MW5 0x6367 selector 0"
+        }
+      }
+    },
+    "ac23": {
+      "kernel_sha256": "e2f9c912499c88669d1df1a31a10aa8367e7a0a517840b9371fcc63601e39aa5",
+      "symbol_count": 31553,
+      "kallsyms_offsets": {
+        "addresses": 5514672,
+        "num_syms": 5640896,
+        "names": 5640912,
+        "markers": 6020144,
+        "token_table": 6020640,
+        "token_index": 6021520
+      },
+      "export_cross_checks": 3803,
+      "selected_symbols": {
+        "_text": {
+          "address": 2147483648,
+          "type": "T",
+          "span": 1024,
+          "span_sha256": "5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+        },
+        "_stext": {
+          "address": 2147484672,
+          "type": "T",
+          "span": 436,
+          "span_sha256": "dee46a7d4d0eb99306d131a630e698bc4c348627e0fdb882e76fc12dca0bd1fd"
+        },
+        "switch_phy_status_get": {
+          "address": 2149095340,
+          "type": "T",
+          "span": 32,
+          "span_sha256": "bf277722d429ad48d3a4380e3d85cee61c289a738848977c5d96821b4d872b09"
+        },
+        "curLinkPortMask": {
+          "address": 2155064428,
+          "type": "b"
+        },
+        "one_sec_timer": {
+          "address": 2149136276,
+          "type": "t",
+          "span": 416,
+          "span_sha256": "682a13a9505ca04666cb896f4722c8638a6fa0e012422094a9367a991a7f6044"
+        },
+        "interrupt_dsr_link": {
+          "address": 2149132456,
+          "type": "t",
+          "span": 192,
+          "span_sha256": "2f043e0d4ac0a8ae3b14e1964874673568ca594accf580a46f0825b806131cac"
+        },
+        "rtl_get_8367r_port_link_status": {
+          "address": 2149121004,
+          "type": "T",
+          "span": 132,
+          "span_sha256": "a297d4885d198607e4a19544a9a0c92ba6cfd4dc563b6a79473c775295be5d00"
+        },
+        "rtl_check_swCore_tx_hang": {
+          "address": 2149117640,
+          "type": "T",
+          "span": 520,
+          "span_sha256": "b7007c77c2e17055f532640335b285de2748b06f0f9bab9418f0e154e64fcf29"
+        },
+        "check_link_change": {
+          "address": 2149119168,
+          "type": "T",
+          "span": 248,
+          "span_sha256": "7838ba786cf0742f108de10bf5edf2c394abea809e2cd7b34bc507e668575531"
+        },
+        "RTL83XX_init": {
+          "address": 2149451280,
+          "type": "T",
+          "span": 540,
+          "span_sha256": "cfbffe7669fc4ab4c6eedcc089e639cfeef942275dbe78a830b5fa0c4a04e268"
+        },
+        "RTL83XX_init_switch_mode": {
+          "address": 2149451896,
+          "type": "T",
+          "span": 248,
+          "span_sha256": "d3d0cf682fac47e001865f73c22497f7fd236d5f5f2ef21486e5c0d2f391c510"
+        },
+        "rtk_switch_init": {
+          "address": 2149626528,
+          "type": "T",
+          "span": 3040,
+          "span_sha256": "1b3b415690c039db9e6c766c5316a33b2c31a99abfb3c2dccf08fb957f1ba13b"
+        },
+        "rtk_switch_probe": {
+          "address": 2149626004,
+          "type": "T",
+          "span": 524,
+          "span_sha256": "92dc6bdf01a80ffaa41faf7f02e6a587929e3531a2b18562c13c081f91add6fc"
+        },
+        "rtk_port_macStatus_get": {
+          "address": 2149600012,
+          "type": "T",
+          "span": 316,
+          "span_sha256": "ade19540ec8bcdeccb8b8dce4ef9e31bf5ecf1ff6529d3e6c90bbbee7c842b6d"
+        },
+        "rtl8367c_getAsicPortStatus": {
+          "address": 2149488560,
+          "type": "T",
+          "span": 144,
+          "span_sha256": "14149deb0ac683bb180445cf3340c514d19f0c2e0bc74f4602ae5338d6ac5e29"
+        },
+        "rtl8367c_getAsicReg": {
+          "address": 2149457632,
+          "type": "T",
+          "span": 64,
+          "span_sha256": "de5b6f2eb020cd01972195f833d3004dfba56c2258254b3d2163c1cc113e7c5e"
+        },
+        "rtl8367c_setAsicReg": {
+          "address": 2149457944,
+          "type": "T",
+          "span": 40,
+          "span_sha256": "55ba49fb3bcba3c2c79192f9c7a59ec33f761151d3262ce79ee3ff93f57d7fef"
+        },
+        "smi_read": {
+          "address": 2149266960,
+          "type": "T",
+          "span": 480,
+          "span_sha256": "2bc188845bbe5cb4f1cd1e954992a2f74c5e30a2ee200201cee58cacc127cd70"
+        },
+        "smi_write": {
+          "address": 2149266444,
+          "type": "T",
+          "span": 516,
+          "span_sha256": "94d249e01be1941008c097d445a32d7f0df9c6acb02073834b45e66e58d899c5"
+        },
+        "PatchChipData": {
+          "address": 2152779392,
+          "type": "r",
+          "span": 1680,
+          "span_sha256": "32037f2bafe1fd858fbcc3879eddecd8cb3b14806a49ec7a6bd8dac294e97a6b",
+          "pair_count": 210,
+          "applicability": "OEM rtk_switch_init selector 1 (RTL8370B), not the logged MW5 0x6367 selector 0"
+        }
+      }
+    },
+    "rd05": {
+      "kernel_sha256": "aa48d325730b95c0658090ba9f943f71bdd9888dc57f609a3989ba58f0f8f5cc",
+      "symbol_count": 24127,
+      "kallsyms_offsets": {
+        "addresses": 7633664,
+        "num_syms": 7730176,
+        "names": 7730192,
+        "markers": 8026768,
+        "token_table": 8027152,
+        "token_index": 8028032
+      },
+      "export_cross_checks": 0,
+      "selected_symbols": {
+        "_stext": {
+          "address": 2147484672,
+          "type": "T",
+          "span": 576,
+          "span_sha256": "d0c2197a50a6025d95677685fb9dfb22f379cfef334130ba11e5f5dd9724ca22"
+        },
+        "one_sec_timer": {
+          "address": 2150264712,
+          "type": "t",
+          "span": 500,
+          "span_sha256": "80a041842febac8d03281512ccdc34ec851da8233e3f1525412e5bef8ca5e6a7"
+        },
+        "interrupt_dsr_link": {
+          "address": 2150252748,
+          "type": "t",
+          "span": 268,
+          "span_sha256": "1c8ceeda4ce669ff1629d2c7ad6ab16000ab056772d84888e8b33e3d087741be"
+        },
+        "rtl_get_8367r_port_link_status": {
+          "address": 2150245584,
+          "type": "T",
+          "span": 192,
+          "span_sha256": "0bca395abe4a50ed5c09e58729e10e9e532ff8295a6b49554d3b780bea260cf7"
+        },
+        "rtl_check_swCore_tx_hang": {
+          "address": 2150251548,
+          "type": "T",
+          "span": 576,
+          "span_sha256": "f3442137e8df4651eeed218245d241dfac1f7ee4ec26d92448a9aeedff85583a"
+        },
+        "RTL83XX_init": {
+          "address": 2150594948,
+          "type": "T",
+          "span": 1460,
+          "span_sha256": "8b2d0728c30d12d5ba9a5a90b0d8e5ee27f90e9374c8bf0b21a2309acc8d6def"
+        },
+        "RTL83XX_init_switch_mode": {
+          "address": 2150596512,
+          "type": "T",
+          "span": 1044,
+          "span_sha256": "0946b6820f876a62600f8674184d839f75f2d5c3fb5329da122cf1d93769d46b"
+        },
+        "rtk_switch_init": {
+          "address": 2150627860,
+          "type": "T",
+          "span": 144,
+          "span_sha256": "a07258e4d1032ef6fde31d18e0d3c97ebbd4af8b7eb8792849e89bfdc46ec2d1"
+        },
+        "rtk_port_macStatus_get": {
+          "address": 2150620396,
+          "type": "T",
+          "span": 124,
+          "span_sha256": "33218de512d4790618a141b8bded83661a1a48b2cbcc8e4f9f80c3b0e4b99a40"
+        },
+        "rtl8367c_getAsicPortStatus": {
+          "address": 2150891396,
+          "type": "T",
+          "span": 184,
+          "span_sha256": "60b5b78026b0ae4327f40228dd7a23ac9ceb8553e7d9648c938eac43f73ae263"
+        },
+        "rtl8367c_getAsicReg": {
+          "address": 2150670912,
+          "type": "T",
+          "span": 96,
+          "span_sha256": "c3380f622118831a19eec69dfa9e78ca8fa4c70f6deb2920c2216c9d2ee6c32b"
+        },
+        "rtl8367c_setAsicReg": {
+          "address": 2150670868,
+          "type": "T",
+          "span": 44,
+          "span_sha256": "850834d6d19e1ebfae3078ffd3648e783cd170caedeed75532294e68c629c1fa"
+        },
+        "smi_read": {
+          "address": 2150411816,
+          "type": "T",
+          "span": 428,
+          "span_sha256": "b5dee5acb4ab9c3476a026f5951694e4a9331b4c2188d50ffe0d483f2c26186e"
+        },
+        "smi_write": {
+          "address": 2150412244,
+          "type": "T",
+          "span": 476,
+          "span_sha256": "06a4959ff65ecebeef12146c87c5d632d0727b6ad60455ddc106993fe888b699"
+        },
+        "hal_find_device": {
+          "address": 2150608776,
+          "type": "T",
+          "span": 184,
+          "span_sha256": "ecbacce3df09d17267cba55b8fb165c1cffe66bea8c847d06903248126a51f5d"
+        },
+        "dal_mgmt_attachDevice": {
+          "address": 2150669936,
+          "type": "T",
+          "span": 192,
+          "span_sha256": "921ad2cd1089a20ee55acecba7c19a6b33d359eeac9db114b08ab2f863889208"
+        }
+      }
+    }
+  },
+  "mw5_flowctrl": {
+    "required_dt_property": "realtek,rtl8197f-mw5-oem-init",
+    "observed_chip_id": 25447,
+    "observed_chip_revision": 96,
+    "source_function": "RTL83XX_init",
+    "source_target": "rtl8367c_setAsicReg",
+    "transport_target": "smi_write",
+    "writes": [
+      {
+        "register": 4639,
+        "value": 464,
+        "sdk_field": "RTL8367C_REG_FLOWCTRL_SYS_ON",
+        "call_pc": 2149420196,
+        "instruction_words": [
+          "0x2404121f",
+          "0x0c076996",
+          "0x240501d0"
+        ],
+        "observed_log_value": 470
+      },
+      {
+        "register": 4640,
+        "value": 428,
+        "sdk_field": "RTL8367C_REG_FLOWCTRL_SYS_OFF",
+        "call_pc": 2149420208,
+        "instruction_words": [
+          "0x24041220",
+          "0x0c076996",
+          "0x240501ac"
+        ],
+        "observed_log_value": 440
+      },
+      {
+        "register": 4641,
+        "value": 414,
+        "sdk_field": "RTL8367C_REG_FLOWCTRL_SHARE_ON",
+        "call_pc": 2149420220,
+        "instruction_words": [
+          "0x24041221",
+          "0x0c076996",
+          "0x2405019e"
+        ],
+        "observed_log_value": 460
+      },
+      {
+        "register": 4642,
+        "value": 378,
+        "sdk_field": "RTL8367C_REG_FLOWCTRL_SHARE_OFF",
+        "call_pc": 2149420232,
+        "instruction_words": [
+          "0x24041222",
+          "0x0c076996",
+          "0x2405017a"
+        ],
+        "observed_log_value": 430
+      },
+      {
+        "register": 4643,
+        "value": 464,
+        "sdk_field": "RTL8367C_REG_FLOWCTRL_FCOFF_SYS_ON",
+        "call_pc": 2149420244,
+        "instruction_words": [
+          "0x24041223",
+          "0x0c076996",
+          "0x240501d0"
+        ],
+        "observed_log_value": 470
+      },
+      {
+        "register": 4644,
+        "value": 428,
+        "sdk_field": "RTL8367C_REG_FLOWCTRL_FCOFF_SYS_OFF",
+        "call_pc": 2149420256,
+        "instruction_words": [
+          "0x24041224",
+          "0x0c076996",
+          "0x240501ac"
+        ],
+        "observed_log_value": 440
+      },
+      {
+        "register": 4645,
+        "value": 414,
+        "sdk_field": "RTL8367C_REG_FLOWCTRL_FCOFF_SHARE_ON",
+        "call_pc": 2149420268,
+        "instruction_words": [
+          "0x24041225",
+          "0x0c076996",
+          "0x2405019e"
+        ],
+        "observed_log_value": 460
+      },
+      {
+        "register": 4646,
+        "value": 378,
+        "sdk_field": "RTL8367C_REG_FLOWCTRL_FCOFF_SHARE_OFF",
+        "call_pc": 2149420280,
+        "instruction_words": [
+          "0x24041226",
+          "0x0c076996",
+          "0x2405017a"
+        ],
+        "observed_log_value": 430
+      }
+    ],
+    "live_log_sha256": "c1912fb73806e8063a8079da1614a19126c51975458ee4b81b32d3b0b64fd3db",
+    "live_log_filename": "LOG_MW5.txt"
+  }
+}

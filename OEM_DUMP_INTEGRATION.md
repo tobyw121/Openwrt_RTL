@@ -90,11 +90,14 @@ OEM-Schnittstellen. Sie werden nicht in Linux 6.6 geladen. Der vorhandene
 DSA-/Phylink-Pfad wird nicht um unbewiesene Registerzugriffe oder eine
 periodische pauschale Löschung von MAC-Tabellen erweitert.
 
-Die vollständige RTL8363NB-Kaltstarttabelle und die Ursache des MW5-
-Netzstillstands sind weiterhin offen. Die vorhandene MW5-Abschaltung der
-Softwarebeschleuniger und das standardmäßig ausgeschaltete RX-Batching
-werden nicht verändert. Auch die OEM-3.10-FastNAT-/Fast-L2-Module des AC23
-werden nicht übernommen.
+Die weitere Rückentwicklung ist in [OEM_SWITCH_REVERSE.md](OEM_SWITCH_REVERSE.md)
+dokumentiert. Inzwischen sind die Symboltabellen aller drei OEM-Kernels,
+der MW5-Common-Init-Zweig für die geloggte ID 0x6367/0x0060 und acht externe
+Flow-Control-Schreibzugriffe rekonstruiert. Patch 332 ergänzt diese acht
+Werte gezielt für diese MW5-Identität. Vollständige Kaltstart-Parität und
+die Ursache des Netzstillstands sind weiterhin nicht hardwarevalidiert.
+Die MW5-Softwarebeschleuniger und RX-Batching bleiben standardmäßig aus.
+Die OEM-3.10-FastNAT-/Fast-L2-Module des AC23 werden nicht übernommen.
 
 ## Prüfungen und Hardwareabnahme
 
