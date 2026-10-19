@@ -260,7 +260,7 @@ basic_snapshot()
 		fi
 	done
 
-	section "WLAN NETIF_RX BACKLOG PRODUCER"
+	section "WLAN LEGACY STACK HANDOFF COUNTERS"
 	for wifi_if in wlan1 wlan0; do
 		if [ -r "/proc/$wifi_if/stats" ]; then
 			echo "--- $wifi_if /proc stats"
@@ -280,6 +280,8 @@ basic_snapshot()
 	else
 		echo "iw unavailable"
 	fi
+	section "WLAN NAPI GRO DELIVERY"
+	wlan_rx_snapshot
 
 	switch_diag_snapshot "CURRENT"
 
@@ -330,21 +332,41 @@ rd05_token_value()
 	' /proc/rd05-rtknet 2>/dev/null
 }
 
+wlan_rx_snapshot()
+{
+	wr_found=0
+	# Only read known counters. Never dump register/regmap debugfs files.
+	for wr_dir in /sys/kernel/debug/rtl8192cd/*; do
+		[ -r "$wr_dir/radio_index" ] || continue
+		wr_found=1
+		echo "--- $(basename "$wr_dir") (radio 0=5GHz, radio 1=2.4GHz)"
+		for wr_key in radio_index napi_schedules napi_polls napi_work_done gro_packets gro_merged backlog_packets rx_refill_alloc_failures; do
+			if [ -r "$wr_dir/$wr_key" ]; then
+				printf '%s=' "$wr_key"
+				cat "$wr_dir/$wr_key" 2>/dev/null || echo NA
+			else
+				echo "$wr_key=NA"
+			fi
+		done
+	done
+	[ "$wr_found" = 1 ] || echo 'WLAN debugfs counters unavailable; GRO activity cannot be measured'
+}
+
 wlan_proc_value()
 {
 	dev="$1"
 	key="$2"
-	[ -r "/proc/$dev/stats" ] || { echo 0; return; }
+	[ -r "/proc/$dev/stats" ] || { echo NA; return; }
 	awk -v key="$key" '
 		index($0, key ":") {
 			line=$0
 			sub("^[^:]*:", "", line)
 			gsub(/[[:space:]]/, "", line)
-			if (line ~ /^[0-9]+$/) print line; else print 0
+			if (line ~ /^[0-9]+$/) print line; else print "NA"
 			found=1
 			exit
 		}
-		END { if (!found) print 0 }
+		END { if (!found) print "NA" }
 	' "/proc/$dev/stats" 2>/dev/null
 }
 
@@ -491,6 +513,8 @@ monitor_summary()
 		NR == 1 { next }
 		{
 			n++
+			if ($8 !~ /^[0-9]+$/) missing_wlan0=1
+			if ($9 !~ /^[0-9]+$/) missing_wlan1=1
 			for (i = 2; i <= 9; i++) {
 				if ($i + 0 > max[i]) max[i] = $i + 0
 				sum[i] += $i + 0
@@ -505,17 +529,19 @@ monitor_summary()
 			printf "peak_net_rx_softirq_per_s=%d\n", max[5]
 			printf "peak_eth0_rx_per_s=%d\n", max[6]
 			printf "peak_eth0_tx_per_s=%d\n", max[7]
-			printf "peak_wlan0_netif_rx_per_s=%d\n", max[8]
-			printf "peak_wlan1_netif_rx_per_s=%d\n", max[9]
+			printf "peak_wlan0_netif_rx_per_s=%s\n", missing_wlan0 ? "NA" : max[8]+0
+			printf "peak_wlan1_netif_rx_per_s=%s\n", missing_wlan1 ? "NA" : max[9]+0
 			printf "backlog_storm_seconds=%d\n", storms
 			printf "sum_softnet_processed=%d\n", sum[2]
 			printf "sum_eth0_rx=%d\n", sum[6]
 			printf "sum_eth0_tx=%d\n", sum[7]
-			printf "sum_wlan0_netif_rx=%d\n", sum[8]
-			printf "sum_wlan1_netif_rx=%d\n", sum[9]
+			printf "sum_wlan0_netif_rx=%s\n", missing_wlan0 ? "NA" : sum[8]+0
+			printf "sum_wlan1_netif_rx=%s\n", missing_wlan1 ? "NA" : sum[9]+0
 			if (max[2] > 100000) {
 				print "ALERT: receive backlog storm observed inside traffic window"
-				if ((max[8] + max[9]) > 100000)
+				if (missing_wlan0 || missing_wlan1)
+					print "CORRELATION: WLAN handoff counters unavailable; cannot exclude WLAN as a source"
+				else if ((max[8] + max[9]) > 100000)
 					print "CORRELATION: rtl8192cd netif_rx is also high; inspect WLAN/bridge reinjection"
 				else if (max[6] > 100000)
 					print "CORRELATION: eth0 RX is also high; inspect DSA/bridge receive amplification"
@@ -593,7 +619,7 @@ full_before_after()
 	after_full="$session/after-full.txt"
 
 	section "MW5 FULL BEFORE/SPEEDTEST/AFTER SESSION"
-	echo "netdiag_version=v44.62.15"
+	echo "netdiag_version=v44.62.15-wlan-gro"
 	echo "session=$session"
 	echo "traffic_window_seconds=$window"
 	echo "One command captures BEFORE, monitors every second, then captures AFTER."

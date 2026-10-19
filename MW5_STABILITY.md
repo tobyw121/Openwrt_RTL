@@ -33,6 +33,54 @@ software acceleration in this baseline.
 
 ## Host validation
 
+The AP writer now explicitly enables the Short Guard Interval capabilities
+already advertised by the two MW5 wiphys: SGI20 for HT20, SGI20/40 for wider HT
+channels, and SGI80 for the 5 GHz VHT80 profile. Previously the generated hostapd
+configuration omitted these flags, and the driver's beacon parser then cleared
+its SGI settings. WMM and A-MPDU remain enabled for the HT/VHT profiles.
+
+At the same modulation, stream count and channel width, Short GI can raise the
+PHY rate by about 11%; this is not a measured throughput improvement. Actual
+benefit depends on client negotiation, RF conditions and CPU load. The change
+does not force a higher modulation, fixed bitrate, transmit power or wider
+channel. The explicit `g-ht20` profile now also keeps HT20 when a saved width is
+40. Legacy b/g profiles do not gain HT/VHT capabilities.
+
+After deploying a build containing these changes, use the normal apply command
+to regenerate hostapd configuration. Both per-band SGI settings default to `1`
+when absent from an older configuration. For an A/B comparison, disable SGI:
+
+```sh
+mw5-wifi save --2g-short-gi 0 --5g-short-gi 0
+mw5-wifi apply
+```
+
+Re-enable it:
+
+```sh
+mw5-wifi save --2g-short-gi 1 --5g-short-gi 1
+mw5-wifi apply
+```
+
+The UCI options are `mw5wifi.radio2g.short_gi` and `mw5wifi.radio5g.short_gi`.
+Applying WLAN settings interrupts associations; run from wired LAN or serial.
+Configuration persistence still depends on the image's writable storage/overlay.
+
+`mw5-netdiag full` also reads the per-radio debugfs `gro_packets`, `gro_merged`
+and `backlog_packets` counters when available. `gro_packets` counts frames handed
+to GRO; `gro_merged` counts `GRO_MERGED`/`GRO_MERGED_FREE` results; `backlog_packets`
+counts delivery outside NAPI. These are separate from the legacy `/proc` handoff
+counter. Missing legacy counters and incomplete monitor summaries now report
+`NA`, rather than inventing a zero measurement. The new snapshot reads only
+named diagnostic counters, not MMIO/register dumps.
+
+Compare each band separately with the same client, position, channel and width,
+using an iperf server on a wired PC rather than on the MW5. Record both traffic
+directions, simultaneous traffic, actual negotiated rates, RSSI and new SSH/TCP
+connection success. The uploaded log had a 2.4 GHz client at -74 dBm and no 5 GHz
+client, so it cannot establish a 5 GHz performance baseline or a throughput gain
+from these new settings.
+
 From the repository root:
 
 ```sh

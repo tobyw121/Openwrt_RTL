@@ -149,6 +149,14 @@ int rtl8192cd_linux6_attach(struct rtl8192cd_linux6_hw *hw)
 					   &hw->priv->pshare->linux6_rx_pending_checks);
 			debugfs_create_u64("napi_work_done", 0444, hw->debugfs_dir,
 					   &hw->priv->pshare->linux6_napi_work_done);
+#ifdef CONFIG_MW5_ACCEL
+			debugfs_create_u64("gro_packets", 0444, hw->debugfs_dir,
+					   &hw->priv->pshare->linux6_gro_packets);
+			debugfs_create_u64("gro_merged", 0444, hw->debugfs_dir,
+					   &hw->priv->pshare->linux6_gro_merged);
+			debugfs_create_u64("backlog_packets", 0444, hw->debugfs_dir,
+					   &hw->priv->pshare->linux6_backlog_packets);
+#endif
 			debugfs_create_u64("rx_icv_errors", 0444, hw->debugfs_dir,
 					   &hw->priv->pshare->linux6_rx_icv_errors);
 			debugfs_create_u64("rx_refill_alloc_failures", 0444, hw->debugfs_dir,

@@ -4938,6 +4938,9 @@ int rtl8192cd_linux6_napi_poll(struct napi_struct *napi, int budget)
 		container_of(napi, struct priv_shared_info, linux6_rx_napi);
 	struct rtl8192cd_priv *priv = pshare->linux6_root_priv;
 	struct sk_buff *skb;
+#ifdef CONFIG_MW5_ACCEL
+	gro_result_t gro_result;
+#endif
 	int work_done;
 
 	/* A zero-budget poll is TX-only. Do not enter the RX engine or complete
@@ -4976,8 +4979,16 @@ int rtl8192cd_linux6_napi_poll(struct napi_struct *napi, int budget)
 	/* GRO may call back into TX via the bridge. No vendor RX lock may be held
 	 * here. Use a separate queue rather than the CPU backlog/extra softirq.
 	 */
-	while ((skb = skb_dequeue(&pshare->linux6_rx_delivery)) != NULL)
+	while ((skb = skb_dequeue(&pshare->linux6_rx_delivery)) != NULL) {
+#ifdef CONFIG_MW5_ACCEL
+		pshare->linux6_gro_packets++;
+		gro_result = napi_gro_receive(napi, skb);
+		if (gro_result == GRO_MERGED || gro_result == GRO_MERGED_FREE)
+			pshare->linux6_gro_merged++;
+#else
 		napi_gro_receive(napi, skb);
+#endif
+	}
 
 #if defined(CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE)
 	/* v44.55 MW5/RTL8812BRH stability: Report19 proves that MGT/HI0 DOK

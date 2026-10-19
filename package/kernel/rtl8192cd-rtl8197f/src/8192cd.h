@@ -6234,6 +6234,11 @@ struct priv_shared_info {
 	struct napi_struct linux6_rx_napi;
 	/* Defer stack delivery until the vendor RX locks have been released. */
 	struct sk_buff_head linux6_rx_delivery;
+#ifdef CONFIG_MW5_ACCEL
+	u64 linux6_gro_packets;
+	u64 linux6_gro_merged;
+	u64 linux6_backlog_packets;
+#endif
 	struct rtl8192cd_priv *linux6_root_priv;
 	int linux6_rx_budget;
 	int linux6_rx_work_done;

@@ -384,8 +384,10 @@ static void rtl8192cd_mw5_receive(struct rtl8192cd_priv *priv,
 	 */
 	if (priv->pshare->linux6_napi_polling)
 		skb_queue_tail(&priv->pshare->linux6_rx_delivery, skb);
-	else
+	else {
+		priv->pshare->linux6_backlog_packets++;
 		netif_rx(skb);
+	}
 }
 #endif
 

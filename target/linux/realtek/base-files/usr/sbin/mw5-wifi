@@ -3,7 +3,7 @@
 # Tenda MW5 cfg80211/nl80211 AP front-end for rtl8192cd Linux-6.6 port.
 set -u
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
-VERSION='v44.65.16-wlan-reopen-panic-fix'
+VERSION='v44.65.16-wlan-reopen-panic-fix-sgi'
 LOG_DIR=/tmp/mw5-webui
 LOG_FILE=$LOG_DIR/wlan-apply.log
 RUNTIME_FILE=$LOG_DIR/mw5wifi.env
@@ -37,6 +37,7 @@ set_defaults() {
 	ENABLED='1'; AUTOLOAD='1'; REGDOMAIN='00'; BRIDGE='br-lan'
 	R2_ENABLED='1'; R2_SSID="$MW5_DEFAULT_2G_SSID"; R2_CHANNEL='6'; R2_WIDTH='20'; R2_PROFILE='auto'; R2_INIT_METHOD='managed-cycle'; R2_ENCRYPTION='psk2'; R2_KEY="$DEFAULT_KEY"
 	R5_ENABLED='1'; R5_SSID="$MW5_DEFAULT_5G_SSID"; R5_CHANNEL='40'; R5_WIDTH='80'; R5_ENCRYPTION='psk2'; R5_KEY="$DEFAULT_KEY"
+	R2_SHORT_GI='1'; R5_SHORT_GI='1'
 	MESH_ENABLED='0'; MESH_MODE='prepared'; MESH_ID='MW5-MESH'; MESH_BACKHAUL='5g'; MESH_PAIRING='manual'; MESH_KEY="$DEFAULT_KEY"
 	LAST_APPLY_RC='none'; LAST_APPLY_MSG=''
 }
@@ -50,6 +51,7 @@ load_config() {
 		LAST_APPLY_RC:general.last_apply_rc LAST_APPLY_MSG:general.last_apply_msg \
 		R2_ENABLED:radio2g.enabled R2_SSID:radio2g.ssid R2_CHANNEL:radio2g.channel R2_WIDTH:radio2g.width R2_PROFILE:radio2g.profile R2_INIT_METHOD:radio2g.init_method R2_ENCRYPTION:radio2g.encryption R2_KEY:radio2g.key \
 		R5_ENABLED:radio5g.enabled R5_SSID:radio5g.ssid R5_CHANNEL:radio5g.channel R5_WIDTH:radio5g.width R5_ENCRYPTION:radio5g.encryption R5_KEY:radio5g.key \
+		R2_SHORT_GI:radio2g.short_gi R5_SHORT_GI:radio5g.short_gi \
 		MESH_ENABLED:mesh.enabled MESH_MODE:mesh.mode MESH_ID:mesh.mesh_id MESH_BACKHAUL:mesh.backhaul MESH_PAIRING:mesh.pairing MESH_KEY:mesh.key; do
 		var=${spec%%:*}; key=${spec#*:}; val="$(uci_get "$key")"
 		[ -n "$val" ] && eval "$var=\$(printf '%s' \"\$val\")"
@@ -66,6 +68,7 @@ R2_ENABLED='$(sq "$R2_ENABLED")'
 R2_SSID='$(sq "$R2_SSID")'
 R2_CHANNEL='$(sq "$R2_CHANNEL")'
 R2_WIDTH='$(sq "$R2_WIDTH")'
+R2_SHORT_GI='$(sq "$R2_SHORT_GI")'
 R2_PROFILE='$(sq "$R2_PROFILE")'
 R2_INIT_METHOD='$(sq "$R2_INIT_METHOD")'
 R2_ENCRYPTION='$(sq "$R2_ENCRYPTION")'
@@ -74,6 +77,7 @@ R5_ENABLED='$(sq "$R5_ENABLED")'
 R5_SSID='$(sq "$R5_SSID")'
 R5_CHANNEL='$(sq "$R5_CHANNEL")'
 R5_WIDTH='$(sq "$R5_WIDTH")'
+R5_SHORT_GI='$(sq "$R5_SHORT_GI")'
 R5_ENCRYPTION='$(sq "$R5_ENCRYPTION")'
 R5_KEY='$(sq "$R5_KEY")'
 MESH_ENABLED='$(sq "$MESH_ENABLED")'
@@ -105,6 +109,7 @@ config radio 'radio2g'
 	option ssid '$(sq "$R2_SSID")'
 	option channel '$(sq "$R2_CHANNEL")'
 	option width '$(sq "$R2_WIDTH")'
+	option short_gi '$(sq "$R2_SHORT_GI")'
 	option profile '$(sq "$R2_PROFILE")'
 	option init_method '$(sq "$R2_INIT_METHOD")'
 	option encryption '$(sq "$R2_ENCRYPTION")'
@@ -115,6 +120,7 @@ config radio 'radio5g'
 	option ssid '$(sq "$R5_SSID")'
 	option channel '$(sq "$R5_CHANNEL")'
 	option width '$(sq "$R5_WIDTH")'
+	option short_gi '$(sq "$R5_SHORT_GI")'
 	option encryption '$(sq "$R5_ENCRYPTION")'
 	option key '$(sq "$R5_KEY")'
 
@@ -155,6 +161,7 @@ save_settings() {
 			--2g-ssid) R2_SSID="$(sanitize_text "${2:-Openwrt_2,4GHz}" 32)"; shift 2 ;;
 			--2g-channel) R2_CHANNEL="$(sanitize_num "${2:-6}" 6)"; shift 2 ;;
 			--2g-width) R2_WIDTH="$(sanitize_width "${2:-20}" 20)"; shift 2 ;;
+			--2g-short-gi) R2_SHORT_GI="$(sanitize_bool "${2:-1}")"; shift 2 ;;
 			--2g-profile) R2_PROFILE="$(sanitize_2g_profile "${2:-auto}")"; shift 2 ;;
 			--2g-init-method) R2_INIT_METHOD="$(sanitize_2g_init "${2:-managed-cycle}")"; shift 2 ;;
 			--2g-encryption) R2_ENCRYPTION="$(sanitize_enc "${2:-psk2}")"; shift 2 ;;
@@ -163,6 +170,7 @@ save_settings() {
 			--5g-ssid) R5_SSID="$(sanitize_text "${2:-Openwrt_5GHz}" 32)"; shift 2 ;;
 			--5g-channel) R5_CHANNEL="$(sanitize_num "${2:-40}" 40)"; shift 2 ;;
 			--5g-width) R5_WIDTH="$(sanitize_width "${2:-80}" 80)"; shift 2 ;;
+			--5g-short-gi) R5_SHORT_GI="$(sanitize_bool "${2:-1}")"; shift 2 ;;
 			--5g-encryption) R5_ENCRYPTION="$(sanitize_enc "${2:-psk2}")"; shift 2 ;;
 			--5g-key) v="$(sanitize_text "${2:-}" 63)"; [ -n "$v" ] && R5_KEY="$v"; shift 2 ;;
 			--mesh-enabled) MESH_ENABLED="$(sanitize_bool "${2:-0}")"; shift 2 ;;
@@ -241,6 +249,33 @@ vht_center80() {
 	esac
 }
 
+write_ht_capabilities() {
+	htc_band="$1"; htc_channel="$2"; htc_width="$3"
+	htc_sgi="$(sanitize_bool "${4:-1}")"
+	htc_caps=''
+	# Both MW5 wiphys advertise SGI20/40; the 5 GHz wiphy also advertises
+	# SGI80. The vendor AP callback derives its SGI settings from the beacon,
+	# so omitting these hostapd flags silently disables those capabilities.
+	[ "$htc_sgi" = 0 ] || htc_caps='[SHORT-GI-20]'
+	case "$htc_width" in
+		40|80)
+			[ "$htc_sgi" = 0 ] || htc_caps="$htc_caps[SHORT-GI-40]"
+			if [ "$htc_band" = 2g ]; then
+				case "$htc_channel" in 1|2|3|4|5|6|7) htc_caps="$htc_caps[HT40+]" ;; *) htc_caps="$htc_caps[HT40-]" ;; esac
+			else
+				case "$htc_channel" in
+					36|44|52|60|100|108|116|124|132|140|149|157) htc_caps="$htc_caps[HT40+]" ;;
+					*) htc_caps="$htc_caps[HT40-]" ;;
+				esac
+			fi
+			;;
+	esac
+	[ -z "$htc_caps" ] || echo "ht_capab=$htc_caps"
+	if [ "$htc_band" = 5g ] && [ "$htc_width" = 80 ] && [ "$htc_sgi" = 1 ]; then
+		echo 'vht_capab=[SHORT-GI-80]'
+	fi
+}
+
 write_hostapd_config() {
 	band="$1"; ifname="$2"; ssid="$3"; channel="$4"; width="$5"; enc="$6"; key="$7"; conf="$8"; ctrl="${9:-$RUN_DIR/ctrl-$band}"
 	{
@@ -290,21 +325,18 @@ write_hostapd_config() {
 					;;
 				*)
 					echo 'hw_mode=g'; echo 'ieee80211n=1'
-					if [ "$width" = 40 ]; then
-						case "$channel" in 1|2|3|4|5|6|7) echo 'ht_capab=[HT40+]' ;; *) echo 'ht_capab=[HT40-]' ;; esac
+					if [ "$profile" = g-ht20 ]; then
+						write_ht_capabilities 2g "$channel" 20 "${R2_SHORT_GI:-1}"
+					else
+						write_ht_capabilities 2g "$channel" "$width" "${R2_SHORT_GI:-1}"
 					fi
 					;;
 			esac
 		else
 			echo 'hw_mode=a'; echo 'ieee80211n=1'; echo 'ieee80211ac=1'
-			if [ "$width" = 40 ]; then
-				case "$channel" in 36|44|52|60|100|108|116|124|132|140|149|157) echo 'ht_capab=[HT40+]' ;; *) echo 'ht_capab=[HT40-]' ;; esac
-			elif [ "$width" = 80 ]; then
+			write_ht_capabilities 5g "$channel" "$width" "${R5_SHORT_GI:-1}"
+			if [ "$width" = 80 ]; then
 				center="$(vht_center80 "$channel")"
-				case "$channel" in
-					36|44|52|60|100|108|116|124|132|140|149|157) echo 'ht_capab=[HT40+]' ;;
-					*) echo 'ht_capab=[HT40-]' ;;
-				esac
 				if [ "$center" != 0 ]; then
 					echo 'vht_oper_chwidth=1'; echo "vht_oper_centr_freq_seg0_idx=$center"
 				fi
@@ -709,6 +741,7 @@ show_status() {
 	echo "version=$VERSION enabled=$ENABLED autoload=$AUTOLOAD driver=cfg80211/nl80211"
 	echo "2g enabled=$R2_ENABLED ifname=wlan1 ssid=$R2_SSID channel=$R2_CHANNEL width=$R2_WIDTH profile=$R2_PROFILE init_method=$R2_INIT_METHOD encryption=$R2_ENCRYPTION"
 	echo "5g enabled=$R5_ENABLED ifname=wlan0 ssid=$R5_SSID channel=$R5_CHANNEL width=$R5_WIDTH encryption=$R5_ENCRYPTION"
+	echo "short_gi_2g=$R2_SHORT_GI short_gi_5g=$R5_SHORT_GI"
 	echo "last_apply_rc=$LAST_APPLY_RC last_apply_msg=$LAST_APPLY_MSG"
 	if [ -r "$WIFI2G_SUCCESS_ENV" ]; then
 		. "$WIFI2G_SUCCESS_ENV" 2>/dev/null || true
@@ -729,6 +762,8 @@ show_status() {
 get_value() {
 	load_config
 	case "$1" in
+		radio2g.short_gi) echo "$R2_SHORT_GI" ;;
+		radio5g.short_gi) echo "$R5_SHORT_GI" ;;
 		general.enabled) echo "$ENABLED" ;; general.autoload) echo "$AUTOLOAD" ;; general.regdomain) echo "$REGDOMAIN" ;; general.bridge) echo "$BRIDGE" ;;
 		radio2g.enabled) echo "$R2_ENABLED" ;; radio2g.ssid) echo "$R2_SSID" ;; radio2g.channel) echo "$R2_CHANNEL" ;; radio2g.width) echo "$R2_WIDTH" ;; radio2g.profile) echo "$R2_PROFILE" ;; radio2g.init_method) echo "$R2_INIT_METHOD" ;; radio2g.encryption) echo "$R2_ENCRYPTION" ;; radio2g.key) echo "$R2_KEY" ;;
 		radio5g.enabled) echo "$R5_ENABLED" ;; radio5g.ssid) echo "$R5_SSID" ;; radio5g.channel) echo "$R5_CHANNEL" ;; radio5g.width) echo "$R5_WIDTH" ;; radio5g.encryption) echo "$R5_ENCRYPTION" ;; radio5g.key) echo "$R5_KEY" ;;
@@ -1262,12 +1297,13 @@ at_write_test_hostapd() {
 		echo "channel=$at_wh_channel"
 		echo 'wmm_enabled=1'
 		echo 'ieee80211n=1'
+		# Exercise the same PHY capabilities as normal AP startup.
+		write_ht_capabilities "$at_wh_band" "$at_wh_channel" "$at_wh_width" 1
 		if [ "$at_wh_band" = 5g ]; then
 			echo 'ieee80211ac=1'
 			if [ "$at_wh_width" = 80 ]; then
 				# Primary channel 40 is the upper 20 MHz channel of the 36/40
 				# HT40 pair.  VHT80 36-48 has center channel index 42.
-				echo 'ht_capab=[HT40-]'
 				echo 'vht_oper_chwidth=1'
 				echo 'vht_oper_centr_freq_seg0_idx=42'
 			fi
@@ -1348,7 +1384,7 @@ at_start_test_ap() {
 			AT_HOSTAPD_11AC=0
 			cp "$at_sa_log" "$at_sa_log.11ac-parser" 2>/dev/null || true
 			at_out 'hostapd 5g parser lacks ieee80211ac; retrying diagnostic AP as HT20 fallback'
-			grep -v -E '^ieee80211ac=|^vht_oper_|^ht_capab=' "$at_sa_conf" >"$at_sa_conf.tmp" 2>/dev/null || cp "$at_sa_conf" "$at_sa_conf.tmp"
+			grep -v -E '^ieee80211ac=|^vht_oper_|^vht_capab=' "$at_sa_conf" >"$at_sa_conf.tmp" 2>/dev/null || cp "$at_sa_conf" "$at_sa_conf.tmp"
 			mv "$at_sa_conf.tmp" "$at_sa_conf"
 			: >"$at_sa_log"
 			if hostapd -B -P "$at_sa_pid" "$at_sa_conf" >"$at_sa_log" 2>&1; then

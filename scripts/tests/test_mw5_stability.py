@@ -20,7 +20,7 @@ WLAN = ROOT / "package/kernel/rtl8192cd-rtl8197f/src"
 
 
 def shell_function(path, name):
-    match = re.search(r"^" + re.escape(name) + r"\(\) \{\n.*?^\}",
+    match = re.search(r"^" + re.escape(name) + r"\(\)\s*\{\n.*?^\}",
                       path.read_text(), re.M | re.S)
     if not match:
         raise AssertionError(f"missing shell function {name} in {path}")
@@ -176,6 +176,7 @@ class NapiTests(unittest.TestCase):
 #include <stdbool.h>
 #include <stddef.h>
 #define CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE
+#define CONFIG_MW5_ACCEL
 #define VERSION_8822B 1
 #define container_of(p, t, m) ((t *)((char *)(p) - offsetof(t, m)))
 #define min(a,b) ((a) < (b) ? (a) : (b))
@@ -194,6 +195,7 @@ struct priv_shared_info {
     int linux6_rx_budget, linux6_rx_work_done, linux6_radio_index;
     bool linux6_napi_polling;
     unsigned long linux6_napi_polls, linux6_napi_work_done, linux6_tx_reclaim_kicks;
+    unsigned long linux6_gro_packets, linux6_gro_merged, linux6_backlog_packets;
     struct { int tasklet; } tx_tasklet;
 };
 struct rtl8192cd_priv {
@@ -205,14 +207,16 @@ struct rtl8192cd_priv {
 static int rx_calls, drains, completed, irq_enabled, gro, backlog, kicks;
 static int supplied_work, complete_ok;
 static bool vendor_locked;
+typedef enum { GRO_NORMAL, GRO_MERGED, GRO_MERGED_FREE } gro_result_t;
+static gro_result_t gro_result;
 static bool napi_complete_done(struct napi_struct *n, int work)
 { (void)n; (void)work; completed++; return complete_ok; }
 static void enable_rx(struct rtl8192cd_priv *p)
 { assert(!p->pshare->linux6_napi_polling); irq_enabled++; }
 static struct { void (*EnableRxRelatedInterruptHandler)(struct rtl8192cd_priv *); }
     hal = { enable_rx };
-static void napi_gro_receive(struct napi_struct *n, struct sk_buff *s)
-{ (void)n; (void)s; assert(!vendor_locked); gro++; }
+static gro_result_t napi_gro_receive(struct napi_struct *n, struct sk_buff *s)
+{ (void)n; (void)s; assert(!vendor_locked); gro++; return gro_result; }
 static void netif_rx(struct sk_buff *s) { (void)s; backlog++; }
 static void skb_queue_tail(struct sk_buff_head *q, struct sk_buff *s)
 {
@@ -269,16 +273,22 @@ int main(void)
     assert(rtl8192cd_linux6_napi_poll(&s.linux6_rx_napi, 64) == 3);
     assert(rx_calls == 1 && drains == 1 && completed == 1 && irq_enabled == 1);
     assert(gro == 2 && !backlog);
+    assert(s.linux6_gro_packets == 2 && !s.linux6_gro_merged);
     assert(!s.linux6_rx_delivery.head && !s.linux6_rx_delivery.tail);
     assert(!s.linux6_napi_polling && !s.linux6_rx_budget);
     rtl8192cd_mw5_receive(&p, &skb); /* e.g. reorder timer, outside NAPI */
     assert(backlog == 1 && gro == 2);
+    assert(s.linux6_backlog_packets == 1);
     /* At budget, leave NAPI scheduled and RX IRQs masked. */
     supplied_work = 64;
+    gro_result = GRO_MERGED;
     assert(rtl8192cd_linux6_napi_poll(&s.linux6_rx_napi, 64) == 64);
+    assert(s.linux6_gro_merged == 2);
     assert(completed == 1 && irq_enabled == 1);
     supplied_work = 65;
+    gro_result = GRO_MERGED_FREE;
     assert(rtl8192cd_linux6_napi_poll(&s.linux6_rx_napi, 64) == 64);
+    assert(s.linux6_gro_packets == 6 && s.linux6_gro_merged == 4);
     /* Busy-poll ownership may refuse completion; don't unmask interrupts. */
     supplied_work = 0;
     complete_ok = 0;
