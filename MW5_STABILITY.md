@@ -5,6 +5,46 @@ MW5 software flow cache disabled. This supersedes the software-offload defaults
 in the older v44.65.21/v44.65.25 notes. The reported symptom is loss of forwarding
 on all interfaces during a speed test; its hardware root cause is not yet proven.
 
+## Network liveness without diagnostic readers
+
+Driver `1.8.35-mw5-independent-watchdog-v44.66.13` addresses two concrete gaps
+relevant to a live serial console but stalled network that appears stable only
+while `mw5-netdiag full` runs:
+
+- MW5 IRQ-mask and RX/TX doorbell writes now have a same-register readback to
+  complete posted MMIO writes in the control path itself. Correctness must not
+  depend on a later diagnostic register read.
+- The existing timer now checks MW5 RX and TX progress even after recent RX IRQ
+  activity. Previously recent RX IRQs skipped this pass entirely, and TX-only
+  lost completion IRQs were not checked. TX readiness requires a valid CDP in
+  the pending ring interval **and** a hardware-cleared OWN bit, under `tx_lock`.
+  The timer schedules normal NAPI cleanup; it never unmaps/reuses DMA buffers,
+  rewinds rings or reprograms forwarding tables itself.
+- An RX publication wait discovered during the timer's current readiness check
+  arms the 1 ms retry immediately, instead of waiting a full watchdog period.
+- Ethernet NAPI budget-zero calls reclaim TX only, without consuming RX recovery
+  state or completing NAPI. TX cleanup remains included in diagnostic totals.
+
+`rx_poll ... tx_fallback=N` in `/proc/rd05-rtknet` counts watchdog-scheduled polls
+with a confirmed TX completion. `mw5-netdiag full` includes its delta as
+`rd05_tx_watchdog`. Idle and hardware-owned TX rings do not trigger extra polls;
+the existing watchdog period and the retired software-flow policy are unchanged.
+
+The compiled host regression reproduces missed RX/TX scheduling with recent RX
+activity, posted control writes, ring wrap, invalid CDPs, OWN/CDP disagreement,
+publication waits, stopped interfaces, and zero-budget NAPI. It runs the actual
+driver functions against mocked MMIO/DMA, with no userspace diagnostic reader.
+This verifies those logic defects, **not** the hardware root cause of the report.
+No full target kernel build or physical MW5 reproduction has been completed in
+this cloud instance.
+
+For hardware acceptance, cold-boot the new image and first run the previously
+failing speed test **without starting netdiag, ethtool dumps or register polling**.
+Keep only the serial console open; check new SSH/TCP connections from a client
+while testing LAN, 2.4 GHz and 5 GHz separately. Repeat after idle and reboot.
+Capture counters/logs afterward, or immediately over serial if forwarding fails.
+Do not treat stability observed only during `netdiag full` as passing this test.
+
 ## Changes
 
 - The Ethernet driver's software-flow gate defaults off before userspace runs.

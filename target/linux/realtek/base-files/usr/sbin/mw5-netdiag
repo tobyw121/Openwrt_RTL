@@ -444,6 +444,7 @@ capture_counter_state()
 		echo "rd05_napi_zero_rx=$(rd05_token_value napi_detail zero_rx)"
 		echo "rd05_ring_full=$(rd05_token_value tx_internal ring_full)"
 		echo "rd05_timeouts=$(rd05_token_value tx_internal timeouts)"
+		echo "rd05_tx_watchdog=$(rd05_token_value rx_poll tx_fallback)"
 		echo "switch_p1_in=$(switch_diag_value port1_in_packets)"
 		echo "switch_p1_out=$(switch_diag_value port1_out_packets)"
 		echo "switch_p1_discards=$(switch_diag_value port1_out_discards)"
@@ -568,6 +569,7 @@ full_delta_summary()
 		wlan0_mw5_netif_rx_pkt wlan1_mw5_netif_rx_pkt \
 		rd05_rx_packets rd05_tx_packets rd05_invalid_port rd05_invalid_drop \
 		rd05_rx_runout rd05_mbuf_runout rd05_napi_budget rd05_napi_zero_rx rd05_ring_full rd05_timeouts \
+		rd05_tx_watchdog \
 		switch_p1_in switch_p1_out switch_p1_discards switch_p3_in switch_p3_out switch_p3_discards \
 		switch_p6_in switch_p6_out switch_p6_discards
 	do

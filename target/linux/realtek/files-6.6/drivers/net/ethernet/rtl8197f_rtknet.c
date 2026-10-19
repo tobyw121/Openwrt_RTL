@@ -61,7 +61,7 @@
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.34-mw5-oem-v212-v44.66.12"
+#define DRV_VERSION			"1.8.35-mw5-independent-watchdog-v44.66.13"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -1032,6 +1032,7 @@ struct rtl8197f_rtknet_priv {
 	u64 rx_poll_last_irq_rx_done;
 	u64 rx_poll_irq_progress_skips;
 	u64 rx_poll_fallback_schedules;
+	u64 tx_watchdog_schedules;
 	u64 sw_trxrdy_writes;
 	u64 cpuicr1_sdk_writes;
 	u64 swcore_sdk_writes;
@@ -1642,6 +1643,18 @@ static inline void rtl8197f_rtk_write(struct rtl8197f_rtknet_priv *priv,
 	writel(val, priv->base + reg);
 }
 
+static void rtl8197f_rtk_write_control(struct rtl8197f_rtknet_priv *priv,
+				     u32 reg, u32 val)
+{
+	rtl8197f_rtk_write(priv, reg, val);
+	/* Complete MW5 mask/doorbell writes at the device before relinquishing
+	 * ownership to NAPI/IRQs. A later /proc register read must not be needed
+	 * to drain a posted write. Only use registers whose reads are non-clearing.
+	 */
+	if (priv->is_mw5)
+		rtl8197f_rtk_read(priv, reg);
+}
+
 static void __iomem *rtl8197f_rtk_ioremap_norequest(struct platform_device *pdev,
 							   const char *name)
 {
@@ -1925,14 +1938,48 @@ static unsigned int rtl8197f_rtk_tx_avail(struct rtl8197f_rtknet_priv *priv)
 		priv->tx_ring_size;
 }
 
+static bool rtl8197f_rtk_mw5_tx_napi_ready(struct rtl8197f_rtknet_priv *priv)
+{
+	unsigned long flags;
+	u32 idx, head, hw_idx, pending, completed, cdp;
+	struct rtl8197f_rtk_desc *desc;
+	bool ready = false;
+
+	if (!priv->is_mw5 || !priv->tx_desc || !priv->tx_ring_size)
+		return false;
+
+	/* Mirror tx_clean's completion contract under the same lock. The timer
+	 * only requests NAPI; it never frees DMA buffers or guesses completion
+	 * from elapsed time. RX progress does not imply TX completion IRQ delivery.
+	 */
+	spin_lock_irqsave(&priv->tx_lock, flags);
+	idx = priv->tx_tail;
+	head = priv->tx_head;
+	if (idx == head)
+		goto out;
+	cdp = rtl8197f_rtk_read(priv, RTL_RTK_CPUTPDCR0);
+	if (!rtl8197f_rtk_tx_cdp_index_value(priv, cdp, &hw_idx))
+		goto out;
+	pending = (head + priv->tx_ring_size - idx) % priv->tx_ring_size;
+	completed = (hw_idx + priv->tx_ring_size - idx) % priv->tx_ring_size;
+	if (!completed || completed > pending)
+		goto out;
+	desc = rtl8197f_rtk_tx_desc(priv, idx);
+	dma_rmb();
+	ready = !(le32_to_cpu(READ_ONCE(desc->opts1)) & RTL_RTK_DESC_OWN);
+out:
+	spin_unlock_irqrestore(&priv->tx_lock, flags);
+	return ready;
+}
+
 static void rtl8197f_rtk_enable_irq(struct rtl8197f_rtknet_priv *priv)
 {
-	rtl8197f_rtk_write(priv, RTL_RTK_CPUIIMR, RTL_RTK_INT_ENABLE_MASK);
+	rtl8197f_rtk_write_control(priv, RTL_RTK_CPUIIMR, RTL_RTK_INT_ENABLE_MASK);
 }
 
 static void rtl8197f_rtk_disable_irq(struct rtl8197f_rtknet_priv *priv)
 {
-	rtl8197f_rtk_write(priv, RTL_RTK_CPUIIMR, 0);
+	rtl8197f_rtk_write_control(priv, RTL_RTK_CPUIIMR, 0);
 }
 
 static void rtl8197f_rtk_kick_rx(struct rtl8197f_rtknet_priv *priv)
@@ -1941,7 +1988,7 @@ static void rtl8197f_rtk_kick_rx(struct rtl8197f_rtknet_priv *priv)
 
 	val = rtl8197f_rtk_read(priv, RTL_RTK_CPUICR);
 	val |= RTL_RTK_CPUICR_RXCMD;
-	rtl8197f_rtk_write(priv, RTL_RTK_CPUICR, val);
+	rtl8197f_rtk_write_control(priv, RTL_RTK_CPUICR, val);
 	priv->hw_rx_restarts++;
 }
 
@@ -1969,7 +2016,7 @@ static void rtl8197f_rtk_tx_doorbell(struct rtl8197f_rtknet_priv *priv)
 	 */
 	cpuicr = rtl8197f_rtk_read(priv, RTL_RTK_CPUICR);
 	cpuicr |= RTL_RTK_CPUICR_TXFD | RTL_RTK_CPUICR_TXCMD | RTL_RTK_CPUICR_RXCMD;
-	rtl8197f_rtk_write(priv, RTL_RTK_CPUICR, cpuicr);
+	rtl8197f_rtk_write_control(priv, RTL_RTK_CPUICR, cpuicr);
 	priv->tx_kicks++;
 }
 
@@ -5830,9 +5877,14 @@ static int rtl8197f_rtk_poll(struct napi_struct *napi, int budget)
 
 	priv->napi_polls++;
 	tx_cleaned = rtl8197f_rtk_tx_clean(priv);
+	priv->napi_tx_clean += tx_cleaned;
+	/* A TX-only poll must not touch RX descriptors/restart state or complete
+	 * NAPI. Preserve pending RX recovery for the next positive-budget poll.
+	 */
+	if (!budget)
+		return 0;
 	work_done = rtl8197f_rtk_rx_poll(priv, budget);
 	priv->napi_rx_work += work_done;
-	priv->napi_tx_clean += tx_cleaned;
 	if (!work_done)
 		priv->napi_zero_rx_polls++;
 	if (work_done >= budget)
@@ -5907,7 +5959,7 @@ static void rtl8197f_rtk_rx_poll_timer(struct timer_list *t)
 		from_timer(priv, t, rx_poll_timer);
 	u32 delay_ms = priv->rx_poll_ms;
 	u64 irq_rx_done;
-	bool pending, publish_wait;
+	bool pending, publish_wait, tx_ready;
 
 	if (!priv->rx_poll_fallback || !netif_running(priv->ndev))
 		return;
@@ -5942,15 +5994,30 @@ static void rtl8197f_rtk_rx_poll_timer(struct timer_list *t)
 
 	if (irq_rx_done != priv->rx_poll_last_irq_rx_done) {
 		priv->rx_poll_last_irq_rx_done = irq_rx_done;
-		priv->rx_poll_irq_progress_skips++;
-		if (!publish_wait &&
-		    !(rtl8197f_rtk_mw5_runout_guard_active(priv)))
+		/* A recent RX IRQ cannot prove that the last RX event or a TX
+		 * completion was delivered. Always inspect MW5 progress independently
+		 * of diagnostic readers, even during otherwise active RX traffic.
+		 */
+		if (!priv->is_mw5 && !publish_wait &&
+		    !(rtl8197f_rtk_mw5_runout_guard_active(priv))) {
+			priv->rx_poll_irq_progress_skips++;
 			goto rearm;
+		}
 	}
 
 	pending = priv->rx_restart_pending || rtl8197f_rtk_rx_napi_ready(priv);
+	tx_ready = rtl8197f_rtk_mw5_tx_napi_ready(priv);
+	pending |= tx_ready;
+	/* The readiness check itself can discover an unpublished RX descriptor.
+	 * Arm the quick retry now, rather than waiting another whole second.
+	 */
+	if (READ_ONCE(priv->rx_publish_wait_pending) &&
+	    !rtl8197f_rtk_mw5_runout_guard_active(priv))
+		delay_ms = RTL_RTK_MW5_RX_PUBLISH_RECHECK_MS;
 	if (pending && napi_schedule_prep(&priv->napi)) {
 		priv->rx_poll_fallback_schedules++;
+		if (tx_ready)
+			priv->tx_watchdog_schedules++;
 		if (rtl8197f_rtk_mw5_runout_guard_active(priv))
 			priv->rx_runout_fast_schedules++;
 		rtl8197f_rtk_disable_irq(priv);
@@ -9143,7 +9210,7 @@ static int rtl8197f_rtk_rd05_proc_show(struct seq_file *m, void *v)
 		   (unsigned long long)priv->napi_budget_polls,
 		   (unsigned long long)priv->napi_rearm_race,
 		   ndev->gro_flush_timeout, ndev->napi_defer_hard_irqs);
-	seq_printf(m, "rx_poll base_ms=%u active_watchdog_ms=%u runout_guard_ms=%u runs=%llu irq_progress=%llu fallback=%llu restarts=%llu\n",
+	seq_printf(m, "rx_poll base_ms=%u active_watchdog_ms=%u runout_guard_ms=%u runs=%llu irq_progress=%llu fallback=%llu restarts=%llu tx_fallback=%llu\n",
 		   priv->rx_poll_ms,
 		   rtl8197f_rtk_mw5_runout_guard_active(priv) ?
 		   RTL_RTK_MW5_RX_RUNOUT_RECHECK_MS :
@@ -9153,7 +9220,8 @@ static int rtl8197f_rtk_rd05_proc_show(struct seq_file *m, void *v)
 		   (unsigned long long)priv->rx_poll_timer_runs,
 		   (unsigned long long)priv->rx_poll_irq_progress_skips,
 		   (unsigned long long)priv->rx_poll_fallback_schedules,
-		   (unsigned long long)priv->hw_rx_restarts);
+		   (unsigned long long)priv->hw_rx_restarts,
+		   (unsigned long long)priv->tx_watchdog_schedules);
 	seq_printf(m, "registers cpuicr=%08x cpuicr1=%08x dma_cr0=%08x\n",
 		   rtl8197f_rtk_read(priv, RTL_RTK_CPUICR),
 		   rtl8197f_rtk_read(priv, RTL_RTK_CPUICR1),
