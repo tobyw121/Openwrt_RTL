@@ -177,6 +177,8 @@ class NapiTests(unittest.TestCase):
 #include <stddef.h>
 #define CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE
 #define CONFIG_MW5_ACCEL
+#define READ_ONCE(x) (x)
+static bool rtl8192cd_rx_batch = RX_BATCH_TEST;
 #define VERSION_8822B 1
 #define container_of(p, t, m) ((t *)((char *)(p) - offsetof(t, m)))
 #define min(a,b) ((a) < (b) ? (a) : (b))
@@ -184,8 +186,8 @@ class NapiTests(unittest.TestCase):
 #define GET_CHIP_VER(p) ((p)->chip)
 #define GET_HAL_INTERFACE(p) (&hal)
 struct napi_struct { int unused; };
-struct sk_buff { struct sk_buff *next; };
-struct sk_buff_head { struct sk_buff *head, *tail; };
+struct sk_buff { struct sk_buff *next; int id; };
+struct sk_buff_head { struct sk_buff *head, *tail; int lock; };
 struct net_device { int unused; };
 struct rtl8192cd_priv;
 struct priv_shared_info {
@@ -206,7 +208,14 @@ struct rtl8192cd_priv {
 };
 static int rx_calls, drains, completed, irq_enabled, gro, backlog, kicks;
 static int supplied_work, complete_ok;
-static bool vendor_locked;
+static bool vendor_locked, queue_locked, inject_late;
+static int queue_locks;
+static struct sk_buff_head *shared_queue;
+static struct sk_buff late_skb = { .id=3 };
+static int gro_ids[128];
+#define spin_lock_irqsave(l,f) do { (void)(l); (f)=0; assert(!queue_locked); queue_locked=true; queue_locks++; } while(0)
+#define spin_unlock_irqrestore(l,f) do { (void)(l); (void)(f); assert(queue_locked); queue_locked=false; } while(0)
+static void skb_queue_tail(struct sk_buff_head *, struct sk_buff *);
 typedef enum { GRO_NORMAL, GRO_MERGED, GRO_MERGED_FREE } gro_result_t;
 static gro_result_t gro_result;
 static bool napi_complete_done(struct napi_struct *n, int work)
@@ -216,7 +225,9 @@ static void enable_rx(struct rtl8192cd_priv *p)
 static struct { void (*EnableRxRelatedInterruptHandler)(struct rtl8192cd_priv *); }
     hal = { enable_rx };
 static gro_result_t napi_gro_receive(struct napi_struct *n, struct sk_buff *s)
-{ (void)n; (void)s; assert(!vendor_locked); gro++; return gro_result; }
+{ (void)n; assert(!vendor_locked && !queue_locked); gro_ids[gro++]=s->id;
+  if (inject_late) { inject_late=false; skb_queue_tail(shared_queue,&late_skb); }
+  return gro_result; }
 static void netif_rx(struct sk_buff *s) { (void)s; backlog++; }
 static void skb_queue_tail(struct sk_buff_head *q, struct sk_buff *s)
 {
@@ -224,7 +235,7 @@ static void skb_queue_tail(struct sk_buff_head *q, struct sk_buff *s)
     if (q->tail) q->tail->next = s; else q->head = s;
     q->tail = s;
 }
-static struct sk_buff *skb_dequeue(struct sk_buff_head *q)
+static struct sk_buff *__skb_dequeue(struct sk_buff_head *q)
 {
     struct sk_buff *s = q->head;
     if (s) {
@@ -233,12 +244,29 @@ static struct sk_buff *skb_dequeue(struct sk_buff_head *q)
     }
     return s;
 }
+static struct sk_buff *skb_dequeue(struct sk_buff_head *q)
+{
+    struct sk_buff *s;
+    unsigned long flags;
+    spin_lock_irqsave(&q->lock,flags);
+    s=__skb_dequeue(q);
+    spin_unlock_irqrestore(&q->lock,flags);
+    return s;
+}
+static void __skb_queue_head_init(struct sk_buff_head *q) { q->head=q->tail=NULL; }
+static bool skb_queue_empty(struct sk_buff_head *q) { return !q->head; }
+static void skb_queue_splice_tail_init(struct sk_buff_head *from, struct sk_buff_head *to)
+{
+    assert(queue_locked && !vendor_locked && !to->head);
+    to->head=from->head; to->tail=from->tail;
+    from->head=from->tail=NULL;
+}
 static int rtk_tasklet_set_triggered(void *t) { (void)t; return 1; }
 static void tasklet_schedule(void *t) { (void)t; kicks++; }
 RECEIVE_FUNCTION
 static void rtl8192cd_rx_isr(struct rtl8192cd_priv *p)
 {
-    static struct sk_buff skb;
+    static struct sk_buff skb = { .id=1 };
     assert(p->pshare->linux6_napi_polling);
     assert(p->pshare->linux6_rx_budget > 0);
     rx_calls++;
@@ -249,7 +277,7 @@ static void rtl8192cd_rx_isr(struct rtl8192cd_priv *p)
 }
 static void schedule_rxq_tasklet(struct rtl8192cd_priv *p, struct net_device *d)
 {
-    static struct sk_buff skb;
+    static struct sk_buff skb = { .id=2 };
     (void)d;
     drains++;
     /* Delivery must still belong to NAPI while software queues drain. */
@@ -265,6 +293,7 @@ int main(void)
     struct rtl8192cd_priv p = { .pshare = &s, .open = true, .chip = 1 };
     struct sk_buff skb;
     s.linux6_root_priv = &p;
+    shared_queue=&s.linux6_rx_delivery;
     /* Zero budget must neither consume descriptors nor complete NAPI. */
     assert(rtl8192cd_linux6_napi_poll(&s.linux6_rx_napi, 0) == 0);
     assert(!rx_calls && !drains && !completed && !irq_enabled);
@@ -273,6 +302,8 @@ int main(void)
     assert(rtl8192cd_linux6_napi_poll(&s.linux6_rx_napi, 64) == 3);
     assert(rx_calls == 1 && drains == 1 && completed == 1 && irq_enabled == 1);
     assert(gro == 2 && !backlog);
+    assert(gro_ids[0]==1 && gro_ids[1]==2);
+    assert(queue_locks == (rtl8192cd_rx_batch ? 1 : 3));
     assert(s.linux6_gro_packets == 2 && !s.linux6_gro_merged);
     assert(!s.linux6_rx_delivery.head && !s.linux6_rx_delivery.tail);
     assert(!s.linux6_napi_polling && !s.linux6_rx_budget);
@@ -302,6 +333,18 @@ int main(void)
     supplied_work = 1;
     assert(rtl8192cd_linux6_napi_poll(&s.linux6_rx_napi, 64) == 1);
     assert(kicks == 1 && s.linux6_tx_reclaim_kicks == 1);
+    /* A late enqueue after snapshot must get another NAPI pass. */
+    if (rtl8192cd_rx_batch) {
+        int old_completed=completed, old_gro=gro;
+        supplied_work=1;
+        inject_late=true;
+        assert(rtl8192cd_linux6_napi_poll(&s.linux6_rx_napi,64)==64);
+        assert(completed==old_completed && s.linux6_rx_delivery.head==&late_skb);
+        supplied_work=0;
+        assert(rtl8192cd_linux6_napi_poll(&s.linux6_rx_napi,64)==0);
+        assert(completed==old_completed+1 && !s.linux6_rx_delivery.head);
+        assert(gro==old_gro+3 && gro_ids[old_gro]==1 && gro_ids[old_gro+1]==2 && gro_ids[old_gro+2]==3);
+    }
     p.open = false;
     rx_calls = 0;
     irq_enabled = 0;
@@ -316,10 +359,12 @@ int main(void)
             source = Path(tmp) / "test.c"
             binary = Path(tmp) / "test"
             source.write_text(harness)
-            subprocess.run(["cc", "-std=gnu11", "-Wall", "-Wextra", "-Werror",
-                            "-fsanitize=undefined", str(source), "-o", str(binary)],
-                           check=True)
-            subprocess.run([str(binary)], check=True)
+            for batch in (0, 1):
+                with self.subTest(rx_batch=batch):
+                    subprocess.run(["cc", "-std=gnu11", "-Wall", "-Wextra", "-Werror",
+                                    f"-DRX_BATCH_TEST={batch}", "-fsanitize=undefined",
+                                    str(source), "-o", str(binary)], check=True)
+                    subprocess.run([str(binary)], check=True)
 
 
 if __name__ == "__main__":

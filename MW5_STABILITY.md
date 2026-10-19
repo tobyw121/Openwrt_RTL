@@ -5,6 +5,52 @@ MW5 software flow cache disabled. This supersedes the software-offload defaults
 in the older v44.65.21/v44.65.25 notes. The reported symptom is loss of forwarding
 on all interfaces during a speed test; its hardware root cause is not yet proven.
 
+## Optional WLAN RX batching for Linux 6.6.114
+
+Package release 98 adds the `rtl8192cd.rx_batch` module parameter for every
+Linux6 WLAN variant. It defaults to **off** while board measurements are pending.
+With batching enabled, NAPI detaches the delivery queue under one IRQ-safe
+queue lock, then consumes the private snapshot without per-packet queue locks.
+GRO and bridge/TX callbacks run after all vendor and queue locks are released.
+Packet order, GRO, firewall/conntrack processing and the zero-budget RX rule
+are preserved. A late enqueue after the snapshot requests another NAPI pass
+instead of completing with a pending delivery queue.
+
+For N queued frames the delivery-side shared-lock acquisitions decrease from
+N+1 to one per poll. Producers still use their normal queue locking. This is a
+reduction in software work, **not a measured throughput or stability result**.
+It neither enables nftables/software-flow offload nor changes DMA publication,
+TX doorbells, RF settings or forwarding policy. Existing Ethernet BQL and
+`xmit_more` batching are retained.
+
+After flashing a build containing this change and loading the WLAN module,
+enable the runtime experiment on the router:
+
+```sh
+echo 1 > /sys/module/rtl8192cd/parameters/rx_batch
+cat /sys/module/rtl8192cd/parameters/rx_batch
+```
+
+Return to the existing per-packet removal path without reloading WLAN:
+
+```sh
+echo 0 > /sys/module/rtl8192cd/parameters/rx_batch
+```
+
+This runtime setting resets on module reload/reboot. For acceptance compare
+0 and 1 with the same client, channel, width and wired iperf server; measure
+both directions, CPU/softirq load, latency during load and new TCP/SSH sessions.
+Repeat simultaneous LAN/WAN and both-band traffic and a 30-minute run with
+`mw5-netdiag full` and register polling stopped. Capture counters afterward.
+Do not promote batching to a persistent default based only on a peak speed test.
+
+The host regression runs the actual poll in both modes with undefined-behaviour
+instrumentation. It checks lock-count reduction, FIFO order, GRO outside locks,
+late-producer continuation, zero/exhausted budgets, busy-poll completion and TX
+reclaim. MIPS compile/link checks use the prepared Linux 6.6.114 test kernel and
+the patched OpenWrt cfg80211 headers; full firmware and hardware tests remain
+separate requirements.
+
 ## Network liveness without diagnostic readers
 
 Driver `1.8.35-mw5-independent-watchdog-v44.66.13` addresses two concrete gaps

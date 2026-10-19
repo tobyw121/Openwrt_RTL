@@ -4932,12 +4932,21 @@ static inline void schedule_rxq_tasklet(struct rtl8192cd_priv *priv, struct net_
 }
 
 #ifdef CONFIG_RTL8192CD_LINUX6_BUS
+/* Opt in until throughput, latency and long-run liveness are measured on the
+ * target boards. This only batches the software handoff to normal GRO. */
+static bool rtl8192cd_rx_batch;
+module_param_named(rx_batch, rtl8192cd_rx_batch, bool, 0644);
+MODULE_PARM_DESC(rx_batch, "Batch WLAN RX queue removal before GRO (default off)");
+
 int rtl8192cd_linux6_napi_poll(struct napi_struct *napi, int budget)
 {
 	struct priv_shared_info *pshare =
 		container_of(napi, struct priv_shared_info, linux6_rx_napi);
 	struct rtl8192cd_priv *priv = pshare->linux6_root_priv;
 	struct sk_buff *skb;
+	struct sk_buff_head delivery;
+	unsigned long flags;
+	bool batch;
 #ifdef CONFIG_MW5_ACCEL
 	gro_result_t gro_result;
 #endif
@@ -4976,10 +4985,22 @@ int rtl8192cd_linux6_napi_poll(struct napi_struct *napi, int budget)
 	schedule_rxq_tasklet(priv, priv->dev);
 	pshare->linux6_napi_polling = false;
 	pshare->linux6_rx_budget = 0;
+	batch = READ_ONCE(rtl8192cd_rx_batch);
+	if (batch) {
+		/* Transfer ownership with one shared-queue lock instead of taking
+		 * that lock for every packet. The local queue has only this consumer.
+		 * Never hold the queue lock across GRO/bridge/TX callbacks.
+		 */
+		__skb_queue_head_init(&delivery);
+		spin_lock_irqsave(&pshare->linux6_rx_delivery.lock, flags);
+		skb_queue_splice_tail_init(&pshare->linux6_rx_delivery, &delivery);
+		spin_unlock_irqrestore(&pshare->linux6_rx_delivery.lock, flags);
+	}
 	/* GRO may call back into TX via the bridge. No vendor RX lock may be held
 	 * here. Use a separate queue rather than the CPU backlog/extra softirq.
 	 */
-	while ((skb = skb_dequeue(&pshare->linux6_rx_delivery)) != NULL) {
+	while ((skb = batch ? __skb_dequeue(&delivery) :
+			     skb_dequeue(&pshare->linux6_rx_delivery)) != NULL) {
 #ifdef CONFIG_MW5_ACCEL
 		pshare->linux6_gro_packets++;
 		gro_result = napi_gro_receive(napi, skb);
@@ -5004,6 +5025,12 @@ int rtl8192cd_linux6_napi_poll(struct napi_struct *napi, int budget)
 		tasklet_schedule(&(pshare->tx_tasklet.tasklet));
 	}
 #endif
+
+	/* A producer which already observed the polling flag may finish after
+	 * the snapshot. Keep NAPI scheduled so its queued frame is not stranded.
+	 */
+	if (batch && !skb_queue_empty(&pshare->linux6_rx_delivery))
+		return budget;
 
 	if (work_done < budget && napi_complete_done(napi, work_done))
 		GET_HAL_INTERFACE(priv)->EnableRxRelatedInterruptHandler(priv);
