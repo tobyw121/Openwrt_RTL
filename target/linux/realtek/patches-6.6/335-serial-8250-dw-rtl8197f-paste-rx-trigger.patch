@@ -1,0 +1,29 @@
+From: OpenWrt RTL8197F bringup <noreply@example.invalid>
+Subject: [PATCH] serial: 8250_dw: drain RTL8197F RX FIFO earlier
+
+The RTL8197F quirk fixes the UART type to a 16-byte 16550A. Its default
+eight-byte RX trigger leaves only eight bytes of headroom during a paste.
+Use the one-byte trigger on this UART, leaving fifteen bytes of headroom
+while the CPU services the interrupt. Preserve the TX and unrelated FIFO
+settings and apply the choice on every termios update, including shell
+line-editor transitions. Other DesignWare UARTs keep their existing setup.
+
+--- a/drivers/tty/serial/8250/8250_dw.c
++++ b/drivers/tty/serial/8250/8250_dw.c
+@@ -422,6 +422,16 @@ static void dw8250_set_termios(struct uart_port *p, struct ktermios *termios,
+ 	}
+ 	clk_prepare_enable(d->clk);
+ 
++	if (d->pdata && (d->pdata->quirks & DW_UART_QUIRK_RTL8197F)) {
++		struct uart_8250_port *up = up_to_u8250p(p);
++
++		/* Leave room for paste bursts while the interrupt is pending.
++		 * serial8250_do_set_termios() writes this cached FCR to hardware.
++		 */
++		up->fcr &= ~UART_FCR_TRIGGER_MASK;
++		up->fcr |= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_00;
++	}
++
+ 	dw8250_do_set_termios(p, termios, old);
+ }
+ 
