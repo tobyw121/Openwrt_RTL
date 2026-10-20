@@ -204,15 +204,13 @@
 	status = "okay";
 };
 
-/*
- * UART0 is physically the DW-APB block at 0x18147000 and remains serial0.
- * Keep the recovery console in polling mode on RD05: early printk already
- * proves the port/base/baud are correct, while the board-level UART IRQ lane
- * has not yet been validated without console lockups.
- */
 &uart0 {
-	/delete-property/ interrupt-parent;
-	/delete-property/ interrupts;
+	/* UART0 ICTL input 9 -> CPU IP2 (output-index 1), as in the BSP.
+	 * The polling fallback cannot drain a 16-byte FIFO at 115200 baud.
+	 * Keep this board's existing register width and data-register layout.
+	 */
+	interrupt-parent = <&intc>;
+	interrupts = <9 1>;
 };
 
 &spi0 {

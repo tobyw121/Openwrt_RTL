@@ -1,15 +1,15 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-2.0-or-later
-# RTL8197F/MW5 serial-console helper.  Keep the RX FIFO trigger low so long
+# RTL8197F serial-console helper.  Keep the RX FIFO trigger low so long
 # paste bursts are drained early, especially while the Ethernet IRQ load is high.
 set -u
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 
-is_mw5() {
-	case "$(cat /tmp/sysinfo/board_name 2>/dev/null) $(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)" in
-		*tenda,nova-mw5*|*nova-mw5*) return 0 ;;
-		*) return 1 ;;
+is_rtl8197f() {
+	case "$(tr '\0' ' ' </proc/device-tree/compatible 2>/dev/null)" in
+		*"realtek,rtl8197f-soc "*) return 0 ;;
 	esac
+	return 1
 }
 
 rx_trigger_paths() {
@@ -21,14 +21,25 @@ rx_trigger_paths() {
 	done
 }
 
+uart_irq() {
+	if [ -r /sys/class/tty/ttyS0/device/irq ]; then
+		cat /sys/class/tty/ttyS0/device/irq
+	else
+		sed -n 's/^0:.* irq:\([0-9][0-9]*\).*/\1/p' /proc/tty/driver/serial 2>/dev/null
+	fi
+}
+
 tune() {
-	is_mw5 || { echo 'mw5-uart: not a Tenda Nova MW5' >&2; return 1; }
+	is_rtl8197f || { echo 'mw5-uart: not an RTL8197F platform' >&2; return 1; }
+	if [ "$(uart_irq)" = 0 ]; then
+		echo 'mw5-uart: UART is polling (irq=0); flash an image with the UART IRQ enabled' >&2
+		return 1
+	fi
 	found=0
 	for p in $(rx_trigger_paths); do
 		found=1
-		if [ -w "$p" ]; then
-			echo 1 > "$p" || return 1
-		fi
+		[ -w "$p" ] || return 1
+		echo 1 > "$p" || return 1
 	done
 	[ "$found" -eq 1 ] || {
 		echo 'mw5-uart: rx_trig_bytes sysfs attribute not available yet' >&2
@@ -38,10 +49,14 @@ tune() {
 }
 
 status() {
-	echo 'MW5 RTL8197F UART v44.65.14'
+	echo 'RTL8197F UART (MW5/RD05/AC23)'
 	printf 'device='; [ -e /dev/ttyS0 ] && echo ttyS0 || echo missing
 	printf 'console='; cat /sys/class/tty/console/active 2>/dev/null || true
-	printf 'irq='; cat /sys/class/tty/ttyS0/device/irq 2>/dev/null || echo unknown
+	irq="$(uart_irq)"
+	printf 'irq=%s\n' "${irq:-unknown}"
+	case "$irq" in 0) echo 'receive_mode=polling (unsafe for fast paste)' ;;
+		'') echo 'receive_mode=unknown' ;;
+		*) echo 'receive_mode=interrupt' ;; esac
 	for p in $(rx_trigger_paths); do
 		printf 'rx_trigger_bytes='; cat "$p" 2>/dev/null || echo unknown
 		printf 'rx_trigger_path=%s\n' "$p"
@@ -52,6 +67,6 @@ status() {
 
 case "${1:-status}" in
 	status) status ;;
-	tune) tune; status ;;
+	tune) tune || exit "$?"; status ;;
 	*) echo 'usage: mw5-uart status|tune' >&2; exit 2 ;;
 esac

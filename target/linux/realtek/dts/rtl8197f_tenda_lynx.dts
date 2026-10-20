@@ -132,11 +132,12 @@
 };
 
 &uart0 {
-	/* Leave UART0 in polling mode initially.  On RD05 the IRQ experiment caused
-	 * console lockups; validate the Tenda interrupt lane before enabling it.
+	/* UART0 ICTL input 9 -> CPU IP2 (output-index 1), as in the BSP.
+	 * The polling fallback cannot drain a 16-byte FIFO at 115200 baud.
+	 * Keep this board's existing register width and data-register layout.
 	 */
-	/delete-property/ interrupt-parent;
-	/delete-property/ interrupts;
+	interrupt-parent = <&intc>;
+	interrupts = <9 1>;
 };
 
 &spi0 {

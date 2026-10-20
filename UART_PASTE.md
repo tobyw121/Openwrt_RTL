@@ -14,6 +14,43 @@ UARTs ohne den RTL8197F-Quirk behalten ihre bisherigen Einstellungen.
 Das vergrößert nicht die physische FIFO und garantiert keine verlustfreie
 Übertragung während beliebig langer Interruptsperren.
 
+## Empfangspfad korrigiert: RD05, AC23 und Lynx
+
+Der RD05-Log mit Firmware `r0-bf8862a476` zeigt weiterhin `input overrun(s)`.
+Die Device Trees von RD05, AC23 und Lynx hatten UART0 ausdrücklich ohne
+`interrupt-parent` und `interrupts` konfiguriert. Linux benutzte dadurch den
+8250-Timer-Polling-Fallback. Eine 16-Byte-FIFO ist bei 115200 Baud und 8N1
+nach etwa 1,39 ms voll; der Timer-Fallback kann sie bei schnellen Paste-Bursts
+nicht rechtzeitig leeren. Ein niedriger FIFO-Trigger hilft ohne IRQ nicht.
+Die bisherigen Puffer-/Trigger-Änderungen waren für diese Boards unzureichend.
+
+UART0 erhält jetzt ICTL-Eingang 9, Ausgangsindex 1 / CPU-IP2. Das entspricht
+der vorhandenen RTL8197F-BSP-Routingtabelle und dem bereits verwendeten
+MW5-Interruptpfad. Die früheren allgemeinen ICTL-Routing- und DW-UART-Quirks
+bleiben aktiv. Registerbreite und Datenregister-Adressen dieser Boards werden
+beibehalten; die MW5-spezifischen Byte-Aliasse werden nicht übernommen.
+WRD12GN behält seine bisherige separate 38400-Baud-Konfiguration.
+
+Der bisher nur auf dem MW5 gestartete `mw5-uart`-Helfer prüft jetzt die
+RTL8197F-Plattform und setzt dort den RX-Trigger. `mw5-uart status` zeigt die
+IRQ-Nummer auch aus `/proc/tty/driver/serial`, wenn das Sysfs-IRQ-Attribut fehlt.
+`tune` meldet einen bekannten Polling-Port (`irq=0`) als Fehler, statt eine
+scheinbar erfolgreiche Abstimmung zu melden.
+
+Nach dem Flashen in Tabby mit den bisherigen 115200/8N1-Einstellungen prüfen:
+
+```sh
+mw5-uart status
+```
+
+Beim RD05 müssen `irq` ungleich 0, `receive_mode=interrupt` und
+`rx_trigger_bytes=1` erscheinen. Danach bei ruhiger Konsole zuerst eine
+1024-Zeichen- und anschließend eine längere Zeile einfügen. Das 8191-Byte-Limit
+der interaktiven Shell gilt weiterhin. Mit `mw5-uart status` davor und danach
+kontrollieren, dass der `oe`-Zähler in der Serial-Zeile nicht steigt.
+Ein physischer RD05-/Tabby-Test steht aus; sehr lange Interruptsperren können
+auch mit aktiviertem UART-IRQ noch Verluste verursachen.
+
 ## RD05-Gerätelog r0-962e91478d
 
 Die Meldung `ttyS ttyS0: input overrun(s)` belegt einen Empfangsüberlauf.
@@ -29,8 +66,8 @@ großen Texte einfügen.
 
 Diese Änderung reduziert eine belegte Quelle langer Konsolenausgaben. Sie
 beweist keine maximal zulässige Interruptlatenz des gesamten Vendor-Treibers.
-Bis zum Hardwaretest im Terminalprogramm 1–2 ms Sendeverzögerung pro Zeichen
-verwenden; für größere Skripte eine Dateiübertragung nutzen.
+Eine Sendeverzögerung im Terminal kann vorübergehend Überläufe reduzieren;
+sie ersetzt die Korrektur des oben beschriebenen Polling-Pfads nicht.
 
 ## Aktualisieren
 
@@ -53,6 +90,13 @@ von etwa 1 ms pro Zeichen verwenden. Das hilft gegen UART-Überläufe, hebt
 aber das Zeilenlimit nicht auf. `stty cols` ändert nur die Darstellung.
 
 ## Prüfung
+
+- Die übersetzten Device Trees von RD05, AC23, Lynx und MW5 enthalten
+  UART0 IRQ9 mit dem richtigen ICTL-Phandle und CPU-IP2-Zuordnung.
+  Registerbreiten bleiben erhalten; WRD12GN bleibt bei 38400/Polling.
+- Hosttests führen den UART-Helfer mit künstlichem Sysfs/Procfs aus:
+  RD05/AC23/MW5/Lynx erhalten den 1-Byte-Trigger; `irq=0` und fremde Plattformen
+  werden abgewiesen. IRQ-Ausgabe funktioniert über beide Dateisystempfade.
 
 - Der echte Kconfig-Resolver wählt 8192 für RTL8197F und 512 für andere Targets.
 - BusyBox 1.36.1 wurde mit dem 8192-Byte-Eingabepuffer als Hostprogramm gebaut.

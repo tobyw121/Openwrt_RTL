@@ -53,6 +53,15 @@ def main() -> int:
             if ("cpu_dma_descriptor_stride_bytes" in profile and
                     profile["cpu_dma_descriptor_stride_bytes"] != 4 * words):
                 errors.append(board + ": inconsistent CPU DMA word/byte stride")
+        if board in ("xiaomi,r4-rd05", "tenda,ac23", "tenda,nova-mw5"):
+            uart = re.search(r"&uart0\s*\{(.*?)\n\};", text, re.S)
+            if not uart:
+                errors.append(board + ": missing UART0 override")
+            else:
+                require(uart[1], "interrupt-parent = <&intc>;", board + " UART0", errors)
+                require(uart[1], "interrupts = <9 1>;", board + " UART0", errors)
+                if "/delete-property/ interrupts" in uart[1]:
+                    errors.append(board + ": UART0 must not fall back to polling")
         if board == "iball,wrd12gn":
             # DTC requires all properties in a node before its first child node.
             # Keep ethernet0 status before the embedded MDIO bus; v44.65.2 had
