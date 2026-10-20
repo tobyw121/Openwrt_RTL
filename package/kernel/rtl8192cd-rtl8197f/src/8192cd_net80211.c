@@ -1263,6 +1263,78 @@ int rtl_net80211_setkey(struct net_device *dev, struct iw_request_info *info, un
 	return 0;
 }
 
+#ifdef CONFIG_RTL8192CD_LINUX6_BUS
+/* nl80211 deletes one key at a time. In AP mode the HAL may use one CAM
+ * slot per VAP, regardless of GTK index: deleting an old GTK must therefore
+ * never erase the replacement GTK's hardware entry.
+ */
+static int rtl_net80211_delkey_linux6(struct rtl8192cd_priv *priv,
+				    const struct ieee80211req_del_key *wk)
+{
+	struct Dot11KeyMappingsEntry *mapping;
+	struct Dot11EncryptKey *key;
+	struct stat_info *sta;
+	unsigned int index = wk->idk_keyix;
+
+	if (!netif_running(priv->dev))
+		return -ENETDOWN;
+	if (is_broadcast_ether_addr(wk->idk_macaddr)) {
+#ifdef CONFIG_IEEE80211W
+		if (index == 4 || index == 5) {
+			mapping = &priv->pmib->dot11IGTKTable;
+			if (mapping->keyid == index)
+				memset(&mapping->dot11EncryptKey, 0,
+				       sizeof(mapping->dot11EncryptKey));
+			return 0;
+		}
+#endif
+		if (index > 3)
+			return -EINVAL;
+		mapping = &priv->pmib->dot11GroupKeysTable;
+		key = index == GKEY_ID_SECOND ? &mapping->dot11EncryptKey2 :
+			&mapping->dot11EncryptKey;
+		/* The first software slot also holds WEP0/1/3. Only GTK1 and
+		 * GTK2 have distinct software storage in this vendor core.
+		 */
+		if (mapping->keyid != index && index != GKEY_ID_SECOND &&
+		    mapping->keyid != GKEY_ID_SECOND)
+			return 0;
+		if (mapping->keyid == index) {
+			if (mapping->keyInCam &&
+			    CamDeleteOneEntry(priv, BROADCAST_MAC, index, 0) &&
+			    priv->pshare->CamEntryOccupied)
+				priv->pshare->CamEntryOccupied--;
+			mapping->keyInCam = FALSE;
+#ifdef HW_ENC_FOR_GROUP_CIPHER
+			/* Do not reinstall a deleted GTK from the HAL's backup. */
+			memset(&priv->group_key_cache, 0, sizeof(priv->group_key_cache));
+			memset(priv->wk_bk, 0, sizeof(priv->wk_bk));
+#endif
+		}
+		memset(key, 0, sizeof(*key));
+		memset(&priv->pmib->dot11DefaultKeysTable.keytype[index], 0,
+		       sizeof(priv->pmib->dot11DefaultKeysTable.keytype[index]));
+		return 0;
+	}
+	/* In the legacy API an all-zero address resets the entire CAM.
+	 * Never interpret a missing nl80211 peer as that global operation.
+	 */
+	if (index != 0 || !is_valid_ether_addr(wk->idk_macaddr))
+		return -EINVAL;
+	sta = get_stainfo(priv, (u8 *)wk->idk_macaddr);
+	if (!sta)
+		return -ENOENT;
+	mapping = &sta->dot11KeyMapping;
+	if (mapping->keyInCam &&
+	    CamDeleteOneEntry(priv, (u8 *)wk->idk_macaddr, index, 0) &&
+	    priv->pshare->CamEntryOccupied)
+		priv->pshare->CamEntryOccupied--;
+	mapping->keyInCam = FALSE;
+	memset(&mapping->dot11EncryptKey, 0, sizeof(mapping->dot11EncryptKey));
+	return 0;
+}
+#endif
+
 int rtl_net80211_delkey(struct net_device *dev, struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
 {
 	struct rtl8192cd_priv *priv = GET_DEV_PRIV(dev);
@@ -1275,6 +1347,10 @@ int rtl_net80211_delkey(struct net_device *dev, struct iw_request_info *info, un
 	struct stat_info	*pstat = NULL;
 	struct wifi_mib 	*pmib = priv->pmib;
 	int ret = 0;
+
+#ifdef CONFIG_RTL8192CD_LINUX6_BUS
+	return rtl_net80211_delkey_linux6(priv, wk);
+#endif
 
 	//check if the interface is down
 	if (!netif_running(priv->dev))

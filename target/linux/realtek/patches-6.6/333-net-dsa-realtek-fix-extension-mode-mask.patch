@@ -1,0 +1,19 @@
+From: OpenAI <noreply@openai.com>
+Subject: [PATCH] net: dsa: realtek: align extension mode mask with value
+
+Each extension mode occupies four bits. EXT1 is bits 7:4 of 0x1305,
+whereas EXT0 uses bits 3:0 and EXT2 uses bits 3:0 of 0x13c3. The value
+already uses a nibble offset, but the mask shifts by only one bit for
+EXT1. This leaves stale EXT1 mode bits and clears part of EXT0 instead.
+
+The RTL8367C SDK and all three archived OEM kernels use 0xf << (id * 4)
+for EXT0/EXT1. Use the existing offset macro for both mask and value.
+The RTL8367D-specific EXT1 path already uses GENMASK(7, 4).
+
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -218,3 +218,3 @@
+ #define   RTL8365MB_DIGITAL_INTERFACE_SELECT_MODE_MASK(_extint) \
+-		(0xF << (((_extint) % 2)))
++		(0xF << RTL8365MB_DIGITAL_INTERFACE_SELECT_MODE_OFFSET(_extint))
+ #define   RTL8365MB_DIGITAL_INTERFACE_SELECT_MODE_OFFSET(_extint) \

@@ -50,6 +50,8 @@ def main():
     parser.add_argument("--cross-compile", default="mips-linux-gnu-")
     parser.add_argument("--cc", default="mips-linux-gnu-gcc")
     parser.add_argument("--jobs", type=int, default=4)
+    parser.add_argument("--extra-cflags", default="",
+                        help="additional compiler flags for optional feature builds")
     parser.add_argument("--resume", action="store_true", help="reuse latest variant directory and rebuild changed sources")
     parser.add_argument("--backports", type=Path, help="configured OpenWrt backports source tree")
     parser.add_argument("--variants", nargs="+", choices=("mw5", "rd05", "ac23", "wrd12gn"),
@@ -80,6 +82,8 @@ def main():
         flags = (f"-I{args.kernel_source.resolve()} -include {compat} -Wno-error "
                  "-Wno-implicit-function-declaration -Wno-int-conversion "
                  "-Wno-address-of-packed-member")
+        if args.extra_cflags:
+            flags += " " + args.extra_cflags
         command = ["make", "-C", str(args.kernel.resolve()), f"M={build}",
                    f"ARCH={args.arch}", f"CROSS_COMPILE={args.cross_compile}",
                    f"CC={args.cc}", f"-j{args.jobs}", *package_flags(variant),

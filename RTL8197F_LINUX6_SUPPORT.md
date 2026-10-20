@@ -176,3 +176,11 @@ Firmware-/MODPOST-Build und Tests auf den Geräten wurden nicht durchgeführt.
 
 Eine vollständige, auf allen genannten Chips hardwarevalidierte Portierung
 ist mit diesem Änderungssatz noch nicht erreicht.
+
+Die weitere Analyse der drei OEM-Kernels korrigiert mit Patch 333 die
+EXT1-Portmodusmaske im DSA-Treiber. Der gemeinsame WLAN-Pfad prüft zusätzlich
+Schlüsselgrößen/-indizes und behandelt GTK-/IGTK-Löschung gezielt. Die
+optionale Hardware-Gruppenschlüsselsicherung besitzt jetzt ausreichend
+Speicher für die Linux6-Struktur und hält keinen Zeiger auf eine lokale
+Stackvariable. Belege, Grenzen und Tests stehen unter
+[Portmodus und WLAN-Schlüssellebensdauer](reverse-engineering/oem-kernels/INTERFACE_FINDINGS.md).

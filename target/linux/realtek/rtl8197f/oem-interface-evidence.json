@@ -1,0 +1,1325 @@
+{
+  "schema": 1,
+  "scope": "Static OEM function spans, direct JAL sites and extension-mode mask proof; no factory values. RD05 C-family routines are not proof of execution on its D-family path.",
+  "sdk": {
+    "commit": "e6d68e9067f54b695022f61ed52e50dc56c5a7b7",
+    "path": "8197/API_Source/rtl8367c_asicdrv_port.c",
+    "sha256": "d79bb85801d2881b6a502733a536e2e8b3eb88bbc0ee5729cb4026d1f4133123",
+    "expression": "RTL8367C_SELECT_GMII_0_MASK << (id * RTL8367C_SELECT_GMII_1_OFFSET)",
+    "rd05_init_path": "8197/RT8197F_RTL8367RB_Gesamtpaket/AX12v1_GPL_Paket/source_subset/rtl8197/rtknet/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_switch.c",
+    "rd05_init_sha256": "3c9e0430495ca3c1c650a7299fee0097f1b2bfb70531746f1e20203f7285b3b7"
+  },
+  "boards": {
+    "mw5": {
+      "kernel_sha256": "11fda4eba4ad3572037fa8ac39c14b28f7535e863e10a01130ea0bb18ff3d6a9",
+      "functions": {
+        "rtl8367c_setAsicPortExtMode": {
+          "address": 2149465376,
+          "span": 8252,
+          "span_sha256": "609407c21126555c56952afc2ced93f5f3af4805f97602a6447913a183130cd0"
+        },
+        "CamDeleteOneEntry": {
+          "address": 2150456640,
+          "span": 540,
+          "span_sha256": "d13f7707d7e3df1db950614834f11ab46ae1d15c17fe97ad9f4292f77722060c",
+          "direct_calls": [
+            {
+              "pc": 2150456700,
+              "target": 2148782360,
+              "symbol": "memcmp"
+            },
+            {
+              "pc": 2150456884,
+              "target": 2148782360,
+              "symbol": "memcmp"
+            }
+          ],
+          "literal_call_sites": []
+        },
+        "CamResetAllEntry": {
+          "address": 2150424200,
+          "span": 96,
+          "span_sha256": "37fb6883d2521961b9264e49852883ad9991aea4a1e34150d89007b34f5998d3",
+          "direct_calls": [],
+          "literal_call_sites": []
+        },
+        "DOT11_Process_Set_Key": {
+          "address": 2150491096,
+          "span": 1668,
+          "span_sha256": "5183dc6db2a5dfae024eb2bc15dbce2067834f5a65c64ce5e2e4305c0a6107f2",
+          "direct_calls": [
+            {
+              "pc": 2150491144,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150491168,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150491284,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150491436,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150491452,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150491468,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150491596,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150491632,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150491648,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150491720,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150491900,
+              "target": 2150362112,
+              "symbol": "get_stainfo_hash"
+            },
+            {
+              "pc": 2150492076,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150492112,
+              "target": 2150456640,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2150492176,
+              "target": 2150457832,
+              "symbol": "CamAddOneEntry"
+            },
+            {
+              "pc": 2150492252,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150492268,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150492304,
+              "target": 2150456640,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2150492368,
+              "target": 2150457832,
+              "symbol": "CamAddOneEntry"
+            },
+            {
+              "pc": 2150492416,
+              "target": 2150220764,
+              "symbol": "assign_aggre_mthod"
+            },
+            {
+              "pc": 2150492448,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150492484,
+              "target": 2150456640,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2150492548,
+              "target": 2150457832,
+              "symbol": "CamAddOneEntry"
+            },
+            {
+              "pc": 2150492608,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150492624,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150492640,
+              "target": 2148798656,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150492676,
+              "target": 2150456640,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2150492740,
+              "target": 2150457832,
+              "symbol": "CamAddOneEntry"
+            }
+          ],
+          "literal_call_sites": []
+        }
+      },
+      "extension_mode_proofs": [
+        {
+          "pc": 2149467364,
+          "call_pc": 2149467380,
+          "setter": 2149426816,
+          "register": 4869,
+          "mask_expression": "0xf << (extension_id * 4)",
+          "instruction_words": [
+            "0x00118880",
+            "0x24041305",
+            "0x2405000f",
+            "0x02252804",
+            "0x0c0769a0",
+            "0x02003021"
+          ]
+        }
+      ]
+    },
+    "ac23": {
+      "kernel_sha256": "e2f9c912499c88669d1df1a31a10aa8367e7a0a517840b9371fcc63601e39aa5",
+      "functions": {
+        "rtl8367c_setAsicPortExtMode": {
+          "address": 2149497240,
+          "span": 10964,
+          "span_sha256": "682984d02a901f60538a6ef2d2620efc31f9807f5b191041eaa38194e024d9ea"
+        },
+        "CamDeleteOneEntry": {
+          "address": 2150105108,
+          "span": 456,
+          "span_sha256": "777d8ce0a7c15e17065f6cf73edc6d59c80eb4e2d57298b7927f7b58b71ffcab",
+          "direct_calls": [
+            {
+              "pc": 2150105168,
+              "target": 2148785208,
+              "symbol": "memcmp"
+            },
+            {
+              "pc": 2150105316,
+              "target": 2148785208,
+              "symbol": "memcmp"
+            }
+          ],
+          "literal_call_sites": []
+        },
+        "CamResetAllEntry": {
+          "address": 2150076072,
+          "span": 68,
+          "span_sha256": "236928d1252db78f15ef740a2f5a1c0f55571b9ffcefe8eea6023ee3b1febcba",
+          "direct_calls": [],
+          "literal_call_sites": []
+        },
+        "DOT11_Process_Set_Key": {
+          "address": 2150152148,
+          "span": 1808,
+          "span_sha256": "c6ce33f5d15cf4dd98a604f4a822387adf6afb24a9ea099e9aac396cab239f62",
+          "direct_calls": [
+            {
+              "pc": 2150152204,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150152228,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150152344,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150152568,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150152664,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150152780,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150152808,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150152892,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150152920,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150153016,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150153068,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150153096,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150153116,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150153140,
+              "target": 2152655604,
+              "symbol": "get_stainfo"
+            },
+            {
+              "pc": 2150153216,
+              "target": 2149787096,
+              "symbol": "dc_sta_update"
+            },
+            {
+              "pc": 2150153248,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150153280,
+              "target": 2150105108,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2150153336,
+              "target": 2150107676,
+              "symbol": "CamAddOneEntry"
+            },
+            {
+              "pc": 2150153412,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150153444,
+              "target": 2150105108,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2150153500,
+              "target": 2150107676,
+              "symbol": "CamAddOneEntry"
+            },
+            {
+              "pc": 2150153560,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150153624,
+              "target": 2150105108,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2150153680,
+              "target": 2150107676,
+              "symbol": "CamAddOneEntry"
+            },
+            {
+              "pc": 2150153724,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150153788,
+              "target": 2150105108,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2150153844,
+              "target": 2150107676,
+              "symbol": "CamAddOneEntry"
+            },
+            {
+              "pc": 2150153884,
+              "target": 2149886056,
+              "symbol": "assign_aggre_mthod"
+            },
+            {
+              "pc": 2150153900,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150153916,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2150153940,
+              "target": 2148801504,
+              "symbol": "memcpy"
+            }
+          ],
+          "literal_call_sites": []
+        }
+      },
+      "extension_mode_proofs": [
+        {
+          "pc": 2149499692,
+          "call_pc": 2149499708,
+          "setter": 2149457984,
+          "register": 4869,
+          "mask_expression": "0xf << (extension_id * 4)",
+          "instruction_words": [
+            "0x00118880",
+            "0x24041305",
+            "0x2405000f",
+            "0x02252804",
+            "0x0c078810",
+            "0x02003021"
+          ]
+        }
+      ]
+    },
+    "rd05": {
+      "kernel_sha256": "aa48d325730b95c0658090ba9f943f71bdd9888dc57f609a3989ba58f0f8f5cc",
+      "functions": {
+        "rtl8367c_setAsicPortExtMode": {
+          "address": 2150897428,
+          "span": 11872,
+          "span_sha256": "4a7f0acecb8670c68dd1b785f1f41104930f17e01777be3d9543f6ad9c3871da"
+        },
+        "rtl_net80211_setkey": {
+          "address": 2152488276,
+          "span": 3252,
+          "span_sha256": "42dd72309c7cdf7bccd18d09a1fb13d4408ddbc88a1163c4d52599d43740487a",
+          "direct_calls": [
+            {
+              "pc": 2152488448,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152488520,
+              "target": 2149592600,
+              "symbol": "memcmp"
+            },
+            {
+              "pc": 2152488616,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152488736,
+              "target": 2151175856,
+              "symbol": "get_stainfo"
+            },
+            {
+              "pc": 2152488888,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152488932,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2152489000,
+              "target": 2151572504,
+              "symbol": "CamAddOneEntry"
+            },
+            {
+              "pc": 2152489048,
+              "target": 2151175856,
+              "symbol": "get_stainfo"
+            },
+            {
+              "pc": 2152489252,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152489284,
+              "target": 2152821184,
+              "symbol": "miwifi_mesh_event_send"
+            },
+            {
+              "pc": 2152489332,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152489376,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2152489460,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152489564,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152489608,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2152489676,
+              "target": 2151572504,
+              "symbol": "CamAddOneEntry"
+            },
+            {
+              "pc": 2152489768,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152489860,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2152489932,
+              "target": 2151572504,
+              "symbol": "CamAddOneEntry"
+            },
+            {
+              "pc": 2152490064,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152490084,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152490108,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152490124,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152490140,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152490200,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2152490264,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152490380,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152490400,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152490424,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152490440,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152490456,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152490516,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2152490620,
+              "target": 2149610808,
+              "symbol": "sprintf"
+            },
+            {
+              "pc": 2152490648,
+              "target": 2149591920,
+              "symbol": "strlen"
+            },
+            {
+              "pc": 2152490744,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152490820,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2152490888,
+              "target": 2151572504,
+              "symbol": "CamAddOneEntry"
+            },
+            {
+              "pc": 2152490924,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152490956,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152490980,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152491004,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152491048,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152491064,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152491100,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2152491152,
+              "target": 2149591512,
+              "symbol": "strcat"
+            },
+            {
+              "pc": 2152491172,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152491196,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2152491236,
+              "target": 2151357396,
+              "symbol": "assign_aggre_mthod"
+            },
+            {
+              "pc": 2152491256,
+              "target": 2149614624,
+              "symbol": "memset"
+            },
+            {
+              "pc": 2152491352,
+              "target": 2149610808,
+              "symbol": "sprintf"
+            },
+            {
+              "pc": 2152491380,
+              "target": 2149591920,
+              "symbol": "strlen"
+            },
+            {
+              "pc": 2152491452,
+              "target": 2149614624,
+              "symbol": "memset"
+            },
+            {
+              "pc": 2152491476,
+              "target": 2149591512,
+              "symbol": "strcat"
+            },
+            {
+              "pc": 2152491492,
+              "target": 2148038008,
+              "symbol": "printk"
+            },
+            {
+              "pc": 2152491508,
+              "target": 2148038008,
+              "symbol": "printk"
+            }
+          ],
+          "literal_call_sites": []
+        },
+        "rtl_net80211_delkey": {
+          "address": 2152491528,
+          "span": 360,
+          "span_sha256": "d553c606e9762350d0d4d44ae8214aba3d35aa4669b24a4b4d20f001006b60d5",
+          "direct_calls": [
+            {
+              "pc": 2152491640,
+              "target": 2149592600,
+              "symbol": "memcmp"
+            },
+            {
+              "pc": 2152491668,
+              "target": 2149592600,
+              "symbol": "memcmp"
+            },
+            {
+              "pc": 2152491704,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2152491776,
+              "target": 2151175856,
+              "symbol": "get_stainfo"
+            },
+            {
+              "pc": 2152491824,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2152491864,
+              "target": 2151573976,
+              "symbol": "CamResetAllEntry"
+            }
+          ],
+          "literal_call_sites": []
+        },
+        "CamDeleteOneEntry": {
+          "address": 2151573304,
+          "span": 672,
+          "span_sha256": "fa7b2fa9a60e30bf3b9a5ad2b626fd05aeb797eaaee4029f82aa0817a1bcb83d",
+          "direct_calls": [
+            {
+              "pc": 2151573376,
+              "target": 2149592600,
+              "symbol": "memcmp"
+            },
+            {
+              "pc": 2151573500,
+              "target": 2149592600,
+              "symbol": "memcmp"
+            },
+            {
+              "pc": 2151573968,
+              "target": 2147619244,
+              "symbol": "__stack_chk_fail"
+            }
+          ],
+          "literal_call_sites": []
+        },
+        "CamResetAllEntry": {
+          "address": 2151573976,
+          "span": 68,
+          "span_sha256": "f84102e638fd22b73c92107823ae86367c275c7508dbaa7ea069dc3b2989d87e",
+          "direct_calls": [],
+          "literal_call_sites": []
+        },
+        "DOT11_Process_Set_Key": {
+          "address": 2151586956,
+          "span": 4776,
+          "span_sha256": "c5a6acd59537ed2328814d44b968d36b447180cbb0f61321b2d1ef2f8822b0e2",
+          "direct_calls": [
+            {
+              "pc": 2151587056,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151587076,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151587176,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151587336,
+              "target": 2151175856,
+              "symbol": "get_stainfo"
+            },
+            {
+              "pc": 2151587420,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151587476,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2151587552,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151587612,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2151587668,
+              "target": 2151572504,
+              "symbol": "CamAddOneEntry"
+            },
+            {
+              "pc": 2151587888,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151587996,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151588056,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151588148,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2151588224,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151588280,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2151588336,
+              "target": 2151572504,
+              "symbol": "CamAddOneEntry"
+            },
+            {
+              "pc": 2151588420,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151588524,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151588632,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2151588712,
+              "target": 2151716568,
+              "symbol": "mclone_find_address"
+            },
+            {
+              "pc": 2151588756,
+              "target": 2151175856,
+              "symbol": "get_stainfo"
+            },
+            {
+              "pc": 2151588824,
+              "target": 2149610808,
+              "symbol": "sprintf"
+            },
+            {
+              "pc": 2151588848,
+              "target": 2149591920,
+              "symbol": "strlen"
+            },
+            {
+              "pc": 2151588932,
+              "target": 2149610808,
+              "symbol": "sprintf"
+            },
+            {
+              "pc": 2151588956,
+              "target": 2149591920,
+              "symbol": "strlen"
+            },
+            {
+              "pc": 2151589040,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2151589152,
+              "target": 2149610808,
+              "symbol": "sprintf"
+            },
+            {
+              "pc": 2151589176,
+              "target": 2149591920,
+              "symbol": "strlen"
+            },
+            {
+              "pc": 2151589312,
+              "target": 2149610808,
+              "symbol": "sprintf"
+            },
+            {
+              "pc": 2151589336,
+              "target": 2149591920,
+              "symbol": "strlen"
+            },
+            {
+              "pc": 2151589408,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151589436,
+              "target": 2149610808,
+              "symbol": "sprintf"
+            },
+            {
+              "pc": 2151589460,
+              "target": 2149591920,
+              "symbol": "strlen"
+            },
+            {
+              "pc": 2151589532,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151589564,
+              "target": 2149610808,
+              "symbol": "sprintf"
+            },
+            {
+              "pc": 2151589588,
+              "target": 2149591920,
+              "symbol": "strlen"
+            },
+            {
+              "pc": 2151589664,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151589692,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151589720,
+              "target": 2149610808,
+              "symbol": "sprintf"
+            },
+            {
+              "pc": 2151589744,
+              "target": 2149591920,
+              "symbol": "strlen"
+            },
+            {
+              "pc": 2151589836,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151589924,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2151589980,
+              "target": 2151572504,
+              "symbol": "CamAddOneEntry"
+            },
+            {
+              "pc": 2151590076,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151590164,
+              "target": 2151573304,
+              "symbol": "CamDeleteOneEntry"
+            },
+            {
+              "pc": 2151590216,
+              "target": 2149591512,
+              "symbol": "strcat"
+            },
+            {
+              "pc": 2151590236,
+              "target": 2149591512,
+              "symbol": "strcat"
+            },
+            {
+              "pc": 2151590256,
+              "target": 2149591512,
+              "symbol": "strcat"
+            },
+            {
+              "pc": 2151590276,
+              "target": 2149591512,
+              "symbol": "strcat"
+            },
+            {
+              "pc": 2151590296,
+              "target": 2149591512,
+              "symbol": "strcat"
+            },
+            {
+              "pc": 2151590316,
+              "target": 2149614624,
+              "symbol": "memset"
+            },
+            {
+              "pc": 2151590336,
+              "target": 2149614624,
+              "symbol": "memset"
+            },
+            {
+              "pc": 2151590356,
+              "target": 2149614624,
+              "symbol": "memset"
+            },
+            {
+              "pc": 2151590376,
+              "target": 2149614624,
+              "symbol": "memset"
+            },
+            {
+              "pc": 2151590396,
+              "target": 2149614624,
+              "symbol": "memset"
+            },
+            {
+              "pc": 2151590448,
+              "target": 2149610808,
+              "symbol": "sprintf"
+            },
+            {
+              "pc": 2151590472,
+              "target": 2149591920,
+              "symbol": "strlen"
+            },
+            {
+              "pc": 2151590604,
+              "target": 2149610808,
+              "symbol": "sprintf"
+            },
+            {
+              "pc": 2151590628,
+              "target": 2149591920,
+              "symbol": "strlen"
+            },
+            {
+              "pc": 2151590712,
+              "target": 2149610808,
+              "symbol": "sprintf"
+            },
+            {
+              "pc": 2151590736,
+              "target": 2149591920,
+              "symbol": "strlen"
+            },
+            {
+              "pc": 2151590808,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151590888,
+              "target": 2149610808,
+              "symbol": "sprintf"
+            },
+            {
+              "pc": 2151590912,
+              "target": 2149591920,
+              "symbol": "strlen"
+            },
+            {
+              "pc": 2151590988,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151591016,
+              "target": 2149613888,
+              "symbol": "memcpy"
+            },
+            {
+              "pc": 2151591036,
+              "target": 2149591512,
+              "symbol": "strcat"
+            },
+            {
+              "pc": 2151591056,
+              "target": 2149591512,
+              "symbol": "strcat"
+            },
+            {
+              "pc": 2151591076,
+              "target": 2149591512,
+              "symbol": "strcat"
+            },
+            {
+              "pc": 2151591096,
+              "target": 2149591512,
+              "symbol": "strcat"
+            },
+            {
+              "pc": 2151591116,
+              "target": 2149591512,
+              "symbol": "strcat"
+            },
+            {
+              "pc": 2151591136,
+              "target": 2149614624,
+              "symbol": "memset"
+            },
+            {
+              "pc": 2151591156,
+              "target": 2149614624,
+              "symbol": "memset"
+            },
+            {
+              "pc": 2151591176,
+              "target": 2149614624,
+              "symbol": "memset"
+            },
+            {
+              "pc": 2151591216,
+              "target": 2151357396,
+              "symbol": "assign_aggre_mthod"
+            },
+            {
+              "pc": 2151591236,
+              "target": 2149614624,
+              "symbol": "memset"
+            },
+            {
+              "pc": 2151591256,
+              "target": 2149614624,
+              "symbol": "memset"
+            },
+            {
+              "pc": 2151591276,
+              "target": 2149591512,
+              "symbol": "strcat"
+            },
+            {
+              "pc": 2151591296,
+              "target": 2149614624,
+              "symbol": "memset"
+            },
+            {
+              "pc": 2151591340,
+              "target": 2147619244,
+              "symbol": "__stack_chk_fail"
+            },
+            {
+              "pc": 2151591408,
+              "target": 2149610808,
+              "symbol": "sprintf"
+            },
+            {
+              "pc": 2151591432,
+              "target": 2149591920,
+              "symbol": "strlen"
+            },
+            {
+              "pc": 2151591504,
+              "target": 2149614624,
+              "symbol": "memset"
+            },
+            {
+              "pc": 2151591524,
+              "target": 2149591512,
+              "symbol": "strcat"
+            },
+            {
+              "pc": 2151591540,
+              "target": 2148038008,
+              "symbol": "printk"
+            },
+            {
+              "pc": 2151591556,
+              "target": 2148038008,
+              "symbol": "printk"
+            },
+            {
+              "pc": 2151591572,
+              "target": 2148038008,
+              "symbol": "printk"
+            },
+            {
+              "pc": 2151591588,
+              "target": 2148038008,
+              "symbol": "printk"
+            },
+            {
+              "pc": 2151591604,
+              "target": 2148038008,
+              "symbol": "printk"
+            },
+            {
+              "pc": 2151591620,
+              "target": 2148038008,
+              "symbol": "printk"
+            },
+            {
+              "pc": 2151591636,
+              "target": 2148038008,
+              "symbol": "printk"
+            },
+            {
+              "pc": 2151591652,
+              "target": 2148038008,
+              "symbol": "printk"
+            },
+            {
+              "pc": 2151591668,
+              "target": 2148038008,
+              "symbol": "printk"
+            },
+            {
+              "pc": 2151591684,
+              "target": 2148038008,
+              "symbol": "printk"
+            },
+            {
+              "pc": 2151591700,
+              "target": 2148038008,
+              "symbol": "printk"
+            },
+            {
+              "pc": 2151591716,
+              "target": 2148038008,
+              "symbol": "printk"
+            }
+          ],
+          "literal_call_sites": []
+        },
+        "hal_Associate_8812FE": {
+          "address": 2152697840,
+          "span": 1012,
+          "span_sha256": "6765d230926ac0ffba7a4258f8c0b157ca42a0ed3359a0a69cf499d1f9d41fec",
+          "direct_calls": [],
+          "literal_call_sites": []
+        },
+        "StopHW8812FE": {
+          "address": 2152697832,
+          "span": 8,
+          "span_sha256": "2b12957b7b20557a2b2214ff0d4c70070be49dbb12c48fe1b778f48a6fc3cd43",
+          "direct_calls": [],
+          "literal_call_sites": [],
+          "constant_return": {
+            "value": 0,
+            "instruction_words": [
+              "0x03e00008",
+              "0x00001025"
+            ]
+          }
+        },
+        "dal_rtl8367d_switch_init": {
+          "address": 2150717040,
+          "span": 8,
+          "span_sha256": "2b12957b7b20557a2b2214ff0d4c70070be49dbb12c48fe1b778f48a6fc3cd43",
+          "direct_calls": [],
+          "literal_call_sites": [],
+          "constant_return": {
+            "value": 0,
+            "instruction_words": [
+              "0x03e00008",
+              "0x00001025"
+            ]
+          }
+        }
+      },
+      "extension_mode_proofs": [
+        {
+          "pc": 2150900228,
+          "call_pc": 2150900244,
+          "setter": 2150670440,
+          "register": 4869,
+          "mask_expression": "0xf << (extension_id * 4)",
+          "instruction_words": [
+            "0x00108080",
+            "0x02203025",
+            "0x2405000f",
+            "0x02052804",
+            "0x0c0c281a",
+            "0x24041305"
+          ]
+        }
+      ]
+    }
+  }
+}

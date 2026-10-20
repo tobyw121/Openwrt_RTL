@@ -2950,6 +2950,62 @@ void _rtl_net80211_setkey(struct net_device *dev, void *info, void *wrqu, char *
 	}
 }
 
+/* The vendor key entry points trust their caller, including the WEP array
+ * index and memcpy length. Keep the nl80211 boundary explicit for every HAL.
+ */
+static int realtek_cfg80211_key_id(int link_id, u8 index, bool pairwise,
+				 const u8 *mac_addr)
+{
+	if (link_id != -1 && link_id != 0)
+		return -EOPNOTSUPP;
+	if (pairwise)
+		return index == 0 && mac_addr && is_valid_ether_addr(mac_addr) ?
+			0 : -EINVAL;
+	return index <= 5 ? 0 : -EINVAL;
+}
+
+static int realtek_cfg80211_key_params(u8 index, bool pairwise,
+				     const struct key_params *params)
+{
+	int length;
+
+	if (!params || !params->key)
+		return -EINVAL;
+	switch (params->cipher) {
+	case WLAN_CIPHER_SUITE_WEP40:
+		length = 5;
+		break;
+	case WLAN_CIPHER_SUITE_WEP104:
+		length = 13;
+		break;
+	case WLAN_CIPHER_SUITE_TKIP:
+		length = 32;
+		break;
+	case WLAN_CIPHER_SUITE_CCMP:
+		length = 16;
+		break;
+#ifdef CONFIG_IEEE80211W
+	case WLAN_CIPHER_SUITE_AES_CMAC:
+		return !pairwise && index >= 4 && index <= 5 &&
+			params->key_len == 16 ? 0 : -EINVAL;
+#endif
+	default:
+		return -EOPNOTSUPP;
+	}
+	return index < 4 && params->key_len == length ? 0 : -EINVAL;
+}
+
+#ifdef HW_ENC_FOR_GROUP_CIPHER
+static void realtek_cfg80211_cache_group_key(struct rtl8192cd_priv *priv,
+					    const struct ieee80211req_key *wk)
+{
+	BUILD_BUG_ON(sizeof(*wk) > sizeof(priv->wk_bk));
+	memcpy(priv->wk_bk, wk, sizeof(*wk));
+	memset(&priv->group_key_cache, 0, sizeof(priv->group_key_cache));
+	priv->group_key_cache.data.pointer = priv->wk_bk;
+}
+#endif
+
 static int realtek_cfg80211_add_key(struct wiphy *wiphy, struct net_device *dev,
 				   int link_id, u8 key_index, bool pairwise,
 				   const u8 *mac_addr,
@@ -2962,12 +3018,17 @@ static int realtek_cfg80211_add_key(struct wiphy *wiphy, struct net_device *dev,
 	struct ieee80211req_key wk;
 	int ret;
 
-	(void)link_id;
 #ifdef CONFIG_IEEE80211R
 	struct stat_info *pstat =NULL;
 #endif
 	NLENTER;
 
+	ret = realtek_cfg80211_key_id(link_id, key_index, pairwise, mac_addr);
+	if (ret)
+		return ret;
+	ret = realtek_cfg80211_key_params(key_index, pairwise, params);
+	if (ret)
+		return ret;
 	if (!realtek_cfg80211_ready(priv))
 		return -EIO;
 
@@ -3097,14 +3158,7 @@ static int realtek_cfg80211_add_key(struct wiphy *wiphy, struct net_device *dev,
 #ifdef HW_ENC_FOR_GROUP_CIPHER
 	/*for support HW_ENC_FOR_GROUP_CIPHER*/
 	if(!pairwise && (wk.ik_type >= IEEE80211_CIPHER_WEP && wk.ik_type <= IEEE80211_CIPHER_AES_CCM) ){
-		memcpy((void *)&priv->group_key_cache,(void *)&wrqu,sizeof(union iwreq_data));
-		if(sizeof(struct ieee80211req_key)<=64){
-			hwgrouplog("group_key_backup_done\n");
-			memcpy((void *)priv->wk_bk,(void *)&wk,sizeof(struct ieee80211req_key));
-			priv->group_key_cache.data.pointer = priv->wk_bk;
-		}else{
-			printk("[%s %d] Err chk!!",__func__,__LINE__);
-		}
+		realtek_cfg80211_cache_group_key(priv, &wk);
 	}
 #endif
 
@@ -3125,22 +3179,16 @@ static int realtek_cfg80211_del_key(struct wiphy *wiphy, struct net_device *dev,
 				   const u8 *mac_addr)
 {
 
-	struct rtknl *rtk = wiphy_priv(wiphy);
 	struct rtl8192cd_priv *priv = realtek_get_priv(wiphy, dev);
 	union iwreq_data wrqu;
 	struct ieee80211req_del_key wk;
 	int ret=0;
 
-	(void)link_id;
 	NLENTER;
 
-	rtk->cipher = _NO_PRIVACY_;
-	if(!pairwise)
-	{
-		// NDEBUG2("No need to delete Groupe key !!\n");
-		goto realtek_cfg80211_del_key_end;
-	}
-
+	ret = realtek_cfg80211_key_id(link_id, key_index, pairwise, mac_addr);
+	if (ret)
+		return ret;
 
 	if (!realtek_cfg80211_ready(priv)){
 		NDEBUG("No realtek_cfg80211_ready !!\n");
@@ -3159,15 +3207,20 @@ static int realtek_cfg80211_del_key(struct wiphy *wiphy, struct net_device *dev,
 
 	wk.idk_keyix = key_index;
 
-	if(mac_addr != NULL)
+	if (!pairwise)
+		memcpy(wk.idk_macaddr, BROADCAST_MAC, ETH_ALEN);
+	else if(mac_addr != NULL)
 		memcpy(wk.idk_macaddr, mac_addr, ETH_ALEN);
 	else
 		memset(wk.idk_macaddr, 0, ETH_ALEN);
 
 
+	memset(&wrqu, 0, sizeof(wrqu));
 	wrqu.data.pointer = &wk;
 
-	rtl_net80211_delkey(priv->dev, NULL, &wrqu, NULL);
+	ret = rtl_net80211_delkey(priv->dev, NULL, &wrqu, NULL);
+	if (ret == -1)
+		ret = -ENOENT;
 
 realtek_cfg80211_del_key_end:
 	NLEXIT;

@@ -126,5 +126,6 @@ Keine Routerprogramme wurden bei der Erstellung ausgeführt.
 ## Bisherige fachliche Ergebnisse
 
 Siehe [NIC-Geometrie und Resetpfade](NIC_FINDINGS.md),
+[Portmodus und WLAN-Schlüsselpfade](INTERFACE_FINDINGS.md),
 [Switch-Rückentwicklung](../../OEM_SWITCH_REVERSE.md) und
 [Factory-/WLAN-Integration](../../OEM_DUMP_INTEGRATION.md).

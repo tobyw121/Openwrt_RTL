@@ -8938,7 +8938,10 @@ typedef struct rtl8192cd_priv {
 	u64		mgmt_tx_cookie;
 #ifdef HW_ENC_FOR_GROUP_CIPHER
 	union iwreq_data group_key_cache;
-	u8 wk_bk[64];/*to record struct ieee80211req_key*/
+	/* The Linux6 compatibility key request is 76 bytes, larger than the
+	 * old 64-byte backup. The cfg80211 cache helper checks this capacity.
+	 */
+	u8 wk_bk[128];
 #endif
 #endif
 #ifdef CONFIG_RTL_OFFLOAD_DRIVER

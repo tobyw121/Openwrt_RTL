@@ -20,11 +20,14 @@ DEFAULT_SYMBOLS = (
     'dal_rtl8367d_switch_init', 'rtk_switch_port_L2P_get',
     'rtk_port_rgmiiDelayExt_set', 'rtk_port_macForceLinkExtSSC_set',
     'rtk_phyPatch_set',
+    'rtl8367c_setAsicPortExtMode',
 )
 LITERAL_TARGETS = {
     'rtl8367c_setAsicReg': (4, 5),
     'rtl8367d_setAsicReg': (4, 5),
     'rtk_port_rgmiiDelayExt_set': (4, 5, 6),
+    'rtl8367c_setAsicRegBits': (4, 5, 6),
+    'rtl8367d_setAsicRegBits': (4, 5, 6),
 }
 
 
