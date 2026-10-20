@@ -30,7 +30,7 @@ xiaomi,r4-rd05)
 	#   wan         -> routed WAN DHCP
 	# Keep an OEM rtl865x fallback for diagnostic/vendor-kernel boots only.
 	if [ -e /sys/class/net/lan1 ] && [ -e /sys/class/net/lan2 ]; then
-		lan_list="lan1 lan2 lan3 lan4"
+		lan_list="lan1 lan2"
 		[ -e /sys/class/net/wan ] && wan_list="wan"
 	elif [ -e /sys/class/net/eth2 ]; then
 		lan_list="eth0 eth1"
@@ -64,6 +64,14 @@ iball,wrd12gn)
 esac
 
 case $board in
+xiaomi,r4-rd05)
+	# Routed DSA user ports, without the managed-switch bridge/VLAN layer.
+	if [ "$lan_list" = eth0 ]; then
+		ucidef_set_interface_lan "$lan_list"
+	else
+		ucidef_set_interfaces_lan_wan "$lan_list" "${wan_list:-wan}"
+	fi
+	;;
 tenda,nova-mw5)
 	# The MW5 is a two-port DSA router, not a managed-switch platform.  Do not
 	# create the target-wide "switch" bridge with switch.1/switch.2 bridge VLAN

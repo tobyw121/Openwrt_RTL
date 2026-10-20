@@ -66,6 +66,7 @@ set network.wan_dev.ipv6='1'
 set network.wan='interface'
 set network.wan.device='wan'
 set network.wan.proto='dhcp'
+set network.wan.broadcast='1'
 
 set network.wan6='interface'
 set network.wan6.device='@wan'
@@ -73,6 +74,10 @@ set network.wan6.proto='dhcpv6'
 UCI
 
 if [ -n "$lan_mac" ]; then
+	# Seed the SoC master with the same factory LAN identity used by br-lan.
+	uci -q set network.eth0_dev='device'
+	uci -q set network.eth0_dev.name='eth0'
+	uci -q set network.eth0_dev.macaddr="$lan_mac"
 	uci -q set network.br_lan.macaddr="$lan_mac"
 	uci -q set network.lan.macaddr="$lan_mac"
 fi

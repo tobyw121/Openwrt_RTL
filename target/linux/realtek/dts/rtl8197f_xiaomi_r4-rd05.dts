@@ -345,8 +345,8 @@
 &ethernet0 {
 	/* RD05 OEM New_swNic_init uses cacheline-padded 32-byte rings. */
 	realtek,descriptor-dwords = <8>;
-	nvmem-cells = <&ethaddr>;
-	nvmem-cell-names = "mac-address";
+	nvmem-cells = <&ethaddr>, <&ethaddr_wan>;
+	nvmem-cell-names = "mac-address", "wan-mac-address";
 
 	/*
 	 * GPL SDK topology for RTL8197F + RTL83xx: the SoC drives the external

@@ -56,12 +56,13 @@
 #include <net/tcp.h>
 #include <net/udp.h>
 #include <net/checksum.h>
+#include <net/dsa.h>
 #include <net/flow_offload.h>
 #include <net/pkt_cls.h>
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.36-mw5-tx-progress-v44.66.14"
+#define DRV_VERSION			"1.8.37-rd05-wan-cpu-mac"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -2772,6 +2773,30 @@ static int rtl8197f_rtk_rd05_force_l2(struct rtl8197f_rtknet_priv *priv,
 					      eidx, w0, w1, name);
 }
 
+/* Keep the routed WAN identity in a separate way of the four-way L2
+ * hash table. Its hash can collide with a LAN/broadcast entry in way zero.
+ * Without a CPU/static entry, source learning can point the WAN MAC back
+ * at P0 and suppress subsequent unicast DHCP replies on that same link.
+ */
+static void rtl8197f_rtk_rd05_seed_wan_cpu(struct rtl8197f_rtknet_priv *priv)
+{
+	u8 fid;
+
+	if (!priv->wan_mac_valid ||
+	    !of_machine_is_compatible("xiaomi,r4-rd05"))
+		return;
+
+	for (fid = 0; fid < 2; fid++) {
+		u32 eidx = (rtl8197f_rtk_rd05_l2_row(priv->wan_mac, fid) << 2) | 1;
+		u32 w0 = rtl8197f_rtk_rd05_l2_w0(priv->wan_mac);
+		u32 w1 = rtl8197f_rtk_rd05_l2_w1(priv->wan_mac, 0, fid,
+						 true, true, true, true);
+
+		rtl8197f_rtk_rd05_force_table2(priv, RTL_RTK_ASICTBL_TYPE_L2,
+					      eidx, w0, w1, "rd05-wan-cpu");
+	}
+}
+
 static u32 rtl8197f_rtk_rd05_vlan_w0(u16 member, u8 fid)
 {
 	/* member/untag port mask uses p0..p5 in bits 0..5 and p6..p8 in ext bits. */
@@ -3517,6 +3542,8 @@ static void rtl8197f_rtk_rd05_seed_l2cpu(struct rtl8197f_rtknet_priv *priv)
 
 	rtl8197f_rtk_rd05_force_l2(priv, bcast, 1, RTL_RTK_RD05_HOST_MBR,
 				       true, true, true, true, "l2-bcast-fid1");
+
+	rtl8197f_rtk_rd05_seed_wan_cpu(priv);
 
 	ether_addr_copy(priv->rd05_seeded_mac, cpu_mac);
 	priv->rd05_mac_reseeds++;
@@ -6535,8 +6562,8 @@ static netdev_tx_t rtl8197f_rtk_start_xmit(struct sk_buff *skb,
 
 	if (!skb_is_gso(skb) &&
 	    skb->len > ndev->mtu + ETH_HLEN + VLAN_HLEN +
-		       (priv->is_mw5 ? RTL_RTK_MW5_CPU_TAG8_LEN : 0)) {
-		/* DSA inserts the MW5 rtl8_4 header before the master ndo_start_xmit.
+		       (netdev_uses_dsa(ndev) ? RTL_RTK_MW5_CPU_TAG8_LEN : 0)) {
+		/* DSA inserts the rtl8_4 header on RD05/AC23/MW5 before ndo_start_xmit.
 		 * Account for those eight bytes in the master-side sanity limit; the
 		 * user-port MTU remains 1500 and the external switch consumes the tag. */
 		priv->tx_mtu_drops++;
@@ -9730,25 +9757,30 @@ static int rtl8197f_rtk_read_mw5_factory_mac(struct device *dev, u8 *addr)
 }
 
 static void rtl8197f_rtk_read_named_mac(struct device *dev, const char *name,
-                                        u8 *addr, bool *valid)
+				     u8 *addr, bool *valid)
 {
-    struct nvmem_cell *cell;
-    void *buf;
-    size_t len;
+	struct nvmem_cell *cell;
+	void *buf;
+	size_t len;
 
-    *valid = false;
-    cell = nvmem_cell_get(dev, name);
-    if (IS_ERR(cell))
-        return;
-    buf = nvmem_cell_read(cell, &len);
-    nvmem_cell_put(cell);
-    if (IS_ERR(buf))
-        return;
-    if (len >= ETH_ALEN && is_valid_ether_addr(buf)) {
-        ether_addr_copy(addr, buf);
-        *valid = true;
-    }
-    kfree(buf);
+	*valid = false;
+	cell = nvmem_cell_get(dev, name);
+	if (IS_ERR(cell))
+		return;
+	buf = nvmem_cell_read(cell, &len);
+	nvmem_cell_put(cell);
+	if (IS_ERR(buf))
+		return;
+	/* u-boot-env converts ethaddr to binary, but ethaddr_wan stays ASCII.
+	 * Never interpret the first six ASCII characters as an Ethernet address.
+	 */
+	if (len == ETH_ALEN && is_valid_ether_addr(buf)) {
+		ether_addr_copy(addr, buf);
+		*valid = true;
+	} else if (len != ETH_ALEN) {
+		*valid = !rtl8197f_rtk_parse_ascii_mac(buf, len, addr);
+	}
+	kfree(buf);
 }
 
 static int rtl8197f_rtk_probe(struct platform_device *pdev)
@@ -10100,7 +10132,7 @@ static int rtl8197f_rtk_probe(struct platform_device *pdev)
 		eth_addr_add(priv->wan_mac, 7);
 		priv->wan_mac_valid = is_valid_ether_addr(priv->wan_mac);
 	}
-	if (priv->is_iball)
+	if (priv->is_iball || of_machine_is_compatible("xiaomi,r4-rd05"))
 		rtl8197f_rtk_read_named_mac(&pdev->dev, "wan-mac-address",
 					       priv->wan_mac, &priv->wan_mac_valid);
 
