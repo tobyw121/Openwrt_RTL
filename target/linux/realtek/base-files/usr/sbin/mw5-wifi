@@ -766,6 +766,37 @@ stop_all() {
 	log 'cfg80211 APs stopped'
 }
 
+# One short UART command collects the usual diagnostics without restarting
+# either AP. Keep credentials/configuration files out of this report.
+wifi_diagnostics() {
+	local diag_if diag_band
+	echo '=== firmware ==='
+	cat /etc/openwrt_release 2>/dev/null || true
+	echo '=== UART ==='
+	if command -v mw5-uart >/dev/null 2>&1; then
+		mw5-uart status 2>&1 || true
+	fi
+	echo '=== wireless interfaces ==='
+	iw dev 2>&1 || true
+	for diag_if in wlan0 wlan1; do
+		echo "=== $diag_if stations ==="
+		iw dev "$diag_if" station dump 2>&1 || true
+	done
+	if command -v hostapd_cli >/dev/null 2>&1; then
+		for diag_band in 2g 5g; do
+			case "$diag_band" in 2g) diag_if=wlan1 ;; *) diag_if=wlan0 ;; esac
+			echo "=== $diag_band hostapd state ==="
+			hostapd_cli -p "$RUN_DIR/ctrl-$diag_band" -i "$diag_if" status 2>&1 || true
+		done
+	fi
+	echo '=== authentication / hostapd / DHCP log (last 80 matches) ==='
+	logread 2>&1 | grep -Ei 'hostapd|wpa|auth|assoc|deauth|dhcp' | tail -n 80 || true
+	echo '=== kernel log (last 120 lines) ==='
+	dmesg 2>&1 | tail -n 120 || true
+	echo '=== WLAN apply log (last 100 lines) ==='
+	tail -n 100 "$LOG_FILE" 2>&1 || true
+}
+
 show_status() {
 	load_config
 	echo "version=$VERSION enabled=$ENABLED autoload=$AUTOLOAD driver=cfg80211/nl80211"
@@ -2461,6 +2492,7 @@ case "${1:-}" in
 	apply-config) ensure_config; echo 'configuration written; AP state unchanged' ;;
 	stop) stop_all ;;
 	status) show_status ;;
+	diag) wifi_diagnostics | tee "$LOG_DIR/wlan-diag.log" ;;
 	get) [ $# -eq 2 ] || exit 2; get_value "$2" ;;
 	pairing-toggle) load_config; [ "$MESH_ENABLED" = 1 ] && MESH_ENABLED=0 || MESH_ENABLED=1; write_config_file; echo "$MESH_ENABLED" ;;
 	alltest) alltest_cfg80211 ;;
@@ -2470,5 +2502,5 @@ case "${1:-}" in
 		: >"$LOG_FILE"; probe_driver; echo 'legacy WEXT phase command mapped to cfg80211 driver probe'; command -v iw >/dev/null 2>&1 && iw phy 2>/dev/null || true ;;
 	start-2g-real|apply-ap-2g) MW5_ONLY_2G=1 apply_cfg80211 ;;
 	unload-driver) stop_all; remove_rtl8192cd_module 2>/dev/null || true ;;
-	*) echo "Usage: mw5-wifi init|init-defaults|save|apply|apply-config|stop|status|get KEY|pairing-toggle|alltest|2g-alltest|sniffing [SECONDS]" >&2; exit 2 ;;
+	*) echo "Usage: mw5-wifi init|init-defaults|save|apply|apply-config|stop|status|diag|get KEY|pairing-toggle|alltest|2g-alltest|sniffing [SECONDS]" >&2; exit 2 ;;
 esac

@@ -1,5 +1,25 @@
 # RD05: Hänger während der WLAN-Initialisierung
 
+## Vollständigen Laufzeitbericht über UART erfassen
+
+Nach einem fehlgeschlagenen Verbindungsversuch genügt ein kurzer Befehl:
+
+```sh
+mw5-wifi diag
+```
+
+Er sammelt Firmware-Version, UART-Status, WLAN-Interfaces, beide Stationstabellen,
+verfügbare hostapd-Statusdaten sowie die begrenzten Authentifizierungs-, Kernel-
+und Apply-Logs. Der Bericht erscheint auf der Konsole und in
+`/tmp/mw5-webui/wlan-diag.log`. Es werden keine APs neu gestartet und keine
+Passwort-/hostapd-Konfigurationsdateien ausgegeben.
+
+Der zuletzt übermittelte abgeschnittene Gerätelog meldet noch
+`r0-bf8862a476` und UART `irq:0`. Er enthält somit noch nicht den UART-Fix
+`5ad14f0e32`; die mehrzeilige Befehlsfolge endet bereits bei `logread | grep -`.
+Daraus lassen sich weder aktuelle Stationstabellen noch ein hostapd-Neustart
+als Ursache für das zeitweise fehlende 5-GHz-Netz ablesen.
+
 ## Authentifizierung mit Firmware r0-962e91478d
 
 Der neue Gerätelog bestätigt abgeschlossene Initialisierung beider Radios
