@@ -185,6 +185,95 @@
             }
           ],
           "literal_call_sites": []
+        },
+        "rtk_switch_maxPktLen_set": {
+          "address": 2149420584,
+          "span": 40,
+          "span_sha256": "821669a25c2a6297401ba101f5fcf2cc976a98e9ac0a0bc7d3767c0adb85b53e",
+          "direct_calls": [
+            {
+              "pc": 2149420604,
+              "target": 2149420548,
+              "symbol": "rtl83xx_setAsicMaxLengthInRx"
+            }
+          ],
+          "literal_call_sites": [],
+          "instruction_words": [
+            "0x27bdffe8",
+            "0xafbf0014",
+            "0x2c830004",
+            "0x10600003",
+            "0x24020001",
+            "0x0c076381",
+            "0x00000000",
+            "0x8fbf0014",
+            "0x03e00008",
+            "0x27bd0018"
+          ]
+        },
+        "rtl8367c_setAsicMaxLength": {
+          "address": 2149455668,
+          "span": 80,
+          "span_sha256": "3157c2b54937cd8bd3873c9a6e8b6825e11120c46295c20eae358e8b407b648b",
+          "direct_calls": [
+            {
+              "pc": 2149455696,
+              "target": 2149427020,
+              "symbol": "rtl8367c_setAsicRegBit"
+            },
+            {
+              "pc": 2149455728,
+              "target": 2149427020,
+              "symbol": "rtl8367c_setAsicRegBit"
+            }
+          ],
+          "literal_call_sites": [],
+          "instruction_words": [
+            "0x27bdffe8",
+            "0xafbf0014",
+            "0x2c830008",
+            "0x10600007",
+            "0x00801021",
+            "0x000528c0",
+            "0x24040883",
+            "0x0c0769d3",
+            "0x00a22821",
+            "0x080785df",
+            "0x8fbf0014",
+            "0x2482fff8",
+            "0x00051840",
+            "0x00652821",
+            "0x2404088a",
+            "0x0c0769d3",
+            "0x00452821",
+            "0x8fbf0014",
+            "0x03e00008",
+            "0x27bd0018"
+          ]
+        },
+        "rtl8367c_setAsicMaxLengthCfg": {
+          "address": 2149455884,
+          "span": 36,
+          "span_sha256": "b25097edcc14c249e4c438bb760c9a027d3ea39d6318d234c6633a74bb9751a2",
+          "direct_calls": [
+            {
+              "pc": 2149455900,
+              "target": 2149426816,
+              "symbol": "rtl8367c_setAsicRegBits"
+            }
+          ],
+          "literal_call_sites": [],
+          "instruction_words": [
+            "0x27bdffe8",
+            "0xafbf0014",
+            "0x00a03021",
+            "0x2484088c",
+            "0x0c0769a0",
+            "0x24053fff",
+            "0x8fbf0014",
+            "0x03e00008",
+            "0x27bd0018"
+          ]
         }
       },
       "extension_mode_proofs": [
@@ -400,6 +489,95 @@
             }
           ],
           "literal_call_sites": []
+        },
+        "rtk_switch_maxPktLen_set": {
+          "address": 2149451856,
+          "span": 40,
+          "span_sha256": "4d314b69221deb09779e31e646c187faac58789f44f0dcbd7abd59110b87316d",
+          "direct_calls": [
+            {
+              "pc": 2149451876,
+              "target": 2149451820,
+              "symbol": "rtl83xx_setAsicMaxLengthInRx"
+            }
+          ],
+          "literal_call_sites": [],
+          "instruction_words": [
+            "0x27bdffe8",
+            "0xafbf0014",
+            "0x2c830004",
+            "0x10600003",
+            "0x24020001",
+            "0x0c07820b",
+            "0x00000000",
+            "0x8fbf0014",
+            "0x03e00008",
+            "0x27bd0018"
+          ]
+        },
+        "rtl8367c_setAsicMaxLength": {
+          "address": 2149486884,
+          "span": 80,
+          "span_sha256": "2073399fbfd93010f54401dbdc961998c5ba8244111849a9de08c16400eb0d29",
+          "direct_calls": [
+            {
+              "pc": 2149486912,
+              "target": 2149458188,
+              "symbol": "rtl8367c_setAsicRegBit"
+            },
+            {
+              "pc": 2149486944,
+              "target": 2149458188,
+              "symbol": "rtl8367c_setAsicRegBit"
+            }
+          ],
+          "literal_call_sites": [],
+          "instruction_words": [
+            "0x27bdffe8",
+            "0xafbf0014",
+            "0x2c830008",
+            "0x10600007",
+            "0x00801021",
+            "0x000528c0",
+            "0x24040883",
+            "0x0c078843",
+            "0x00a22821",
+            "0x0807a45b",
+            "0x8fbf0014",
+            "0x2482fff8",
+            "0x00051840",
+            "0x00652821",
+            "0x2404088a",
+            "0x0c078843",
+            "0x00452821",
+            "0x8fbf0014",
+            "0x03e00008",
+            "0x27bd0018"
+          ]
+        },
+        "rtl8367c_setAsicMaxLengthCfg": {
+          "address": 2149487100,
+          "span": 36,
+          "span_sha256": "068c55cef3f5cd4e4ef2152cb8537d66e5aff03727c01cf2b4ad10d25b576a38",
+          "direct_calls": [
+            {
+              "pc": 2149487116,
+              "target": 2149457984,
+              "symbol": "rtl8367c_setAsicRegBits"
+            }
+          ],
+          "literal_call_sites": [],
+          "instruction_words": [
+            "0x27bdffe8",
+            "0xafbf0014",
+            "0x00a03021",
+            "0x2484088c",
+            "0x0c078810",
+            "0x24053fff",
+            "0x8fbf0014",
+            "0x03e00008",
+            "0x27bd0018"
+          ]
         }
       },
       "extension_mode_proofs": [
@@ -1301,6 +1479,236 @@
               "0x00001025"
             ]
           }
+        },
+        "rtk_switch_maxPktLen_set": {
+          "address": 2150594520,
+          "span": 112,
+          "span_sha256": "d159c6f34cb581e51782ea13a53503928a3ca0c9ad0c849f50f38e648b33bdfc",
+          "direct_calls": [
+            {
+              "pc": 2150594560,
+              "target": 2150628252,
+              "symbol": "rtk_switch_maxPktLenCfg_set"
+            },
+            {
+              "pc": 2150594588,
+              "target": 2150628004,
+              "symbol": "rtk_switch_portMaxPktLen_set"
+            }
+          ],
+          "literal_call_sites": [],
+          "instruction_words": [
+            "0x2c823fff",
+            "0x14400003",
+            "0x24020001",
+            "0x03e00008",
+            "0x00000000",
+            "0x27bdffe0",
+            "0xafbf001c",
+            "0xafb10018",
+            "0xafb00014",
+            "0x00802825",
+            "0x0c0bfee7",
+            "0x00002025",
+            "0x1440000a",
+            "0x00008025",
+            "0x24110008",
+            "0x00003025",
+            "0x24050001",
+            "0x0c0bfea9",
+            "0x02002025",
+            "0x14400003",
+            "0x26100001",
+            "0x1611fffa",
+            "0x00003025",
+            "0x8fbf001c",
+            "0x8fb10018",
+            "0x8fb00014",
+            "0x03e00008",
+            "0x27bd0020"
+          ]
+        },
+        "rtl8367c_setAsicMaxLength": {
+          "address": 2150889976,
+          "span": 76,
+          "span_sha256": "48234ac90acc6b4138a803e72ad3d54ee24a798f3fb1222744814279e8bed450",
+          "direct_calls": [
+            {
+              "pc": 2150890000,
+              "target": 2150670128,
+              "symbol": "rtl8367c_setAsicRegBit"
+            },
+            {
+              "pc": 2150890036,
+              "target": 2150670128,
+              "symbol": "rtl8367c_setAsicRegBit"
+            }
+          ],
+          "literal_call_sites": [],
+          "instruction_words": [
+            "0x27bdffe8",
+            "0x2c820008",
+            "0x10400008",
+            "0xafbf0014",
+            "0x000528c0",
+            "0x00a42821",
+            "0x0c0c27cc",
+            "0x24040883",
+            "0x8fbf0014",
+            "0x03e00008",
+            "0x27bd0018",
+            "0x00051040",
+            "0x00452821",
+            "0x00a42821",
+            "0x24a5fff8",
+            "0x0c0c27cc",
+            "0x2404088a",
+            "0x1000fff7",
+            "0x8fbf0014"
+          ]
+        },
+        "rtl8367c_setAsicMaxLengthCfg": {
+          "address": 2150889904,
+          "span": 36,
+          "span_sha256": "1b19fb0e078d04d783f14bc0c3af7c1a4aae8a60ae98d8cc62b4885d2c7a9c1e",
+          "direct_calls": [
+            {
+              "pc": 2150889920,
+              "target": 2150670440,
+              "symbol": "rtl8367c_setAsicRegBits"
+            }
+          ],
+          "literal_call_sites": [],
+          "instruction_words": [
+            "0x27bdffe8",
+            "0xafbf0014",
+            "0x00a03025",
+            "0x24053fff",
+            "0x0c0c281a",
+            "0x2484088c",
+            "0x8fbf0014",
+            "0x03e00008",
+            "0x27bd0018"
+          ]
+        },
+        "dal_rtl8367d_switch_portMaxPktLen_set": {
+          "address": 2150717048,
+          "span": 164,
+          "span_sha256": "cef43f9081d2130c3c5b0d4b44413017311a7b888bc4f537f74f8ff35d94b975",
+          "direct_calls": [
+            {
+              "pc": 2150717076,
+              "target": 2150626188,
+              "symbol": "rtk_switch_initialState_get"
+            },
+            {
+              "pc": 2150717120,
+              "target": 2150626200,
+              "symbol": "rtk_switch_logicalPortCheck"
+            },
+            {
+              "pc": 2150717168,
+              "target": 2150626872,
+              "symbol": "rtk_switch_port_L2P_get"
+            },
+            {
+              "pc": 2150717188,
+              "target": 2150678192,
+              "symbol": "rtl8367d_setAsicRegBit"
+            }
+          ],
+          "literal_call_sites": [],
+          "instruction_words": [
+            "0x27bdffe0",
+            "0xafbf001c",
+            "0xafb20018",
+            "0xafb10014",
+            "0xafb00010",
+            "0x00808825",
+            "0x00a08025",
+            "0x0c0bfce3",
+            "0x00c09025",
+            "0x24030001",
+            "0x10430007",
+            "0x2402000f",
+            "0x8fbf001c",
+            "0x8fb20018",
+            "0x8fb10014",
+            "0x8fb00010",
+            "0x03e00008",
+            "0x27bd0020",
+            "0x0c0bfce6",
+            "0x02202025",
+            "0x1440fff7",
+            "0x24020003",
+            "0x2e020002",
+            "0x1040fff4",
+            "0x24020001",
+            "0x2e420002",
+            "0x14400003",
+            "0x00000000",
+            "0x1000ffef",
+            "0x24020001",
+            "0x0c0bfd8e",
+            "0x02202025",
+            "0x001028c0",
+            "0x02403025",
+            "0x00a22821",
+            "0x0c0c2fac",
+            "0x24040883",
+            "0x1000ffe7",
+            "0x8fbf001c",
+            "0x1000ffe4",
+            "0x24020001"
+          ]
+        },
+        "dal_rtl8367d_switch_maxPktLenCfg_set": {
+          "address": 2150717372,
+          "span": 112,
+          "span_sha256": "8954974dd4240036e2b5b3c91c12da6d68569881e07e4be25ca4bb5b16975608",
+          "direct_calls": [
+            {
+              "pc": 2150717392,
+              "target": 2150626188,
+              "symbol": "rtk_switch_initialState_get"
+            },
+            {
+              "pc": 2150717444,
+              "target": 2150678504,
+              "symbol": "rtl8367d_setAsicRegBits"
+            }
+          ],
+          "literal_call_sites": [],
+          "instruction_words": [
+            "0x27bdffe0",
+            "0xafbf001c",
+            "0xafb10018",
+            "0xafb00014",
+            "0x00808025",
+            "0x0c0bfce3",
+            "0x00a08825",
+            "0x24030001",
+            "0x1443000d",
+            "0x2e020002",
+            "0x1040000c",
+            "0x24020001",
+            "0x2e224000",
+            "0x14400003",
+            "0x02203025",
+            "0x10000007",
+            "0x24020001",
+            "0x24053fff",
+            "0x0c0c2ffa",
+            "0x2604088c",
+            "0x10000003",
+            "0x8fbf001c",
+            "0x2402000f",
+            "0x8fbf001c",
+            "0x8fb10018",
+            "0x8fb00014",
+            "0x03e00008",
+            "0x27bd0020"
+          ]
         }
       },
       "extension_mode_proofs": [

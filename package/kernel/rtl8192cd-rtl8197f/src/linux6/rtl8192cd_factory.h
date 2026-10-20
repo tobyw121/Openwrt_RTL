@@ -19,7 +19,7 @@ struct rtl_factory_field {
 	u16 rd05_offset;
 	u8 band; /* 0: common, 2: 2.4 GHz, 5: 5 GHz */
 	u8 path; /* number of RF paths required */
-	u8 scalar; /* 0: byte array, 1: u32, 2: u8 */
+	u8 scalar; /* 0: byte array, 1: u32, 2: u8, 3: 14 AC groups */
 	u8 maximum;
 };
 
@@ -51,6 +51,21 @@ static const struct rtl_factory_field rtl_factory_fields[] = {
 	RF_FIELD("TX_POWER_DIFF_5G_HT40_2S", pwrdiff5GHT40_2S, 0x235, 5, 1, 0, 0),
 	RF_FIELD("TX_POWER_DIFF_5G_HT20", pwrdiff5GHT20, 0x2f9, 5, 1, 0, 0),
 	RF_FIELD("TX_POWER_DIFF_5G_OFDM", pwrdiff5GOFDM, 0x3bd, 5, 1, 0, 0),
+	RF_FIELD("TX_POWER_DIFF_20BW1S_OFDM1T_A", pwrdiff_20BW1S_OFDM1T_A, 0x80b, 2, 1, 0, 0),
+	RF_FIELD("TX_POWER_DIFF_40BW2S_20BW2S_A", pwrdiff_40BW2S_20BW2S_A, 0x819, 2, 1, 0, 0),
+	RF_FIELD("TX_POWER_DIFF_20BW1S_OFDM1T_B", pwrdiff_20BW1S_OFDM1T_B, 0x8eb, 2, 2, 0, 0),
+	RF_FIELD("TX_POWER_DIFF_40BW2S_20BW2S_B", pwrdiff_40BW2S_20BW2S_B, 0x8f9, 2, 2, 0, 0),
+	/* assign_diff_AC in the MW5/RD05 flash utilities and SDK: these are
+	 * 14 packed group bytes, not a truncated per-channel table.
+	 */
+	RF_FIELD("TX_POWER_DIFF_5G_20BW1S_OFDM1T_A", pwrdiff_5G_20BW1S_OFDM1T_A, 0x86d, 5, 1, 3, 0),
+	RF_FIELD("TX_POWER_DIFF_5G_40BW2S_20BW2S_A", pwrdiff_5G_40BW2S_20BW2S_A, 0x87b, 5, 1, 3, 0),
+	RF_FIELD("TX_POWER_DIFF_5G_80BW1S_160BW1S_A", pwrdiff_5G_80BW1S_160BW1S_A, 0x8b3, 5, 1, 3, 0),
+	RF_FIELD("TX_POWER_DIFF_5G_80BW2S_160BW2S_A", pwrdiff_5G_80BW2S_160BW2S_A, 0x8c1, 5, 1, 3, 0),
+	RF_FIELD("TX_POWER_DIFF_5G_20BW1S_OFDM1T_B", pwrdiff_5G_20BW1S_OFDM1T_B, 0x94d, 5, 2, 3, 0),
+	RF_FIELD("TX_POWER_DIFF_5G_40BW2S_20BW2S_B", pwrdiff_5G_40BW2S_20BW2S_B, 0x95b, 5, 2, 3, 0),
+	RF_FIELD("TX_POWER_DIFF_5G_80BW1S_160BW1S_B", pwrdiff_5G_80BW1S_160BW1S_B, 0x993, 5, 2, 3, 0),
+	RF_FIELD("TX_POWER_DIFF_5G_80BW2S_160BW2S_B", pwrdiff_5G_80BW2S_160BW2S_B, 0x9a1, 5, 2, 3, 0),
 	RF_FIELD("TX_POWER_TSSI_CCK_A", pwrlevel_TSSICCK_A, 0x481, 2, 1, 0, 0),
 	RF_FIELD("TX_POWER_TSSI_CCK_B", pwrlevel_TSSICCK_B, 0x48f, 2, 2, 0, 0),
 	RF_FIELD("TX_POWER_TSSI_HT40_1S_A", pwrlevel_TSSIHT40_1S_A, 0x4b9, 2, 1, 0, 0),
@@ -144,6 +159,23 @@ static int rtl_factory_h601(const u8 *data, size_t len)
 	return sum ? -EBADMSG : 0;
 }
 
+static void rtl_factory_expand_ac(u8 *target, const u8 *groups)
+{
+	/* Zero-based MIB offsets, exactly as assign_diff_AC in both OEM
+	 * utilities. Preserve offsets 0..34 and 177..195 from HAL/eFuse.
+	 * Each byte contains two signed power-difference nibbles; do not
+	 * reinterpret it as an absolute transmit-power value.
+	 */
+	static const u8 offsets[] = {
+		35, 40, 48, 56, 64, 104, 112, 120, 128, 136, 144,
+		153, 161, 169, 177,
+	};
+	unsigned int i;
+
+	for (i = 0; i < 14; i++)
+		memset(target + offsets[i], groups[i], offsets[i + 1] - offsets[i]);
+}
+
 static int rtl_factory_apply(struct Dot11RFEntry *rf, unsigned int format,
 			     unsigned int radio, unsigned int paths, bool band5,
 			     const u8 *data, size_t len,
@@ -183,9 +215,9 @@ static int rtl_factory_apply(struct Dot11RFEntry *rf, unsigned int format,
 				goto reject;
 		} else {
 			value = data + 6 + 0x409 + radio * 2507 + f->rd05_offset;
-			n = f->scalar ? 1 : f->size;
+			n = f->scalar == 3 ? 14 : f->scalar ? 1 : f->size;
 		}
-		if (f->scalar) {
+		if (f->scalar == 1 || f->scalar == 2) {
 			if (format == RTL_FACTORY_TENDA_KV) {
 				if (rtl_factory_scalar(value, n, f->maximum, &number))
 					goto reject;
@@ -205,7 +237,7 @@ static int rtl_factory_apply(struct Dot11RFEntry *rf, unsigned int format,
 			count = format == RTL_FACTORY_TENDA_KV ? n / 2 : n;
 			/* Old MW5 5G base tables have channels 1..177.  Preserve the
 			 * remaining vendor/eFuse entries; arbitrary short tables fail. */
-			if (count != f->size &&
+			if (count != (f->scalar == 3 ? 14 : f->size) &&
 			    !(band5 && f->size == 196 && count == 177 &&
 			      !strncmp(f->key, "TX_POWER_5G_HT40_1S_", 20)))
 				goto reject;
@@ -228,7 +260,10 @@ static int rtl_factory_apply(struct Dot11RFEntry *rf, unsigned int format,
 				;
 			if (j == count)
 				goto reject;
-			memcpy(target, decoded, count);
+			if (f->scalar == 3)
+				rtl_factory_expand_ac(target, decoded);
+			else
+				memcpy(target, decoded, count);
 			if (!strncmp(f->key, "TX_POWER_TSSI_", 14))
 				tssi_tables++;
 		}

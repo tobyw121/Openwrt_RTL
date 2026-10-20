@@ -184,3 +184,11 @@ optionale Hardware-Gruppenschlüsselsicherung besitzt jetzt ausreichend
 Speicher für die Linux6-Struktur und hält keinen Zeiger auf eine lokale
 Stackvariable. Belege, Grenzen und Tests stehen unter
 [Portmodus und WLAN-Schlüssellebensdauer](reverse-engineering/oem-kernels/INTERFACE_FINDINGS.md).
+
+Die kompakte 14-Byte-AC-Gruppenzuordnung ist inzwischen aus beiden
+MW5-/RD05-Userspace-Routinen und dem SDK rekonstruiert. Der gemeinsame
+Importer unterstützt acht zusätzliche 5-GHz- und vier 2,4-GHz-Felder für
+die Pfade A/B. AC23 erhält ohne passende Factory-Felder keine Ersatzwerte.
+Patch 334 ergänzt beim RD05 die ausdrückliche Auswahl des vom DSA-Treiber
+programmierten Paketlängenprofils für aktive Ports. Siehe
+[Kalibrierung und MTU-Profile](reverse-engineering/oem-kernels/CALIBRATION_AND_MTU_FINDINGS.md).

@@ -66,9 +66,12 @@ strukturell und auf seinen Wertebereich geprüft.
 TSSI wird aus der Factory nur aktiviert, wenn alle für Band und Pfadzahl
 benötigten TSSI-Tabellen vollständig eingelesen wurden. Alte MW5-5-GHz-
 Basistabellen mit 177 Kanaleinträgen werden begrenzt übernommen; die übrigen
-Einträge bleiben erhalten. Die 14 Byte langen AC-Leistungsdifferenzfelder
-aus manchen OEM-Stores sind **nicht** mit vollständigen 196-Kanal-Tabellen
-gleichzusetzen und werden in diesem Import noch nicht übernommen. Die
+Einträge bleiben erhalten. Die inzwischen aus den MW5-/RD05-OEM-Programmen
+und dem SDK rekonstruierte 14-Byte-AC-Gruppenzuordnung wird für acht
+5-GHz-Differenztabellen der Pfade A/B übernommen; vier zusätzliche
+2,4-GHz-Felder werden direkt eingelesen. Diese Gruppensätze sind **nicht**
+mit vollständigen 196-Kanal-Tabellen gleichzusetzen. Details und Belege:
+[AC-Kalibrierung und MTU-Profile](reverse-engineering/oem-kernels/CALIBRATION_AND_MTU_FINDINGS.md). Die
 vollständige chipbezogene Power-Tracking-/Regulatory-Integration bleibt zu
 validieren; dieser Stand behauptet keine vollständige OEM-RF-Parität.
 

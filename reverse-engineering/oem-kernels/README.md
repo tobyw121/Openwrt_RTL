@@ -127,5 +127,6 @@ Keine Routerprogramme wurden bei der Erstellung ausgeführt.
 
 Siehe [NIC-Geometrie und Resetpfade](NIC_FINDINGS.md),
 [Portmodus und WLAN-Schlüsselpfade](INTERFACE_FINDINGS.md),
+[AC-Kalibrierung und RD05-MTU-Profile](CALIBRATION_AND_MTU_FINDINGS.md),
 [Switch-Rückentwicklung](../../OEM_SWITCH_REVERSE.md) und
 [Factory-/WLAN-Integration](../../OEM_DUMP_INTEGRATION.md).

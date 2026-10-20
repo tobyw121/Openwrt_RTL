@@ -1,0 +1,98 @@
+From: OpenAI <noreply@openai.com>
+Subject: [PATCH] net: dsa: realtek: select the programmed MTU profile on RTL8367D
+
+The exact RD05 OEM kernel programs profile 0 and then selects it per port.
+The DAL/SDK defines 0x0883 as one selector bit per physical port and speed:
+port + speed * 8. CFG0/CFG1 lengths are 0x088c/0x088d, mask 0x3fff.
+
+The native DSA driver updates CFG0 only. Ensure the active RTL8367D ports
+use it at both link speeds, without changing selectors on unused ports.
+Propagate failures and leave the C-family path unchanged. This establishes
+a deterministic MTU configuration; it is not a measured fix for packet loss.
+
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -1561,27 +1561,58 @@
+ }
+-
++
+-static int rtl8365mb_port_change_mtu(struct dsa_switch *ds, int port,
+-				     int new_mtu)
+-{
+-	struct realtek_priv *priv = ds->priv;
+-	int frame_size;
+-
+-	/* When a new MTU is set, DSA always sets the CPU port's MTU to the
+-	 * largest MTU of the slave ports. Because the switch only has a global
+-	 * RX length register, only allowing CPU port here is enough.
+-	 */
+-	if (!dsa_is_cpu_port(ds, port))
+-		return 0;
+-
+-	frame_size = new_mtu + VLAN_ETH_HLEN + ETH_FCS_LEN;
+-
+-	dev_dbg(priv->dev, "changing mtu to %d (frame size: %d)\n",
+-		new_mtu, frame_size);
+-
+-	return regmap_update_bits(priv->map, RTL8365MB_CFG0_MAX_LEN_REG,
+-				  RTL8365MB_CFG0_MAX_LEN_MASK,
+-				  FIELD_PREP(RTL8365MB_CFG0_MAX_LEN_MASK,
+-					     frame_size));
+-}
++/* RTL8367D selects length profile 0/1 independently for each physical
++ * port and link speed. DSA owns one global limit in CFG0; explicitly select
++ * that profile on active ports instead of inheriting a bootloader selector.
++ */
++static int rtl8367d_mtu_select_cfg0(struct realtek_priv *priv)
++{
++	struct rtl8365mb *mb = priv->chip_data;
++	struct dsa_switch *ds = priv->ds;
++	u32 ports = 0;
++	unsigned int port;
++
++	if (!mb->chip_info->rtl8367d)
++		return 0;
++
++	for (port = 0; port < ds->num_ports && port < 8; port++)
++		if (dsa_is_user_port(ds, port) || dsa_is_cpu_port(ds, port) ||
++		    dsa_is_dsa_port(ds, port))
++			ports |= BIT(port);
++
++	if (!ports)
++		return 0;
++
++	/* SDK/OEM: 0x0883 bit (physical_port + speed * 8), cfgId=0. */
++	return regmap_update_bits(priv->map, 0x0883, ports | (ports << 8), 0);
++}
++
++static int rtl8365mb_port_change_mtu(struct dsa_switch *ds, int port,
++				     int new_mtu)
++{
++	struct realtek_priv *priv = ds->priv;
++	int frame_size;
++	int ret;
++
++	/* When a new MTU is set, DSA always sets the CPU port's MTU to the
++	 * largest MTU of the slave ports. Because the switch only has a global
++	 * RX length register, only allowing CPU port here is enough.
++	 */
++	if (!dsa_is_cpu_port(ds, port))
++		return 0;
++
++	frame_size = new_mtu + VLAN_ETH_HLEN + ETH_FCS_LEN;
++
++	dev_dbg(priv->dev, "changing mtu to %d (frame size: %d)\n",
++		new_mtu, frame_size);
++
++	ret = regmap_update_bits(priv->map, RTL8365MB_CFG0_MAX_LEN_REG,
++				  RTL8365MB_CFG0_MAX_LEN_MASK,
++				  FIELD_PREP(RTL8365MB_CFG0_MAX_LEN_MASK,
++					     frame_size));
++	if (ret)
++		return ret;
++
++	return rtl8367d_mtu_select_cfg0(priv);
++}
+-
++
+ static int rtl8365mb_port_max_mtu(struct dsa_switch *ds, int port)

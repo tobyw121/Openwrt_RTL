@@ -22,6 +22,11 @@ NAMES = ('rtl8367c_setAsicPortExtMode', 'rtl_net80211_setkey',
          'rtl_net80211_delkey', 'CamDeleteOneEntry', 'CamResetAllEntry',
          'DOT11_Process_Set_Key', 'hal_Associate_8812FE', 'StopHW8812FE')
 NAMES += ('dal_rtl8367d_switch_init',)
+MTU_NAMES = ('rtk_switch_maxPktLen_set', 'rtl8367c_setAsicMaxLength',
+             'rtl8367c_setAsicMaxLengthCfg',
+             'dal_rtl8367d_switch_portMaxPktLen_set',
+             'dal_rtl8367d_switch_maxPktLenCfg_set')
+NAMES += MTU_NAMES
 
 
 def verified_artifact(directory, manifest, name):
@@ -100,6 +105,13 @@ def collect(archives):
             symbols.append({'address': int(address, 16), 'type': kind, 'name': name})
         metadata = {'image_base': manifest['image_base'], 'symbols': symbols}
         functions = AUDIT.audit_functions(kernel, metadata, NAMES)
+        for name in MTU_NAMES:
+            if name in functions:
+                item = functions[name]
+                offset = item['address'] - manifest['image_base']
+                code = kernel[offset:offset + item['span']]
+                item['instruction_words'] = ['0x%08x' % w for w in
+                    struct.unpack('<%dI' % (len(code) // 4), code)]
         setter = next(s['address'] for s in symbols if s['name'] == 'rtl8367c_setAsicRegBits')
         proofs = mode_mask_proofs(kernel, manifest['image_base'],
                                  functions[NAMES[0]], setter)

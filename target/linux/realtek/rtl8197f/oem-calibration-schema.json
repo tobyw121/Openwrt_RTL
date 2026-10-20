@@ -149,8 +149,69 @@
           "key": "11N_TSSI_ENABLE",
           "offset": 2049,
           "size": 1
+        },
+        {
+          "key": "TX_POWER_DIFF_20BW1S_OFDM1T_A",
+          "offset": 2059,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_40BW2S_20BW2S_A",
+          "offset": 2073,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_5G_20BW1S_OFDM1T_A",
+          "offset": 2157,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_5G_40BW2S_20BW2S_A",
+          "offset": 2171,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_5G_80BW1S_160BW1S_A",
+          "offset": 2227,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_5G_80BW2S_160BW2S_A",
+          "offset": 2241,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_20BW1S_OFDM1T_B",
+          "offset": 2283,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_40BW2S_20BW2S_B",
+          "offset": 2297,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_5G_20BW1S_OFDM1T_B",
+          "offset": 2381,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_5G_40BW2S_20BW2S_B",
+          "offset": 2395,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_5G_80BW1S_160BW1S_B",
+          "offset": 2451,
+          "size": 14
+        },
+        {
+          "key": "TX_POWER_DIFF_5G_80BW2S_160BW2S_B",
+          "offset": 2465,
+          "size": 14
         }
-      ]
+      ],
+      "compact_ac_evidence": "oem-ac-calibration-evidence.json"
     },
     "ac23": {
       "library_path": "/lib/libapmib.so",

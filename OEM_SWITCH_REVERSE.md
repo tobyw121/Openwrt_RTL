@@ -6,6 +6,11 @@ des RD05-Init-Stubs mit dem SDK sind in
 beschrieben; reproduzierbare Instruktionsbelege stehen in
 `target/linux/realtek/rtl8197f/oem-interface-evidence.json`.
 
+Der anschließende Paketlängenabgleich ergänzt mit Patch 334 die explizite
+Auswahl von Profil 0 für aktive RD05-/RTL8367D-Ports. OEM-Registerbelege,
+SDK-Abgleich und Grenzen stehen in
+[Kalibrierung und MTU-Profile](reverse-engineering/oem-kernels/CALIBRATION_AND_MTU_FINDINGS.md).
+
 Stand: 20.10.2026. Grundlage sind dieselben drei SPI-Dumps aus RT8197F wie
 in [OEM_DUMP_INTEGRATION.md](OEM_DUMP_INTEGRATION.md). Die Originale blieben
 unverändert. Routerprogramme wurden nicht ausgeführt.

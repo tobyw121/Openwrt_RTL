@@ -114,8 +114,8 @@ Das sind Objekt-/Regressionstests; ein vollständiger Firmwarebuild,
 abschließendes MODPOST und Gerätetests gehören nicht zu diesen Ergebnissen.
 
 Diese Änderungen vervollständigen noch nicht die Rückentwicklung. Offen
-bleiben unter anderem Kaltstart-Parität der Switches, unbekannte kompakte
-AC-Kalibriertabellen, allgemeine VIF-Lebensdauer, RTL8812F-Firmware-
+bleiben unter anderem Kaltstart-Parität der Switches, weitere RF-Felder,
+allgemeine VIF-Lebensdauer, RTL8812F-Firmware-
 Stromsparfunktionen sowie die Verifikation von DFS, Temperaturen und Last.
 Die bestehenden Beschleunigerregeln und WEXT-Abschaltung bleiben erhalten.
 
@@ -126,3 +126,8 @@ Für MW5/AC23 muss zudem das EXT1-Feld in `0x1305` nach der Konfiguration
 RGMII anzeigen und die Nachbarbits erhalten. Die Änderungen sind weder
 ein gemessener Durchsatzgewinn noch ein Hardwarebeweis für die Behebung
 des ursprünglichen MW5-Netzstillstands.
+
+Die damals offene kompakte A/B-AC-Gruppenzuordnung ist inzwischen aus
+beiden OEM-Programmen rekonstruiert und im Import ergänzt; ebenso die
+ausdrückliche RD05-MTU-Profilwahl. Siehe
+[Kalibrierung und MTU-Profile](CALIBRATION_AND_MTU_FINDINGS.md).
