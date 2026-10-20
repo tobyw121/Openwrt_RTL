@@ -5889,7 +5889,9 @@ int realtek_interface_add(struct rtl8192cd_priv *priv,
 
 	priv->cfg80211_interface_add = FALSE;
 
+	rtl8197f_wlan_phase_set(714, "probe-cfg80211-netdev-register-entry", 0);
 	register_netdev(ndev);
+	rtl8197f_wlan_phase_set(715, "probe-cfg80211-netdev-register-returned", 0);
 
 #if 0
 	if(IS_ROOT_INTERFACE(priv))
@@ -8340,8 +8342,11 @@ int realtek_cfg80211_init(struct rtknl *rtk,struct rtl8192cd_priv *priv)
 	realtek_regdom = _rtl_regdomain_select(priv->pmib->dot11StationConfigEntry.dot11RegDomain);
 
 
+	rtl8197f_wlan_phase_set(710, "probe-wiphy-register-entry", 0);
 	ret = wiphy_register(wiphy);
+	rtl8197f_wlan_phase_set(711, "probe-wiphy-register-returned", ret);
 
+	rtl8197f_wlan_phase_set(712, "probe-wiphy-regdomain-entry", 0);
 	if (rtnl_is_locked())
 		regulatory_set_wiphy_regd_sync(wiphy, (struct ieee80211_regdomain *)realtek_regdom);
 	else {
@@ -8349,6 +8354,7 @@ int realtek_cfg80211_init(struct rtknl *rtk,struct rtl8192cd_priv *priv)
 		regulatory_set_wiphy_regd_sync(wiphy, (struct ieee80211_regdomain *)realtek_regdom);
 		rtnl_unlock();
 	}
+	rtl8197f_wlan_phase_set(713, "probe-wiphy-regdomain-returned", 0);
 	/*----------------------reg domain related-----------------------*/
 
 

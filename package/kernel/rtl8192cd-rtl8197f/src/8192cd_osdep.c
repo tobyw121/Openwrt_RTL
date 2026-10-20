@@ -16730,9 +16730,11 @@ void *rtl8192cd_init_one(struct sdio_func *psdio_func, void *ent, struct _device
 			priv->pshare->linux6_root_priv = priv;
 			skb_queue_head_init(&priv->pshare->linux6_rx_delivery);
 			INIT_WORK(&priv->pshare->cfg80211_work, realtek_process_cfg80211_work);
+			rtl8197f_wlan_phase_set(716, "probe-napi-add-entry", 0);
 			netif_napi_add_weight(dev, &priv->pshare->linux6_rx_napi,
 					rtl8192cd_linux6_napi_poll, 64);
 			priv->pshare->linux6_napi_added = true;
+			rtl8197f_wlan_phase_set(717, "probe-napi-add-ready", 0);
 		}
 #endif
 #ifdef USE_RTL8186_SDK
@@ -16843,6 +16845,8 @@ void *rtl8192cd_init_one(struct sdio_func *psdio_func, void *ent, struct _device
 #endif
 
 #ifdef CONFIG_PCI_HCI
+if (vap_idx < 0)
+	rtl8197f_wlan_phase_set(700, "probe-shared-state-ready", 0);
 if (GET_HCI_TYPE(priv) == RTL_HCI_PCIE) {
 #if defined(CONFIG_NET_PCI) || defined(CONFIG_RTL_8198F)
 	if ((((wdev->type >> TYPE_SHIFT) & TYPE_MASK) == TYPE_PCI_BIOS)||(((wdev->type >> TYPE_SHIFT) & TYPE_MASK) == TYPE_PCI_BIOS_DT))
@@ -17289,10 +17293,12 @@ if (GET_HCI_TYPE(priv) == RTL_HCI_PCIE) {
                 goto err_out_free2;
             }
             priv->pmib->dot11RFEntry.macPhyMode = SINGLEMAC_SINGLEPHY;
+            rtl8197f_wlan_phase_set(701, "probe-pci-hal-link-entry", 0);
             if (Wlan_HAL_Link(priv) != SUCCESS) {
                 rc = -ENODEV;
                 goto err_out_free2;
             }
+            rtl8197f_wlan_phase_set(702, "probe-pci-hal-link-ready", 0);
         } else
 #endif
         if (((priv->pshare->type>>TYPE_SHIFT) & TYPE_MASK) == TYPE_PCI_DIRECT)
@@ -17770,6 +17776,8 @@ if (GET_HCI_TYPE(priv) == RTL_HCI_PCIE) {
 			}
 		}
 		else if (TYPE_EMBEDDED == ((priv->pshare->type>>TYPE_SHIFT) & TYPE_MASK) ) {
+			if (vap_idx < 0)
+				rtl8197f_wlan_phase_set(703, "probe-soc-identify-entry", 0);
 			DEBUG_INFO("TYPE_EMBEDDED\n");
 #if defined(CONFIG_WLAN_HAL_8881A)
 				priv->pshare->version_id = VERSION_8881A;
@@ -18018,7 +18026,11 @@ if (GET_HCI_TYPE(priv) == RTL_HCI_PCIE) {
 
 
 #ifdef  CONFIG_WLAN_HAL
+            if (vap_idx < 0)
+                rtl8197f_wlan_phase_set(704, "probe-soc-hal-link-entry", 0);
             Wlan_HAL_Link(priv);
+            if (vap_idx < 0)
+                rtl8197f_wlan_phase_set(705, "probe-soc-hal-link-ready", 0);
 #endif  //CONFIG_WLAN_HAL
         }		
 	}
@@ -18210,7 +18222,11 @@ register_driver:
 #endif
 
 #if defined(CONFIG_WLAN_HAL) 
+	if (vap_idx < 0)
+		rtl8197f_wlan_phase_set(706, "probe-mac-software-entry", 0);
 	MACFM_software_init(priv);
+	if (vap_idx < 0)
+		rtl8197f_wlan_phase_set(707, "probe-mac-software-ready", 0);
 #endif
 
 #if defined(WIFI5_THER_CTRL)
@@ -18227,7 +18243,9 @@ register_driver:
 	if(vap_idx < 0) {
 		if (IS_ROOT_INTERFACE(priv)) //wrt-vxd
 		{
+			rtl8197f_wlan_phase_set(708, "probe-cfg80211-entry", 0);
 			realtek_cfg80211_init(rtk,priv);
+			rtl8197f_wlan_phase_set(709, "probe-cfg80211-returned", 0);
 			//modlog("realtek_interface_add [%s]",rtk->root_ifname);
 			realtek_interface_add(priv, rtk, rtk->root_ifname, NL80211_IFTYPE_STATION, 0, 0); 
 		}

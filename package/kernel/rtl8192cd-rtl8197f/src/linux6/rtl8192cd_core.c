@@ -72,10 +72,13 @@ int rtl8192cd_linux6_attach(struct rtl8192cd_linux6_hw *hw)
 		wdev->mac_valid = true;
 	}
 
-	dev_info(hw->dev, "attach vendor core: radio=%u bus=%s irq=%d mmio=%p rfe=%u\n",
+	/* A hard hang can prevent userspace from reading dmesg. Keep the bus
+	 * identity beside the serial-console phase markers, without MMIO reads.
+	 */
+	dev_emerg(hw->dev, "attach vendor core: radio=%u bus=%s irq=%d mmio_len=%pa rfe=%u\n",
 		 hw->board.radio_index,
 		 hw->bus_type == RTL8192CD_BUS_PCI ? "pci" : "soc",
-		 hw->irq, hw->mmio, hw->board.rfe_type);
+		 hw->irq, &hw->mmio_len, hw->board.rfe_type);
 
 	ret = rtl8192cd_init_one(hw->pdev, id, wdev, -1);
 	if (ret) {
