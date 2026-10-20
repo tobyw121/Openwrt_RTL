@@ -27,6 +27,8 @@ PKG_CONFIG_DEPENDS += \
 	CONFIG_EMMC_SUPPORT \
 	CONFIG_CLEAN_IPKG \
 	CONFIG_PER_FEED_REPO \
+	CONFIG_PACKAGE_luci-base \
+	CONFIG_TARGET_realtek_rtl8197f_DEVICE_tenda_nova_mw5 \
 	$(foreach feed,$(FEEDS_AVAILABLE),CONFIG_FEED_$(feed))
 
 include $(INCLUDE_DIR)/package.mk
