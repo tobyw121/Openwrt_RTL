@@ -132,3 +132,9 @@ Nach einem vollständigen OpenWrt-Build/MODPOST und Flashen: Kaltstart,
 WLAN-Start/Stop, Neustart, MAC-Adressen, Region, beide Bänder, Signal/Raten,
 bidirektionale Last und thermisches Verhalten auf jedem Board prüfen.
 MW5-Netzlast insbesondere ohne laufendes `mw5-netdiag full` testen.
+
+Die vollständigen entpackten Kernel-Images aller drei Geräte, ihre gesamten
+Symboltabellen und wortweise geprüften Disassemblierungen sind jetzt für
+spätere Untersuchungen im Repository archiviert:
+[`reverse-engineering/oem-kernels/`](reverse-engineering/oem-kernels/README.md).
+Factory-/Umgebungspartitionen und Rootfs sind nicht Teil dieser Ablage.

@@ -1,0 +1,142 @@
+{
+  "schema": 1,
+  "board": "mw5",
+  "source_commit": "e6d68e9067f54b695022f61ed52e50dc56c5a7b7",
+  "source_path": "openwrt24.10-realtek-rtl8197f-mw5/fullflash-templates/tenda-nova-mw5-spi.bin",
+  "flash_sha256": "b4b1b2caca98e20096a80519b9c8ff22399d051bc77f6aef4f29b6ef76a31428",
+  "lzma_offset": 206872,
+  "lzma_size": 2053960,
+  "image_base": 2147483648,
+  "kernel_size": 6890804,
+  "kernel_sha256": "11fda4eba4ad3572037fa8ac39c14b28f7535e863e10a01130ea0bb18ff3d6a9",
+  "symbol_count": 29629,
+  "export_cross_checks": 3672,
+  "kallsyms_offsets": {
+    "addresses": 4790128,
+    "num_syms": 4908656,
+    "names": 4908672,
+    "markers": 5268912,
+    "token_table": 5269376,
+    "token_index": 5270272
+  },
+  "privacy_checks": {
+    "identifier_patterns_checked": 2,
+    "matches": 0,
+    "private_key_markers": 0,
+    "limits": "Known env/factory ASCII identifiers, binary MAC forms and PEM markers only; not a general guarantee that compiled OEM defaults contain no sensitive strings."
+  },
+  "objdump": "GNU objdump (GNU Binutils for Debian) 2.44",
+  "limits": "Full loaded kernel image; no rootfs/modules, BSS contents, original C source or complete semantic reverse engineering. Whole-image disassembly also interprets data as code.",
+  "artifacts": {
+    "kernel.raw.xz": {
+      "sha256": "abab58348a28b5f934f95ba4ede7c6cea8e0c642315faf893bb6f11a2bbe38d4",
+      "size": 2051308,
+      "unpacked_sha256": "11fda4eba4ad3572037fa8ac39c14b28f7535e863e10a01130ea0bb18ff3d6a9",
+      "unpacked_size": 6890804
+    },
+    "symbols.tsv.xz": {
+      "sha256": "1326907801b43a79d3f982d305894b3ea019e6ef605e8ec292ee5fadfe7d6c0b",
+      "size": 191420,
+      "unpacked_sha256": "de701c314dfe5956626e121fd5d77b8b5bca050dd334208d4eba971d6ff697f9",
+      "unpacked_size": 955234
+    },
+    "text-symbol-spans.tsv.xz": {
+      "sha256": "e3c3ce0fe6d6cd88be8d32de6e07e0bcc3ce7e2836b4b77b2281dc13bbeddae2",
+      "size": 730208,
+      "unpacked_sha256": "21c1e9a2804c30333a92a598a5361fba92af1bf78c654c2ec9d201de4a235994",
+      "unpacked_size": 1740416
+    },
+    "linker-markers.json": {
+      "sha256": "4e0bcbb0b75c9c0b44b599d2d8390c0db3d32b65d13c01809efbd28c1c774f77",
+      "size": 377,
+      "unpacked_sha256": "4e0bcbb0b75c9c0b44b599d2d8390c0db3d32b65d13c01809efbd28c1c774f77",
+      "unpacked_size": 377
+    },
+    "disassembly/80000000-80100000.dis.xz": {
+      "sha256": "c054cf2f0d6854702df0b87693315b12ac356e01d435711598d82eaf858040e8",
+      "size": 1268892,
+      "unpacked_sha256": "d8ecee8526db7bb86ac051f2a816262c685bf10cb080d322f815fba2a39cbdb0",
+      "unpacked_size": 9065282
+    },
+    "disassembly/80100000-80200000.dis.xz": {
+      "sha256": "22d705721d66a83e3061a3abf7bba51d23579b6a656628bfba6dca6e1a91ea1f",
+      "size": 1204424,
+      "unpacked_sha256": "5624c272b5b5dda81c968cb657facd52fc7fadce555ec130e7df78977f14adb4",
+      "unpacked_size": 9191820
+    },
+    "disassembly/80200000-80300000.dis.xz": {
+      "sha256": "f90986223d9eb78eb5198a8215161210c63bd00a68ac6238fbfb2a98b2c222a5",
+      "size": 1139616,
+      "unpacked_sha256": "0702fd201c0a5f3bb4b5b9bb8fbc5b9f512439e85056d70dbff55f948a1781de",
+      "unpacked_size": 9169206
+    },
+    "disassembly/80300000-80400000.dis.xz": {
+      "sha256": "501a167118bf01288190e05063845bb75837ba7ec22e80d080c98c7d45d0e78e",
+      "size": 1227344,
+      "unpacked_sha256": "1ef5994e23e4a8764bd80e43cad7cc9ec219b2ab16f420d6b8c7a26a263ee441",
+      "unpacked_size": 9059644
+    },
+    "disassembly/80400000-80500000.dis.xz": {
+      "sha256": "64a72dbe959859a5a45f33efcaf6807142aa2747c2996048e04ce6cc2a2a90fb",
+      "size": 1427748,
+      "unpacked_sha256": "27c5ff735f8cffa2502805fc68df628755ecade978cdd95e323d6898f681e54e",
+      "unpacked_size": 9365064
+    },
+    "disassembly/80500000-80600000.dis.xz": {
+      "sha256": "c28c3380ca16db7b5fe27b33d56e4dfdb09fe70278c40521f0b278a396288888",
+      "size": 1100756,
+      "unpacked_sha256": "5eaf18469a896b39dcd7df52db0906a76bcfcd01c91d77bb07396e1445a2cd71",
+      "unpacked_size": 9345762
+    },
+    "disassembly/80600000-80692534.dis.xz": {
+      "sha256": "31356de3b033b7e8a2d40e0bedf8756a8d3f3b3f1710f6aa406cc239de15317e",
+      "size": 556200,
+      "unpacked_sha256": "f45ec9ff37e0a403928d23dcbc07454bf425aefaf19d5cbc2c387ba7fdc00ebc",
+      "unpacked_size": 5396053
+    }
+  },
+  "disassembly_chunks": [
+    {
+      "path": "disassembly/80000000-80100000.dis.xz",
+      "start": 2147483648,
+      "stop": 2148532224,
+      "words": 262144
+    },
+    {
+      "path": "disassembly/80100000-80200000.dis.xz",
+      "start": 2148532224,
+      "stop": 2149580800,
+      "words": 262144
+    },
+    {
+      "path": "disassembly/80200000-80300000.dis.xz",
+      "start": 2149580800,
+      "stop": 2150629376,
+      "words": 262144
+    },
+    {
+      "path": "disassembly/80300000-80400000.dis.xz",
+      "start": 2150629376,
+      "stop": 2151677952,
+      "words": 262144
+    },
+    {
+      "path": "disassembly/80400000-80500000.dis.xz",
+      "start": 2151677952,
+      "stop": 2152726528,
+      "words": 262144
+    },
+    {
+      "path": "disassembly/80500000-80600000.dis.xz",
+      "start": 2152726528,
+      "stop": 2153775104,
+      "words": 262144
+    },
+    {
+      "path": "disassembly/80600000-80692534.dis.xz",
+      "start": 2153775104,
+      "stop": 2154374452,
+      "words": 149837
+    }
+  ]
+}

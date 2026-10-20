@@ -217,6 +217,8 @@
 };
 
 &ethernet0 {
+	/* OEM New_swNic_init walks both RX and TX rings in 24-byte steps. */
+	realtek,descriptor-dwords = <6>;
 	realtek,tx-port-mask = <0x40>;
 	realtek,tx-dp-ext = <0x2>;
 	realtek,tx-extspa = <0x0>;

@@ -31,7 +31,10 @@
       "switch_rgmii_delay_ps": {
         "tx": 0,
         "rx": 1500
-      }
+      },
+      "cpu_dma_descriptor_dwords": 8,
+      "cpu_dma_descriptor_stride_bytes": 32,
+      "cpu_dma_descriptor_evidence": "OEM New_swNic_init TX/RX loop strides and completion checks; oem-nic-evidence.json and reverse-engineering/oem-kernels/rd05"
     },
     "tenda,nova-mw5": {
       "confidence": "medium-high",
@@ -107,7 +110,7 @@
       "loader_relocation_distance_bytes": 3145728,
       "cpu_dma_descriptor_dwords": 6,
       "cpu_dma_descriptor_stride_bytes": 24,
-      "cpu_dma_descriptor_evidence": "RTL8197FS non-VG SDK defines CONFIG_RTL_TX/RX_CACHE_ALIGN only for RTL8197F_VG; hardware CPUICR1 readback keeps CF_TXDESC/CF_RXDESC zero while v42.25 32-byte software rings time out with TX OWN set and RX zero.",
+      "cpu_dma_descriptor_evidence": "RTL8197FS non-VG SDK defines CONFIG_RTL_TX/RX_CACHE_ALIGN only for RTL8197F_VG; hardware CPUICR1 readback keeps CF_TXDESC/CF_RXDESC zero while v42.25 32-byte software rings time out with TX OWN set and RX zero. Also confirmed by OEM New_swNic_init TX/RX loops; oem-nic-evidence.json.",
       "soc_internal_p0_cpu_pipeline": true,
       "soc_internal_lan_vid": 9,
       "soc_internal_host_port": 0,
@@ -159,7 +162,10 @@
       "switch_rgmii_delay_ps": {
         "tx": 0,
         "rx": 1500
-      }
+      },
+      "cpu_dma_descriptor_dwords": 6,
+      "cpu_dma_descriptor_stride_bytes": 24,
+      "cpu_dma_descriptor_evidence": "OEM New_swNic_init TX/RX loop strides and completion checks; oem-nic-evidence.json and reverse-engineering/oem-kernels/ac23"
     },
     "iball,wrd12gn": {
       "confidence": "medium-high",

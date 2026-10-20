@@ -226,6 +226,7 @@
 };
 
 &ethernet0 {
+	realtek,descriptor-dwords = <6>;
 	/* v44.65.15: provide the raw MW5 factory store to rtknet so it can parse
 	 * HW_NIC0_ADDR before its first ndo_open/RTL865x table seed. */
 	nvmem-cells = <&mw5_factory>;

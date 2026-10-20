@@ -3551,8 +3551,9 @@ static void rtl8197f_rtk_apply_sdk_cpuif_init(struct rtl8197f_rtknet_priv *priv)
 		 RTL_RTK_CPUICR1_RXDESC_MASK);
 	/*
 	 * RTL8197F SDK builds with CONFIG_RTL_SWITCH_NEW_DESCRIPTOR, which redirects
-	 * the swNic hooks to New_swNic_*.  Non-VG chips use the native six-dword
-	 * format; VG builds add cacheline padding and program an eight-dword stride.
+	 * the swNic hooks to New_swNic_*. MW5 and the AC23 OEM kernel use native
+	 * six-dword rings; RD05 uses eight dwords with cacheline padding. Do not
+	 * infer ring geometry from the SoC's VG/FH label alone.
 	 * Keep CPUICR1 and CPURPDCR0/CPUTPDCR0 consistent with the selected board.
 	 */
 	val |= RTL_RTK_CPUICR1_TXRX_DIV_LX | RTL_RTK_CPUICR1_LE |

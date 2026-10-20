@@ -46,6 +46,13 @@ def main() -> int:
             for direction in ("tx", "rx"):
                 require(text, f'{direction}-internal-delay-ps = <{delay[direction]}>;',
                         board + " switch RGMII delay", errors)
+        if "cpu_dma_descriptor_dwords" in profile:
+            words = profile["cpu_dma_descriptor_dwords"]
+            require(text, f'realtek,descriptor-dwords = <{words}>;',
+                    board + " CPU DMA geometry", errors)
+            if ("cpu_dma_descriptor_stride_bytes" in profile and
+                    profile["cpu_dma_descriptor_stride_bytes"] != 4 * words):
+                errors.append(board + ": inconsistent CPU DMA word/byte stride")
         if board == "iball,wrd12gn":
             # DTC requires all properties in a node before its first child node.
             # Keep ethernet0 status before the embedded MDIO bus; v44.65.2 had

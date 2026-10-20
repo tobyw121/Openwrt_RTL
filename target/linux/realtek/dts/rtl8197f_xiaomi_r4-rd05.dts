@@ -344,6 +344,8 @@
 };
 
 &ethernet0 {
+	/* RD05 OEM New_swNic_init uses cacheline-padded 32-byte rings. */
+	realtek,descriptor-dwords = <8>;
 	nvmem-cells = <&ethaddr>;
 	nvmem-cell-names = "mac-address";
 

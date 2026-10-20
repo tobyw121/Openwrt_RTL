@@ -375,3 +375,27 @@ Strom trennen, Startmeldung `restored MW5 OEM external flow-control thresholds
 `/proc/mw5-rtl8367-flowctrl` prüfen. Anschließend bidirektionale LAN/WAN-
 und WLAN-Last ohne laufendes `mw5-netdiag full` testen. Erst diese Prüfung
 kann zeigen, ob die fehlende Boardinitialisierung zum Netzstillstand beitrug.
+
+## Vollständige Kernel-Ablage und vertiefte NIC-Analyse
+
+Die vollständigen entpackten OEM-Kernels, sämtliche 85.309 Symbole und die
+wortweise geprüfte Disassemblierung aller Image-Bytes liegen nun unter
+[`reverse-engineering/oem-kernels/`](reverse-engineering/oem-kernels/README.md).
+Das Archiv enthält keine SPI-/Factory-/Umgebungspartitionen. Es bewahrt
+auch Kernel-Daten und Code außerhalb der einfachen `_stext.._etext`-Grenze;
+es ist keine vollständige semantische Rückentwicklung oder C-Dekompilierung.
+
+Die [weitere NIC-Analyse](reverse-engineering/oem-kernels/NIC_FINDINGS.md)
+bestätigt die 24-Byte-Ringe von MW5 **und AC23** direkt in den RX-/TX-
+Init-Schleifen, gegenüber 32 Byte beim RD05. Der AC23-DTS setzt deshalb
+jetzt explizit sechs Dwords, statt den Acht-Dword-Treiberstandard zu erben.
+MW5 und RD05 erhalten ebenfalls explizite, zu ihrem bisherigen Verhalten
+passende Angaben. Die CPUICR1-/Padding-Regression führt beide Formen aus.
+Die neu erfasste OEM-Reset-Aufrufkette bindet auf allen drei Boards Tabellen-
+Save/Restore, Re-Probe, NIC-Reinit und Betriebsmodus ein; sie wird nicht
+als isolierte TX-Recovery in unseren laufenden Treiber kopiert.
+
+Der aktuelle Host-Teststand umfasst 49 bestandene Tests. Alle drei
+Kernel-Archive bestanden zusätzlich den unabhängigen wortweisen
+Integritätstest. Ein vollständiger Firmwarebuild und Hardwarelasttest
+werden dadurch weiterhin nicht ersetzt.

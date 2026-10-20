@@ -159,6 +159,11 @@ Firmware-/MODPOST-Build und Tests auf den Geräten wurden nicht durchgeführt.
    angeforderte Switch-RGMII-RX-Wert 5 = 1500 ps jetzt im DTS korrigiert;
    die vorausgehende OEM-SSC-Sequenz wird dadurch nicht vollständig portiert.
    Separate AC23-Schwellen werden nicht mit MW5-Werten überschrieben.
+   RX-/TX-Init-Code bestätigt außerdem die CPU-DMA-Abstände: MW5 und AC23
+   sechs Dwords/24 Byte, RD05 acht Dwords/32 Byte. Die DTS legen diese Werte
+   explizit fest; beim AC23 ersetzt dies den bisherigen Acht-Dword-Standard.
+   Belege und vollständige OEM-Kernels liegen unter
+   `reverse-engineering/oem-kernels/`; siehe dort `NIC_FINDINGS.md`.
 5. Je Band WPA2/CCMP-Verbindungsaufbau, DHCP, Bridging, Routing, Reconnect und
    Neustart testen. Danach parallelen LAN/WAN- und WLAN-Verkehr mit einem
    zweiten Rechner erzeugen; mindestens 30 Minuten bidirektional, anschließend

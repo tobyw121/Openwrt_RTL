@@ -1,0 +1,225 @@
+{
+  "schema": 1,
+  "limits": "OEM descriptor stride is proved by TX and RX initialization loops as well as the separately recorded completion check. No throughput or hardware stability claim.",
+  "boards": {
+    "mw5": {
+      "kernel_sha256": "11fda4eba4ad3572037fa8ac39c14b28f7535e863e10a01130ea0bb18ff3d6a9",
+      "descriptor_dwords": 6,
+      "descriptor_stride_bytes": 24,
+      "New_swNic_init": {
+        "address": 2149218248,
+        "span": 1672,
+        "sha256": "766be56bf494ccf5591362dac242b7b9c9d25799b00d063df6a9aebd056b1075"
+      },
+      "ring_stride_proofs": [
+        {
+          "pc": 2149218436,
+          "instruction_word": "0x24840018",
+          "operation": "addiu pointer, pointer, 24"
+        },
+        {
+          "pc": 2149218748,
+          "instruction_word": "0x26520018",
+          "operation": "addiu pointer, pointer, 24"
+        }
+      ],
+      "switchcore_reinit": {
+        "address": 2149160020,
+        "span": 288,
+        "sha256": "c33cb37cefe13dd9637c9112e98db9970bd45e6df8f43d772232f3a81679ef0d",
+        "direct_calls": [
+          {
+            "pc": 2149160136,
+            "instruction_word": "0x0c06555d",
+            "target": 2149143924,
+            "symbol": "rtl819x_save_hw_tables"
+          },
+          {
+            "pc": 2149160144,
+            "instruction_word": "0x0c0654ef",
+            "target": 2149143484,
+            "symbol": "re865x_reProbe"
+          },
+          {
+            "pc": 2149160152,
+            "instruction_word": "0x0c0697fd",
+            "target": 2149212148,
+            "symbol": "New_swNic_reInit"
+          },
+          {
+            "pc": 2149160160,
+            "instruction_word": "0x0c0664e5",
+            "target": 2149159828,
+            "symbol": "rtl865x_reChangeOpMode"
+          },
+          {
+            "pc": 2149160168,
+            "instruction_word": "0x0c065547",
+            "target": 2149143836,
+            "symbol": "rtl819x_restore_hw_tables"
+          }
+        ],
+        "limits": "Direct call sequence only; table contents, indirect calls and full reset safety are not reconstructed."
+      }
+    },
+    "ac23": {
+      "kernel_sha256": "e2f9c912499c88669d1df1a31a10aa8367e7a0a517840b9371fcc63601e39aa5",
+      "descriptor_dwords": 6,
+      "descriptor_stride_bytes": 24,
+      "New_swNic_init": {
+        "address": 2149196656,
+        "span": 1672,
+        "sha256": "4065b0023be425834938303bf0c7b0a1e60c33e2d81e25c2690653c2882e805e"
+      },
+      "ring_stride_proofs": [
+        {
+          "pc": 2149196844,
+          "instruction_word": "0x24840018",
+          "operation": "addiu pointer, pointer, 24"
+        },
+        {
+          "pc": 2149197156,
+          "instruction_word": "0x26520018",
+          "operation": "addiu pointer, pointer, 24"
+        },
+        {
+          "pc": 2149197248,
+          "instruction_word": "0x26520018",
+          "operation": "addiu pointer, pointer, 24"
+        }
+      ],
+      "switchcore_reinit": {
+        "address": 2149135712,
+        "span": 368,
+        "sha256": "c589fa6260e5d86518966cbbf6688ea15d69ddaad956bca1b8334d559f9e2c8d",
+        "direct_calls": [
+          {
+            "pc": 2149135768,
+            "instruction_word": "0x0c0506cc",
+            "target": 2148801328,
+            "symbol": "__udelay"
+          },
+          {
+            "pc": 2149135836,
+            "instruction_word": "0x0c063ca2",
+            "target": 2149118600,
+            "symbol": "rtl819x_save_hw_tables"
+          },
+          {
+            "pc": 2149135844,
+            "instruction_word": "0x0c063c34",
+            "target": 2149118160,
+            "symbol": "re865x_reProbe"
+          },
+          {
+            "pc": 2149135852,
+            "instruction_word": "0x0c068260",
+            "target": 2149190016,
+            "symbol": "New_swNic_reInit"
+          },
+          {
+            "pc": 2149135860,
+            "instruction_word": "0x0c064d28",
+            "target": 2149135520,
+            "symbol": "rtl865x_reChangeOpMode"
+          },
+          {
+            "pc": 2149135868,
+            "instruction_word": "0x0c063c8c",
+            "target": 2149118512,
+            "symbol": "rtl819x_restore_hw_tables"
+          }
+        ],
+        "limits": "Direct call sequence only; table contents, indirect calls and full reset safety are not reconstructed."
+      },
+      "post_etext_symbols": {
+        "_etext": {
+          "address": 2152579336,
+          "type": "T"
+        },
+        "_sdata": {
+          "address": 2152682340,
+          "type": "R"
+        },
+        "New_swNic_send": {
+          "address": 2152591756,
+          "type": "T"
+        },
+        "New_swNic_send_tso_sg": {
+          "address": 2152591696,
+          "type": "T"
+        },
+        "alloc_rx_buf": {
+          "address": 2152583732,
+          "type": "T"
+        }
+      }
+    },
+    "rd05": {
+      "kernel_sha256": "aa48d325730b95c0658090ba9f943f71bdd9888dc57f609a3989ba58f0f8f5cc",
+      "descriptor_dwords": 8,
+      "descriptor_stride_bytes": 32,
+      "New_swNic_init": {
+        "address": 2150338988,
+        "span": 1556,
+        "sha256": "58ee5ff94240c12769657556eb9e38c56971e3c55e219ea8a76bdde073a6a069"
+      },
+      "ring_stride_proofs": [
+        {
+          "pc": 2150339180,
+          "instruction_word": "0x24a50020",
+          "operation": "addiu pointer, pointer, 32"
+        },
+        {
+          "pc": 2150339964,
+          "instruction_word": "0x26f70020",
+          "operation": "addiu pointer, pointer, 32"
+        }
+      ],
+      "switchcore_reinit": {
+        "address": 2150264080,
+        "span": 324,
+        "sha256": "30686cb22fe53df305a4891b484c1eecba470e09f20da75f40b5a44d870964d4",
+        "direct_calls": [
+          {
+            "pc": 2150264128,
+            "instruction_word": "0x0c082004",
+            "target": 2149613584,
+            "symbol": "__udelay"
+          },
+          {
+            "pc": 2150264184,
+            "instruction_word": "0x0c0a8e74",
+            "target": 2150250960,
+            "symbol": "rtl819x_save_hw_tables"
+          },
+          {
+            "pc": 2150264192,
+            "instruction_word": "0x0c0a8e97",
+            "target": 2150251100,
+            "symbol": "re865x_reProbe"
+          },
+          {
+            "pc": 2150264200,
+            "instruction_word": "0x0c0ae6ab",
+            "target": 2150341292,
+            "symbol": "New_swNic_reInit"
+          },
+          {
+            "pc": 2150264208,
+            "instruction_word": "0x0c0a9b1a",
+            "target": 2150263912,
+            "symbol": "rtl865x_reChangeOpMode"
+          },
+          {
+            "pc": 2150264216,
+            "instruction_word": "0x0c0a8e83",
+            "target": 2150251020,
+            "symbol": "rtl819x_restore_hw_tables"
+          }
+        ],
+        "limits": "Direct call sequence only; table contents, indirect calls and full reset safety are not reconstructed."
+      }
+    }
+  }
+}

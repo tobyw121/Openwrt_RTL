@@ -1,0 +1,178 @@
+{
+  "schema": 1,
+  "board": "rd05",
+  "source_commit": "e6d68e9067f54b695022f61ed52e50dc56c5a7b7",
+  "source_path": "openwrt24.10-realtek-rtl8197f-mw5/fullflash-templates/xiaomi-r4-rd05-spi.bin",
+  "flash_sha256": "805469c49ecd6860a444f92ef19bcf4834ee912261b4a0205074d6095c516608",
+  "lzma_offset": 403480,
+  "lzma_size": 3015373,
+  "image_base": 2147483648,
+  "kernel_size": 9780680,
+  "kernel_sha256": "aa48d325730b95c0658090ba9f943f71bdd9888dc57f609a3989ba58f0f8f5cc",
+  "symbol_count": 24127,
+  "export_cross_checks": 0,
+  "kallsyms_offsets": {
+    "addresses": 7633664,
+    "num_syms": 7730176,
+    "names": 7730192,
+    "markers": 8026768,
+    "token_table": 8027152,
+    "token_index": 8028032
+  },
+  "privacy_checks": {
+    "identifier_patterns_checked": 9,
+    "matches": 0,
+    "private_key_markers": 0,
+    "limits": "Known env/factory ASCII identifiers, binary MAC forms and PEM markers only; not a general guarantee that compiled OEM defaults contain no sensitive strings."
+  },
+  "objdump": "GNU objdump (GNU Binutils for Debian) 2.44",
+  "limits": "Full loaded kernel image; no rootfs/modules, BSS contents, original C source or complete semantic reverse engineering. Whole-image disassembly also interprets data as code.",
+  "artifacts": {
+    "kernel.raw.xz": {
+      "sha256": "003e6e98e4e9ed62f77c18471fd2f9d9393828f7e5d44bcdcdbbaaddbb10a382",
+      "size": 3009696,
+      "unpacked_sha256": "aa48d325730b95c0658090ba9f943f71bdd9888dc57f609a3989ba58f0f8f5cc",
+      "unpacked_size": 9780680
+    },
+    "symbols.tsv.xz": {
+      "sha256": "a448a357efb7dea7d24be2db1227719ec5ce3e9af927f57b68583ba3b7dfe16b",
+      "size": 175360,
+      "unpacked_sha256": "ba71b7c7a2fa75ead7b21bc53e9f91c2129222b0b72c1dd6ab98ce21ac885e5d",
+      "unpacked_size": 759482
+    },
+    "text-symbol-spans.tsv.xz": {
+      "sha256": "a54bbef7b0f25d547d329494e2228fd1762f176117138fa9806468869af0f0b4",
+      "size": 1054596,
+      "unpacked_sha256": "8b73574ea06b2e4a1e11e03579b6ec9b192ccf1fe31bc244b9f1a9ff0bd2af5a",
+      "unpacked_size": 2532890
+    },
+    "linker-markers.json": {
+      "sha256": "03b882f7e7236487eea9f3c67fc875fa45cb494e163c32c1e2f8ebf2f7e4d5cd",
+      "size": 161,
+      "unpacked_sha256": "03b882f7e7236487eea9f3c67fc875fa45cb494e163c32c1e2f8ebf2f7e4d5cd",
+      "unpacked_size": 161
+    },
+    "disassembly/80000000-80100000.dis.xz": {
+      "sha256": "e62efde77b922492c8537f698e98ccc51a832cb1b62232759b6af289c75c2f8c",
+      "size": 1285872,
+      "unpacked_sha256": "f3b1a6d118a604705310a51bee466106ccafa4470a8194f367bbabc11dda36f4",
+      "unpacked_size": 9083405
+    },
+    "disassembly/80100000-80200000.dis.xz": {
+      "sha256": "ba37d759c5bb2a7bd3a9c06f518b11625899b769cbdbfbc68b21e823f4871516",
+      "size": 1296456,
+      "unpacked_sha256": "d97d2cce7f10bdd885848ac060f0a256dfb0a4b57fcef6a4d060ac08cc14f73f",
+      "unpacked_size": 9114455
+    },
+    "disassembly/80200000-80300000.dis.xz": {
+      "sha256": "972a6d962cff62445df59fc5f8dffc3809bbe0dcc53397b0bf1658497018a801",
+      "size": 1235596,
+      "unpacked_sha256": "c561cbbe65ccae7368fd3eb0a9e090e906535ba7302fee3ed63a24ff38e98762",
+      "unpacked_size": 9173856
+    },
+    "disassembly/80300000-80400000.dis.xz": {
+      "sha256": "2000d8950f5d01d4b5d809e145b921b1f4d37a6aad36bd623567b544e816b387",
+      "size": 1174412,
+      "unpacked_sha256": "b98a8532aaf84a84aaf2fe41bc2414db4bb17a73a0b1af28cce7ec71f6f376f7",
+      "unpacked_size": 9231952
+    },
+    "disassembly/80400000-80500000.dis.xz": {
+      "sha256": "58245554e9e56a40001ba075e80dd094fdc2091b77a1aa4f2738a860a13f9a56",
+      "size": 1159432,
+      "unpacked_sha256": "dc30da834c6a002855a80d0fd523f0e3752e124791b83548b82845ada14f6ca4",
+      "unpacked_size": 9215413
+    },
+    "disassembly/80500000-80600000.dis.xz": {
+      "sha256": "32446c2cc8c768fe63d06e346fb3bff442a83cada666184c2837b04f1f3931d1",
+      "size": 1274632,
+      "unpacked_sha256": "e9c67b1fc954abe55180d814207c463c6796889df21c9cac080f4c81f940c671",
+      "unpacked_size": 9064739
+    },
+    "disassembly/80600000-80700000.dis.xz": {
+      "sha256": "f5eac15c11d2e655c248057f5988a574cd148322d231bcddbec9ae105a2d4297",
+      "size": 1262100,
+      "unpacked_sha256": "8089e14804a71a0aeb072eea58cee3001816f68ec793eb5ab5c9bbc00b231461",
+      "unpacked_size": 9027442
+    },
+    "disassembly/80700000-80800000.dis.xz": {
+      "sha256": "eee72608a9780684168b7d3d1dd436d5995b54bf3281ceedcaea0aac5578a66f",
+      "size": 1365156,
+      "unpacked_sha256": "ee580fee43fba93b863f271c446b4be4e55fd78944a56a3253acf905c792d885",
+      "unpacked_size": 9444839
+    },
+    "disassembly/80800000-80900000.dis.xz": {
+      "sha256": "28d470e445e21759f9ee4a23e0e98c23728bbdaa37ac7b8e02ea62f7c2ba4598",
+      "size": 856040,
+      "unpacked_sha256": "44013d1a2cd13c32ddec3d40391dfa7efb2efa267d34e66fa8b328a64a3878fd",
+      "unpacked_size": 9080053
+    },
+    "disassembly/80900000-80953dc8.dis.xz": {
+      "sha256": "e5fe766cd0833a953fb242faa1bf7d9e549db87a316210df5a227748006a7cf7",
+      "size": 346008,
+      "unpacked_sha256": "9fadb18b7929231298f3b34fdc6a9acb5d076b96f2e432fc227680c61b50adcf",
+      "unpacked_size": 2837827
+    }
+  },
+  "disassembly_chunks": [
+    {
+      "path": "disassembly/80000000-80100000.dis.xz",
+      "start": 2147483648,
+      "stop": 2148532224,
+      "words": 262144
+    },
+    {
+      "path": "disassembly/80100000-80200000.dis.xz",
+      "start": 2148532224,
+      "stop": 2149580800,
+      "words": 262144
+    },
+    {
+      "path": "disassembly/80200000-80300000.dis.xz",
+      "start": 2149580800,
+      "stop": 2150629376,
+      "words": 262144
+    },
+    {
+      "path": "disassembly/80300000-80400000.dis.xz",
+      "start": 2150629376,
+      "stop": 2151677952,
+      "words": 262144
+    },
+    {
+      "path": "disassembly/80400000-80500000.dis.xz",
+      "start": 2151677952,
+      "stop": 2152726528,
+      "words": 262144
+    },
+    {
+      "path": "disassembly/80500000-80600000.dis.xz",
+      "start": 2152726528,
+      "stop": 2153775104,
+      "words": 262144
+    },
+    {
+      "path": "disassembly/80600000-80700000.dis.xz",
+      "start": 2153775104,
+      "stop": 2154823680,
+      "words": 262144
+    },
+    {
+      "path": "disassembly/80700000-80800000.dis.xz",
+      "start": 2154823680,
+      "stop": 2155872256,
+      "words": 262144
+    },
+    {
+      "path": "disassembly/80800000-80900000.dis.xz",
+      "start": 2155872256,
+      "stop": 2156920832,
+      "words": 262144
+    },
+    {
+      "path": "disassembly/80900000-80953dc8.dis.xz",
+      "start": 2156920832,
+      "stop": 2157264328,
+      "words": 85874
+    }
+  ]
+}
