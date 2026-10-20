@@ -31,6 +31,17 @@ einen anderen CPU-Port oder eine andere Switch-Initialisierung umgestellt.
 
 ## Änderungen
 
+- Fehler bei `wiphy_register()`, regulatorischer Initialisierung und
+  `register_netdev()` werden weitergegeben. Der Root-Probe bricht mit dem
+  tatsächlichen Fehler ab und gibt sein neu angelegtes wiphy wieder frei.
+  Die Diagnosephasen melden keine pauschale Null mehr bei diesen Fehlern.
+- Die Freigabe entfernt ein Radio anhand seines eigenen Eintrags aus der
+  Funkgeräteliste, auch bei abweichender Unbind-Reihenfolge. Zugriffe auf den
+  wiphy-Privatbereich erfolgen vor `wiphy_free()`. cfg80211-Arbeit wird vor
+  der Freigabe beendet; die Ereignisliste wird bereits beim Probe angelegt,
+  sodass auch ein nie geöffnetes Radio eine gültige leere Liste besitzt.
+  Hosttests prüfen Registrierungsfehler und das Entfernen des zuerst
+  angelegten Radios; der Speichertest verwendet AddressSanitizer.
 - Alle vier WLAN-Paketvarianten verwenden Linux6, cfg80211/nl80211 und die
   OpenWrt-Backports-Header. `wireless-tools`, private WEXT-Handler und der
   installierte `iwpriv`-AP-Test gehören nicht mehr zum Paketpfad. Die

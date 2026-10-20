@@ -5857,6 +5857,7 @@ int realtek_interface_add(struct rtl8192cd_priv *priv,
 					  u8 fw_vif_idx, u8 nw_type)
 {
  	struct net_device *ndev;
+	int ret;
 
 	NLENTER;
 	//NDEBUG("type[%d]\n", type);
@@ -5890,8 +5891,10 @@ int realtek_interface_add(struct rtl8192cd_priv *priv,
 	priv->cfg80211_interface_add = FALSE;
 
 	rtl8197f_wlan_phase_set(714, "probe-cfg80211-netdev-register-entry", 0);
-	register_netdev(ndev);
-	rtl8197f_wlan_phase_set(715, "probe-cfg80211-netdev-register-returned", 0);
+	ret = register_netdev(ndev);
+	rtl8197f_wlan_phase_set(715, "probe-cfg80211-netdev-register-returned", ret);
+	if (ret)
+		return ret;
 
 #if 0
 	if(IS_ROOT_INTERFACE(priv))
@@ -7822,16 +7825,26 @@ void rtk_unregister_wiphy(struct rtknl *rtk)
 
 void rtk_free_wiphy(struct rtknl *rtk)
 {
-	rtk_phy_idx--;
+	struct wiphy *wiphy;
+	int i;
 
-	NDEBUG2("free wiphy[%d]\n", rtk_phy_idx);
-
-	rtk_phy[rtk_phy_idx] = NULL;
-
-	if(rtk->wiphy) {
-		wiphy_free(rtk->wiphy);
-		rtk->wiphy = NULL;
+	if (!rtk)
+		return;
+	/* Bus unbinds need not follow the reverse probe order. */
+	for (i = 0; i < rtk_phy_idx; i++) {
+		if (rtk_phy[i] != rtk)
+			continue;
+		for (; i + 1 < rtk_phy_idx; i++)
+			rtk_phy[i] = rtk_phy[i + 1];
+		rtk_phy[--rtk_phy_idx] = NULL;
+		break;
 	}
+
+	wiphy = rtk->wiphy;
+	rtk->wiphy = NULL;
+	/* rtk is wiphy private storage: no access after wiphy_free(). */
+	if (wiphy)
+		wiphy_free(wiphy);
 }
 #endif
 
@@ -8341,30 +8354,33 @@ int realtek_cfg80211_init(struct rtknl *rtk,struct rtl8192cd_priv *priv)
 	wiphy->regulatory_flags = REGULATORY_WIPHY_SELF_MANAGED;
 	realtek_regdom = _rtl_regdomain_select(priv->pmib->dot11StationConfigEntry.dot11RegDomain);
 
+	if (!realtek_regdom)
+		return -EINVAL;
 
 	rtl8197f_wlan_phase_set(710, "probe-wiphy-register-entry", 0);
 	ret = wiphy_register(wiphy);
 	rtl8197f_wlan_phase_set(711, "probe-wiphy-register-returned", ret);
+	if (ret)
+		return ret;
+	rtk->wiphy_registered = true;
 
 	rtl8197f_wlan_phase_set(712, "probe-wiphy-regdomain-entry", 0);
 	if (rtnl_is_locked())
-		regulatory_set_wiphy_regd_sync(wiphy, (struct ieee80211_regdomain *)realtek_regdom);
+		ret = regulatory_set_wiphy_regd_sync(wiphy, (struct ieee80211_regdomain *)realtek_regdom);
 	else {
 		rtnl_lock();
-		regulatory_set_wiphy_regd_sync(wiphy, (struct ieee80211_regdomain *)realtek_regdom);
+		ret = regulatory_set_wiphy_regd_sync(wiphy, (struct ieee80211_regdomain *)realtek_regdom);
 		rtnl_unlock();
 	}
-	rtl8197f_wlan_phase_set(713, "probe-wiphy-regdomain-returned", 0);
+	rtl8197f_wlan_phase_set(713, "probe-wiphy-regdomain-returned", ret);
 	/*----------------------reg domain related-----------------------*/
 
 
 
 	if (ret < 0) {
-		printk("couldn't register wiphy device\n");
+		rtk_unregister_wiphy(rtk);
 		return ret;
 	}
-
-	rtk->wiphy_registered = true;
 
 	NLEXIT;
 	return 0;

@@ -15815,12 +15815,15 @@ void *rtl8192cd_init_one(struct sdio_func *psdio_func, void *ent, struct _device
 #if defined(CONFIG_RG_WLAN_HWNAT_ACCELERATION) && !defined(CONFIG_ARCH_LUNA_SLAVE)
     int wlanIdx, devIdx;
 #endif
-    struct net_device *dev;
+    struct net_device *dev = NULL;
 #ifdef __ECOS
     struct net_device *tmp_dev;
 #endif
 #ifdef RTK_NL80211
 	struct rtknl *rtk = NULL;
+#ifdef CONFIG_RTL8192CD_LINUX6_BUS
+	bool linux6_rtk_owned = false;
+#endif
 #endif
     struct rtl8192cd_priv *priv;
     void *regs;
@@ -15924,7 +15927,7 @@ void *rtl8192cd_init_one(struct sdio_func *psdio_func, void *ent, struct _device
 	int i;
 #endif
 
-	struct priv_shared_info *pshare;	// david
+	struct priv_shared_info *pshare = NULL;	// david
 
 #if 0 //#ifdef CONFIG_WLAN_HAL
     BOOLEAN     bVal;
@@ -16051,6 +16054,9 @@ void *rtl8192cd_init_one(struct sdio_func *psdio_func, void *ent, struct _device
 			NDEBUG2("init for root device\n");
 #ifdef CONFIG_RTL8192CD_LINUX6_BUS
 			rtk = realtek_cfg80211_create(wdev->linux_dev, wdev->radio_index);
+			if (!rtk)
+				return -ENOMEM;
+			linux6_rtk_owned = true;
 #elif defined(RTK_129X_PLATFORM)
 #ifdef CONFIG_PCI_HCI
 			rtk = realtek_cfg80211_create(&pdev->dev);
@@ -16092,6 +16098,12 @@ void *rtl8192cd_init_one(struct sdio_func *psdio_func, void *ent, struct _device
 	}
 #endif
 	if (!dev) {
+#if defined(CONFIG_RTL8192CD_LINUX6_BUS) && defined(RTK_NL80211)
+		if (linux6_rtk_owned) {
+			rtk_remove_dev(rtk, wdev->radio_index);
+			rtk_free_wiphy(rtk);
+		}
+#endif
 		if (vap_idx < 0)
 			rtl8197f_wlan_phase_set(109, "netdev-allocation-failed", -ENOMEM);
 		printk(KERN_ERR "alloc_etherdev() error!\n");
@@ -16732,6 +16744,7 @@ void *rtl8192cd_init_one(struct sdio_func *psdio_func, void *ent, struct _device
 			priv->pshare->linux6_radio_index = wdev->radio_index;
 			priv->pshare->linux6_root_priv = priv;
 			skb_queue_head_init(&priv->pshare->linux6_rx_delivery);
+			INIT_LIST_HEAD(&priv->pshare->cfg80211_queue);
 			INIT_WORK(&priv->pshare->cfg80211_work, realtek_process_cfg80211_work);
 			rtl8197f_wlan_phase_set(716, "probe-napi-add-entry", 0);
 			netif_napi_add_weight(dev, &priv->pshare->linux6_rx_napi,
@@ -18250,10 +18263,12 @@ register_driver:
 		if (IS_ROOT_INTERFACE(priv)) //wrt-vxd
 		{
 			rtl8197f_wlan_phase_set(708, "probe-cfg80211-entry", 0);
-			realtek_cfg80211_init(rtk,priv);
-			rtl8197f_wlan_phase_set(709, "probe-cfg80211-returned", 0);
+			rc = realtek_cfg80211_init(rtk,priv);
+			rtl8197f_wlan_phase_set(709, "probe-cfg80211-returned", rc);
+			if (rc)
+				goto err_out_free2;
 			//modlog("realtek_interface_add [%s]",rtk->root_ifname);
-			realtek_interface_add(priv, rtk, rtk->root_ifname, NL80211_IFTYPE_STATION, 0, 0); 
+			rc = realtek_interface_add(priv, rtk, rtk->root_ifname, NL80211_IFTYPE_STATION, 0, 0);
 		}
 #ifdef  UNIVERSAL_REPEATER //wrt-vxd
 		else
@@ -19639,6 +19654,18 @@ err_out_free2:
 
 err_out_free:
 
+#if defined(CONFIG_RTL8192CD_LINUX6_BUS) && defined(RTK_NL80211)
+	if (linux6_rtk_owned) {
+		if (pshare && pshare->linux6_napi_added) {
+			cancel_work_sync(&pshare->cfg80211_work);
+			realtek_clear_cfg80211_event(priv);
+		}
+		rtk_unregister_wiphy(rtk);
+		rtk_remove_dev(rtk, wdev->radio_index);
+		rtk_free_wiphy(rtk);
+	}
+#endif
+
 #ifdef CONFIG_RTL8192CD_LINUX6_BUS
 	/* The embedded pshare NAPI node must leave dev->napi_list before
 	 * pshare is freed; free_netdev() also walks that list on probe failure.
@@ -19776,7 +19803,8 @@ err_out_free:
 		free_site_survey_res(site_survey);
 
 #ifdef __LINUX_2_6__
-	free_netdev(dev);
+	if (dev)
+		free_netdev(dev);
 #else
     kfree(dev);
 #endif
@@ -20019,10 +20047,16 @@ void rtl8192cd_deinit_one(struct rtl8192cd_priv *priv)
 
 #if	defined(CONFIG_WIRELESS_LAN_MODULE) || defined(RTK_129X_PLATFORM) 
 #ifdef RTK_NL80211
-	modlog("rtk_unregister_wiphy ; rtk_free_wiphy ; rtk_del_priv");
+	modlog("rtk_del_priv ; rtk_unregister_wiphy ; rtk_free_wiphy");
+#ifdef CONFIG_RTL8192CD_LINUX6_BUS
+	if (priv->pshare->linux_dev) {
+		cancel_work_sync(&priv->pshare->cfg80211_work);
+		realtek_clear_cfg80211_event(priv);
+	}
+#endif
+	rtk_del_priv(priv, priv->rtk);
 	rtk_unregister_wiphy(priv->rtk);
 	rtk_free_wiphy(priv->rtk);
-	rtk_del_priv(priv, priv->rtk);
 #endif
 #endif
 
@@ -20304,8 +20338,6 @@ if (GET_HCI_TYPE(priv) == RTL_HCI_USB || GET_HCI_TYPE(priv) == RTL_HCI_SDIO) {
 #endif
 #ifdef CONFIG_RTL8192CD_LINUX6_BUS
 	if (priv->pshare->linux_dev) {
-		cancel_work_sync(&priv->pshare->cfg80211_work);
-		realtek_clear_cfg80211_event(priv);
 		if (priv->pshare->linux6_napi_enabled) {
 			napi_disable(&priv->pshare->linux6_rx_napi);
 			priv->pshare->linux6_napi_enabled = false;
