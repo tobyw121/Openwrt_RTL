@@ -9123,18 +9123,10 @@ GET_MACHALAPI_INTERFACE(Adapter)->halmac_cfg_drv_info(Adapter->pHalmac_adapter,H
 				}
 
 #if defined(CONFIG_RTL8192CD_LINUX6_BUS) && defined(CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE)
-				/* v44.54 / Report18b: wlan0 can receive AUTH while the 8822B
-				 * management streaming-DMA map count grows without matching
-				 * unmaps.  The generic IMR intentionally omits per-TX-queue
-				 * completion bits.  Enable them only for MW5 radio0 so Linux
-				 * can promptly reclaim MGT and the HI0 critical-response ring. */
-				if (GET_CHIP_VER(priv) == VERSION_8822B &&
-				    priv->pshare->linux6_radio_index == 0) {
-					GET_HAL_INTERFACE(priv)->AddInterruptMaskHandler(priv, HAL_INT_TYPE_MGNTDOK);
-					GET_HAL_INTERFACE(priv)->AddInterruptMaskHandler(priv, HAL_INT_TYPE_HIGHDOK);
-					pr_info("rtl8197f-wlan: v44.54 MW5 8822B TX completion IRQs enabled if=%s MGT+HI0\n",
-						priv->dev ? priv->dev->name : "none");
-				}
+				/* Reclaim sparse management traffic on every Linux6 HAL radio.
+				 * Use HAL interrupt types, never another chip's register bits. */
+				GET_HAL_INTERFACE(priv)->AddInterruptMaskHandler(priv, HAL_INT_TYPE_MGNTDOK);
+				GET_HAL_INTERFACE(priv)->AddInterruptMaskHandler(priv, HAL_INT_TYPE_HIGHDOK);
 #endif
 		
 #if IS_EXIST_PCI || IS_EXIST_EMBEDDED

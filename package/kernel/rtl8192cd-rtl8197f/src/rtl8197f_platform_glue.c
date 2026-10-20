@@ -17,6 +17,10 @@ static bool external_radio = true;
 module_param(external_radio, bool, 0644);
 MODULE_PARM_DESC(external_radio, "Allow PCIe external-radio registration");
 
+static bool trace_init;
+module_param(trace_init, bool, 0644);
+MODULE_PARM_DESC(trace_init, "Print successful init phases on the serial console (default off)");
+
 /* Legacy diagnostic option from v43.38.  The OEM attachments show that
  * MW5 normally uses wlan0=external RTL8822B/5GHz and wlan1=integrated
  * RTL8197FS/2.4GHz, so the new default 2G path does NOT use this.
@@ -151,9 +155,11 @@ void rtl8197f_wlan_phase_set(int phase, const char *name, int rc)
 	init_phase = phase;
 	init_rc = rc;
 	strscpy(last_phase, name ? name : "unnamed", sizeof(last_phase));
-	/* KERN_EMERG is intentional during bring-up: the box can hard-hang before
-	 * userspace can read dmesg, so the phase must hit the serial console.
+	/* Always retain the last phase in sysfs. Avoid synchronous serial-console
+	 * floods in normal operation; errors remain visible without tracing.
 	 */
+	if (!rc && !trace_init)
+		return;
 	printk(KERN_EMERG "rtl8197f-wlan: phase=%d name=%s rc=%d profile=%s bond=%u external=%u integrated_first=%u oem_2g_only=%u root_only=%u probe_only=%u skip_init_one=%u stop_after=%d\n",
 		phase, last_phase, rc, rtl8197f_detect_profile(),
 		rtl819x_bond_option(), external_radio, integrated_first, oem_2g_only,

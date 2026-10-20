@@ -2189,8 +2189,11 @@ InterruptTxHandle(
     phw = GET_HW(priv);
 
 #if defined(CONFIG_RTL8192CD_LINUX6_BUS) && defined(CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE)
-    if (GET_CHIP_VER(priv) == VERSION_8822B && priv->pshare &&
-        priv->pshare->linux6_radio_index == 0) {
+    /* All Linux6 HAL profiles need timely management-buffer recycling.
+     * The generic queue condition only fires above ten pending descriptors;
+     * sparse authentication traffic must also reclaim completed frames. HAL
+     * translates these interrupt types for each MAC generation. */
+    if (priv->pshare) {
         mw5_mgnt_done = GET_HAL_INTERFACE(priv)->GetInterruptHandler(priv, HAL_INT_TYPE_MGNTDOK);
         mw5_high_done = GET_HAL_INTERFACE(priv)->GetInterruptHandler(priv, HAL_INT_TYPE_HIGHDOK);
         if (mw5_mgnt_done)

@@ -20494,6 +20494,8 @@ void issue_auth_resp(struct rtl8192cd_priv *priv, struct stat_info *pstat, unsig
 	UINT8	isMeshMP = FALSE;
 	struct stat_info *pstat_tmp=NULL;
 	DECLARE_TXINSN(txinsn);
+	const char *failure = "management-buffer";
+	int txrc = -1;
 	if(pstat==NULL)
 		return;
 	
@@ -20575,6 +20577,7 @@ void issue_auth_resp(struct rtl8192cd_priv *priv, struct stat_info *pstat, unsig
 	if (pbuf == NULL)
 		goto issue_auth_resp_fail;
 
+	failure = "header-buffer";
 	txinsn.phdr = get_wlanhdr_from_poll(priv);
 
 	if (txinsn.phdr == NULL){
@@ -20720,10 +20723,20 @@ skip_security_check1:
 	}
 #endif
 
-	if ((rtl8192cd_firetx(priv, &txinsn)) == SUCCESS)
+	failure = "firetx";
+	txrc = rtl8192cd_firetx(priv, &txinsn);
+	if (txrc == SUCCESS)
 		return;
 issue_auth_resp_fail:
+#if defined(CONFIG_RTL8192CD_LINUX6_BUS)
+	pr_warn_ratelimited("rtl8197f-wlan: AUTH-TX-FAIL if=%s stage=%s rc=%d q=%u available=%u buffers=%u headers=%u\n",
+		priv->dev->name, failure, txrc, txinsn.q_num,
+		getAvailableTXBD(priv, txinsn.q_num),
+		(unsigned int)priv->pshare->pwlanbuf_poll->count,
+		(unsigned int)priv->pshare->pwlan_hdr_poll->count);
+#else
 	log("issue_auth_resp_fail %pm",pstat->cmn_info.mac_addr);
+#endif
 
 	if (txinsn.phdr)
 		release_wlanhdr_to_poll(priv, txinsn.phdr);
@@ -35147,7 +35160,7 @@ def RTK_MULTI_AP
 #endif
 	{
 #ifdef RTK_NL80211
-		pr_info("rtl8197f-wlan: MW5-AUTH-RESP if=%s peer=%pM status=0 seq=%u\n",
+		pr_info("rtl8197f-wlan: MW5-AUTH-RESP-ATTEMPT if=%s peer=%pM status=0 seq=%u\n",
 			priv->dev->name, sa, pstat->auth_seq);
 #endif
 		issue_auth_resp(priv, pstat, (unsigned short)(_STATS_SUCCESSFUL_));

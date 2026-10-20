@@ -14,6 +14,24 @@ UARTs ohne den RTL8197F-Quirk behalten ihre bisherigen Einstellungen.
 Das vergrößert nicht die physische FIFO und garantiert keine verlustfreie
 Übertragung während beliebig langer Interruptsperren.
 
+## RD05-Gerätelog r0-962e91478d
+
+Die Meldung `ttyS ttyS0: input overrun(s)` belegt einen Empfangsüberlauf.
+Das ist unabhängig vom 8192-Byte-Zeilenpuffer: Bereits verlorene UART-Zeichen
+kann die Shell nicht wiederherstellen. Der WLAN-Treiber druckt erfolgreiche
+Initialisierungsphasen deshalb standardmäßig nicht mehr synchron mit
+`KERN_EMERG` auf die Konsole. Der letzte Zustand bleibt in den Modulparametern
+`init_phase`, `init_rc` und `last_phase` erhalten; Fehler werden weiterhin
+sofort ausgegeben. Ausführliche Phasen lassen sich bei Bedarf mit
+`trace_init=1` beim Laden oder über
+`/sys/module/rtl8192cd/parameters/trace_init` aktivieren. Währenddessen keine
+großen Texte einfügen.
+
+Diese Änderung reduziert eine belegte Quelle langer Konsolenausgaben. Sie
+beweist keine maximal zulässige Interruptlatenz des gesamten Vendor-Treibers.
+Bis zum Hardwaretest im Terminalprogramm 1–2 ms Sendeverzögerung pro Zeichen
+verwenden; für größere Skripte eine Dateiübertragung nutzen.
+
 ## Aktualisieren
 
 ```sh

@@ -401,6 +401,12 @@ mw5_effective_port_mode() {
 # the RTL865x L2/netif tables (the RESEED command does not rewind RX DMA).
 mw5_network_guard() {
 	mg_phase="${1:-runtime}"
+	. /lib/functions/rtl8197f-board.sh
+	if ! rtl8197f_is_mw5; then
+		# Preserve board-aware CPU-link recovery without MW5 port/MAC policy.
+		mw5_rtknet_reseed "$mg_phase"
+		return 0
+	fi
 	command -v ip >/dev/null 2>&1 || { mw5_rtknet_reseed "$mg_phase"; return 0; }
 	mg_mode="$(mw5_effective_port_mode)"
 
@@ -590,6 +596,24 @@ two_g_wait_for_client() {
 	return 1
 }
 
+# Require hostapd's completed setup, not just an nl80211 AP interface.
+# Record the log boundary before starting so a previous AP-ENABLED cannot
+# validate this attempt. No hostapd_cli package is needed on small images.
+wait_hostapd_enabled() {
+	local ap_if="$1" ap_pid="$2" ap_first="$3" ap_wait=0 ap_events
+	while [ "$ap_wait" -lt 20 ]; do
+		kill -0 "$ap_pid" 2>/dev/null || return 1
+		ap_events="$(tail -n "+$ap_first" "$LOG_FILE" 2>/dev/null | grep -F "$ap_if: AP-" || true)"
+		case "$(printf '%s\n' "$ap_events" | tail -n 1)" in
+			"$ap_if: AP-ENABLED"*) return 0 ;;
+			"$ap_if: AP-DISABLED"*) return 1 ;;
+		esac
+		sleep 1
+		ap_wait=$((ap_wait + 1))
+	done
+	return 1
+}
+
 start_radio() {
 	band="$1"; ifname="$2"; enabled="$3"; ssid="$4"; channel="$5"; width="$6"; enc="$7"; key="$8"
 	[ "$enabled" = 1 ] || return 0
@@ -620,6 +644,7 @@ start_radio() {
 		command -v iw >/dev/null 2>&1 && iw dev "$ifname" set type managed >>"$LOG_FILE" 2>&1 || true
 		ip link set dev "$ifname" up 2>/dev/null || true
 	fi
+	ap_first=$(( $(wc -l <"$LOG_FILE") + 1 ))
 	if ! hostapd -B -P "$pidfile" "$conf" >>"$LOG_FILE" 2>&1; then
 		log "$band: hostapd/nl80211 Start fehlgeschlagen ($ifname)"
 		echo "FAIL: $band hostapd start failed on $ifname; see $LOG_FILE"
@@ -630,6 +655,11 @@ start_radio() {
 	if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
 		log "$band: hostapd exited during startup validation ($ifname)"
 		echo "FAIL: $band hostapd exited during startup validation; see $LOG_FILE"
+		return 1
+	fi
+	if ! wait_hostapd_enabled "$ifname" "$pid" "$ap_first"; then
+		log "$band: hostapd did not reach AP-ENABLED ($ifname)"
+		echo "FAIL: $band hostapd setup incomplete on $ifname; see $LOG_FILE"
 		return 1
 	fi
 	info="$(iw dev "$ifname" info 2>/dev/null || true)"

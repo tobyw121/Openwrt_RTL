@@ -1,5 +1,45 @@
 # RD05: Hänger während der WLAN-Initialisierung
 
+## Authentifizierung mit Firmware r0-962e91478d
+
+Der neue Gerätelog bestätigt abgeschlossene Initialisierung beider Radios
+und empfangene Open-System-Authentifizierungsanfragen. Auf 2,4 GHz scheitert
+`issue_auth_resp()`, auf 5 GHz folgt auf die Antwortversuche keine belegte
+Assoziierung. Beide Stationstabellen sind leer. `status=0` im bisherigen
+`MW5-AUTH-RESP`-Log wurde vor dem Sendeaufruf ausgegeben und beweist keine
+Übertragung. Das Ereignis heißt deshalb jetzt `MW5-AUTH-RESP-ATTEMPT`.
+
+Die schnelle TX-Rückgewinnung für MGT/HI war bisher nur für RTL8822B Radio 0
+aktiviert. Die generische HAL-Bedingung fordert mehr als zehn ausstehende
+Deskriptoren; einzelne Management-Antworten können darunter liegen. Jetzt
+aktivieren alle Linux6-HAL-Radios die passenden Completion-Interrupts und
+planen darüber die bestehende Rückgewinnung ein. Registerbits und Queue-
+Zuordnungen bleiben Sache der jeweiligen HAL. Es werden keine 8822B-
+HI0-Umleitungen oder Descriptor-Layouts auf 8812F/8197G übertragen.
+
+Verbleibende Authentifizierungsfehler nennen nun gedrosselt `AUTH-TX-FAIL`
+mit Ursache (`management-buffer`, `header-buffer` oder `firetx`), Rückgabewert,
+Queue und freien Puffern. Das unterscheidet Pool-Erschöpfung von TX-Ablehnung.
+Es ist weiterhin ein Hardwaretest nötig, um die Authentifizierung zu bestätigen.
+
+Das Startskript wartet auf ein neues `AP-ENABLED` von hostapd. `HT_SCAN`, ein
+lebender Prozess, `type AP` und ein Beacon-Descriptor allein gelten nicht mehr
+als erfolgreicher Start. Ein früheres `AP-ENABLED` wird nicht wiederverwendet.
+RD05/AC23 warten außerdem nicht mehr bis zu 25 Sekunden auf den nur beim MW5
+laufenden Auto-WAN-Dienst. Die MW5-Port-/MAC-Policy wird dort übersprungen;
+das vorhandene boardspezifische RTL865x-Recovery bleibt erhalten.
+
+Erfolgreiche Init-Phasen sind zur UART-Entlastung standardmäßig still; für
+weitere Hängerdiagnosen `trace_init=1` aktivieren. Details und Grenzen der
+UART-Änderung stehen in [UART_PASTE.md](UART_PASTE.md).
+
+Validierung: Hosttests führen den echten HAL-Interrupt-Dispatcher mit
+Management-/High-/Schwellwert-Ereignissen und die Shell-Startprüfung mit
+aktuellen, fremden und veralteten hostapd-Ereignissen aus. Die vier WLAN-
+Paketvarianten kompilieren und linken gegen Linux 6.6.114/Backports 6.12.96.
+Das ersetzt weder einen Firmware-Build noch den Verbindungs- und UART-Test
+auf dem RD05.
+
 ## Eingrenzung mit Firmware r0-66e44628ff
 
 Der vollständige Gerätelog bestätigt: PCIe-Radio 0 erreicht Phase 190;
