@@ -31,7 +31,8 @@ The SoC reported 196 completed TX packets but zero RX packets, RX interrupts,
 RX errors, or RX descriptor traces after thousands of RX polling passes.
 This disproves completion of the WAN fix and places the remaining fault before
 normal IP routing. TX DMA completion alone does not establish external egress.
-The external switch MIB counters are needed to distinguish copper ingress,
+A further capture showed nonzero, CRC-error-free ingress on WAN and LAN2,
+but zero output octets on both ports. The external switch CPU MIB counters are needed to distinguish copper ingress,
 CPU-port egress, and the RGMII/SoC receive path.
 
 The RD05 P0 setup still enabled CPU_TAG_RX, CPU_TAG_TX, and
@@ -92,3 +93,20 @@ If DHCP still fails after the complete firmware update, collect `ifstatus wan`,
 `ip -s link show wan`, the udhcpc log, and Ethernet/switch ethtool counters during
 one renewal. A capture on the Fritzbox side can distinguish a lost discover
 from a lost offer. Do not publish complete configuration files or credentials.
+
+## CPU endpoint counters
+
+`ethtool -S wan` and `ethtool -S lan2` also expose the RTL8367D CPU endpoint:
+
+- `cpu_ifInOctets`: packets entering the switch from the SoC over RGMII.
+- `cpu_ifOutOctets`: packets leaving the switch toward the SoC.
+- `cpu_fcs_errors`: bad FCS received by the switch from the SoC.
+- `cpu_stp_state` / `user_stp_state`: expected forwarding value is 3 on active ports.
+- `cpu_isolation` / `user_isolation`: permitted destination masks. In the
+  current bootstrap, CPU7 permits users 0..4 (`31`), users permit CPU7 (`128`).
+
+These are live read-only observations. An unavailable/read-error value is
+UINT64_MAX (18446744073709551615), not zero. Copper input with no CPU output
+points to switch forwarding/classification. CPU output with no SoC RX points
+to the RGMII/SoC/DMA receive path. CPU input or FCS counters help verify whether
+completed SoC TX actually reached the external switch.

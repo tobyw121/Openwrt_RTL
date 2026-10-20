@@ -1,0 +1,87 @@
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -2348,6 +2348,46 @@
+ 	rtl8365mb_mw5_proc_priv = NULL;
+ }
+ 
++/* Expose the otherwise invisible RTL8367D CPU/RGMII endpoint alongside
++ * each user port. Read failures are U64_MAX, not misleading zero counters.
++ */
++static const char rtl8367d_cpu_stat_names[][ETH_GSTRING_LEN] = {
++	"cpu_ifInOctets", "cpu_ifOutOctets", "cpu_fcs_errors",
++	"cpu_stp_state", "user_stp_state", "cpu_isolation", "user_isolation",
++};
++
++static void rtl8367d_get_cpu_path_stats(struct realtek_priv *priv, int port,
++				      u64 *data)
++{
++	struct rtl8365mb *mb = priv->chip_data;
++	int cpu_port = mb->cpu.trap_port;
++	u32 val;
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(rtl8367d_cpu_stat_names); i++)
++		data[i] = U64_MAX;
++	if (cpu_port < 0 || cpu_port >= priv->num_ports)
++		return;
++
++	mutex_lock(&mb->mib_lock);
++	if (rtl8365mb_mib_counter_read(priv, cpu_port, 0, 4, &data[0]))
++		data[0] = U64_MAX;
++	if (rtl8365mb_mib_counter_read(priv, cpu_port, 60, 4, &data[1]))
++		data[1] = U64_MAX;
++	if (rtl8365mb_mib_counter_read(priv, cpu_port, 4, 2, &data[2]))
++		data[2] = U64_MAX;
++	mutex_unlock(&mb->mib_lock);
++
++	if (!regmap_read(priv->map, RTL8365MB_MSTI_CTRL_REG(0, cpu_port), &val))
++		data[3] = (val >> RTL8365MB_MSTI_CTRL_PORT_STATE_OFFSET(cpu_port)) & 3;
++	if (!regmap_read(priv->map, RTL8365MB_MSTI_CTRL_REG(0, port), &val))
++		data[4] = (val >> RTL8365MB_MSTI_CTRL_PORT_STATE_OFFSET(port)) & 3;
++	if (!regmap_read(priv->map, RTL8365MB_PORT_ISOLATION_REG(cpu_port), &val))
++		data[5] = val;
++	if (!regmap_read(priv->map, RTL8365MB_PORT_ISOLATION_REG(port), &val))
++		data[6] = val;
++}
++
+ static void rtl8365mb_get_ethtool_stats(struct dsa_switch *ds, int port, u64 *data)
+ {
+ 	struct realtek_priv *priv = ds->priv;
+@@ -2371,10 +2411,14 @@
+ 		}
+ 	}
+ 	mutex_unlock(&mb->mib_lock);
++	if (mb->chip_info->rtl8367d)
++		rtl8367d_get_cpu_path_stats(priv, port, data + RTL8365MB_MIB_END);
+ }
+ 
+ static void rtl8365mb_get_strings(struct dsa_switch *ds, int port, u32 stringset, u8 *data)
+ {
++	struct realtek_priv *priv = ds->priv;
++	struct rtl8365mb *mb = priv->chip_data;
+ 	int i;
+ 
+ 	if (stringset != ETH_SS_STATS)
+@@ -2385,14 +2429,21 @@
+ 
+ 		strncpy(data + i * ETH_GSTRING_LEN, mib->name, ETH_GSTRING_LEN);
+ 	}
++	if (mb->chip_info->rtl8367d)
++		memcpy(data + RTL8365MB_MIB_END * ETH_GSTRING_LEN,
++		       rtl8367d_cpu_stat_names, sizeof(rtl8367d_cpu_stat_names));
+ }
+ 
+ static int rtl8365mb_get_sset_count(struct dsa_switch *ds, int port, int sset)
+ {
++	struct realtek_priv *priv = ds->priv;
++	struct rtl8365mb *mb = priv->chip_data;
++
+ 	if (sset != ETH_SS_STATS)
+ 		return -EOPNOTSUPP;
+ 
+-	return RTL8365MB_MIB_END;
++	return RTL8365MB_MIB_END + (mb->chip_info->rtl8367d ?
++		ARRAY_SIZE(rtl8367d_cpu_stat_names) : 0);
+ }
+ 
+ static void rtl8365mb_get_phy_stats(struct dsa_switch *ds, int port,
