@@ -372,10 +372,10 @@
 	 * RTL8367D UTP ports and parses the rtl8_4 CPU tag in Linux.
 	 */
 	realtek,legacy-rd05-sdk-pipeline;
-	/* Accept RTL8367D protocol-4 CPU-tagged frames in the RTL8197F P0 parser,
-	 * but preserve the 8-byte tag for Linux's rtl8_4 DSA tagger.
+	/* Linux rtl8_4 owns the external switch header. Leave the SoC's legacy
+	 * CPU-tag parser/generator and PORT0_ROUTER_MODE disabled so the header
+	 * crosses P0 unchanged, including the external ingress port number.
 	 */
-	realtek,p0-cpu-tag-pass-through;
 	/* v23: physical DMA addresses did not move the CPU ring.  Return to the
 	 * SDK-compatible KSEG1 descriptor/buffer address form inherited from the SoC
 	 * dtsi and test the missing rtl865x_start() side-band sequence instead.

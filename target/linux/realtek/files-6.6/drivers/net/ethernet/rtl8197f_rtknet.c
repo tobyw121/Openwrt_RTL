@@ -62,7 +62,7 @@
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.37-rd05-wan-cpu-mac"
+#define DRV_VERSION			"1.8.38-rd05-transparent-dsa"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -2352,6 +2352,8 @@ static void rtl8197f_rtk_init_p0_rgmii(struct rtl8197f_rtknet_priv *priv,
 {
 	u32 pcr, gmii, val, pad = 0;
 	bool mw5 = of_machine_is_compatible("tenda,nova-mw5");
+	bool rd05 = of_machine_is_compatible("xiaomi,r4-rd05");
+	bool transparent = rd05 || (mw5 && READ_ONCE(priv->mw5_p0_transparent));
 	u32 tx_delay;
 	u32 rx_delay;
 
@@ -2423,28 +2425,21 @@ static void rtl8197f_rtk_init_p0_rgmii(struct rtl8197f_rtknet_priv *priv,
 	gmii |= RTL_RTK_P0GMIICR_RGTXC_3 | rx_delay;
 	if (tx_delay)
 		gmii |= RTL_RTK_P0GMIICR_TX_DELAY_MASK;
-	if (priv->p0_cpu_tag_passthrough) {
-		/* RD05 keeps the vendor hardware parser.  On MW5 the hardware log
-		 * proves that enabling CPU_TAG_RX can deliver an already stripped
-		 * Ethernet frame to DMA.  Leave RX parsing disabled so a real 0x8899
-		 * header can pass unchanged to Linux DSA; the RX descriptor fallback
-		 * below reconstructs it when this RTL8197FS revision still strips it.
-		 */
-		if (!mw5) {
-			gmii |= RTL_RTK_P0GMIICR_CPU_TAG_RX;
-			gmii |= RTL_RTK_P0GMIICR_CPU_TAG_TX;
-		}
-	}
+	/* Linux rtl8_4 needs the switch tag after SA, including its original
+	 * ingress port. The legacy SoC parser/generator may consume or replace
+	 * it; RD05 must transport it as opaque Ethernet data in both directions.
+	 * Keep the separate VG timing and pad settings below unchanged.
+	 */
+	if (priv->p0_cpu_tag_passthrough && !mw5 && !rd05)
+		gmii |= RTL_RTK_P0GMIICR_CPU_TAG_RX | RTL_RTK_P0GMIICR_CPU_TAG_TX;
 	writel(gmii, priv->swcore + RTL_RTK_SWCORE_P0GMIICR);
 
 	val = readl(priv->swcore + RTL_RTK_SWCORE_MACCR1);
 	val &= ~(RTL_RTK_MACCR1_P0_ROUTER_MODE |
 		 RTL_RTK_MACCR1_RMD_TAG_MASK);
-	/* The vendor SDK couples PORT0_ROUTER_MODE to the RTL8197F CPU-tag
-	 * parser/generator. MW5 Linux DSA intentionally keeps both CPU_TAG_RX/TX
-	 * disabled, so leave P0 in normal mode as well. The old router-mode path is
-	 * retained only as a live A/B diagnostic through /proc/rd05-rtknet. */
-	if (priv->p0_cpu_tag_passthrough && (!mw5 || !READ_ONCE(priv->mw5_p0_transparent)))
+	/* Couple normal P0 mode to opaque DSA tag transport. Preserve the MW5
+	 * runtime A/B control and legacy non-DSA board policy. */
+	if (priv->p0_cpu_tag_passthrough && !transparent)
 		val |= RTL_RTK_MACCR1_P0_ROUTER_MODE;
 	writel(val, priv->swcore + RTL_RTK_SWCORE_MACCR1);
 
@@ -2514,9 +2509,9 @@ static void rtl8197f_rtk_init_p0_rgmii(struct rtl8197f_rtknet_priv *priv,
 		    RTL_RTK_P0GMIICR_CPU_TAG_RX),
 		 !!(readl(priv->swcore + RTL_RTK_SWCORE_P0GMIICR) &
 		    RTL_RTK_P0GMIICR_CPU_TAG_TX),
-		 mw5 && READ_ONCE(priv->mw5_p0_transparent) ? "transparent" : "router",
+		 transparent || !priv->p0_cpu_tag_passthrough ? "transparent" : "router",
 		 "rtl8_4/8byte",
-		 mw5 ? "wire-pass+desc-fallback" : "hardware-parser");
+		 mw5 ? "wire-pass+desc-fallback" : rd05 ? "wire-pass" : "hardware-parser");
 }
 
 static void rtl8197f_rtk_rd05_vendor_sidebands(struct rtl8197f_rtknet_priv *priv,
@@ -8980,6 +8975,16 @@ static int rtl8197f_rtk_rd05_proc_show(struct seq_file *m, void *v)
 		   ndev->name, netif_running(ndev), netif_carrier_ok(ndev));
 	seq_printf(m, "mac=%pM seeded_mac=%pM\n",
 		   ndev->dev_addr, priv->rd05_seeded_mac);
+	if (priv->swcore && rtl8197f_rtk_p0_external_switch_board()) {
+		u32 gmii = readl(priv->swcore + RTL_RTK_SWCORE_P0GMIICR);
+		u32 maccr1 = readl(priv->swcore + RTL_RTK_SWCORE_MACCR1);
+
+		seq_printf(m, "dsa_host_link p0gmii=0x%08x maccr1=0x%08x cpu_tag_rx=%u cpu_tag_tx=%u router_mode=%u\n",
+			   gmii, maccr1,
+			   !!(gmii & RTL_RTK_P0GMIICR_CPU_TAG_RX),
+			   !!(gmii & RTL_RTK_P0GMIICR_CPU_TAG_TX),
+			   !!(maccr1 & RTL_RTK_MACCR1_P0_ROUTER_MODE));
+	}
 	seq_printf(m, "descriptor_policy dwords=%u stride=%u kseg1=%u sdk_crc=%u txringcr=0x%08x\n",
 		   priv->desc_dwords, priv->desc_stride,
 		   priv->desc_addr_kseg1, priv->sdk_crc_lengths,

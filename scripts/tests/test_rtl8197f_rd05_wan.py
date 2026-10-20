@@ -101,5 +101,76 @@ int main(void) {
             subprocess.run([str(binary)], check=True)
 
 
+    def test_p0_mmio_keeps_rd05_dsa_tag_opaque_with_old_and_new_dt(self):
+        # Compile the complete production P0 setup function against fake MMIO.
+        # Use the driver's real register definitions, including VG timing fields.
+        definitions = []
+        lines = DRIVER.read_text().splitlines(keepends=True)
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            if line.startswith('#define RTL_RTK_'):
+                definition = line
+                while line.rstrip().endswith('\\'):
+                    i += 1
+                    line = lines[i]
+                    definition += line
+                definitions.append(definition)
+            i += 1
+        code = r"""
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+typedef uint32_t u32;
+#define BIT(n) (1U << (n))
+#define GENMASK(h,l) ((~0U << (l)) & (~0U >> (31-(h))))
+#define READ_ONCE(x) (x)
+#define min_t(t,a,b) ((t)(a) < (t)(b) ? (t)(a) : (t)(b))
+#define dev_info(...) ((void)0)
+#define udelay(...) ((void)0)
+static u32 readl(void *p) { return *(u32 *)p; }
+static void writel(u32 v, void *p) { *(u32 *)p = v; }
+static const char *board;
+static bool of_machine_is_compatible(const char *s) { return !strcmp(s,board); }
+static unsigned int rd05_p0_tx_delay = 0, rd05_p0_rx_delay = 6;
+struct rtl8197f_rtknet_priv {
+    void *swcore, *system, *dev;
+    bool mw5_p0_transparent, p0_cpu_tag_passthrough;
+};
+""" + ''.join(definitions) + c_function(DRIVER, 'static void rtl8197f_rtk_init_p0_rgmii(') + r"""
+int main(void) {
+    u32 regs[0x10000 / 4], system[0x4000 / 4];
+    struct rtl8197f_rtknet_priv p = {.swcore=regs, .system=system};
+    const char *boards[] = {"xiaomi,r4-rd05", "tenda,nova-mw5", "legacy"};
+    for (int b=0;b<3;b++) for (int old_dt=0;old_dt<2;old_dt++) {
+        board = boards[b]; memset(regs,0xff,sizeof(regs)); memset(system,0xff,sizeof(system));
+        p.p0_cpu_tag_passthrough = old_dt; p.mw5_p0_transparent = true;
+        for (int reseed=0;reseed<2;reseed++) {
+            rtl8197f_rtk_init_p0_rgmii(&p,"regression");
+            u32 gmii = readl(p.swcore + RTL_RTK_SWCORE_P0GMIICR);
+            u32 maccr1 = readl(p.swcore + RTL_RTK_SWCORE_MACCR1);
+            u32 bits = gmii & (RTL_RTK_P0GMIICR_CPU_TAG_RX | RTL_RTK_P0GMIICR_CPU_TAG_TX);
+            assert(!!bits == (b == 2 && old_dt));
+            assert(!!(maccr1 & RTL_RTK_MACCR1_P0_ROUTER_MODE) == (b == 2 && old_dt));
+            assert(gmii & RTL_RTK_P0GMIICR_CONF_DONE);
+            assert((gmii & RTL_RTK_P0GMIICR_RX_DELAY_MASK) == (b == 1 ? RTL_RTK_P0GMIICR_RX_DELAY_FS : 6));
+            if (b == 0) {
+                assert((readl(p.swcore + RTL_RTK_SWCORE_PITCR) & RTL_RTK_PITCR_FIX_IPG_MASK) == RTL_RTK_PITCR_FIX_IPG_8BYTE);
+                assert((readl(p.swcore + RTL_RTK_SWCORE_EXTPCR0) & RTL_RTK_EXTPCR0_TX_IPG_MASK) == RTL_RTK_EXTPCR0_TX_IPG_8BYTE);
+            }
+        }
+    }
+    return 0;
+}
+"""
+        with tempfile.TemporaryDirectory() as tmp:
+            c = Path(tmp) / 'p0.c'; binary = Path(tmp) / 'p0'
+            c.write_text(code)
+            subprocess.run(['cc', '-std=gnu11', '-Werror', '-fsanitize=undefined',
+                            str(c), '-o', str(binary)], check=True)
+            subprocess.run([str(binary)], check=True)
+
+
 if __name__ == '__main__':
     unittest.main()
