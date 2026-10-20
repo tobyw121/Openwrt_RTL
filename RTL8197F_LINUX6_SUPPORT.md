@@ -154,6 +154,11 @@ Firmware-/MODPOST-Build und Tests auf den Geräten wurden nicht durchgeführt.
    `tx_watchdog_rekicks`; ein steigender Zähler ist Anlass zur Untersuchung,
    kein Beleg für einen behobenen Hardwarestillstand. Dieser neue Retry-Pfad
    ist für AC23/RD05 nicht aktiviert.
+   Die weitere Boardanalyse bestätigt beim RD05 den Typ-4-Wechsel auf CPU7
+   und zeigt einen leeren OEM-DAL-Init-Einstieg. Beim AC23 ist der abschließend
+   angeforderte Switch-RGMII-RX-Wert 5 = 1500 ps jetzt im DTS korrigiert;
+   die vorausgehende OEM-SSC-Sequenz wird dadurch nicht vollständig portiert.
+   Separate AC23-Schwellen werden nicht mit MW5-Werten überschrieben.
 5. Je Band WPA2/CCMP-Verbindungsaufbau, DHCP, Bridging, Routing, Reconnect und
    Neustart testen. Danach parallelen LAN/WAN- und WLAN-Verkehr mit einem
    zweiten Rechner erzeugen; mindestens 30 Minuten bidirektional, anschließend

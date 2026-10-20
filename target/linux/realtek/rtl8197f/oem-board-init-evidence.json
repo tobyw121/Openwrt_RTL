@@ -1,0 +1,1024 @@
+{
+  "schema": 1,
+  "source_commit": "e6d68e9067f54b695022f61ed52e50dc56c5a7b7",
+  "limits": "Static code evidence; call-site presence is not proof of runtime execution or success. No individual factory data.",
+  "boards": {
+    "mw5": {
+      "kernel_sha256": "11fda4eba4ad3572037fa8ac39c14b28f7535e863e10a01130ea0bb18ff3d6a9",
+      "functions": {
+        "RTL83XX_init": {
+          "address": 2149419968,
+          "span": 580,
+          "span_sha256": "c4907490fa8e428258364b5709dbe7cefd4485cfe7cbd62846d458adf635af8f",
+          "literal_call_sites": [
+            {
+              "call_pc": 2149419992,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4898,
+                1
+              ],
+              "instruction_words": [
+                "0x24041322",
+                "0x0c076996",
+                "0x24050001"
+              ]
+            },
+            {
+              "call_pc": 2149420152,
+              "target": "rtk_port_rgmiiDelayExt_set",
+              "arguments": [
+                16,
+                0,
+                2
+              ],
+              "instruction_words": [
+                "0x24040010",
+                "0x00002821",
+                "0x0c07de2c",
+                "0x24060002"
+              ]
+            },
+            {
+              "call_pc": 2149420184,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                6915,
+                2358
+              ],
+              "instruction_words": [
+                "0x24041b03",
+                "0x0c076996",
+                "0x24050936"
+              ]
+            },
+            {
+              "call_pc": 2149420196,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4639,
+                464
+              ],
+              "instruction_words": [
+                "0x2404121f",
+                "0x0c076996",
+                "0x240501d0"
+              ]
+            },
+            {
+              "call_pc": 2149420208,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4640,
+                428
+              ],
+              "instruction_words": [
+                "0x24041220",
+                "0x0c076996",
+                "0x240501ac"
+              ]
+            },
+            {
+              "call_pc": 2149420220,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4641,
+                414
+              ],
+              "instruction_words": [
+                "0x24041221",
+                "0x0c076996",
+                "0x2405019e"
+              ]
+            },
+            {
+              "call_pc": 2149420232,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4642,
+                378
+              ],
+              "instruction_words": [
+                "0x24041222",
+                "0x0c076996",
+                "0x2405017a"
+              ]
+            },
+            {
+              "call_pc": 2149420244,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4643,
+                464
+              ],
+              "instruction_words": [
+                "0x24041223",
+                "0x0c076996",
+                "0x240501d0"
+              ]
+            },
+            {
+              "call_pc": 2149420256,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4644,
+                428
+              ],
+              "instruction_words": [
+                "0x24041224",
+                "0x0c076996",
+                "0x240501ac"
+              ]
+            },
+            {
+              "call_pc": 2149420268,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4645,
+                414
+              ],
+              "instruction_words": [
+                "0x24041225",
+                "0x0c076996",
+                "0x2405019e"
+              ]
+            },
+            {
+              "call_pc": 2149420280,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4646,
+                378
+              ],
+              "instruction_words": [
+                "0x24041226",
+                "0x0c076996",
+                "0x2405017a"
+              ]
+            },
+            {
+              "call_pc": 2149420292,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                5059,
+                0
+              ],
+              "instruction_words": [
+                "0x240413c3",
+                "0x0c076996",
+                "0x00002821"
+              ]
+            },
+            {
+              "call_pc": 2149420304,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                5060,
+                0
+              ],
+              "instruction_words": [
+                "0x240413c4",
+                "0x0c076996",
+                "0x00002821"
+              ]
+            },
+            {
+              "call_pc": 2149420316,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                7507,
+                1
+              ],
+              "instruction_words": [
+                "0x24041d53",
+                "0x0c076996",
+                "0x24050001"
+              ]
+            },
+            {
+              "call_pc": 2149420328,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                7509,
+                15
+              ],
+              "instruction_words": [
+                "0x24041d55",
+                "0x0c076996",
+                "0x2405000f"
+              ]
+            },
+            {
+              "call_pc": 2149420340,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                7508,
+                1530
+              ],
+              "instruction_words": [
+                "0x24041d54",
+                "0x0c076996",
+                "0x240505fa"
+              ]
+            },
+            {
+              "call_pc": 2149420352,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                7506,
+                9331
+              ],
+              "instruction_words": [
+                "0x24041d52",
+                "0x0c076996",
+                "0x24052473"
+              ]
+            },
+            {
+              "call_pc": 2149420364,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                7514,
+                1
+              ],
+              "instruction_words": [
+                "0x24041d5a",
+                "0x0c076996",
+                "0x24050001"
+              ]
+            },
+            {
+              "call_pc": 2149420376,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                7516,
+                15
+              ],
+              "instruction_words": [
+                "0x24041d5c",
+                "0x0c076996",
+                "0x2405000f"
+              ]
+            },
+            {
+              "call_pc": 2149420388,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                7515,
+                1530
+              ],
+              "instruction_words": [
+                "0x24041d5b",
+                "0x0c076996",
+                "0x240505fa"
+              ]
+            },
+            {
+              "call_pc": 2149420400,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                7513,
+                9331
+              ],
+              "instruction_words": [
+                "0x24041d59",
+                "0x0c076996",
+                "0x24052473"
+              ]
+            },
+            {
+              "call_pc": 2149420416,
+              "target": "rtk_port_rgmiiDelayExt_set",
+              "arguments": [
+                16,
+                0,
+                5
+              ],
+              "instruction_words": [
+                "0x24040010",
+                "0x00002821",
+                "0x0c07de2c",
+                "0x24060005"
+              ]
+            }
+          ]
+        },
+        "rtk_switch_port_L2P_get": {
+          "address": 2149564468,
+          "span": 60,
+          "span_sha256": "cefad7ee81b753079881ea08b396e5759e0b5778bec6f63b1ffbeb9b4b4b113b"
+        },
+        "rtk_port_rgmiiDelayExt_set": {
+          "address": 2149546160,
+          "span": 216,
+          "span_sha256": "3819e91529df9c010e75cce29a37ff2b5d676df8e5020949ef53e937ec90edfb"
+        },
+        "rtk_switch_init": {
+          "address": 2149566908,
+          "span": 2468,
+          "span_sha256": "8f82dc1abce7a7fcbba385d69691490a6a6bf54c023a34ab258db87c1ba4ffa0"
+        }
+      },
+      "hal_logical_to_physical": {
+        "address": 2153255344,
+        "type": 0,
+        "map_u32": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          6,
+          7,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "sha256": "84283ef978a1308f6fe108834eecb0cb904d8eb215fc1e5a59d76c389c7f48a8",
+        "limits": "Selected family table, not a runtime chip-ID reading or copper connector labels."
+      },
+      "rgmii": {
+        "stages": [
+          {
+            "call_pc": 2149420152,
+            "target": "rtk_port_rgmiiDelayExt_set",
+            "arguments": [
+              16,
+              0,
+              2
+            ],
+            "instruction_words": [
+              "0x24040010",
+              "0x00002821",
+              "0x0c07de2c",
+              "0x24060002"
+            ]
+          },
+          {
+            "call_pc": 2149420416,
+            "target": "rtk_port_rgmiiDelayExt_set",
+            "arguments": [
+              16,
+              0,
+              5
+            ],
+            "instruction_words": [
+              "0x24040010",
+              "0x00002821",
+              "0x0c07de2c",
+              "0x24060005"
+            ]
+          }
+        ],
+        "logical_port": 16,
+        "physical_port": 6,
+        "final_tx_step": 0,
+        "final_rx_step": 5,
+        "rx_step_ps": 300,
+        "delay_register": 4871,
+        "mask": 15,
+        "implementation_proof": {
+          "pc": 2149546292,
+          "instruction_words": [
+            "0x001128c0",
+            "0x30a50008",
+            "0x32520007",
+            "0x00b22825",
+            "0x8fa20010",
+            "0x3042fff0",
+            "0x00a22825",
+            "0xafa50010"
+          ]
+        }
+      }
+    },
+    "ac23": {
+      "kernel_sha256": "e2f9c912499c88669d1df1a31a10aa8367e7a0a517840b9371fcc63601e39aa5",
+      "functions": {
+        "RTL83XX_init": {
+          "address": 2149451280,
+          "span": 540,
+          "span_sha256": "cfbffe7669fc4ab4c6eedcc089e639cfeef942275dbe78a830b5fa0c4a04e268",
+          "literal_call_sites": [
+            {
+              "call_pc": 2149451436,
+              "target": "rtk_port_rgmiiDelayExt_set",
+              "arguments": [
+                16,
+                0,
+                2
+              ],
+              "instruction_words": [
+                "0x24040010",
+                "0x00002821",
+                "0x0c080fa5",
+                "0x24060002"
+              ]
+            },
+            {
+              "call_pc": 2149451468,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                6915,
+                546
+              ],
+              "instruction_words": [
+                "0x24041b03",
+                "0x0c078806",
+                "0x24050222"
+              ]
+            },
+            {
+              "call_pc": 2149451480,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4639,
+                470
+              ],
+              "instruction_words": [
+                "0x2404121f",
+                "0x0c078806",
+                "0x240501d6"
+              ]
+            },
+            {
+              "call_pc": 2149451492,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4640,
+                440
+              ],
+              "instruction_words": [
+                "0x24041220",
+                "0x0c078806",
+                "0x240501b8"
+              ]
+            },
+            {
+              "call_pc": 2149451504,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4641,
+                460
+              ],
+              "instruction_words": [
+                "0x24041221",
+                "0x0c078806",
+                "0x240501cc"
+              ]
+            },
+            {
+              "call_pc": 2149451516,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4642,
+                430
+              ],
+              "instruction_words": [
+                "0x24041222",
+                "0x0c078806",
+                "0x240501ae"
+              ]
+            },
+            {
+              "call_pc": 2149451528,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4643,
+                770
+              ],
+              "instruction_words": [
+                "0x24041223",
+                "0x0c078806",
+                "0x24050302"
+              ]
+            },
+            {
+              "call_pc": 2149451540,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4644,
+                740
+              ],
+              "instruction_words": [
+                "0x24041224",
+                "0x0c078806",
+                "0x240502e4"
+              ]
+            },
+            {
+              "call_pc": 2149451552,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4645,
+                720
+              ],
+              "instruction_words": [
+                "0x24041225",
+                "0x0c078806",
+                "0x240502d0"
+              ]
+            },
+            {
+              "call_pc": 2149451564,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4646,
+                680
+              ],
+              "instruction_words": [
+                "0x24041226",
+                "0x0c078806",
+                "0x240502a8"
+              ]
+            },
+            {
+              "call_pc": 2149451576,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                5059,
+                0
+              ],
+              "instruction_words": [
+                "0x240413c3",
+                "0x0c078806",
+                "0x00002821"
+              ]
+            },
+            {
+              "call_pc": 2149451588,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                5060,
+                0
+              ],
+              "instruction_words": [
+                "0x240413c4",
+                "0x0c078806",
+                "0x00002821"
+              ]
+            },
+            {
+              "call_pc": 2149451616,
+              "target": "rtk_port_rgmiiDelayExt_set",
+              "arguments": [
+                16,
+                0,
+                5
+              ],
+              "instruction_words": [
+                "0x24040010",
+                "0x00002821",
+                "0x0c080fa5",
+                "0x24060005"
+              ]
+            }
+          ]
+        },
+        "rtk_switch_port_L2P_get": {
+          "address": 2149623492,
+          "span": 60,
+          "span_sha256": "e92f5b0b374f01fab8e2eb05a58b55d96efb5aa1010f2ca06383a57622b63e7e"
+        },
+        "rtk_port_rgmiiDelayExt_set": {
+          "address": 2149596820,
+          "span": 296,
+          "span_sha256": "98812a139d894297ac6ff665130f6d197ec57a25089caf89f734f58ca9aad970"
+        },
+        "rtk_port_macForceLinkExtSSC_set": {
+          "address": 2149450468,
+          "span": 812,
+          "span_sha256": "2b69c84bfb2251485e00a97804b50a60c0e7c313f707d3a9aa076801f53ce277"
+        },
+        "rtk_phyPatch_set": {
+          "address": 2149450004,
+          "span": 292,
+          "span_sha256": "071fc29dc475dabd7510971a403869af50abab8c2962bdb2e8e02029f3a67e36"
+        },
+        "rtk_switch_init": {
+          "address": 2149626528,
+          "span": 3040,
+          "span_sha256": "1b3b415690c039db9e6c766c5316a33b2c31a99abfb3c2dccf08fb957f1ba13b"
+        }
+      },
+      "hal_logical_to_physical": {
+        "address": 2154049984,
+        "type": 0,
+        "map_u32": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          6,
+          7,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "sha256": "84283ef978a1308f6fe108834eecb0cb904d8eb215fc1e5a59d76c389c7f48a8",
+        "limits": "Selected family table, not a runtime chip-ID reading or copper connector labels."
+      },
+      "rgmii": {
+        "stages": [
+          {
+            "call_pc": 2149451436,
+            "target": "rtk_port_rgmiiDelayExt_set",
+            "arguments": [
+              16,
+              0,
+              2
+            ],
+            "instruction_words": [
+              "0x24040010",
+              "0x00002821",
+              "0x0c080fa5",
+              "0x24060002"
+            ]
+          },
+          {
+            "call_pc": 2149451616,
+            "target": "rtk_port_rgmiiDelayExt_set",
+            "arguments": [
+              16,
+              0,
+              5
+            ],
+            "instruction_words": [
+              "0x24040010",
+              "0x00002821",
+              "0x0c080fa5",
+              "0x24060005"
+            ]
+          }
+        ],
+        "logical_port": 16,
+        "physical_port": 6,
+        "final_tx_step": 0,
+        "final_rx_step": 5,
+        "rx_step_ps": 300,
+        "delay_register": 4871,
+        "mask": 15,
+        "implementation_proof": {
+          "pc": 2149596972,
+          "instruction_words": [
+            "0x001128c0",
+            "0x30a50008",
+            "0x32520007",
+            "0x00b22825",
+            "0x8fa20010",
+            "0x3042fff0",
+            "0x00a22825",
+            "0xafa50010"
+          ]
+        }
+      }
+    },
+    "rd05": {
+      "kernel_sha256": "aa48d325730b95c0658090ba9f943f71bdd9888dc57f609a3989ba58f0f8f5cc",
+      "functions": {
+        "RTL83XX_init": {
+          "address": 2150594948,
+          "span": 1460,
+          "span_sha256": "8b2d0728c30d12d5ba9a5a90b0d8e5ee27f90e9374c8bf0b21a2309acc8d6def",
+          "literal_call_sites": [
+            {
+              "call_pc": 2150595560,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4639,
+                470
+              ],
+              "instruction_words": [
+                "0x240501d6",
+                "0x0c0c2885",
+                "0x2404121f"
+              ]
+            },
+            {
+              "call_pc": 2150595588,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4640,
+                440
+              ],
+              "instruction_words": [
+                "0x240501b8",
+                "0x0c0c2885",
+                "0x24041220"
+              ]
+            },
+            {
+              "call_pc": 2150595616,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4641,
+                460
+              ],
+              "instruction_words": [
+                "0x240501cc",
+                "0x0c0c2885",
+                "0x24041221"
+              ]
+            },
+            {
+              "call_pc": 2150595644,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4642,
+                430
+              ],
+              "instruction_words": [
+                "0x240501ae",
+                "0x0c0c2885",
+                "0x24041222"
+              ]
+            },
+            {
+              "call_pc": 2150595672,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4643,
+                770
+              ],
+              "instruction_words": [
+                "0x24050302",
+                "0x0c0c2885",
+                "0x24041223"
+              ]
+            },
+            {
+              "call_pc": 2150595700,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4644,
+                740
+              ],
+              "instruction_words": [
+                "0x240502e4",
+                "0x0c0c2885",
+                "0x24041224"
+              ]
+            },
+            {
+              "call_pc": 2150595728,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4645,
+                720
+              ],
+              "instruction_words": [
+                "0x240502d0",
+                "0x0c0c2885",
+                "0x24041225"
+              ]
+            },
+            {
+              "call_pc": 2150595756,
+              "target": "rtl8367c_setAsicReg",
+              "arguments": [
+                4646,
+                680
+              ],
+              "instruction_words": [
+                "0x240502a8",
+                "0x0c0c2885",
+                "0x24041226"
+              ]
+            }
+          ]
+        },
+        "rtk_switch_port_L2P_get": {
+          "address": 2150626872,
+          "span": 68,
+          "span_sha256": "93cd41b686ca7e2a568375a8de76f029eecb66a6009fe8aaa65b2c431455f8a1"
+        },
+        "rtk_port_rgmiiDelayExt_set": {
+          "address": 2150622008,
+          "span": 124,
+          "span_sha256": "8c8a909b06bb4bee20fc8d59be5a5b51abf158bc3e20f868abde72f256a4c647"
+        },
+        "rtk_port_macForceLinkExtSSC_set": {
+          "address": 2150625480,
+          "span": 124,
+          "span_sha256": "3469f123a94866cae30e4c8fa7fd2f449677649a4996277bf649172af25ffc12"
+        },
+        "rtk_phyPatch_set": {
+          "address": 2150594632,
+          "span": 316,
+          "span_sha256": "0c4182a2316da70fd763d19c1178557684b6ce70574d05789475228a9867d069"
+        },
+        "rtk_switch_init": {
+          "address": 2150627860,
+          "span": 144,
+          "span_sha256": "a07258e4d1032ef6fde31d18e0d3c97ebbd4af8b7eb8792849e89bfdc46ec2d1"
+        },
+        "switch_probe": {
+          "address": 2150608416,
+          "span": 360,
+          "span_sha256": "fa1b3f2d5e46761d8c05ccecee4928e85f79fd2db44d1befd33226883460f16a"
+        },
+        "hal_find_device": {
+          "address": 2150608776,
+          "span": 184,
+          "span_sha256": "ecbacce3df09d17267cba55b8fb165c1cffe66bea8c847d06903248126a51f5d"
+        },
+        "dal_mgmt_attachDevice": {
+          "address": 2150669936,
+          "span": 192,
+          "span_sha256": "921ad2cd1089a20ee55acecba7c19a6b33d359eeac9db114b08ab2f863889208"
+        },
+        "dal_rtl8367d_mapper_get": {
+          "address": 2150697216,
+          "span": 16,
+          "span_sha256": "09ebd6442076d17a434dae5d72741524256f676f5f5003f492b6401efa447d46"
+        },
+        "dal_rtl8367d_switch_init": {
+          "address": 2150717040,
+          "span": 8,
+          "span_sha256": "2b12957b7b20557a2b2214ff0d4c70070be49dbb12c48fe1b778f48a6fc3cd43",
+          "constant_return": {
+            "value": 0,
+            "instruction_words": [
+              "0x03e00008",
+              "0x00001025"
+            ]
+          }
+        }
+      },
+      "hal_logical_to_physical": {
+        "address": 2156208352,
+        "type": 4,
+        "map_u32": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          6,
+          7,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "sha256": "99857f538bb4525e9608ee66fa638ce685a514577393164ce3469e2212612fe6",
+        "limits": "Selected family table, not a runtime chip-ID reading or copper connector labels."
+      },
+      "mapper": {
+        "getter": {
+          "pc": 2150697216,
+          "instruction_words": [
+            "0x3c028085",
+            "0x03e00008",
+            "0x24422c40"
+          ]
+        },
+        "table_address": 2156211264,
+        "first_function_pointer": 2150717040,
+        "first_function": "dal_rtl8367d_switch_init",
+        "rtk_switch_init_dispatch": {
+          "pc": 2150627964,
+          "instruction_words": [
+            "0x3c028085",
+            "0x8c422c38",
+            "0x8c420000",
+            "0x8c420000",
+            "0x0040f809",
+            "0x00000000"
+          ]
+        }
+      },
+      "chip_type_4_path": {
+        "probe_id": 26178,
+        "probe_type": 4,
+        "probe_proof": {
+          "pc": 2150608688,
+          "instruction_words": [
+            "0x24036642",
+            "0x10830010",
+            "0x24030004",
+            "0x1000ffc4"
+          ]
+        },
+        "logical_port_override": 17,
+        "physical_port": 7,
+        "override_proof": {
+          "pc": 2150595812,
+          "instruction_words": [
+            "0x24030011",
+            "0x1000ff4c",
+            "0xac4320d8"
+          ]
+        },
+        "skip_flowctrl_and_phy_patch": {
+          "pc": 2150595520,
+          "instruction_words": [
+            "0x3c028099",
+            "0x8c43c9f0",
+            "0x24020004",
+            "0x1062ff7a",
+            "0x02001025"
+          ]
+        },
+        "skip_target": 2150595000,
+        "limits": "Type-4 path returns before the generic C-family threshold/PHY-patch tail; do not copy those eight call sites into RTL8367D initialization."
+      },
+      "rgmii": {
+        "logical_port": 17,
+        "physical_port": 7,
+        "staged_tx_step": 0,
+        "staged_rx_step": 2,
+        "final_tx_step": 0,
+        "final_rx_step": 5,
+        "rx_step_ps": 300,
+        "staged_call": {
+          "pc": 2150595196,
+          "instruction_words": [
+            "0x24060002",
+            "0x00002825",
+            "0x3c028085",
+            "0x0c0bf8ce",
+            "0x8c4420d8"
+          ]
+        },
+        "final_call": {
+          "pc": 2150595248,
+          "instruction_words": [
+            "0x24060005",
+            "0x00002825",
+            "0x3c028085",
+            "0x0c0bf8ce",
+            "0x8c4420d8"
+          ]
+        },
+        "limits": "a0 is loaded from the board global overridden to logical port 17 in the chip-type-4 path, not an adjacent literal. These sites are manually reviewed; the automatic literal scanner does not infer this global."
+      }
+    }
+  }
+}

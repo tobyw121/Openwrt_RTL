@@ -217,6 +217,119 @@ chipbezogener Funktionszeiger. Die alte direkte Initialisierung des MW5 ist
 dafür keine passende Vorlage. Weitere DAL-/RTL8367D-Funktionen sind jetzt
 gezielt adressierbar, aber noch nicht vollständig rekonstruiert.
 
+## Weitere Board-Init-Rückentwicklung: AC23 und RD05 unterscheiden
+
+Die folgenden Ergänzungen sind in
+`target/linux/realtek/rtl8197f/oem-board-init-evidence.json` mit Kernel-Hash,
+Funktionsbereichen/-Hashes und ausgewählten MIPS-Instruktionen festgehalten.
+Die 32-Einträge-L2P-Tabellen sind statische SDK-Portzuordnungen; sie enthalten
+keine individuellen MAC-Adressen oder Kalibrierwerte. Sie beweisen keine
+Beschriftung oder Belegung der kupfernen Gehäuseanschlüsse.
+
+### Reproduzierbarer statischer Auditor
+
+`scripts/rtl8197f-oem-switch-audit.py` verwendet zuerst den vollständigen
+Kallsyms-Validator. Danach erfasst er direkte JAL-Aufrufstellen und deren
+Ziele in ausgewählten Switch-Funktionen. Für bekannte Registerschreiber
+und RGMII-Delay-Aufrufe dekodiert er ausschließlich unmittelbar benachbarte
+konstante Argumente, einschließlich des MIPS-Delay-Slots. Vorzeichenbehaftetes
+`addiu`, vorzeichenloses `ori` und echte Null-Moves werden unterschieden.
+Unbekannte Loads oder über globale Zeiger geladene Argumente werden nicht
+als Konstanten geraten. Ein exakt erkannter `jr ra; return 0`-Stub wird
+zusätzlich gekennzeichnet.
+
+```sh
+python3 scripts/rtl8197f-oem-switch-audit.py /pfad/ac23-kernel.raw \
+  --output /tmp/ac23-switch-audit.json
+# Einzelne Textfunktion statt der Standardauswahl:
+python3 scripts/rtl8197f-oem-switch-audit.py /pfad/rd05-kernel.raw \
+  --symbol dal_rtl8367d_switch_init --output /tmp/rd05-dal-init.json
+```
+
+Die Ausgabe wird nicht überschrieben. Standardmäßig wurden auf den drei
+Originalkernels 5 MW5-, 7 AC23- und 11 RD05-Funktionen geprüft. Der Auditor
+ist kein Disassembler für beliebige MIPS-Varianten, kein vollständiger
+Kontrollflussanalysator und keine Firmware-Ausführung. **Eine vorhandene
+Aufrufstelle beweist weder ihre Erreichbarkeit noch einen erfolgreichen
+Registerzugriff.** Gerade der nachfolgende RD05-Pfad zeigt diese Grenze.
+
+### AC23: eigene Schwellen und abschließender RGMII-Wert
+
+`RTL83XX_init` bei `0x801e0610` fordert folgende externe Werte an:
+
+| Register | MW5 | AC23 |
+| --- | --- | --- |
+| 0x1b03 | 0x0936 | 0x0222 |
+| 0x121f / 0x1220 | 464 / 428 | 470 / 440 |
+| 0x1221 / 0x1222 | 414 / 378 | 460 / 430 |
+| 0x1223 / 0x1224 | 464 / 428 | 770 / 740 |
+| 0x1225 / 0x1226 | 414 / 378 | 720 / 680 |
+
+Damit ist ein pauschales Übertragen der acht MW5-Schwellen auf AC23
+widerlegt. AC23-SSC, PHY-Patch und Flow-Control werden in dieser Änderung
+nicht zusätzlich programmiert; eine live bestätigte Switch-ID/-Revision
+und die Einordnung in unseren DSA-Pfad fehlen weiterhin.
+
+Der AC23 setzt den logischen externen Port 16 zunächst bei `0x801e06ac`
+auf TX0/RX2. Nach dem SSC-Aufruf bei `0x801e0750` folgt bei `0x801e0760`
+ein weiterer Delay-Aufruf mit **TX0/RX5**. Der MW5 besitzt dieselbe
+zweistufige Delay-Anforderung, aber eine andere Board-Registersequenz.
+
+Der untersuchte C-Familien-HAL-Block liegt beim AC23 bei `0x806431c0`,
+beim MW5 bei `0x805811b0`. Die SDK-L2P-Funktion liest das Wort an
+`hal + 4 + logical_port * 4`: Port 16 wird auf physisch 6 abgebildet,
+Port 17 auf physisch 7. Das gilt für diese ausgewählte Familientabelle;
+es ersetzt keinen Laufzeitnachweis der konkreten AC23-Siliziumvariante.
+
+Die Delay-Hilfsfunktion wählt für logischen Port 16 Register `0x1307` und
+ändert nur dessen unteres Nibble: TX in Bit 3, RX in Bit 2..0. Der Linux-
+DSA-Treiber verwendet 300-ps-Schritte für RX. Der AC23-Device-Tree enthielt
+bislang den temporären Wert RX2 = 600 ps. Er fordert nun den abschließenden
+OEM-Wert **RX5 = 1500 ps** an; TX bleibt 0. Die Boardprofile und deren
+Validator halten diesen Sollwert fest. Das ist eine belegte Korrektur der
+angeforderten Verzögerung, keine nachgewiesene Durchsatzverbesserung oder
+vollständige Übernahme der vorausgehenden OEM-SSC-Konfiguration.
+
+### RD05: Typ 4, Port 7 und ein Init-Erfolg ohne ASIC-Initialisierung
+
+Die Zeigerkette ist nun bis zum tatsächlichen Ziel nachvollziehbar:
+
+```text
+switch_probe: ID 0x6642 → Chiptyp 4
+hal_find_device → Typ-4-HAL bei 0x808520e0
+dal_mgmt_attachDevice → dal_rtl8367d_mapper_get
+  → Mapper bei 0x80852c40
+rtk_switch_init → Mapper-Slot 0
+  → dal_rtl8367d_switch_init bei 0x80315670
+      jr ra
+      move v0, zero  (Delay-Slot)
+```
+
+Dieser konkrete Init-Einstieg ist nur acht Byte lang, hat keine Aufrufe
+und keine Registerzugriffe und liefert sofort Erfolg. Somit beweist ein
+erfolgreiches OEM-`rtk_switch_init()` auf diesem RD05 **keine vollständige
+ASIC-Kaltinitialisierung**. Ob Bootloader oder andere OEM-Pfade einen
+vorausgesetzten Zustand herstellen, ist noch nicht vollständig geklärt.
+Unser DSA-Treiber darf seine notwendigen Initialisierungen deshalb nicht
+durch diesen Stub ersetzen.
+
+Für Chiptyp 4 verzweigt `RTL83XX_init` bei `0x802f7a14` nach
+`0x802f7ce4` und überschreibt den Board-Port auf logisch **17**. Die
+Typ-4-L2P-Tabelle ordnet diesen physisch **7** zu. Das bestätigt unseren
+RD05-CPU-Port 7; der anfängliche globale Wert 16 darf nicht isoliert als
+CPU-Port 6 interpretiert werden. Auch hier werden TX0/RX2 vor SSC und
+TX0/RX5 danach angefordert. Die Portnummer wird aus dem überschriebenen
+globalen Wert geladen; der Auditor gibt sie deshalb nicht als lokale
+Konstante aus. Die betreffende Instruktionsfolge ist separat belegt.
+
+Besonders relevant ist der spätere Branch bei `0x802f7bcc`: Für Chiptyp 4
+kehrt die Boardfunktion nach Duplex-/Downspeed-Konfiguration zum Epilog
+`0x802f79b8` zurück. Die ebenfalls im Funktionskörper vorhandenen acht
+C-Familien-Flow-Control-Schreiber und der nachfolgende `rtk_phyPatch_set`
+werden auf diesem normalen Typ-4-Pfad **übersprungen**. Der statische
+Auditor findet diese acht Stellen trotzdem. Sie sind kein Beleg dafür,
+dass der RD05-D-Switch dieselben Schwellen erhalten muss wie AC23.
+
 ## Nachweise und weitere Hardwareprüfung
 
 - Decoder und Fehlerfälle werden mit synthetischen Kernel-Symboltabellen
@@ -228,7 +341,7 @@ gezielt adressierbar, aber noch nicht vollständig rekonstruiert.
   werden auf die Linux-6.6.114-Testquelle angewendet. Der resultierende
   `rtl8365mb.o` kompiliert mit MIPS32R2, Little Endian und dem durch Patch 329
   angepassten DSA-Header. Andere DSA-Module sind damit nicht neu geprüft.
-- Die gesamte Host-Regression umfasst jetzt 38 bestandene Tests. Die
+- Die gesamte Host-Regression umfasst jetzt 42 bestandene Tests. Die
   unveränderten WLAN-Varianten wurden in der vorigen Änderung bereits als
   MIPS-Objekte geprüft; sie wurden für diese Switch-Änderung nicht neu gebaut.
 
@@ -245,6 +358,15 @@ Dabei wird der bereits im Repository vorhandene OpenWrt-Backport 703
 `include/net/flow_offload.h` angewendet. Der Kernel-Testbaum bleibt unverändert.
 Boardprofile, klassischer MW5-Routingpfad und der auf den aktuellen
 coherent-DMA-/CLI-Stand angepasste MW5-Baseline-Prüfer bestehen ebenfalls.
+
+Die vier neuen Auditor-Tests prüfen echte MIPS-Instruktionskodierungen:
+beide Argumentreihenfolgen, Delay-Slots, drei RGMII-Argumente, Sign Extension,
+unbekannte Loads, exakte Erfolg-Stubs sowie ungültige oder abgeschnittene
+Funktionsbereiche. Der geänderte AC23-DTS wurde zu einem DTB kompiliert und
+zurückgelesen: CPU-Port 6 enthält TX=0 und RX=1500 ps. Die bereits bestehenden
+DTC-Warnungen zu doppelter Unit-Adresse und PCIe-Interrupt-Provider bleiben;
+sie wurden durch diese Timingänderung nicht behoben. Unveränderte C-Treiber
+wurden für diesen Analyse-/DTS-Schritt nicht erneut als MIPS-Objekte gebaut.
 
 Das ist kein vollständiger OpenWrt-Firmware-/MODPOST-Build und kein
 Hardwaretest. Nach einem solchen Build und Flashen: Gerät vollständig vom

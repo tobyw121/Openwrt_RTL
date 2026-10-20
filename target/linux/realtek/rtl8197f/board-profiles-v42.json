@@ -22,11 +22,16 @@
         "OEM Linux 4.4.176 boot log",
         "OEM /proc/rtl865x and rtl_8367 dumps",
         "RD05 full SPI dump",
-        "Realtek RTL8197F and RTL8367D SDK sources"
+        "Realtek RTL8197F and RTL8367D SDK sources",
+        "OEM switch init and logical-to-physical table in oem-board-init-evidence.json; final CPU-link delay TX0/RX5"
       ],
       "factory_format": "rd05-h601",
       "factory_offset": 262144,
-      "factory_size": 65536
+      "factory_size": 65536,
+      "switch_rgmii_delay_ps": {
+        "tx": 0,
+        "rx": 1500
+      }
     },
     "tenda,nova-mw5": {
       "confidence": "medium-high",
@@ -63,7 +68,8 @@
         "verified MW5 8 MiB SPI dump",
         "extracted RTL8197F/RFE5 and RTL8822B firmware tables",
         "Realtek RTL8197FS SDK sources",
-        "Recovered OEM kallsyms and external switch SMI write sequence; LOG_MW5 chip_id=0x6367 chip_ver=0x0060"
+        "Recovered OEM kallsyms and external switch SMI write sequence; LOG_MW5 chip_id=0x6367 chip_ver=0x0060",
+        "OEM switch init and logical-to-physical table in oem-board-init-evidence.json; final CPU-link delay TX0/RX5"
       ],
       "unresolved": [
         "Full cold-start equivalence between recovered OEM 6367/0060 init and Linux DSA/platform sequence requires hardware validation",
@@ -113,7 +119,11 @@
       "switch_chip_id": "0x6367",
       "switch_revision": "0x0060",
       "switch_sdk_family": "RTL8367C (OEM selector 0), as reported by the existing MW5 live log",
-      "switch_flowctrl_evidence": "OEM RTL83XX_init direct SMI writes at 0x801d8ca0..0x801d8cfc; patch 332 gated to 6367/0060 and MW5 OEM-init property"
+      "switch_flowctrl_evidence": "OEM RTL83XX_init direct SMI writes at 0x801d8ca0..0x801d8cfc; patch 332 gated to 6367/0060 and MW5 OEM-init property",
+      "switch_rgmii_delay_ps": {
+        "tx": 0,
+        "rx": 1500
+      }
     },
     "tenda,ac23": {
       "confidence": "medium-low",
@@ -133,7 +143,8 @@
         "board chip inventory",
         "RTL8197F + RTL8367RB SDK reference designs",
         "RTL8814B HAL/PHYDM sources",
-        "OEM libapmib RF field metadata and extracted gpio_conf; nice/Tenda-XZ rootfs at 0x26a012"
+        "OEM libapmib RF field metadata and extracted gpio_conf; nice/Tenda-XZ rootfs at 0x26a012",
+        "OEM switch init and logical-to-physical table in oem-board-init-evidence.json; final CPU-link delay TX0/RX5"
       ],
       "unresolved": [
         "RAM size requires UART confirmation",
@@ -144,7 +155,11 @@
       "flash_erase_size": 65536,
       "factory_format": "tenda-kv",
       "factory_offset": 131072,
-      "factory_size": 65536
+      "factory_size": 65536,
+      "switch_rgmii_delay_ps": {
+        "tx": 0,
+        "rx": 1500
+      }
     },
     "iball,wrd12gn": {
       "confidence": "medium-high",

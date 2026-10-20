@@ -92,8 +92,13 @@
 				label = "cpu";
 				ethernet = <&ethernet0>;
 				phy-mode = "rgmii";
+				/* OEM RTL83XX_init finishes logical EXT16/physical CPU6
+				 * at TX0/RX5 after staging RX2 and enabling SSC. The
+				 * RTL8367C delay field uses 300 ps RX steps: 5 = 1500 ps.
+				 * This is the final delay, not the temporary 600 ps stage.
+				 */
 				tx-internal-delay-ps = <0>;
-				rx-internal-delay-ps = <600>;
+				rx-internal-delay-ps = <1500>;
 
 				fixed-link {
 					speed = <1000>;

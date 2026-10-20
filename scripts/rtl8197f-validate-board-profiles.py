@@ -41,6 +41,11 @@ def main() -> int:
         if "firmware_size" in profile:
             want = f'<0x{profile["firmware_offset"]:06x} 0x{profile["firmware_size"]:06x}>'
             require(text, want, board, errors)
+        if "switch_rgmii_delay_ps" in profile:
+            delay = profile["switch_rgmii_delay_ps"]
+            for direction in ("tx", "rx"):
+                require(text, f'{direction}-internal-delay-ps = <{delay[direction]}>;',
+                        board + " switch RGMII delay", errors)
         if board == "iball,wrd12gn":
             # DTC requires all properties in a node before its first child node.
             # Keep ethernet0 status before the embedded MDIO bus; v44.65.2 had
