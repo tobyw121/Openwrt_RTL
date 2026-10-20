@@ -769,7 +769,7 @@ stop_all() {
 # One short UART command collects the usual diagnostics without restarting
 # either AP. Keep credentials/configuration files out of this report.
 wifi_diagnostics() {
-	local diag_if diag_band
+	local diag_if diag_band diag_dir diag_counter
 	echo '=== firmware ==='
 	cat /etc/openwrt_release 2>/dev/null || true
 	echo '=== UART ==='
@@ -781,6 +781,15 @@ wifi_diagnostics() {
 	for diag_if in wlan0 wlan1; do
 		echo "=== $diag_if stations ==="
 		iw dev "$diag_if" station dump 2>&1 || true
+		diag_dir="$(beacon_debug_dir_for_if "$diag_if" 2>/dev/null || true)"
+		if [ -n "$diag_dir" ]; then
+			echo "=== $diag_if DMA counters ==="
+			for diag_counter in txbd_dma_base txbd_hw_base txdesc_dma_base bcnbd_dma_base bcnbd_hw_base bcndesc_dma_base mgq_rwptr txdma_errors txdma_last_status txdma_qsel_diff mgntdok_irq_count; do
+				[ -r "$diag_dir/$diag_counter" ] || continue
+				printf '%s=' "$diag_counter"
+				cat "$diag_dir/$diag_counter" 2>/dev/null || true
+			done
+		fi
 	done
 	if command -v hostapd_cli >/dev/null 2>&1; then
 		for diag_band in 2g 5g; do

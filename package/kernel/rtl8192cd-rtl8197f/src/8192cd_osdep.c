@@ -14954,6 +14954,37 @@ void rtl8197f_wlan_dma_free(struct rtl8192cd_priv *priv, size_t size,
 	dma_free_coherent(dma_dev, size, cpu_addr, dma_handle);
 }
 
+/* Resolve an entry through its coherent allocation, not virt_to_bus().
+ * Bounds checks also reject a queue table that exceeds its chip's ring size.
+ */
+int rtl8197f_wlan_tx_ring_dma(struct rtl8192cd_priv *priv, const void *entry,
+			    size_t length, dma_addr_t *address)
+{
+	HAL_DATA_TYPE *hal = _GET_HAL_DATA(priv);
+	const unsigned char *bases[] = { hal->desc_txbd_dma_buf,
+		hal->desc_txdesc_dma_buf, hal->desc_bcn_dma_buf };
+	size_t sizes[] = { hal->desc_dma_txbd_buf_len,
+		hal->desc_dma_txdesc_buf_len, hal->desc_dma_bcn_buf_len };
+	dma_addr_t dma[] = { hal->desc_txbd_dma_addr,
+		hal->desc_txdesc_dma_addr, hal->desc_bcn_dma_addr };
+	const void *allocations[] = { hal->alloc_desc_txbd_addr,
+		hal->alloc_desc_txdesc_addr, hal->alloc_desc_bcn_addr };
+	unsigned int i;
+
+	if (!entry || !address || !length)
+		return 0;
+	for (i = 0; i < ARRAY_SIZE(bases); i++) {
+		unsigned long offset = (unsigned long)entry - (unsigned long)bases[i];
+
+		if (allocations[i] && bases[i] && offset < sizes[i] &&
+		    length <= sizes[i] - offset) {
+			*address = dma[i] + offset;
+			return 1;
+		}
+	}
+	return 0;
+}
+
 void rtl8197f_wlan_dma_sync(struct rtl8192cd_priv *priv, unsigned long start,
 			    unsigned int size, int direction)
 {
@@ -15435,9 +15466,11 @@ int InitWlanBuffer88XX_V1(struct rtl8192cd_priv *priv)
 		 * descriptor block in coherent DMA memory as well; the v44.25
 		 * coherent beacon payload alone cannot fix an invalid TXBD chain. */
 		mw5_linux6_coherent_tx =
-			((GET_CHIP_VER(priv) == VERSION_8197F) &&
+			((GET_CHIP_VER(priv) == VERSION_8197F ||
+			  GET_CHIP_VER(priv) == VERSION_8197G) &&
 			 ((((priv->pshare->type >> TYPE_SHIFT) & TYPE_MASK) == TYPE_EMBEDDED))) ||
-			((GET_CHIP_VER(priv) == VERSION_8822B) &&
+			((GET_CHIP_VER(priv) == VERSION_8822B ||
+			  GET_CHIP_VER(priv) == VERSION_8812F) &&
 			 ((((priv->pshare->type >> TYPE_SHIFT) & TYPE_MASK) == TYPE_PCI_DIRECT)));
 		_GET_HAL_DATA(priv)->alloc_desc_txbd_addr = NULL;
 		_GET_HAL_DATA(priv)->alloc_desc_txbd_buf_size = 0;
@@ -19003,7 +19036,11 @@ if (GET_HCI_TYPE(priv) == RTL_HCI_PCIE) {
 	if (GET_HCI_TYPE(priv) == RTL_HCI_PCIE) {
 #ifdef  CONFIG_WLAN_HAL
 		if (IS_HAL_CHIP(priv)) {
-#if defined(CONFIG_RTL_8198F) || defined(CONFIG_WLAN_HAL_8197F) || defined(CONFIG_WLAN_HAL_8814BE)  || defined(CONFIG_RTL_8197G)//98F platfrorm (2 chip: 98F wifi+8814B wifi) or 8814B wifi (1 chip)
+#if defined(CONFIG_RTL_8198F) || defined(CONFIG_WLAN_HAL_8197F) || \
+    defined(CONFIG_WLAN_HAL_8197G) || defined(CONFIG_WLAN_HAL_8812FE) || \
+    defined(CONFIG_WLAN_HAL_8814BE) || defined(CONFIG_RTL_8197G)
+        /* Select by WLAN HAL, not CPU family: RD05 runs 8197G + 8812F
+         * on an RTL8197F CPU and both require chip-specific ring geometry. */
         if (GET_CHIP_VER(priv) == VERSION_8198F || GET_CHIP_VER(priv) == VERSION_8814B || 
 			GET_CHIP_VER(priv) == VERSION_8197G || GET_CHIP_VER(priv) == VERSION_8197F || GET_CHIP_VER(priv) == VERSION_8812F) {
             

@@ -993,7 +993,8 @@ original:
         mw5_coherent_tx = 0;
         mw5_txbd_dma = 0;
         mw5_txdesc_dma = 0;
-        if ((IS_HARDWARE_TYPE_8822B(Adapter) || IS_HARDWARE_TYPE_8197F(Adapter)) &&
+        if ((IS_HARDWARE_TYPE_8822B(Adapter) || IS_HARDWARE_TYPE_8812F(Adapter) ||
+             IS_HARDWARE_TYPE_8197F(Adapter)) &&
             q_num != HCI_TX_DMA_QUEUE_BCN &&
             _GET_HAL_DATA(Adapter)->alloc_desc_txbd_addr &&
             _GET_HAL_DATA(Adapter)->alloc_desc_txdesc_addr) {
@@ -1005,7 +1006,8 @@ original:
             mw5_txbd_dma = (unsigned long)_GET_HAL_DATA(Adapter)->desc_txbd_dma_addr + txbd_off;
             mw5_txdesc_dma = (unsigned long)_GET_HAL_DATA(Adapter)->desc_txdesc_dma_addr + txdesc_off;
             mw5_coherent_tx = 1;
-        } else if ((IS_HARDWARE_TYPE_8822B(Adapter) || IS_HARDWARE_TYPE_8197F(Adapter)) &&
+        } else if ((IS_HARDWARE_TYPE_8822B(Adapter) || IS_HARDWARE_TYPE_8812F(Adapter) ||
+             IS_HARDWARE_TYPE_8197F(Adapter)) &&
                    q_num == HCI_TX_DMA_QUEUE_BCN &&
                    _GET_HAL_DATA(Adapter)->alloc_desc_bcn_addr) {
             unsigned long txbd_off = (unsigned long)((pu1Byte)ptxbd -
@@ -8271,6 +8273,10 @@ PrepareTXBD88XX_V1(
     PTX_DESC_88XX               ptx_desc;
 
     
+#if defined(CONFIG_RTL8192CD_LINUX6_BUS) && defined(CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE)
+    dma_addr_t coherent_bd = 0, coherent_desc = 0;
+    int coherent_tx = 0;
+#endif
     u4Byte                      q_num;
     pu4Byte                     pTXBD_NUM;
     u4Byte                      i;
@@ -8820,11 +8826,37 @@ original:
         ptxbd    = ptx_dma->tx_queue[q_num].pTXBD_head;
         ptx_desc = ptx_dma->tx_queue[q_num].ptx_desc_head;
 
+#if defined(CONFIG_RTL8192CD_LINUX6_BUS) && defined(CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE)
+        coherent_tx = !!_GET_HAL_DATA(Adapter)->alloc_desc_txbd_addr;
+        if (coherent_tx &&
+            (!rtl8197f_wlan_tx_ring_dma(Adapter, ptxbd,
+                q_num == DMA_QUEUE_BCN ? beacon_offset * HAL_NUM_VWLAN + sizeof(*ptxbd) :
+                sizeof(*ptxbd) * pTXBD_NUM[q_num], &coherent_bd) ||
+             !rtl8197f_wlan_tx_ring_dma(Adapter, ptx_desc,
+                sizeof(*ptx_desc) * (q_num == DMA_QUEUE_BCN ?
+                    1 + HAL_NUM_VWLAN : pTXBD_NUM[q_num]), &coherent_desc)))
+            return RT_STATUS_FAILURE;
+#endif
+
 		if(pTXBD_RWPtr_Reg[q_num])
         	HAL_RTL_W32(pTXBD_RWPtr_Reg[q_num], 0);
 #if (IS_RTL8198F_SERIES || IS_RTL8197G_SERIES)
         if (IS_HARDWARE_TYPE_8198F(Adapter) || IS_HARDWARE_TYPE_8197G(Adapter)) {
     		if(pTXBD_Reg[q_num]){        
+#if defined(CONFIG_RTL8192CD_LINUX6_BUS) && defined(CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE)
+                if (coherent_tx) {
+                    HAL_RTL_W32(pTXBD_Reg[q_num], coherent_bd);
+                    if (q_num == HCI_TX_DMA_QUEUE_MGT_V1) {
+                        Adapter->pshare->linux6_txbd_dma_base = coherent_bd;
+                        Adapter->pshare->linux6_txbd_hw_base = HAL_RTL_R32(pTXBD_Reg[q_num]);
+                        Adapter->pshare->linux6_txdesc_dma_base = coherent_desc;
+                    } else if (q_num == DMA_QUEUE_BCN) {
+                        Adapter->pshare->linux6_bcnbd_dma_base = coherent_bd;
+                        Adapter->pshare->linux6_bcnbd_hw_base = HAL_RTL_R32(pTXBD_Reg[q_num]);
+                        Adapter->pshare->linux6_bcndesc_dma_base = coherent_desc;
+                    }
+                } else
+#endif
                 HAL_RTL_W32(pTXBD_Reg[q_num], HAL_VIRT_TO_BUS((void *)(u4Byte)ptxbd));
 
             
@@ -8858,11 +8890,16 @@ original:
         if (q_num != DMA_QUEUE_BCN) {
             for(i = 0; i < pTXBD_NUM[q_num]; i++)        
             {   
+                dma_addr_t desc_address = HAL_VIRT_TO_BUS((void *)(u4Byte)&ptx_desc[i]);
+#if defined(CONFIG_RTL8192CD_LINUX6_BUS) && defined(CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE)
+                if (coherent_tx)
+                    desc_address = coherent_desc + sizeof(*ptx_desc) * i;
+#endif
                 SET_DESC_FIELD_CLR(ptxbd[i].TXBD_ELE[0].Dword0, \
                         TXDESCSize, \
                         TXBD_DW0_TXBUFSIZE_MSK, TXBD_DW0_TXBUFSIZE_SH);
                 SET_DESC_FIELD_CLR(ptxbd[i].TXBD_ELE[0].Dword1, \
-                        HAL_VIRT_TO_BUS((void *)(u4Byte)&ptx_desc[i]), \
+                        desc_address, \
                         TXBD_DW1_PHYADDR_LOW_MSK, TXBD_DW1_PHYADDR_LOW_SH);
 
                 platform_zero_memory(&(ptxbd[i].TXBD_ELE[1]), sizeof(TXBD_ELEMENT)*(TXBD_ELE_NUM-1));
@@ -8970,6 +9007,11 @@ original:
             //for (i = 0; i < 1+4; i++)
             for (i = 0; i < 1+HAL_NUM_VWLAN; i++)
             {
+                dma_addr_t desc_address = HAL_VIRT_TO_BUS((void *)(u4Byte)&ptx_desc[i]);
+#if defined(CONFIG_RTL8192CD_LINUX6_BUS) && defined(CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE)
+                if (coherent_tx)
+                    desc_address = coherent_desc + sizeof(*ptx_desc) * i;
+#endif
                 ptxbd_bcn_cur = (PTX_BUFFER_DESCRIPTOR)((pu1Byte)ptxbd + beacon_offset * i);
 
                 // clear own_bit for initial random value                
@@ -8979,7 +9021,7 @@ original:
                         bcn_TXDESCSize, \
                         TXBD_DW0_TXBUFSIZE_MSK, TXBD_DW0_TXBUFSIZE_SH);
                 SET_DESC_FIELD_CLR(ptxbd_bcn_cur->TXBD_ELE[0].Dword1, \
-                        HAL_VIRT_TO_BUS((void *)(u4Byte)&ptx_desc[i]), \
+                        desc_address, \
                         TXBD_DW1_PHYADDR_LOW_MSK, TXBD_DW1_PHYADDR_LOW_SH);
                 // clear for initial random value
                 platform_zero_memory(&(ptxbd_bcn_cur->TXBD_ELE[1]), sizeof(TXBD_ELEMENT)*(TXBD_ELE_NUM-1));

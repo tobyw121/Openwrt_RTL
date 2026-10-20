@@ -66,6 +66,8 @@
 #if defined(CONFIG_MW5_FORCE_WLAN_DEVICE_TABLE)
 void *rtl8197f_wlan_dma_alloc(struct rtl8192cd_priv *priv, size_t size, dma_addr_t *dma_handle);
 void rtl8197f_wlan_dma_free(struct rtl8192cd_priv *priv, size_t size, void *cpu_addr, dma_addr_t dma_handle);
+int rtl8197f_wlan_tx_ring_dma(struct rtl8192cd_priv *priv, const void *entry,
+                            size_t length, dma_addr_t *address);
 void rtl8197f_wlan_dma_sync(struct rtl8192cd_priv *priv, unsigned long start, unsigned int size, int direction);
 void rtl8197f_wlan_dma_sync_rx_for_device(struct rtl8192cd_priv *priv, unsigned long dma_addr, unsigned int size);
 void rtl8197f_wlan_dma_sync_rx_for_cpu(struct rtl8192cd_priv *priv, unsigned long dma_addr, unsigned int size);

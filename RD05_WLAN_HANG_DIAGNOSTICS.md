@@ -1,5 +1,64 @@
 # RD05: Hänger während der WLAN-Initialisierung
 
+## Gerätelog r0-5f845f4c12: UART aktiv, WLAN-TX gestört
+
+UART meldet jetzt `irq=9`, `receive_mode=interrupt` und einen RX-Trigger von
+1 Byte. Die übermittelten Diagnosebefehle kommen vollständig an; dieser Log
+enthält keine UART-Overrun-Meldung. Das bestätigt diesen Befehlsblock, keinen
+beliebig großen Paste-Test.
+
+2,4 GHz erreicht `AP-ENABLED` und empfängt Open-System-Authentifizierungsanfragen,
+aber die Stationstabellen bleiben leer. Die früher beobachtete Puffererschöpfung
+ist in diesem kürzeren Log noch nicht sichtbar. 5 GHz bleibt in `HT_SCAN` und
+meldet TX-DMA-Status `0x4400` und `0x6400`. Laut den RTL8812F-SDK-Definitionen:
+
+| Bit | Bedeutung |
+| --- | --- |
+| 10 | `EP_QSEL_DIFF`: DMA-Kanal/Queue-Auswahl stimmen nicht überein |
+| 14 | `PAYLOAD_UDN`: Payload-Unterlauf |
+| 13, zusätzlich bei 0x6400 | `PAYLOAD_OVF`: Payload-Überlauf |
+
+Damit ist der 5-GHz-AP-Start nicht abgeschlossen. Ein Passwortfehler oder
+DHCP-Problem erklärt diese DMA-/Scan-Fehler nicht. Ein automatischer Neustart
+von hostapd ist in diesem Log nicht belegt.
+
+Ein konkreter Auswahlfehler wurde im Probe-Pfad gefunden: Die Präprozessor-
+Bedingung vor `InitWlanBuffer88XX_V1()` berücksichtigte die CPU-Option
+`CONFIG_RTL_8197G`, aber nicht die WLAN-HAL-Optionen `CONFIG_WLAN_HAL_8197G`
+und `CONFIG_WLAN_HAL_8812FE`. Der RD05 hat eine RTL8197F-CPU und fiel dadurch
+für beide Radios auf den alten generischen Buffer-Allocator zurück, obwohl
+die anschließenden HAL-Funktionen chipspezifische Ring-Geometrien verwenden.
+Die Auswahl berücksichtigt jetzt beide WLAN-HAL-Optionen. MW5/WRD12GN behalten
+ihre bisherigen Zuordnungen, der AC23 verwendet bereits den V1-Pfad.
+
+Die Linux6-Portierung benutzte kohärente TXBD/TXDESC-/Beacon-Descriptor-Speicher
+bisher nur auf RTL8822B/8197F. RTL8812F/8197G erhalten jetzt ebenfalls diese
+DMA-Allokationen. Für RTL8812F bleibt der vorhandene Queue-Code zuständig;
+RTL8197G verwendet seinen eigenen Queue-Code und leitet DMA-Adressen aus den
+jeweiligen Allokations-Handles plus geprüftem Offset ab. Der Beacon-Descriptor-
+Count wird separat von der in Strides angegebenen Beacon-Tabelle behandelt.
+Queue-Selektoren, Kanalbreiten und RF-Tabellen werden dadurch nicht umgestellt.
+Diese Korrektur ersetzt den alten kmalloc-/Alias-Pfad, beweist aber noch nicht,
+dass sämtliche beobachteten TX-Fehler behoben sind.
+
+Zusätzlich behandelt cfg80211 Scan-SSIDs jetzt als längengeprüfte Bytefelder:
+kein `strlen()` auf einer möglicherweise 32 Byte langen, nicht terminierten
+SSID, keine P2P-Präfixprüfung ohne vorhandene SSID und keine alte gerichtete
+SSID bei einem passiven Scan. Das gilt auch für Anfragen ohne Kanalliste.
+
+`mw5-wifi diag` ergänzt vorhandene DMA-Basisadressen und Fehlerzähler beider
+Radios. Nach dem Flashen erneut auf beiden Bändern verbinden und den Bericht
+aufnehmen. Erwartet sind `AP-ENABLED` auch auf 5 GHz, ein erfolgreicher WPA-
+Handshake und Einträge in den Stationstabellen. Das erfordert Hardwaretests.
+
+Validierung: Die vier Treibervarianten kompilieren und linken gegen Linux
+6.6.114/Backports 6.12.96. Native C-Tests prüfen kohärente DMA-Offsets bei
+abweichenden CPU-/Busadressen, gültige DMA-Adresse 0, Speichergrenzen sowie
+passive, binäre, maximale und ungültige Scan-SSIDs. Der echte Probe-Auswahlblock
+wird zusätzlich mit den HAL-Konfigurationen aller vier Boards und einem
+fehlgeschlagenen Allocator ausgeführt. Kein vollständiger
+Firmware-Build und kein eigener Hardwaretest.
+
 ## Vollständigen Laufzeitbericht über UART erfassen
 
 Nach einem fehlgeschlagenen Verbindungsversuch genügt ein kurzer Befehl:

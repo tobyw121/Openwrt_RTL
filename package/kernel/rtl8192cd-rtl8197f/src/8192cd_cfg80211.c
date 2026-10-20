@@ -4228,6 +4228,26 @@ static int realtek_cfg80211_scan_abort(struct rtl8192cd_priv *priv)
 	return 0;
 }
 
+/* cfg80211 SSIDs are byte arrays, not NUL-terminated strings. Passive
+ * scans may have no SSID array at all; do not retain a previous directed SSID.
+ */
+static int realtek_cfg80211_scan_ssid(struct rtl8192cd_priv *priv,
+                                    const struct cfg80211_scan_request *request)
+{
+	const struct cfg80211_ssid *ssid = request->n_ssids ? request->ssids : NULL;
+
+	if (request->n_ssids && (!ssid || ssid->ssid_len > sizeof(ssid->ssid) ||
+				ssid->ssid_len > sizeof(priv->ss_ssid)))
+		return -EINVAL;
+	priv->ss_ssidlen = 0;
+	memset(priv->ss_ssid, 0, sizeof(priv->ss_ssid));
+	if (ssid) {
+		priv->ss_ssidlen = ssid->ssid_len;
+		memcpy(priv->ss_ssid, ssid->ssid, ssid->ssid_len);
+	}
+	return 0;
+}
+
 static int realtek_cfg80211_scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
 {
 	struct rtknl *rtk;
@@ -4241,7 +4261,7 @@ static int realtek_cfg80211_scan(struct wiphy *wiphy, struct cfg80211_scan_reque
 	priv = get_priv_from_wdev(rtk, request->wdev);
 	if (!priv || !priv->dev || !priv->pmib || !priv->pshare)
 		return -ENODEV;
-	ssids = request->ssids;
+	ssids = request->n_ssids ? request->ssids : NULL;
 
 	NLENTER;
 	NLMSG("request->flags = 0x%x \n", request->flags);
@@ -4253,6 +4273,10 @@ static int realtek_cfg80211_scan(struct wiphy *wiphy, struct cfg80211_scan_reque
 	if (ret) {
 		return ret;
 	}
+
+	ret = realtek_cfg80211_scan_ssid(priv, request);
+	if (ret)
+		return ret;
 
 	if (request->n_channels == 0) {
 		NDEBUG2("start_scan\n");
@@ -4288,13 +4312,11 @@ static int realtek_cfg80211_scan(struct wiphy *wiphy, struct cfg80211_scan_reque
 
 	//rtk_abort_scan(priv);
 
-	priv->ss_ssidlen = 0;
-	memset(priv->ss_ssid, 0, sizeof(priv->ss_ssid));
-
 #if defined(P2P_SUPPORT)
-	if (ssids->ssid != NULL && !memcmp(ssids->ssid, "DIRECT-", 7)
+	if (ssids && ssids->ssid_len >= 7 && !memcmp(ssids->ssid, "DIRECT-", 7)
 	    && rtk_get_p2p_ie((u8 *) request->ie, request->ie_len, NULL, NULL)) {
-		NDEBUG("Ssid=[%s],len[%d]...\n", ssids->ssid, ssids->ssid_len);
+		NDEBUG("Ssid=[%.*s],len[%d]...\n", (int)ssids->ssid_len,
+		       ssids->ssid, ssids->ssid_len);
 
 		priv->ss_ssidlen = (ssids->ssid_len > 32) ? 32 : ssids->ssid_len;
 		memcpy(priv->ss_ssid, ssids->ssid, priv->ss_ssidlen);
@@ -4310,15 +4332,9 @@ static int realtek_cfg80211_scan(struct wiphy *wiphy, struct cfg80211_scan_reque
 		rtk_p2p_set_role(priv, P2P_DEVICE);
 		rtk_p2p_set_state(priv, P2P_S_SEARCH);
 		//GET_ROOT(priv)->site_survey_times = SS_COUNT-2;   // pre-channel just scan twice
-	} else
-#endif
-	if (request!=NULL && ssids !=NULL ) {
-		if(strlen(ssids->ssid) && ssids->ssid_len){
-			NDEBUG2("Ssid=[%s],len[%d]...\n", ssids->ssid, ssids->ssid_len);
-			priv->ss_ssidlen = (ssids->ssid_len > 32) ? 32 : ssids->ssid_len;
-			memcpy(priv->ss_ssid, ssids->ssid, priv->ss_ssidlen);
-		}
 	}
+#endif
+
 #if defined(P2P_SUPPORT)
 	/*set WPS P2P IE to probe_req */
 	if (request->ie && request->ie_len > 0) {
