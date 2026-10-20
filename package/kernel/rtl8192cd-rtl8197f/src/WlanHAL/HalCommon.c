@@ -39,6 +39,11 @@ HAL_ReadTypeID(
     value8 = platform_efio_read_1byte(Adapter, REG_SYS_CFG2);
     HCI    = platform_efio_read_1byte(Adapter, REG_SYS_STATUS1);
 
+#ifdef CONFIG_RTL8192CD_LINUX6_BUS
+    printk(KERN_EMERG "rtl8197f-wlan: HAL MAC identity id=%#x hci=%#x version=%#x\n",
+           value8, HCI, GET_CHIP_VER(Adapter));
+#endif
+
     RT_TRACE(COMP_INIT, DBG_LOUD, ("REG_SYS_CFG2(0xFC): 0x%x \n, REG_SYS_STATUS1(0xF4): 0x%x\n", value8, HCI));
     
     switch(value8)

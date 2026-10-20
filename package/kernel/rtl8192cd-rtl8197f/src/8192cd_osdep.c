@@ -337,7 +337,7 @@ extern struct brsc_cache_t brsc_cache_arr[MAX_BRSC_NUM];
  * 0xb8640000 and exposes it as wlan1 on interrupt line 6.  The long-term
  * port consumes these from DT; keep the proven values as a compatibility
  * fallback for the legacy static device table. */
-#if defined(CONFIG_WLAN_HAL_8197F)
+#if defined(CONFIG_WLAN_HAL_8197F) || defined(CONFIG_WLAN_HAL_8197G)
 #define BSP_WLAN_BASE_ADDR      0xB8640000
 #define BSP_WLAN_CONF_ADDR      NULL
 #define BSP_WLAN_MAC_IRQ        6
@@ -10302,7 +10302,8 @@ priv->pshare->curr_band =0; //init curr_band value
 				panic_printk("MAC IO enabled already! Reset HW!\n");
 				/* v44.65.16: never indirect-call a missing vendor HAL hook. */
 				if (GET_HAL_INTERFACE(priv)->ResetHWForSurpriseHandler)
-					GET_HAL_INTERFACE(priv)->ResetHWForSurpriseHandler(priv);
+					if (GET_HAL_INTERFACE(priv)->ResetHWForSurpriseHandler)
+						GET_HAL_INTERFACE(priv)->ResetHWForSurpriseHandler(priv);
 				else
 					panic_printk("ResetHWForSurpriseHandler missing; continue with StopHW\n");
 
@@ -14391,14 +14392,15 @@ Wlan_HAL_Link(
 {
     BOOLEAN         status = TRUE;
     BOOLEAN         bVal;
-	unsigned int    errorFlag;
+	unsigned int    errorFlag = 0;
 
 	if (RT_STATUS_SUCCESS == HalAssociateNic(priv, TRUE)) {
         DEBUG_INFO("HalAssociateNic OK \n");
 
 	} else {
 	    panic_printk("HalAssociateNic Failed \n");
-        status = FALSE;
+        /* No callback table is usable after a failed association. */
+        return FALSE;
 	}
 
 #ifdef CONFIG_WLAN_MACHAL_API
@@ -14412,7 +14414,7 @@ Wlan_HAL_Link(
        {
             printk("halmac_init_adapter Failed \n");
             errorFlag |= DRV_ER_INIT_PON;
-            status = FALSE;
+            return FALSE;
        }else    {
             printk("halmac_init_adapter Succss \n");
        }
@@ -14425,7 +14427,8 @@ Wlan_HAL_Link(
 	if ( bVal || (RTL_R8(SYS_FUNC_EN+1) & BIT2)) {
         // If the watchdog reboot the system without stop the DMA HW, it may got DMA hang
         // Do reset to recovery this case
-        GET_HAL_INTERFACE(priv)->ResetHWForSurpriseHandler(priv);
+        if (GET_HAL_INTERFACE(priv)->ResetHWForSurpriseHandler)
+            GET_HAL_INTERFACE(priv)->ResetHWForSurpriseHandler(priv);
         
 		if (RT_STATUS_SUCCESS == GET_HAL_INTERFACE(priv)->StopHWHandler(priv)) {
 			DEBUG_INFO("StopHW Succeed\n");
@@ -18028,7 +18031,10 @@ if (GET_HCI_TYPE(priv) == RTL_HCI_PCIE) {
 #ifdef  CONFIG_WLAN_HAL
             if (vap_idx < 0)
                 rtl8197f_wlan_phase_set(704, "probe-soc-hal-link-entry", 0);
-            Wlan_HAL_Link(priv);
+            if (Wlan_HAL_Link(priv) != SUCCESS) {
+                rc = -ENODEV;
+                goto err_out_free2;
+            }
             if (vap_idx < 0)
                 rtl8197f_wlan_phase_set(705, "probe-soc-hal-link-ready", 0);
 #endif  //CONFIG_WLAN_HAL
@@ -19607,8 +19613,9 @@ err_out_free2:
 #ifdef CONFIG_WLAN_HAL
 	if (IS_HAL_CHIP(priv)) {
 #ifdef CONFIG_WLAN_MACHAL_API
-		if (IS_HARDWARE_MACHAL_SUPPORT(priv)) {
-			halmac_deinit_adapter(priv->pHalmac_adapter);
+		if (priv->HalData && IS_HARDWARE_MACHAL_SUPPORT(priv)) {
+			if (priv->pHalmac_adapter)
+				halmac_deinit_adapter(priv->pHalmac_adapter);
 			disassociate_halMac_API(priv);
 		}
 #endif
@@ -19631,6 +19638,16 @@ err_out_free2:
 	wdev->priv = NULL;
 
 err_out_free:
+
+#ifdef CONFIG_RTL8192CD_LINUX6_BUS
+	/* The embedded pshare NAPI node must leave dev->napi_list before
+	 * pshare is freed; free_netdev() also walks that list on probe failure.
+	 */
+	if (pshare && pshare->linux6_napi_added) {
+		netif_napi_del(&pshare->linux6_rx_napi);
+		pshare->linux6_napi_added = false;
+	}
+#endif
 
 	if (pmib){
 #ifdef RTL8192CD_VARIABLE_USED_DMEM

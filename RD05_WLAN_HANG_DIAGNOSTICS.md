@@ -1,5 +1,41 @@
 # RD05: Hänger während der WLAN-Initialisierung
 
+## Eingrenzung mit Firmware r0-66e44628ff
+
+Der vollständige Gerätelog bestätigt: PCIe-Radio 0 erreicht Phase 190;
+SoC-Radio 1 erreicht Phase 704, aber nicht 705. Der Hänger liegt damit in
+`Wlan_HAL_Link()` des integrierten WLANs. NAPI und cfg80211 des PCIe-Radios
+kehren vorher zurück. Das ist kein Nachweis für Funkbetrieb auf einem Band.
+
+Der Abgleich mit den archivierten OEM-Kerneln zeigt eine falsche HAL-Auswahl:
+
+| Board | Eigener OEM-Kernel | Korrigierte Paketwahl |
+| --- | --- | --- |
+| RD05 | `hal_Associate_8197G` bei `0x804f7630`, `InitPON8197G` bei `0x804f74a0` | `CONFIG_WLAN_HAL_8197G=y` |
+| AC23 | `hal_Associate_8197G` bei `0x80394488`, `InitPON8197G` bei `0x803948a4` | `CONFIG_WLAN_HAL_8197G=y` |
+| MW5 | `hal_Associate_8197F` bei `0x80362248`, `InitPON8197F` bei `0x80362628` | `CONFIG_WLAN_HAL_8197F=y` |
+
+Die überprüften Symboltabellen liegen unter `reverse-engineering/oem-kernels`.
+Beim RD05 setzt der OEM-Initialisierungspfad bei `0x803903d8` die interne
+WLAN-Version auf `0x100f` (8197G), setzt bei `0x803903ec` die Gate-Bits `0x1f`
+und ruft bei `0x803903f4` `Wlan_HAL_Link()` auf. Der AC23-Gerätetisch verwendet
+wie MW5 weiterhin den integrierten MMIO-Bereich `0xb8640000`.
+Die WLAN-HAL-Revision ist von der Bezeichnung des SoC-/CPU-Profils zu
+unterscheiden; die CPU-Plattform wird hier nicht auf RTL8197G umgestellt.
+
+Zusätzlich bricht `Wlan_HAL_Link()` jetzt bei fehlgeschlagener HAL-/HALMAC-
+Anbindung sofort ab. Bisher konnte es anschließend nicht initialisierte
+Callbacks aufrufen. Der integrierte Aufrufer wertet den Fehler nun aus;
+der Fehlerpfad berücksichtigt teilweise angelegte HALMAC-Ressourcen.
+Der optionale Surprise-Reset-Callback wird vor dem Aufruf geprüft: Die
+8197G-Tabelle belegt ihn nicht, der reguläre StopHW-Pfad bleibt aktiv.
+Der Factory-Import berücksichtigt nun auch `VERSION_8197G` als 2,4-GHz-Radio.
+
+Diese Änderungen korrigieren belegte Zuordnungs- und Fehlerbehandlungsprobleme.
+Eine Bestätigung, dass der RD05 damit startet und beide APs senden, steht aus.
+
+## Frühere Diagnose und zusätzliche Phasen
+
 Der Hardwarebericht mit Firmware `r0-65e596cca5` endet beim zweiten
 `rtl8192cd_init_one()` nach Phase 106. Der erste Aufruf erreicht Phase 190.
 Das belegt keinen erfolgreichen Funkbetrieb des ersten Radios. Die bisherigen

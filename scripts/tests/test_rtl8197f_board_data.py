@@ -109,7 +109,7 @@ class RadioBandTests(unittest.TestCase):
 #include <stdbool.h>
 typedef bool BOOLEAN;
 enum { VERSION_8812E, VERSION_8814A, VERSION_8822B, VERSION_8812F,
-       VERSION_8814B, VERSION_8192D, VERSION_8881A, VERSION_8197F };
+       VERSION_8814B, VERSION_8192D, VERSION_8881A, VERSION_8197F, VERSION_8197G };
 struct rtl8192cd_priv { int version; };
 #define GET_CHIP_VER(p) ((p)->version)
 '''
@@ -124,10 +124,13 @@ int main(void) {
         assert(!band2 && band5);
         assert(is_support_ac(&p));
     }
-    p.version=VERSION_8197F;
-    rtk_get_band_capa(&p,&band2,&band5);
-    assert(band2 && !band5);
-    assert(!is_support_ac(&p));
+    int soc_chips[]={VERSION_8197F,VERSION_8197G};
+    for(unsigned i=0;i<sizeof(soc_chips)/sizeof(soc_chips[0]);i++) {
+        p.version=soc_chips[i];
+        rtk_get_band_capa(&p,&band2,&band5);
+        assert(band2 && !band5);
+        assert(!is_support_ac(&p));
+    }
     return 0;
 }
 '''

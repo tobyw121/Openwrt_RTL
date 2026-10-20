@@ -16,6 +16,7 @@ void rtl8192cd_linux6_apply_factory(struct rtl8192cd_priv *priv)
 		return;
 	switch (GET_CHIP_VER(priv)) {
 	case VERSION_8197F:
+	case VERSION_8197G:
 		band5 = false;
 		break;
 	case VERSION_8814B:

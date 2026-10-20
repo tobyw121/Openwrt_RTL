@@ -61,6 +61,7 @@ static void rtl8197f_soc_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id rtl8197f_soc_of_match[] = {
+	{ .compatible = "realtek,rtl8197g-wlan" },
 	{ .compatible = "realtek,rtl8197fs-wlan" },
 	{ .compatible = "realtek,rtl8197fh-wlan" },
 	{ .compatible = "realtek,rtl8197f-wmac" },

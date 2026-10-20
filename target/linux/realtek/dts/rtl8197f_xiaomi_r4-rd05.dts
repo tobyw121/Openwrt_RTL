@@ -301,7 +301,8 @@
 
 
 &wlan {
-	compatible = "realtek,rtl8197fh-wlan", "realtek,rtl8197f-wmac";
+	/* OEM integrated MAC uses the 8197G HAL despite the FH-VG SoC name. */
+	compatible = "realtek,rtl8197g-wlan", "realtek,rtl8197f-wmac";
 	interrupt-parent = <&intc>;
 	interrupts = <29 5>;
 	realtek,radio-index = <1>;

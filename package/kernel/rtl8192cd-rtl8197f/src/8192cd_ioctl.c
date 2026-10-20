@@ -19034,7 +19034,7 @@ case DO_KFREE:
 		ret = 0;
 		break;
 #endif /* _IOCTL_DEBUG_CMD_ */
-#ifdef CONFIG_WLAN_HAL_8197G
+#if defined(CONFIG_WLAN_HAL_8197G) && defined(_IOCTL_DEBUG_CMD_)
 	case SIOCGIWRTLDBFROTATION:
 		if(ioctl_copy_from_user(tmpbuf, (void *)wrq->u.data.pointer, wrq->u.data.length))
 			break;

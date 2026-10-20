@@ -114,6 +114,9 @@ def main():
             if any(word in symbols for word in forbidden):
                 print(f"{variant}: FAIL: unresolved WEXT dependency", flush=True)
                 failed = True
+            if "set_dbf_rotation" in symbols:
+                print(f"{variant}: FAIL: unresolved disabled debug-ioctl helper", flush=True)
+                failed = True
     return int(failed)
 
 

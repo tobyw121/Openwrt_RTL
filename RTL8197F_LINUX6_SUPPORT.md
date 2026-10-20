@@ -6,6 +6,12 @@ Switch-Kaltstart und Dauerlast müssen auf den jeweiligen Geräten geprüft werd
 
 ## Hardware und SDK-Zuordnung
 
+Korrektur anhand der eigenen OEM-Kernel: RD05 und AC23 verwenden für das
+integrierte 2,4-GHz-MAC den **8197G-HAL**, MW5 den **8197F-HAL**. Die bisherige
+gemeinsame Auswahl des 8197F-HAL war falsch. SoC-/CPU-Profil und PCIe-Chipauswahl
+bleiben getrennt davon. Belege und der RD05-Hänger bei Phase 704 stehen in
+[RD05_WLAN_HANG_DIAGNOSTICS.md](RD05_WLAN_HANG_DIAGNOSTICS.md).
+
 Referenz: Branch `RT8197F`, Commit
 `e6d68e9067f54b695022f61ed52e50dc56c5a7b7`, insbesondere
 `8197/backports/src/drivers/net/wireless/realtek/rtl8192fe/8192cd_osdep.c`
