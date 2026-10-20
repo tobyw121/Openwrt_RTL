@@ -5044,6 +5044,7 @@ static int rtl8192cd_init_sw(struct rtl8192cd_priv *priv)
 
 #ifdef RTK_NL80211
 		INIT_LIST_HEAD(&priv->pshare->cfg80211_queue);
+		priv->pshare->cfg80211_queue_len = 0;
 #endif
 
 #ifdef RF_MIMO_SWITCH
@@ -16745,6 +16746,7 @@ void *rtl8192cd_init_one(struct sdio_func *psdio_func, void *ent, struct _device
 			priv->pshare->linux6_root_priv = priv;
 			skb_queue_head_init(&priv->pshare->linux6_rx_delivery);
 			INIT_LIST_HEAD(&priv->pshare->cfg80211_queue);
+			priv->pshare->cfg80211_queue_len = 0;
 			INIT_WORK(&priv->pshare->cfg80211_work, realtek_process_cfg80211_work);
 			rtl8197f_wlan_phase_set(716, "probe-napi-add-entry", 0);
 			netif_napi_add_weight(dev, &priv->pshare->linux6_rx_napi,

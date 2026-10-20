@@ -106,6 +106,10 @@ int rtl8192cd_linux6_attach(struct rtl8192cd_linux6_hw *hw)
 		hw->debugfs_dir = debugfs_create_dir(dev_name(hw->dev),
 					       rtl8192cd_debugfs_root);
 		if (!IS_ERR_OR_NULL(hw->debugfs_dir)) {
+			debugfs_create_u32("cfg80211_queue_depth", 0444, hw->debugfs_dir,
+					   &hw->priv->pshare->cfg80211_queue_len);
+			debugfs_create_u64("cfg80211_queue_full_drops", 0444, hw->debugfs_dir,
+					   &hw->priv->pshare->cfg80211_queue_full_drops);
 			debugfs_create_u8("radio_index", 0444, hw->debugfs_dir,
 					  &hw->board.radio_index);
 			debugfs_create_u8("rfe_type", 0444, hw->debugfs_dir,

@@ -8390,14 +8390,20 @@ static void realtek_drain_cfg80211_events(struct rtl8192cd_priv *priv)
 {
 	struct list_head *head = &priv->pshare->cfg80211_queue;
 	unsigned long flags;
-	struct CFG80211_RX_MGMT_IND *entry, *next;
+	struct CFG80211_RX_MGMT_IND *entry;
 
 	if (!IS_DRV_OPEN(priv))
 		return;
 
-	list_for_each_entry_safe(entry, next, head, list) {
+	for (;;) {
 		spin_lock_irqsave(&priv->pshare->cfg80211_queue_lock, flags);
+		if (list_empty(head)) {
+			spin_unlock_irqrestore(&priv->pshare->cfg80211_queue_lock, flags);
+			break;
+		}
+		entry = list_first_entry(head, struct CFG80211_RX_MGMT_IND, list);
 		list_del_init(&entry->list);
+		priv->pshare->cfg80211_queue_len--;
 		spin_unlock_irqrestore(&priv->pshare->cfg80211_queue_lock, flags);
 
 		cfg80211_rx_mgmt(entry->wdev, entry->freq, 0, entry->buf, entry->len, entry->flags);
@@ -8424,11 +8430,25 @@ void realtek_process_cfg80211_work(struct work_struct *work)
 void realtek_enqueue_cfg80211_event(struct rtl8192cd_priv *priv, struct rx_frinfo *pfrinfo, u32 answered)
 {
 	unsigned long flags;
-	unsigned int channel = priv->pmib->dot11RFEntry.dot11channel;
-	unsigned char *pframe = get_pframe(pfrinfo);
+	unsigned int channel;
+	unsigned char *pframe;
 	struct CFG80211_RX_MGMT_IND *ind = NULL;
 
-	ind = kmalloc(sizeof(*ind), GFP_ATOMIC);
+	if (!priv || !priv->pshare || !priv->pmib || !pfrinfo ||
+	    !pfrinfo->pskb || !pfrinfo->pskb->data)
+		return;
+	if (pfrinfo->pktlen < IEEE80211_HDRLEN ||
+	    pfrinfo->pktlen > IEEE80211_MAX_FRAME_LEN)
+		return;
+	pframe = get_pframe(pfrinfo);
+	/* Vendor RX skbs need not yet have skb->len set. Bound the copy by
+	 * their linear allocation, not by that later networking-stack length.
+	 */
+	if (pframe > skb_end_pointer(pfrinfo->pskb) ||
+	    pfrinfo->pktlen > skb_end_pointer(pfrinfo->pskb) - pframe)
+		return;
+	channel = priv->pmib->dot11RFEntry.dot11channel;
+	ind = kmalloc(struct_size(ind, buf, pfrinfo->pktlen), GFP_ATOMIC);
 	if (!ind)
 		return;
 	memset(ind, 0, sizeof(*ind));
@@ -8444,7 +8464,14 @@ void realtek_enqueue_cfg80211_event(struct rtl8192cd_priv *priv, struct rx_frinf
 	ind->flags = answered;
 
 	spin_lock_irqsave(&priv->pshare->cfg80211_queue_lock, flags);
+	if (priv->pshare->cfg80211_queue_len >= RTK_CFG80211_EVENT_QUEUE_MAX) {
+		priv->pshare->cfg80211_queue_full_drops++;
+		spin_unlock_irqrestore(&priv->pshare->cfg80211_queue_lock, flags);
+		kfree(ind);
+		return;
+	}
 	list_add_tail(&ind->list, &priv->pshare->cfg80211_queue);
+	priv->pshare->cfg80211_queue_len++;
 	spin_unlock_irqrestore(&priv->pshare->cfg80211_queue_lock, flags);
 
 #ifdef CONFIG_RTL8192CD_LINUX6_BUS
@@ -8466,6 +8493,7 @@ void realtek_clear_cfg80211_event(struct rtl8192cd_priv *priv)
 		list_del_init(&entry->list);
 		kfree(entry);
 	}
+	priv->pshare->cfg80211_queue_len = 0;
 
 	spin_unlock_irqrestore(&priv->pshare->cfg80211_queue_lock, flags);
 }

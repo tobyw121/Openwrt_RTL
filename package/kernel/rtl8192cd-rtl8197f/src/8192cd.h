@@ -6231,6 +6231,8 @@ struct priv_shared_info {
 #endif
 	struct list_head cfg80211_queue;
 	spinlock_t cfg80211_queue_lock;
+	u32 cfg80211_queue_len;
+	u64 cfg80211_queue_full_drops;
 #endif
 #ifdef CONFIG_RTL8192CD_LINUX6_BUS
 	/* Linux 6.x RX bottom half: one NAPI instance per physical radio. */

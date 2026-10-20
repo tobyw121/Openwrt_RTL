@@ -31,6 +31,22 @@ einen anderen CPU-Port oder eine andere Switch-Initialisierung umgestellt.
 
 ## Änderungen
 
+- Die cfg80211-Ereigniswarteschlange verwendet passend große Puffer statt
+  eines ungeprüften 512-Byte-Arrays. Die Kopierlänge muss zwischen dem
+  Management-Header und `IEEE80211_MAX_FRAME_LEN` liegen und in den linearen
+  Empfangspuffer passen. Größere gültige Frames werden vollständig kopiert.
+  Pro Radio sind höchstens 64 Ereignisse eingereiht; weitere werden verworfen.
+  Unter `/sys/kernel/debug/rtl8192cd/<Busgerät>/` zeigen
+  `cfg80211_queue_depth` und `cfg80211_queue_full_drops` den Stand und die
+  Verwerfungen wegen voller Warteschlange. Beide Dateien sind nur lesbar.
+- Der Ereignisempfänger entnimmt jeden Listeneintrag vollständig unter der
+  Queue-Sperre und verarbeitet ihn anschließend außerhalb der Sperre.
+  Gleichzeitiges Leeren kann dadurch keine bereits vorgemerkten nächsten
+  Einträge mehr freigeben. Ein Hosttest führt die tatsächlichen Funktionen
+  mit AddressSanitizer aus, einschließlich 513-/2352-Byte-Frames,
+  abgeschnittenen Empfangspuffern, Allokationsfehlern, Queue-Sättigung und
+  gleichzeitigem Einfügen, Verarbeiten und Leeren. Die Änderungen sind noch
+  kein am Gerät bestätigter Fix des RD05-Verbindungsfehlers.
 - Fehler bei `wiphy_register()`, regulatorischer Initialisierung und
   `register_netdev()` werden weitergegeben. Der Root-Probe bricht mit dem
   tatsächlichen Fehler ab und gibt sein neu angelegtes wiphy wieder frei.

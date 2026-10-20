@@ -417,13 +417,15 @@ struct rtknl {
 	unsigned char	keep_legacy;
 };
 
+#define RTK_CFG80211_EVENT_QUEUE_MAX 64
+
 struct CFG80211_RX_MGMT_IND {
 	struct list_head list;
 	struct wireless_dev *wdev;
 	int freq;
-	u8 buf[512];
 	size_t len;
 	u32 flags;
+	u8 buf[];
 };
 
 /* HT Capabilities Info field within HT Capabilities element */
