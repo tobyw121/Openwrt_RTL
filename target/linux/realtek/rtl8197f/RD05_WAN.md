@@ -110,3 +110,42 @@ UINT64_MAX (18446744073709551615), not zero. Copper input with no CPU output
 points to switch forwarding/classification. CPU output with no SoC RX points
 to the RGMII/SoC/DMA receive path. CPU input or FCS counters help verify whether
 completed SoC TX actually reached the external switch.
+
+## RGMII timing probe after the c219e31a4f hardware log
+
+The transparent configuration was confirmed active on hardware, but did not
+restore traffic. The CPU endpoint counted 13941 input bytes, 12182 output
+bytes and 73 FCS errors, while the SoC reported 73 TX completions and zero RX.
+Active user/CPU STP was 3, isolation masks were 128/31. These observations
+move the remaining investigation to the physical CPU/RGMII/FCS path; they do
+not prove a specific delay or CRC-format correction.
+
+Disabling EXT1 SSC did not obtain a WAN lease. A later sample had 51668 input
+bytes, 95593 output bytes and 194 FCS errors. There was no immediate pre-test
+snapshot, so the FCS delta attributable to disabling SSC is unknown.
+
+`rd05-rgmii-test` now tests the eight legal switch-side EXT1 RX-delay steps.
+It keeps the current SSC selection, CPU TX delay/fine tap, SoC timing and all
+CRC checks. It renews DHCP through netifd and measures counter deltas over
+three seconds per setting, after a one-second settling interval. It refuses
+to run with WAN already up or without valid CPU counters. Settings are restored
+on completion, command failures and INT/TERM; SIGKILL/power loss cannot run a
+shell cleanup handler (reboot restores compiled defaults). A successful DHCP
+observation is reported but never automatically persisted.
+
+This is a diagnostic probe, not an automatic calibration or proof of stable
+operation. `tx-clean-rx-missing` means only the measured SoC-to-switch direction
+had traffic without new FCS errors. The opposite direction still failed.
+`no-tx-sample` is inconclusive. Counter resets and missing/U64_MAX readings
+must not be called clean results.
+
+Run from UART or local WLAN while WAN and a wired client remain attached:
+
+```sh
+rd05-rgmii-test
+cat /tmp/rd05-rgmii-test.log
+```
+
+The standalone script can also be copied to `/tmp` on existing c219e31a4f
+firmware and run with `sh /tmp/rd05-rgmii-test`; a reflash is not needed for
+this measurement. The package includes it in future RD05 builds.

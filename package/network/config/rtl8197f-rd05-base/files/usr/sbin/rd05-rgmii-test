@@ -1,0 +1,117 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Bounded, reversible RTL8367D RX-clock diagnostic. No CRC bypass or table resets.
+PARAM=/sys/module/rtl8365mb/parameters/rd05_ext1_rx_delay
+REPORT=/tmp/rd05-rgmii-test.log
+LOCK=/tmp/rd05-rgmii-test.lock
+SAVED_DELAY=
+
+wan_up() {
+	ifstatus wan 2>/dev/null | grep -Eq '"up"[[:space:]]*:[[:space:]]*true'
+}
+
+snapshot() {
+	local counters rx
+	counters="$(ethtool -S wan 2>/dev/null | awk '
+		$1 == "cpu_ifInOctets:" { i=$2 }
+		$1 == "cpu_ifOutOctets:" { o=$2 }
+		$1 == "cpu_fcs_errors:" { c=$2 }
+		END {
+			if (i !~ /^[0-9]+$/ || o !~ /^[0-9]+$/ || c !~ /^[0-9]+$/ ||
+			    length(i)>15 || length(o)>15 || length(c)>15) exit 1
+			print i, o, c
+		}')" || return 1
+	rx="$(cat /sys/class/net/eth0/statistics/rx_packets 2>/dev/null)" || return 1
+	case "$rx" in ''|*[!0-9]*) return 1 ;; esac
+	[ "${#rx}" -le 15 ] || return 1
+	printf '%s %s\n' "$counters" "$rx"
+}
+
+# Classify deltas, never cumulative counters. Unknown, reset and idle samples
+# must not be reported as clean links. Zero errors alone is insufficient.
+classify() {
+	local before_in before_out before_crc before_rx after_in after_out after_crc after_rx
+	before_in=$1 before_out=$2 before_crc=$3 before_rx=$4
+	after_in=$5 after_out=$6 after_crc=$7 after_rx=$8
+	if [ "$after_in" -lt "$before_in" ] || [ "$after_out" -lt "$before_out" ] ||
+	   [ "$after_crc" -lt "$before_crc" ] || [ "$after_rx" -lt "$before_rx" ]; then
+		echo 'counter-reset'; return
+	fi
+	if [ "$after_in" -le "$before_in" ]; then
+		echo 'no-tx-sample'; return
+	fi
+	if [ "$after_crc" -gt "$before_crc" ]; then
+		echo 'crc-errors'; return
+	fi
+	if [ "$after_rx" -le "$before_rx" ]; then
+		echo 'tx-clean-rx-missing'; return
+	fi
+	echo 'bidirectional-traffic'
+}
+
+restore() {
+	local rc=0
+	if [ -n "$SAVED_DELAY" ]; then
+		if printf '%s\n' "$SAVED_DELAY" >"$PARAM"; then
+			echo "restored_rx_delay=$SAVED_DELAY" >>"$REPORT"
+		else
+			echo 'ERROR: restoring RX delay failed; reboot to restore defaults' | tee -a "$REPORT" >&2
+			rc=1
+		fi
+	fi
+	rmdir "$LOCK" 2>/dev/null || true
+	return "$rc"
+}
+
+run_test() {
+	local before after delay result saved_ssc
+	case "$(cat /tmp/sysinfo/board_name 2>/dev/null)" in
+		xiaomi,r4-rd05) ;; *) echo 'Only Xiaomi RD05 is supported' >&2; return 2 ;;
+	esac
+	[ -w "$PARAM" ] || { echo "Timing parameter unavailable: $PARAM" >&2; return 1; }
+	wan_up && { echo 'WAN is already up; refusing to interrupt the working link' >&2; return 1; }
+	command -v ubus >/dev/null 2>&1 || return 1
+	before="$(snapshot)" || { echo 'CPU-port counters unavailable; cannot test timing' >&2; return 1; }
+	mkdir "$LOCK" 2>/dev/null || { echo 'A timing test is already running' >&2; return 1; }
+	SAVED_DELAY="$(cat "$PARAM")"
+	case "$SAVED_DELAY" in [0-7]) ;; *) SAVED_DELAY=; rmdir "$LOCK"; return 1 ;; esac
+	trap 'restore' EXIT
+	trap 'exit 130' INT
+	trap 'exit 143' TERM
+	saved_ssc="$(cat /sys/module/rtl8365mb/parameters/rd05_ext1_ssc 2>/dev/null)"
+	{
+		echo 'RD05 RGMII RX timing test v1; no defaults are changed'
+		echo "original_rx_delay=$SAVED_DELAY ssc=$saved_ssc"
+		echo 'Only switch RX delay is varied; SSC, SoC timing, CRC validation and port tables are preserved.'
+		echo 'A clean TX sample does not prove DHCP, ARP or SoC RX works.'
+	} >"$REPORT"
+	for delay in 0 1 2 3 4 5 6 7; do
+		printf '%s\n' "$delay" >"$PARAM" || return 1
+		# Exclude the clock reconfiguration from the measurement window.
+		sleep 1
+		before="$(snapshot)" || return 1
+		# netifd's renew sends SIGUSR1 to udhcpc, without restarting the bridge.
+		ubus call network.interface.wan renew >/dev/null 2>&1 || {
+			echo 'DHCP renew failed; no valid test stimulus' | tee -a "$REPORT" >&2
+			return 1
+		}
+		sleep 3
+		after="$(snapshot)" || return 1
+		# snapshot accepts decimal numbers only; field splitting is intentional.
+		result="$(classify $before $after)"
+		echo "delay=$delay before=[$before] after=[$after] result=$result" | tee -a "$REPORT"
+		if wan_up; then
+			echo "DHCP_UP_AT_DELAY=$delay (original timing will be restored)" | tee -a "$REPORT"
+			break
+		fi
+	done
+	restore || return 1
+	SAVED_DELAY=
+	trap - EXIT INT TERM
+	echo "Report: $REPORT"
+}
+
+case "${1:-test}" in
+	test) run_test ;;
+	*) echo 'Usage: rd05-rgmii-test [test]' >&2; exit 2 ;;
+esac

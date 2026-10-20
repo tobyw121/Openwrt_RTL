@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rtl8197f-rd05-base
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 PKG_LICENSE:=GPL-2.0-or-later
 
 include $(INCLUDE_DIR)/package.mk
@@ -25,6 +25,7 @@ endef
 
 define Package/rtl8197f-rd05-base/install
 	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) ./files/usr/sbin/rd05-rgmii-test $(1)/usr/sbin/rd05-rgmii-test
 	$(INSTALL_BIN) ./files/usr/sbin/rd05-ioctl $(1)/usr/sbin/rd05-ioctl
 	$(INSTALL_DIR) $(1)/etc/profile.d
 	$(INSTALL_BIN) ./files/etc/profile.d/99-rd05-uart-guard.sh $(1)/etc/profile.d/99-rd05-uart-guard.sh
