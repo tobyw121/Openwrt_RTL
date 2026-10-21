@@ -143,7 +143,7 @@ int main(void) {
     u32 regs[0x10000 / 4], system[0x4000 / 4];
     struct rtl8197f_rtknet_priv p = {.swcore=regs, .system=system};
     const char *boards[] = {"xiaomi,r4-rd05", "xiaomi,r4-rd05", "tenda,nova-mw5", "legacy"};
-    const u32 chip_ids[] = {0x8197f000, 0x81970000, 0x8197f000, 0};
+    const u32 chip_ids[] = {0x8197f000, 0x81970001, 0x8197f000, 0};
     const u32 rx_default[] = {5, 6, 5, 6};
     for (int b=0;b<4;b++) for (int old_dt=0;old_dt<2;old_dt++) {
         board = boards[b]; memset(regs,0xff,sizeof(regs)); memset(system,0xff,sizeof(system));

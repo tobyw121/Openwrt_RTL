@@ -197,3 +197,21 @@ root cause. The OEM function may also be followed by later register writes.
 geometry merely to match another router would not follow the OEM evidence.
 The similarly named legacy `_swNic_send` is present too; its presence alone
 does not establish that it is the active new-descriptor transmit path.
+
+## Retest of 6afa2d01ed: actual RD05 ID matches the original branch
+
+The next hardware log reports `soc_id=0x81970001`, `old_id_branch=1`,
+`fixed_ipg=1`, RX6 and PAD `0xdbffff7f`. After masking revision bits, this is
+exactly the OEM `0x81970000` branch. The adaptive-ID correction therefore does
+not change P0 electrical settings on this particular device and did not fix
+its outage. It must not be presented as an identified cause for this unit.
+The native P0 test now includes the observed `0x81970001` revision value.
+
+The same capture has 74 SoC TX completions and 74 switch CPU FCS errors,
+14262 CPU input octets, 14935 CPU output octets, zero user output octets and
+zero SoC RX. No new timing-probe result has been supplied yet. The existing
+`rd05-rgmii-test` is the next measurement; another firmware build is not needed
+for this measurement. A clean timing row would narrow the TX failure. Errors
+at every RX-delay step would leave TX clock phase, frame/FCS generation and
+the distinct SoC RX path under investigation, rather than proving any one of
+them. CRC verification remains enabled throughout.
