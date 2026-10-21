@@ -149,3 +149,51 @@ cat /tmp/rd05-rgmii-test.log
 The standalone script can also be copied to `/tmp` on existing c219e31a4f
 firmware and run with `sh /tmp/rd05-rgmii-test`; a reflash is not needed for
 this measurement. The package includes it in future RD05 builds.
+
+## OEM chip-ID branch reconstruction (2026-10-21)
+
+A direct examination of RD05 `init_8197f_p0` at `0x802cf41c` found a concrete
+mismatch. Kernel SHA256 is
+`aa48d325730b95c0658090ba9f943f71bdd9888dc57f609a3989ba58f0f8f5cc`;
+the 400-byte function SHA256 is
+`b147868cac2037ce7b6765d090a06104a56d8946fcddd8c3f3c7894cbe2ef200`.
+The complete instructions are in the existing archived
+`disassembly/80200000-80300000.dis.xz`.
+
+The function reads system register `0xb8000000` and compares
+`ID & 0xfffff000` to `0x81970000`. It does not select the branch based on the
+router profile or the FH/VG name.
+
+| Setting | ID matches 0x81970000 | Other IDs, including 0x8197f000 |
+| --- | --- | --- |
+| SoC RX delay | 6 | 5 |
+| PAD preserve mask | 0x019fffff | 0x01bfffff |
+| PAD OR value | 0xda600000 | 0xd8000000 |
+| PITCR fixed-IPG field | clear field then set 0x1000 | preserve |
+| EXTPCR0 IPG field | set 8 | preserve |
+
+Branch sites are `0x802cf4bc` and `0x802cf4f8`; the distinct pad paths start
+at `0x802cf500` and `0x802cf570`. The RX6 override is at `0x802cf590`.
+The base RX5 setup is at `0x802cf480`. These instructions were checked against
+the archived kernel bytes and interpreted with fake MMIO, including branch
+delay slots, for several initial register values. This is static/host analysis,
+not a trace of execution on the router.
+
+Our driver previously forced the ID-matching branch's PAD bits, fixed IPG and
+RX6 on RD05 unconditionally. Version `1.8.39-rd05-oem-chip-pad` reads the silicon
+ID and follows the OEM branch. On the nonmatching path, the previously logged
+PAD value `0xdbffff7f` becomes `0xd9bfff7f`; this clears the incorrectly forced
+MODE/TX_E2 fields while preserving the other OEM-designated bits. RX becomes 5
+unless a manual timing override was requested. Other board policies and the
+Linux DSA opaque-tag policy remain unchanged.
+
+The live ID is now reported as `soc_id` in `dsa_host_link`, and boot logs include
+`RD05 OEM P0 chip_id=... old_id_branch=... fixed_ipg=... rx_delay=... pad=...`.
+The source mismatch is established; restoring traffic and lowering FCS errors
+still require a hardware retest. It is not sufficient to call this the sole
+root cause. The OEM function may also be followed by later register writes.
+
+`New_swNic_init` does use 32-byte RX/TX strides on RD05, so changing that known
+geometry merely to match another router would not follow the OEM evidence.
+The similarly named legacy `_swNic_send` is present too; its presence alone
+does not establish that it is the active new-descriptor transmit path.

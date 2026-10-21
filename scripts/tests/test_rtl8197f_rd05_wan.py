@@ -133,7 +133,7 @@ static u32 readl(void *p) { return *(u32 *)p; }
 static void writel(u32 v, void *p) { *(u32 *)p = v; }
 static const char *board;
 static bool of_machine_is_compatible(const char *s) { return !strcmp(s,board); }
-static unsigned int rd05_p0_tx_delay = 0, rd05_p0_rx_delay = 6;
+static unsigned int rd05_p0_tx_delay = 0, rd05_p0_rx_delay = ~0U;
 struct rtl8197f_rtknet_priv {
     void *swcore, *system, *dev;
     bool mw5_p0_transparent, p0_cpu_tag_passthrough;
@@ -142,25 +142,42 @@ struct rtl8197f_rtknet_priv {
 int main(void) {
     u32 regs[0x10000 / 4], system[0x4000 / 4];
     struct rtl8197f_rtknet_priv p = {.swcore=regs, .system=system};
-    const char *boards[] = {"xiaomi,r4-rd05", "tenda,nova-mw5", "legacy"};
-    for (int b=0;b<3;b++) for (int old_dt=0;old_dt<2;old_dt++) {
+    const char *boards[] = {"xiaomi,r4-rd05", "xiaomi,r4-rd05", "tenda,nova-mw5", "legacy"};
+    const u32 chip_ids[] = {0x8197f000, 0x81970000, 0x8197f000, 0};
+    const u32 rx_default[] = {5, 6, 5, 6};
+    for (int b=0;b<4;b++) for (int old_dt=0;old_dt<2;old_dt++) {
         board = boards[b]; memset(regs,0xff,sizeof(regs)); memset(system,0xff,sizeof(system));
+        system[0] = chip_ids[b];
         p.p0_cpu_tag_passthrough = old_dt; p.mw5_p0_transparent = true;
         for (int reseed=0;reseed<2;reseed++) {
             rtl8197f_rtk_init_p0_rgmii(&p,"regression");
             u32 gmii = readl(p.swcore + RTL_RTK_SWCORE_P0GMIICR);
             u32 maccr1 = readl(p.swcore + RTL_RTK_SWCORE_MACCR1);
             u32 bits = gmii & (RTL_RTK_P0GMIICR_CPU_TAG_RX | RTL_RTK_P0GMIICR_CPU_TAG_TX);
-            assert(!!bits == (b == 2 && old_dt));
-            assert(!!(maccr1 & RTL_RTK_MACCR1_P0_ROUTER_MODE) == (b == 2 && old_dt));
+            assert(!!bits == (b == 3 && old_dt));
+            assert(!!(maccr1 & RTL_RTK_MACCR1_P0_ROUTER_MODE) == (b == 3 && old_dt));
             assert(gmii & RTL_RTK_P0GMIICR_CONF_DONE);
-            assert((gmii & RTL_RTK_P0GMIICR_RX_DELAY_MASK) == (b == 1 ? RTL_RTK_P0GMIICR_RX_DELAY_FS : 6));
-            if (b == 0) {
+            assert((gmii & RTL_RTK_P0GMIICR_RX_DELAY_MASK) == rx_default[b]);
+            if (b == 1 || b == 3) {
                 assert((readl(p.swcore + RTL_RTK_SWCORE_PITCR) & RTL_RTK_PITCR_FIX_IPG_MASK) == RTL_RTK_PITCR_FIX_IPG_8BYTE);
                 assert((readl(p.swcore + RTL_RTK_SWCORE_EXTPCR0) & RTL_RTK_EXTPCR0_TX_IPG_MASK) == RTL_RTK_EXTPCR0_TX_IPG_8BYTE);
+            } else {
+                assert((readl(p.swcore + RTL_RTK_SWCORE_PITCR) & RTL_RTK_PITCR_FIX_IPG_MASK) == RTL_RTK_PITCR_FIX_IPG_MASK);
+                assert((readl(p.swcore + RTL_RTK_SWCORE_EXTPCR0) & RTL_RTK_EXTPCR0_TX_IPG_MASK) == RTL_RTK_EXTPCR0_TX_IPG_MASK);
             }
+            if (b == 0)
+                assert(readl(p.system + RTL_RTK_SYSTEM_PAD_CTRL_1) == ((0xffffffffU & 0x01bfffff) | 0xd8000000));
+            if (b == 1)
+                assert(readl(p.system + RTL_RTK_SYSTEM_PAD_CTRL_1) == ((0xffffffffU & 0x019fffff) | 0xda600000));
         }
     }
+    board = boards[0]; system[0] = chip_ids[0];
+    writel(0xdbffff7f, p.system + RTL_RTK_SYSTEM_PAD_CTRL_1);
+    rtl8197f_rtk_init_p0_rgmii(&p,"logged-pad-regression");
+    assert(readl(p.system + RTL_RTK_SYSTEM_PAD_CTRL_1) == 0xd9bfff7f);
+    rd05_p0_rx_delay = 3;
+    rtl8197f_rtk_init_p0_rgmii(&p,"manual-override");
+    assert((readl(p.swcore + RTL_RTK_SWCORE_P0GMIICR) & RTL_RTK_P0GMIICR_RX_DELAY_MASK) == 3);
     return 0;
 }
 """

@@ -62,7 +62,7 @@
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.38-rd05-transparent-dsa"
+#define DRV_VERSION			"1.8.39-rd05-oem-chip-pad"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -684,17 +684,17 @@ static int rd05_txdesc_mode;
 module_param_named(rd05_txdesc_mode, rd05_txdesc_mode, int, 0644);
 MODULE_PARM_DESC(rd05_txdesc_mode, "RD05 RTL8197F TX mode: 0 direct P0/RGMII, 1 legacy DP40/EXT2 loop, 2..12 diagnostics");
 
-/* RD05 v36 exposes both SoC-side RGMII delay controls.  The Linux SDK
- * defaults are TX0/RX6 on RTL8197F-VG; hardware calibration can change
- * them at runtime and replay P0 setup through rd05-ioctl eth0 reseed.
+/* Manual SoC-side RGMII timing controls. RX defaults to the OEM chip-ID
+ * branch on RD05; a value 0..7 overrides it for bounded hardware diagnostics.
+ * Replay P0 setup through rd05-ioctl eth0 reseed after changing a parameter.
  */
 static unsigned int rd05_p0_tx_delay;
 module_param_named(rd05_p0_tx_delay, rd05_p0_tx_delay, uint, 0644);
 MODULE_PARM_DESC(rd05_p0_tx_delay, "RD05 RTL8197F P0 RGMII TX delay: 0 or 1");
 
-static unsigned int rd05_p0_rx_delay = RTL_RTK_P0GMIICR_RX_DELAY_VG;
+static unsigned int rd05_p0_rx_delay = ~0U;
 module_param_named(rd05_p0_rx_delay, rd05_p0_rx_delay, uint, 0644);
-MODULE_PARM_DESC(rd05_p0_rx_delay, "RD05 RTL8197F P0 RGMII RX delay tap: 0..7");
+MODULE_PARM_DESC(rd05_p0_rx_delay, "P0 RX delay: 0..7 override; UINT_MAX selects OEM chip-ID default");
 
 
 /*
@@ -2354,6 +2354,9 @@ static void rtl8197f_rtk_init_p0_rgmii(struct rtl8197f_rtknet_priv *priv,
 	bool mw5 = of_machine_is_compatible("tenda,nova-mw5");
 	bool rd05 = of_machine_is_compatible("xiaomi,r4-rd05");
 	bool transparent = rd05 || (mw5 && READ_ONCE(priv->mw5_p0_transparent));
+	u32 chip_id = priv->system ? readl(priv->system) : 0;
+	bool rd05_old_chip = rd05 && (chip_id & 0xfffff000) == 0x81970000;
+	bool fixed_ipg = !mw5 && (!rd05 || rd05_old_chip);
 	u32 tx_delay;
 	u32 rx_delay;
 
@@ -2402,15 +2405,22 @@ static void rtl8197f_rtk_init_p0_rgmii(struct rtl8197f_rtknet_priv *priv,
 	 * P0 mode: all three SoC CPU-tag/router controls are off and the external
 	 * rtl8_4 bytes are transported unchanged through descriptor DP=P0.
 	 */
-	/* The non-VG RTL8197FS SDK uses fixed TX0/RX5.  RD05 is an
-	 * RTL8197FH-VG board and keeps its bounded runtime calibration knobs.
+	/* Keep MW5's fixed timing. RD05 follows the OEM chip-ID branch;
+	 * other boards retain their existing default and manual timing knobs.
 	 */
 	if (mw5) {
 		tx_delay = 0;
 		rx_delay = RTL_RTK_P0GMIICR_RX_DELAY_FS;
 	} else {
 		tx_delay = min_t(u32, READ_ONCE(rd05_p0_tx_delay), 1);
-		rx_delay = min_t(u32, READ_ONCE(rd05_p0_rx_delay), 7);
+		/* OEM init_8197f_p0 selects RX6 only for ID 0x81970000.
+		 * Other IDs (including RTL8197F) retain its base RX5 setting.
+		 * The silicon branch is independent of the board's FH/VG label.
+		 */
+		rx_delay = rd05 && !rd05_old_chip ? RTL_RTK_P0GMIICR_RX_DELAY_FS :
+			RTL_RTK_P0GMIICR_RX_DELAY_VG;
+		if (READ_ONCE(rd05_p0_rx_delay) != ~0U)
+			rx_delay = min_t(u32, READ_ONCE(rd05_p0_rx_delay), 7);
 	}
 
 	gmii = readl(priv->swcore + RTL_RTK_SWCORE_P0GMIICR);
@@ -2428,7 +2438,7 @@ static void rtl8197f_rtk_init_p0_rgmii(struct rtl8197f_rtknet_priv *priv,
 	/* Linux rtl8_4 needs the switch tag after SA, including its original
 	 * ingress port. The legacy SoC parser/generator may consume or replace
 	 * it; RD05 must transport it as opaque Ethernet data in both directions.
-	 * Keep the separate VG timing and pad settings below unchanged.
+	 * Electrical timing and pad selection are handled separately below.
 	 */
 	if (priv->p0_cpu_tag_passthrough && !mw5 && !rd05)
 		gmii |= RTL_RTK_P0GMIICR_CPU_TAG_RX | RTL_RTK_P0GMIICR_CPU_TAG_TX;
@@ -2443,21 +2453,20 @@ static void rtl8197f_rtk_init_p0_rgmii(struct rtl8197f_rtknet_priv *priv,
 		val |= RTL_RTK_MACCR1_P0_ROUTER_MODE;
 	writel(val, priv->swcore + RTL_RTK_SWCORE_MACCR1);
 
-	/* RTL8197F-VG init_8197f_p0() fixes the transmit inter-packet gap
-	 * at eight bytes on both PITCR and EXTPCR0.  Without these fields the
-	 * external RTL8367 can count each otherwise valid SoC frame as an FCS/drop
-	 * event even when the RGMII delay taps themselves are in range.
+	/* OEM init_8197f_p0 changes fixed-IPG fields only for ID
+	 * 0x81970000. RD05 must not take that branch based on its board name.
+	 * Retain the existing policy for other boards.
 	 */
 	val = readl(priv->swcore + RTL_RTK_SWCORE_PITCR);
 	val |= RTL_RTK_PITCR_P0_EXT_INTERFACE;
-	if (!mw5) {
+	if (fixed_ipg) {
 		val &= ~RTL_RTK_PITCR_FIX_IPG_MASK;
 		val |= RTL_RTK_PITCR_FIX_IPG_8BYTE;
 	}
 	writel(val, priv->swcore + RTL_RTK_SWCORE_PITCR);
 
-	/* The SDK applies the fixed eight-byte IPG only on RTL8197F-VG. */
-	if (!mw5) {
+	/* OEM applies the fixed IPG only in its ID-0x81970000 branch. */
+	if (fixed_ipg) {
 		val = readl(priv->swcore + RTL_RTK_SWCORE_EXTPCR0);
 		val &= ~RTL_RTK_EXTPCR0_TX_IPG_MASK;
 		val |= RTL_RTK_EXTPCR0_TX_IPG_8BYTE;
@@ -2470,17 +2479,26 @@ static void rtl8197f_rtk_init_p0_rgmii(struct rtl8197f_rtknet_priv *priv,
 
 	if (priv->system) {
 		pad = readl(priv->system + RTL_RTK_SYSTEM_PAD_CTRL_1);
-		pad &= ~(RTL_RTK_PAD_P0_RGMII_DN_MASK |
-			 RTL_RTK_PAD_P0_RGMII_DP_MASK |
-			 RTL_RTK_PAD_P0_RGMII_MODE |
-			 RTL_RTK_PAD_P0_TX_E2 |
-			 RTL_RTK_PAD_P0_VG_BIT21);
-		pad |= (RTL_RTK_PAD_P0_DRIVE_VG << RTL_RTK_PAD_P0_RGMII_DN_SHIFT) |
-		       (RTL_RTK_PAD_P0_DRIVE_VG << RTL_RTK_PAD_P0_RGMII_DP_SHIFT);
-		if (!mw5)
-			pad |= RTL_RTK_PAD_P0_RGMII_MODE |
-			       RTL_RTK_PAD_P0_TX_E2 |
-			       RTL_RTK_PAD_P0_VG_BIT21;
+		if (rd05) {
+			/* Exact OEM masks at 0x802cf500/0x802cf570. Do not force
+			 * MODE/TX_E2/BIT21 on chips taking the non-0x81970000 path.
+			 * Preserve all fields outside the selected OEM mask.
+			 */
+			pad &= rd05_old_chip ? 0x019fffff : 0x01bfffff;
+			pad |= rd05_old_chip ? 0xda600000 : 0xd8000000;
+		} else {
+			pad &= ~(RTL_RTK_PAD_P0_RGMII_DN_MASK |
+				 RTL_RTK_PAD_P0_RGMII_DP_MASK |
+				 RTL_RTK_PAD_P0_RGMII_MODE |
+				 RTL_RTK_PAD_P0_TX_E2 |
+				 RTL_RTK_PAD_P0_VG_BIT21);
+			pad |= (RTL_RTK_PAD_P0_DRIVE_VG << RTL_RTK_PAD_P0_RGMII_DN_SHIFT) |
+			       (RTL_RTK_PAD_P0_DRIVE_VG << RTL_RTK_PAD_P0_RGMII_DP_SHIFT);
+			if (!mw5)
+				pad |= RTL_RTK_PAD_P0_RGMII_MODE |
+				       RTL_RTK_PAD_P0_TX_E2 |
+				       RTL_RTK_PAD_P0_VG_BIT21;
+		}
 		writel(pad, priv->system + RTL_RTK_SYSTEM_PAD_CTRL_1);
 		readl(priv->system + RTL_RTK_SYSTEM_PAD_CTRL_1);
 	}
@@ -2489,6 +2507,11 @@ static void rtl8197f_rtk_init_p0_rgmii(struct rtl8197f_rtknet_priv *priv,
 	gmii |= RTL_RTK_P0GMIICR_CONF_DONE;
 	writel(gmii, priv->swcore + RTL_RTK_SWCORE_P0GMIICR);
 	readl(priv->swcore + RTL_RTK_SWCORE_P0GMIICR);
+
+	if (rd05)
+		dev_info(priv->dev,
+			 "RD05 OEM P0 chip_id=0x%08x old_id_branch=%u fixed_ipg=%u rx_delay=%u pad=0x%08x\n",
+			 chip_id, rd05_old_chip, fixed_ipg, rx_delay, pad);
 
 	dev_info(priv->dev,
 		 "%s p0 rgmii sdk: %s pcrp0=0x%08x p0gmii=0x%08x pitcr=0x%08x extpcr0=0x%08x maccr=0x%08x maccr1=0x%08x pad=0x%08x txdelay=%u rxdelay=%u cputag-rx=%u cputag-tx=%u p0mode=%s preserve-tag=1 tag=%s rx-policy=%s txdp=0x1/dpext=0\n",
@@ -8979,11 +9002,12 @@ static int rtl8197f_rtk_rd05_proc_show(struct seq_file *m, void *v)
 		u32 gmii = readl(priv->swcore + RTL_RTK_SWCORE_P0GMIICR);
 		u32 maccr1 = readl(priv->swcore + RTL_RTK_SWCORE_MACCR1);
 
-		seq_printf(m, "dsa_host_link p0gmii=0x%08x maccr1=0x%08x cpu_tag_rx=%u cpu_tag_tx=%u router_mode=%u\n",
+		seq_printf(m, "dsa_host_link p0gmii=0x%08x maccr1=0x%08x cpu_tag_rx=%u cpu_tag_tx=%u router_mode=%u soc_id=0x%08x\n",
 			   gmii, maccr1,
 			   !!(gmii & RTL_RTK_P0GMIICR_CPU_TAG_RX),
 			   !!(gmii & RTL_RTK_P0GMIICR_CPU_TAG_TX),
-			   !!(maccr1 & RTL_RTK_MACCR1_P0_ROUTER_MODE));
+			   !!(maccr1 & RTL_RTK_MACCR1_P0_ROUTER_MODE),
+			   priv->system ? readl(priv->system) : 0);
 	}
 	seq_printf(m, "descriptor_policy dwords=%u stride=%u kseg1=%u sdk_crc=%u txringcr=0x%08x\n",
 		   priv->desc_dwords, priv->desc_stride,
