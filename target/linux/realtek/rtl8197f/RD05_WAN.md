@@ -215,3 +215,30 @@ for this measurement. A clean timing row would narrow the TX failure. Errors
 at every RX-delay step would leave TX clock phase, frame/FCS generation and
 the distinct SoC RX path under investigation, rather than proving any one of
 them. CRC verification remains enabled throughout.
+
+## First timing sweep: six CRC rows, two inconclusive rows
+
+The v1 probe reported CRC errors at RX-delay steps 1, 2, 3, 4, 6 and 7.
+Steps 0 and 5 had no increase in switch CPU input bytes during their measurement
+windows and were marked `no-tx-sample`. They are not passing rows. Because v1
+did not record SoC TX completions, these rows cannot distinguish absent DHCP
+traffic from packets lost before the switch CPU MIB counted them. SoC RX
+remained zero in every row. Delay 5 was restored, and SSC was enabled.
+
+The v2 probe uses its own bounded DHCP client (`-t 1 -T 1`, four-second timeout)
+with `/bin/true` as the event script and a private PID file. It does not install
+an address, DNS or routes and does not overwrite netifd's client PID file. A
+lease observed by this probe is reported separately from netifd WAN-up status.
+It also samples SoC TX completions. `tx-missing-at-switch` now distinguishes a
+SoC TX completion with no switch CPU input from a genuinely idle window. All
+settings are restored; no timing row is persisted automatically. The field
+order is printed in the report and is now five counters rather than four.
+
+A fresh SDK source comparison of `_New_swNic_send` in
+`8197/RT8197F_RTL8367RB_Gesamtpaket/MR62X_SDK_Paket/selected_sources/sdk/openwrt-21.02/target/linux/rtknet/drivers/net/rtl819x/rtl819x_swNic.c`
+confirms that the new-descriptor routine sets both packet-header and buffer
+length to payload length plus four (minimum 64), explicitly saying hardware
+adds CRC. Our driver follows that rule. This does not prove that the complete
+MAC/CRC configuration is correct, but it supplies no basis for blindly removing
+those four bytes. The previous legacy `rtl865xc_swNic.c` comparison alone was
+not sufficient to establish the new-descriptor rule.

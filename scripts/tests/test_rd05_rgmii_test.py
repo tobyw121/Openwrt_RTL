@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-2.0-or-later
-"""Run timing policy and failure cleanup against fake counters/sysfs/ubus."""
+"""Run timing policy and failure cleanup against fake counters/sysfs/DHCP."""
 import os
 from pathlib import Path
 import subprocess
@@ -15,12 +15,14 @@ class RGMIIProbeTests(unittest.TestCase):
     def test_classification_requires_samples_and_both_directions(self):
         function = shell_function(SCRIPT, 'classify')
         cases = [
-            ('100 100 3 0 200 200 4 0', 'crc-errors'),
-            ('100 100 3 0 200 200 3 0', 'tx-clean-rx-missing'),
-            ('100 100 3 0 100 200 3 0', 'no-tx-sample'),
-            ('100 100 3 0 99 200 3 0', 'counter-reset'),
-            ('100 100 3 0 200 200 2 0', 'counter-reset'),
-            ('100 100 3 0 200 200 3 1', 'bidirectional-traffic'),
+            ('100 100 3 0 10 200 200 4 0 11', 'crc-errors'),
+            ('100 100 3 0 10 200 200 3 0 11', 'tx-clean-rx-missing'),
+            ('100 100 3 0 10 100 200 3 0 10', 'no-tx-sample'),
+            ('100 100 3 0 10 100 200 3 0 11', 'tx-missing-at-switch'),
+            ('100 100 3 0 10 99 200 3 0 11', 'counter-reset'),
+            ('100 100 3 0 10 200 200 2 0 11', 'counter-reset'),
+            ('100 100 3 0 10 200 200 3 1 11', 'bidirectional-traffic'),
+            ('100 100 3 0 10 200 200 3 1 9', 'counter-reset'),
         ]
         for args, expected in cases:
             with self.subTest(args=args):
@@ -34,9 +36,11 @@ class RGMIIProbeTests(unittest.TestCase):
         funcs = funcs.replace('$(cat /tmp/sysinfo/board_name 2>/dev/null)', 'xiaomi,r4-rd05')
         mocks = r'''
 wan_up() { [ -f "$TEST_DIR/lease" ]; }
-snapshot() { printf '%s %s %s %s\n' "${count:-100}" "${count:-100}" 0 "${rx:-0}"; }
+snapshot() { printf '%s %s %s %s %s\n' "${count:-100}" "${count:-100}" 0 "${rx:-0}" "${count:-100}"; }
 sleep() { :; }
-ubus() {
+udhcpc() { :; }
+timeout() { :; }
+probe_packets() {
     d=$(cat "$PARAM")
     [ "$d" != "$FAIL_AT" ] || return 1
     if [ "$FAIL_AT" = term ]; then kill -TERM $$; fi
@@ -65,7 +69,7 @@ ubus() {
         with tempfile.TemporaryDirectory() as tmp:
             result, report = self.run_probe(tmp, '2')
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn('DHCP renew failed', report)
+            self.assertIn('DHCP probe failed', report)
 
     def test_restore_after_termination(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -83,6 +87,27 @@ snapshot
 '''
                 result = subprocess.run(['sh','-c',function+mock], capture_output=True)
                 self.assertEqual(result.returncode == 0, values == '12 34 5')
+
+    def test_private_probe_uses_separate_pid_and_no_network_configuration(self):
+        function = shell_function(SCRIPT, 'probe_packets')
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp)
+            script = 'LOCK="$TEST_DIR"; REPORT="$TEST_DIR/report"; PROBE_JOB=; PROBE_LEASE=0\n'
+            script += function + r"""
+timeout() { printf '%s\n' "$*" > "$TEST_DIR/args"; return "$PROBE_RC"; }
+probe_packets
+rc=$?
+printf '%s %s\n' "$rc" "$PROBE_LEASE"
+"""
+            for rc in [0, 1, 124, 143, 127]:
+                with self.subTest(rc=rc):
+                    result = subprocess.check_output(['sh','-c',script], text=True,
+                        env=dict(os.environ,TEST_DIR=tmp,PROBE_RC=str(rc)))
+                    self.assertEqual(result.strip(), f'{1 if rc == 127 else 0} {1 if rc == 0 else 0}')
+                    args = (path/'args').read_text()
+                    self.assertIn('4 udhcpc -f -n -q -t 1 -T 1 -C -B -i wan -s /bin/true', args)
+                    self.assertIn('-p '+tmp+'/probe.pid', args)
+                    self.assertNotIn('/var/run/', args)
 
 
 if __name__ == '__main__':
