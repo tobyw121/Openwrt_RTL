@@ -148,3 +148,8 @@ Sie dienen zunächst ausschließlich dem UART-/RAM-Bring-up.
 
 Die nachfolgende CPU-Clock-Portierung und die Bewertung weiterer Treiber sind
 in [DRIVER_PORTS.md](DRIVER_PORTS.md) beschrieben.
+
+Die Bestandsaufnahme der Software-/Hardware-Beschleuniger und ihre strikte
+firewall4-Anpassung stehen in
+[ACCELERATION.md](../../target/linux/realtek/rtl8197f/ACCELERATION.md), mit
+Quellpfaden und Prüfsummen in [acceleration-inventory.json](acceleration-inventory.json).

@@ -137,7 +137,8 @@ log() { :; }
         master = driver.split('if (!strcmp(buf, "accel-on")) {', 1)[1].split(
             'if (!strcmp(buf, "accel-off")) {', 1)[0]
         self.assertNotIn("WRITE_ONCE(mw5_accel_sw_enable, true)", master)
-        self.assertIn("priv->accel_sw = READ_ONCE(mw5_accel_sw_enable);", master)
+        self.assertIn("priv->accel_sw = rtl8197f_rtk_forward_offload_allowed() &&", master)
+        self.assertIn("READ_ONCE(mw5_accel_sw_enable);", master)
 
     def test_portmode_firewall_repair_keeps_offloading_off(self):
         source = shell_function(BASE / "usr/sbin/mw5-portmode", "ensure_base_firewall")

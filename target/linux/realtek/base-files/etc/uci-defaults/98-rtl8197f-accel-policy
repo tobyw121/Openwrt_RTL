@@ -1,0 +1,9 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# First-boot policy only. Do not overwrite unrelated Realtek switch targets.
+case "$(cat /tmp/sysinfo/board_name 2>/dev/null)" in
+	xiaomi,r4-rd05|tenda,nova-mw5|tenda,ac23|tenda,lynx-rtl8197f|iball,wrd12gn|\
+	cudy,wr1500|cudy,re1500|cudy,m1500)
+		/usr/sbin/rtl8197f-accel defaults ;;
+	*) exit 0 ;;
+esac

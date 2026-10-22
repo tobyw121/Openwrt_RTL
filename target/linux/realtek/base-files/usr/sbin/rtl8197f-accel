@@ -1,0 +1,85 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Strict routed firewall policy. Never enables a forwarding shortcut.
+PROC=/proc/rd05-rtknet
+
+supported_board() {
+	case "$(cat /tmp/sysinfo/board_name 2>/dev/null)" in
+		xiaomi,r4-rd05|tenda,nova-mw5|tenda,ac23|tenda,lynx-rtl8197f|iball,wrd12gn|\
+		cudy,wr1500|cudy,re1500|cudy,m1500) return 0 ;;
+	esac
+	echo 'No strict acceleration policy defined for this board' >&2
+	return 1
+}
+
+firewall_reload() {
+	[ -x /etc/init.d/firewall ] || {
+		echo 'Firewall service unavailable; settings saved but not applied' >&2
+		return 1
+	}
+	/etc/init.d/firewall reload
+}
+
+configure() {
+	supported_board || return 1
+	# Never create an incomplete firewall configuration if firewall4 is absent.
+	[ "$(uci -q get firewall.@defaults[0] 2>/dev/null)" = defaults ] || {
+		echo 'Firewall defaults section unavailable; no settings changed' >&2
+		return 1
+	}
+	uci -q set firewall.@defaults[0].flow_offloading=0 || return 1
+	uci -q set firewall.@defaults[0].flow_offloading_hw=0 || return 1
+	uci -q commit firewall || return 1
+}
+
+flow_rules_state() {
+	local rules
+	rules="$(nft list ruleset 2>/dev/null)" || { echo unknown; return; }
+	if printf '%s\n' "$rules" | grep -Eq 'flow (add|offload)[[:space:]]+@'; then
+		echo present
+	else
+		echo absent
+	fi
+}
+
+firewall4_state() {
+	local rules
+	rules="$(nft list table inet fw4 2>/dev/null)" || { echo unknown; return; }
+	if printf '%s\n' "$rules" | grep -Eq 'type filter hook forward[[:space:]]'; then
+		echo present
+	else
+		echo absent
+	fi
+}
+
+status() {
+	supported_board || return 1
+	echo 'policy=strict-per-packet-routed-firewall'
+	echo "flow_offloading=$(uci -q get firewall.@defaults[0].flow_offloading 2>/dev/null || echo unknown)"
+	echo "flow_offloading_hw=$(uci -q get firewall.@defaults[0].flow_offloading_hw 2>/dev/null || echo unknown)"
+	echo "fw4_forward_hook=$(firewall4_state)"
+	echo "nft_flow_rules=$(flow_rules_state)"
+	if [ -r "$PROC" ]; then
+		grep -E '^(driver=|firewall_policy |mw5_accel |mw5_legacy_accel |hwaccel_rx |hwaccel_tx |napt )' "$PROC"
+	else
+		echo 'driver_policy=unavailable'
+	fi
+}
+
+verify() {
+	status || return 1
+	[ "$(uci -q get firewall.@defaults[0].flow_offloading)" = 0 ] || return 1
+	[ "$(uci -q get firewall.@defaults[0].flow_offloading_hw)" = 0 ] || return 1
+	[ "$(firewall4_state)" = present ] || return 1
+	[ "$(flow_rules_state)" = absent ] || return 1
+	grep -q '^firewall_policy mode=strict routed_shortcuts=0 tc_flowtable_hw=0 ' "$PROC" 2>/dev/null || return 1
+	echo 'strict_forwarding_policy=PASS (not a connectivity or isolation test)'
+}
+
+case "${1:-status}" in
+	status) status ;;
+	verify) verify ;;
+	defaults) configure ;;
+	enforce) configure && firewall_reload ;;
+	*) echo 'Usage: rtl8197f-accel {status|verify|enforce|defaults}' >&2; exit 2 ;;
+esac

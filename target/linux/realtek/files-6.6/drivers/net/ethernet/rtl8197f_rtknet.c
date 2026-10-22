@@ -62,7 +62,7 @@
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.39-rd05-oem-chip-pad"
+#define DRV_VERSION			"1.8.40-strict-firewall"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -602,19 +602,47 @@ MODULE_PARM_DESC(mw5_rx_coherent_bounce,
 /* v44.65.17 MW5 accelerator ownership.
  *
  * One policy engine owns all MW5 acceleration.  Linux nftables/conntrack and
- * nf_flow_table remain authoritative; the driver may only accelerate an exact
- * flow after TC_SETUP_FT has installed it.  The software engine performs the
- * NAT/L2 rewrite shortcut.  The hardware engine owns only verified DMA/DSA
- * assists on Realtek-DSA-tagged boards; unsafe RTL865x L3/L4 lookup remains fail-closed.
+ * nf_flow_table were the admission source for the experimental software
+ * NAT/L2 cache. Strict per-packet firewall policy now disables that cache and
+ * the NAPT mirror entirely. The hardware engine label covers DMA/DSA assists,
+ * not autonomous routed forwarding. Historical encoders remain for analysis.
  */
+/* Strict firewall policy: packet processing assists are allowed, routed
+ * forwarding shortcuts are not. This is deliberately not a runtime knob.
+ * Even nf_flow_table admission does not preserve per-packet forward hooks.
+ */
+static bool rtl8197f_rtk_forward_offload_allowed(void)
+{
+	return false;
+}
+
+static int rtl8197f_rtk_forward_param_set(const char *val,
+				       const struct kernel_param *kp)
+{
+	bool enabled;
+	int ret = kstrtobool(val, &enabled);
+
+	if (ret)
+		return ret;
+	if (enabled && !rtl8197f_rtk_forward_offload_allowed())
+		return -EOPNOTSUPP;
+	return param_set_bool(val, kp);
+}
+
+static const struct kernel_param_ops rtl8197f_rtk_forward_param_ops = {
+	.set = rtl8197f_rtk_forward_param_set,
+	.get = param_get_bool,
+};
+
 static bool mw5_accel_enable = true;
 module_param(mw5_accel_enable, bool, 0644);
 MODULE_PARM_DESC(mw5_accel_enable,
 		 "MW5 unified accelerator master gate (default on; firewall/conntrack remains authoritative)");
 static bool mw5_accel_sw_enable;
-module_param(mw5_accel_sw_enable, bool, 0644);
+module_param_cb(mw5_accel_sw_enable, &rtl8197f_rtk_forward_param_ops,
+		&mw5_accel_sw_enable, 0644);
 MODULE_PARM_DESC(mw5_accel_sw_enable,
-		 "MW5 exact-flow software accelerator (default off pending hardware stress validation)");
+		 "MW5 exact-flow software accelerator reserved; enabling rejected by strict firewall policy");
 static bool mw5_accel_hw_enable = true;
 module_param(mw5_accel_hw_enable, bool, 0644);
 MODULE_PARM_DESC(mw5_accel_hw_enable,
@@ -643,9 +671,8 @@ MODULE_PARM_DESC(mw5_hwlookup_enable, "LEGACY MW5 HWLOOKUP gate (retired by v44.
 static bool mw5_hw_napt_enable;
 module_param(mw5_hw_napt_enable, bool, 0400);
 MODULE_PARM_DESC(mw5_hw_napt_enable, "LEGACY MW5 RTL865x HW-NAPT gate (retired by v44.65.17; kept off)");
-/* Generic RTL8197F gates.  These never create policy on their own: the NAPT
- * gate only allows nf_flow_table/tc flower rules already accepted by
- * firewall4+conntrack to be mirrored into the ASIC. */
+/* Generic packet assists do not create forwarding policy. The historical
+ * NAPT opt-in is retained for ABI visibility, but strict policy rejects it. */
 static bool rtl8197f_hw_csum_enable;
 module_param(rtl8197f_hw_csum_enable, bool, 0644);
 MODULE_PARM_DESC(rtl8197f_hw_csum_enable, "RTL8197F checksum offload opt-in for non-DSA boards");
@@ -659,8 +686,9 @@ static bool rtl8197f_hw_qos_enable;
 module_param(rtl8197f_hw_qos_enable, bool, 0644);
 MODULE_PARM_DESC(rtl8197f_hw_qos_enable, "RTL8197F three-queue QoS opt-in");
 static bool rtl8197f_hw_napt_enable;
-module_param(rtl8197f_hw_napt_enable, bool, 0600);
-MODULE_PARM_DESC(rtl8197f_hw_napt_enable, "RTL865x HW-NAPT flowtable mirror; firewall/conntrack remains authoritative");
+module_param_cb(rtl8197f_hw_napt_enable, &rtl8197f_rtk_forward_param_ops,
+		&rtl8197f_hw_napt_enable, 0600);
+MODULE_PARM_DESC(rtl8197f_hw_napt_enable, "RTL865x HW-NAPT reserved; enabling rejected by strict per-packet firewall policy");
 static bool mw5_extport_wlan_enable;
 module_param(mw5_extport_wlan_enable, bool, 0400);
 MODULE_PARM_DESC(mw5_extport_wlan_enable, "LEGACY MW5 extension-port gate (retired by v44.65.17; kept off)");
@@ -7651,7 +7679,7 @@ static int rtl8197f_mw5_accel_sw_replace(struct rtl8197f_rtknet_priv *priv,
 	unsigned long flags;
 	int ret;
 
-	if (!priv->is_mw5 || !priv->accel_sw) {
+	if (!rtl8197f_rtk_forward_offload_allowed() || !priv->is_mw5 || !priv->accel_sw) {
 		priv->accel_sw_replace_fallback++;
 		return -EOPNOTSUPP;
 	}
@@ -7810,7 +7838,8 @@ static int rtl8197f_mw5_accel_sw_forward(struct rtl8197f_rtknet_priv *priv,
 	bool dsa_in = false, udp_zero = false;
 	int ret;
 
-	if (!priv || !priv->is_mw5 || !READ_ONCE(mw5_accel_enable) || !READ_ONCE(priv->accel_sw) ||
+	if (!rtl8197f_rtk_forward_offload_allowed() ||
+	    !priv || !priv->is_mw5 || !READ_ONCE(mw5_accel_enable) || !READ_ONCE(priv->accel_sw) ||
 	    !skb || !skb->dev || skb->len < ETH_HLEN + sizeof(struct iphdr))
 		return 0;
 	/* v44.65.20: until nf_flow_table has installed at least one exact rule,
@@ -8018,6 +8047,8 @@ int rtl8197f_mw5_accel_rx(struct sk_buff *skb)
 {
 	struct rtl8197f_rtknet_priv *priv = READ_ONCE(rtl8197f_mw5_runtime);
 
+	if (!rtl8197f_rtk_forward_offload_allowed())
+		return 0; /* Original skb continues into the normal Linux RX stack. */
 	return rtl8197f_mw5_accel_sw_forward(priv, skb);
 }
 EXPORT_SYMBOL_GPL(rtl8197f_mw5_accel_rx);
@@ -8027,7 +8058,8 @@ EXPORT_SYMBOL_GPL(rtl8197f_mw5_accel_rx);
  * RTL865x NAPT mirror for Linux nf_flow_table
  * -------------------------------------------------------------------------
  *
- * Security model:
+ * Historical prototype, now disabled by strict per-packet firewall policy.
+ * Its original admission/lifetime model was:
  *   - only TC_SETUP_FT (netfilter flowtable) is allowed to reach this encoder;
  *     ordinary tc flower remains a separate callback and cannot create NAPT.
  *   - rules must be exact IPv4 TCP/UDP NAT tuples with a known LAN/WAN redirect;
@@ -8133,7 +8165,7 @@ static void rtl8197f_rtk_napt_set_l34(struct rtl8197f_rtknet_priv *priv,
     val = readl(priv->swcore + RTL_RTK_SWCORE_MSCR);
     val &= ~(RTL_RTK_MSCR_EN_L3 | RTL_RTK_MSCR_EN_L4);
     val |= RTL_RTK_MSCR_EN_L2;
-    if (enable)
+    if (enable && rtl8197f_rtk_forward_offload_allowed())
         val |= RTL_RTK_MSCR_EN_L3 | RTL_RTK_MSCR_EN_L4;
     writel(val, priv->swcore + RTL_RTK_SWCORE_MSCR);
     readl(priv->swcore + RTL_RTK_SWCORE_MSCR);
@@ -8464,11 +8496,12 @@ static int rtl8197f_rtk_napt_replace(struct rtl8197f_rtknet_priv *priv,
     u8 extidx;
     int ret;
 
-    if (!priv->is_iball || !priv->internal_vlan_split || !priv->napt_capable ||
+    if (!rtl8197f_rtk_forward_offload_allowed() ||
+        !priv->is_iball || !priv->internal_vlan_split || !priv->napt_capable ||
         !priv->hw_napt || !priv->swcore) {
         priv->napt_replace_fallback++;
         NL_SET_ERR_MSG_MOD(f->common.extack,
-                           "RTL865x HW-NAPT is disabled/not supported; Linux software flowtable remains active");
+                           "RTL865x HW-NAPT rejected; use regular Linux forwarding with strict firewall policy");
         return -EOPNOTSUPP;
     }
 
@@ -8818,6 +8851,10 @@ static int rtl8197f_rtk_setup_tc(struct net_device *ndev,
     case TC_SETUP_BLOCK:
         return rtl8197f_rtk_setup_tc_block(ndev, type_data, false);
     case TC_SETUP_FT:
+        if (!rtl8197f_rtk_forward_offload_allowed()) {
+            priv->tc_unsupported++;
+            return -EOPNOTSUPP;
+        }
         return rtl8197f_rtk_setup_tc_block(ndev, type_data, true);
     default:
         priv->tc_unsupported++;
@@ -8832,7 +8869,8 @@ static int rtl8197f_rtk_setup_tc_ft_source_cb(enum tc_setup_type type,
     struct rtl8197f_rtknet_priv *priv = READ_ONCE(rtl8197f_mw5_runtime);
     struct flow_cls_offload *cls;
 
-    if (!priv || !priv->is_mw5 || !READ_ONCE(mw5_accel_enable) || !READ_ONCE(priv->accel_sw) ||
+    if (!rtl8197f_rtk_forward_offload_allowed() ||
+        !priv || !priv->is_mw5 || !READ_ONCE(mw5_accel_enable) || !READ_ONCE(priv->accel_sw) ||
         type != TC_SETUP_CLSFLOWER)
         return -EOPNOTSUPP;
     cls = type_data;
@@ -8869,7 +8907,8 @@ int rtl8197f_mw5_accel_setup_tc(struct net_device *source,
     struct flow_block_offload *f = type_data;
     int ret;
 
-    if (!priv || !priv->is_mw5 || !READ_ONCE(mw5_accel_enable) || !READ_ONCE(priv->accel_sw) ||
+    if (!rtl8197f_rtk_forward_offload_allowed() ||
+        !priv || !priv->is_mw5 || !READ_ONCE(mw5_accel_enable) || !READ_ONCE(priv->accel_sw) ||
         !source || type != TC_SETUP_FT ||
         !rtl8197f_mw5_accel_sw_ingress_class(source))
         return -EOPNOTSUPP;
@@ -9013,6 +9052,7 @@ static int rtl8197f_rtk_rd05_proc_show(struct seq_file *m, void *v)
 		   priv->desc_dwords, priv->desc_stride,
 		   priv->desc_addr_kseg1, priv->sdk_crc_lengths,
 		   rtl8197f_rtk_read(priv, RTL_RTK_TXRINGCR));
+	seq_puts(m, "firewall_policy mode=strict routed_shortcuts=0 tc_flowtable_hw=0 dma_path=linux\n");
 	seq_printf(m, "mw5_accel enabled=%u sw=%u hw=%u hw_engine=coherent-dma+dsa-wlan-egress asic_l34_safe=%u rings=%u/%u coherent_rx=%u coherent_tx=%u page_pool=%u hw_packets=%llu hw_fallback=%llu hw_flow_attempts=%llu hw_flow_rejects=%llu\n",
 		   priv->is_mw5 && READ_ONCE(mw5_accel_enable),
 		   priv->accel_sw, priv->accel_hw, priv->accel_hw_l34_safe,
@@ -9503,7 +9543,8 @@ static ssize_t rtl8197f_rtk_rd05_proc_write(struct file *file,
 		WRITE_ONCE(mw5_accel_enable, true);
 		WRITE_ONCE(mw5_accel_hw_enable, true);
 		/* Master/hardware setup must not implicitly opt into software NAT. */
-		priv->accel_sw = READ_ONCE(mw5_accel_sw_enable);
+		priv->accel_sw = rtl8197f_rtk_forward_offload_allowed() &&
+			READ_ONCE(mw5_accel_sw_enable);
 		priv->accel_hw = true;
 		priv->hw_napt = false;
 		priv->tx_hwlookup = false;
@@ -9526,6 +9567,8 @@ static ssize_t rtl8197f_rtk_rd05_proc_write(struct file *file,
 		return len;
 	}
 	if (!strcmp(buf, "accel-sw-on")) {
+		if (!rtl8197f_rtk_forward_offload_allowed())
+			return -EOPNOTSUPP;
 		if (!priv->is_mw5)
 			return -EOPNOTSUPP;
 		WRITE_ONCE(mw5_accel_sw_enable, true);
@@ -9555,6 +9598,8 @@ static ssize_t rtl8197f_rtk_rd05_proc_write(struct file *file,
 		return len;
 	}
 	if (!strcmp(buf, "napt-on")) {
+		if (!rtl8197f_rtk_forward_offload_allowed())
+			return -EOPNOTSUPP;
 		if (priv->is_mw5)
 			return -EOPNOTSUPP; /* retired: unified MW5 accelerator owns policy */
 		if (!priv->is_iball)
@@ -10044,7 +10089,8 @@ static int rtl8197f_rtk_probe(struct platform_device *pdev)
 		 * assumption. Additional OEM RX/TX rings remain intentionally disabled. */
 		priv->rx_ring_size = RTL_RTK_MW5_OEM_RX_RING0;
 		priv->tx_ring_size = RTL_RTK_MW5_OEM_TX_RING0;
-		priv->accel_sw = mw5_accel_enable && mw5_accel_sw_enable;
+		priv->accel_sw = rtl8197f_rtk_forward_offload_allowed() &&
+			mw5_accel_enable && mw5_accel_sw_enable;
 		priv->accel_hw = mw5_accel_enable && mw5_accel_hw_enable;
 		priv->accel_hw_l34_safe = false; /* Realtek DSA tag offset is not RTL865x-L34-proven */
 	}
@@ -10060,7 +10106,8 @@ static int rtl8197f_rtk_probe(struct platform_device *pdev)
 		priv->hw_sg = rtl8197f_hw_sg_enable;
 		priv->hw_tso = rtl8197f_hw_tso_enable;
 		priv->hw_qos = rtl8197f_hw_qos_enable;
-		priv->hw_napt = priv->napt_capable && rtl8197f_hw_napt_enable;
+		priv->hw_napt = rtl8197f_rtk_forward_offload_allowed() &&
+			priv->napt_capable && rtl8197f_hw_napt_enable;
 		priv->tx_hwlookup = false;
 		priv->tx_bridge = false;
 		priv->tx_port_mask = priv->lan_port_mask;

@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "scope": "RTL8197F/RTL865x/RTL83xx mechanisms found in supplied Cudy GPL and current Openwrt_RTL branch, not all Realtek product families",
+  "gpl_archive_sha256": "2413dbd852e6f039d402f8ffda62e20b9f7b88a38dde0e7d86a527078ed66b93",
+  "source_root": "GPL_for_AX1500_rtl8197/openwrt/21.02/",
+  "mechanisms": [
+    {
+      "mechanism": "ipv4-fastpath",
+      "strict_policy_status": "blocked",
+      "sources": [
+        {
+          "path": "target/linux/realtek/files-4.4/net/rtl/fastpath/core/fastpath_core.c",
+          "bytes": 99949,
+          "sha256": "950457984f613456b6d69473827b39cd8154cfbed687e86ef2f3d4af5ca777f4"
+        }
+      ]
+    },
+    {
+      "mechanism": "ipv6-fastpath",
+      "strict_policy_status": "blocked",
+      "sources": [
+        {
+          "path": "target/linux/realtek/files-4.4/net/rtl/fastpath/core/fast_ipv6_core.c",
+          "bytes": 40348,
+          "sha256": "6dcd152465bbc879c2e175bba753b6e5e2dd4a3d0335ad4660cfb22fbf5263f3"
+        }
+      ]
+    },
+    {
+      "mechanism": "bridge-shortcut",
+      "strict_policy_status": "blocked",
+      "sources": [
+        {
+          "path": "target/linux/realtek/files-4.4/net/rtl/fastpath/core/fast_br.c",
+          "bytes": 9692,
+          "sha256": "2de5b1a12600d79718622a9fbeba7a0b2ad5eb242928e48c64c238786d8313e0"
+        }
+      ]
+    },
+    {
+      "mechanism": "pppoe-fastpath",
+      "strict_policy_status": "blocked",
+      "sources": [
+        {
+          "path": "target/linux/realtek/files-4.4/net/rtl/fastpath/core/fast_pppoe_core.c",
+          "bytes": 20613,
+          "sha256": "b8b0cce53a795a8b27cf1007efaeb1604916cfb053324140ae06df27698045c4"
+        }
+      ]
+    },
+    {
+      "mechanism": "pptp-fastpath",
+      "strict_policy_status": "blocked",
+      "sources": [
+        {
+          "path": "target/linux/realtek/files-4.4/net/rtl/fastpath/core/fast_pptp_core.c",
+          "bytes": 40519,
+          "sha256": "17f0029e00bd8ede16a964a19e81d7e8dc97a35bf483462d23187e263ac54317"
+        }
+      ]
+    },
+    {
+      "mechanism": "l2tp-fastpath",
+      "strict_policy_status": "blocked",
+      "sources": [
+        {
+          "path": "target/linux/realtek/files-4.4/net/rtl/fastpath/core/fast_l2tp_core.c",
+          "bytes": 24942,
+          "sha256": "93b28f79dec2285942d6c2e6edb889626d61913a7bb3e3aece52e639020a4c07"
+        }
+      ]
+    },
+    {
+      "mechanism": "private-netfilter-hooks",
+      "strict_policy_status": "not-imported",
+      "sources": [
+        {
+          "path": "target/linux/realtek/files-4.4/net/rtl/features/rtl_ps_hooks.c",
+          "bytes": 39867,
+          "sha256": "d1c6d7b1ba4349b4f9fba5e22222d1118a21bf20d035ece3b6d632dd5aecc8ae"
+        },
+        {
+          "path": "target/linux/realtek/files-4.4/net/rtl/fastpath/core/filter_ipv4.c",
+          "bytes": 40080,
+          "sha256": "0e97f7e3b6f573a07430745d3a2c43a2e48c6217d7b0b63ee0a1e4878b2f037f"
+        },
+        {
+          "path": "target/linux/realtek/files-4.4/net/rtl/fastpath/core/filter_ipv6.c",
+          "bytes": 9815,
+          "sha256": "789940cd134cecd9b0e39a92c22a0056b098eb3c0bb57aa96ba28df0745e55f3"
+        }
+      ]
+    },
+    {
+      "mechanism": "rtl865x-hardware-napt",
+      "strict_policy_status": "blocked",
+      "sources": [
+        {
+          "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/l4Driver/rtl865x_nat.c",
+          "bytes": 54214,
+          "sha256": "7cdce497d363cc3d03fc58fa0565f1eb6236cae8e7b8f09a9ea4d58a6ba13344"
+        },
+        {
+          "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/AsicDriver/rtl865x_asicL4.c",
+          "bytes": 14109,
+          "sha256": "9382d6c9fa0a8771702d6313c16e21d82e19b3f2000d266695cc18a2d061823d"
+        }
+      ]
+    },
+    {
+      "mechanism": "rtl865x-layer2",
+      "strict_policy_status": "linux-owned-reference",
+      "sources": [
+        {
+          "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/AsicDriver/rtl865x_asicL2.c",
+          "bytes": 343180,
+          "sha256": "662cca254ff20bf8e60795c5661ff65e0dc13dec0a49984138fd8619826e9836"
+        }
+      ]
+    },
+    {
+      "mechanism": "rtl83xx-layer2-cpu-tag",
+      "strict_policy_status": "linux-dsa-reference",
+      "sources": [
+        {
+          "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_cpu.c",
+          "bytes": 16457,
+          "sha256": "6c2209bcc001d8c0ce535d4ad5634724b3b41227b76f141d280309f745dd0eae"
+        },
+        {
+          "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_port.c",
+          "bytes": 139423,
+          "sha256": "f38f14da47656dbee95e0b63b22052305f68b245bc1df4bfa3d8c391602800d1"
+        }
+      ]
+    },
+    {
+      "mechanism": "dma-csum-sg-tso",
+      "strict_policy_status": "packet-assist-reference",
+      "sources": [
+        {
+          "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl819x_swNic.c",
+          "bytes": 80667,
+          "sha256": "f72dbbb08f9ca9ddc728543feff28392a2e3070e37958b9e093a8801b8ea5079"
+        },
+        {
+          "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl819x_swNic.h",
+          "bytes": 19241,
+          "sha256": "783f37656c80da3413fafa363a777b21ee50751f530bc5e0ddd0dd9f8f3d0076"
+        }
+      ]
+    },
+    {
+      "mechanism": "hardware-qos",
+      "strict_policy_status": "unvalidated-not-enabled",
+      "sources": [
+        {
+          "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/l2Driver/rtl865x_hw_qos_config.c",
+          "bytes": 27627,
+          "sha256": "672e0eec4f6e6ccf6b886fe1a4eae00cc916f8d7bf92d0668ce31ebc3526acde"
+        }
+      ]
+    },
+    {
+      "mechanism": "multicast-snooping",
+      "strict_policy_status": "layer2-reference",
+      "sources": [
+        {
+          "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_igmp.c",
+          "bytes": 10175,
+          "sha256": "ab20682406b909b6b4bf1d2443819e8bcb9d84c9910c4b5e4566eb46a9f92af9"
+        }
+      ]
+    },
+    {
+      "mechanism": "hardware-acl",
+      "strict_policy_status": "reference-no-firewall-rule-offload",
+      "sources": [
+        {
+          "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_acl.c",
+          "bytes": 84461,
+          "sha256": "b11129c047aa3523c43ed1b0a000d0a289518b7cbbedf622a5c4e6375a9f49f9"
+        }
+      ]
+    },
+    {
+      "mechanism": "crypto-engine",
+      "strict_policy_status": "bootcode-reference-only",
+      "sources": [
+        {
+          "path": "package/boot/rtl819x-SDK-v3.6.0-bootcode/src/boot/crypto/crypto_engine/rtl_ipsec.c",
+          "bytes": 38873,
+          "sha256": "02d393ce9e9ac2939d5748dc5e4db94c2b138974d521cac8ff57b34a713a87ac"
+        }
+      ]
+    }
+  ],
+  "additional_current_branch_mechanisms": [
+    "MW5 exact-flow software cache (blocked)",
+    "Linux software flowtable (disabled by strict UCI policy)",
+    "coherent DMA and page_pool",
+    "NAPI BQL GRO GSO",
+    "WLAN aggregation/crypto: existing driver, no additional complete radio source tree in this GPL"
+  ],
+  "hardware_validation": "No new hardware validation; RD05 CPU-link CRC issue remains unresolved"
+}
