@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-22",
+  "review_branch": "MW5_Stable",
+  "review_commit": "ddf39b1d2fc592e9bc587f2c20a6983f46a9ee48",
+  "comparison_ref": "origin/RT8197F",
+  "comparison_commit": "e6d68e9067f54b695022f61ed52e50dc56c5a7b7",
+  "source_url": "https://drive.usercontent.google.com/open?id=1sqW7x8sLHnSitW9ZXxgsrVN3lprFLp45&authuser=0",
+  "archive": {
+    "filename": "GPL_for_AX1500_rtl8197.tar.gz",
+    "bytes": 146030155,
+    "sha256": "2413dbd852e6f039d402f8ffda62e20b9f7b88a38dde0e7d86a527078ed66b93",
+    "entries": 27989,
+    "regular_files": 25265,
+    "regular_file_bytes": 466832957
+  },
+  "source_root": "GPL_for_AX1500_rtl8197/openwrt/21.02/",
+  "scope": "Targeted source review; no supplied programs executed, no firmware build or hardware validation.",
+  "comparisons": [
+    {
+      "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl819x_swNic.c",
+      "bytes": 80667,
+      "sha256": "f72dbbb08f9ca9ddc728543feff28392a2e3070e37958b9e093a8801b8ea5079",
+      "comparisons": {
+        "mr62x": {
+          "path": "8197/RT8197F_RTL8367RB_Gesamtpaket/MR62X_SDK_Paket/selected_sources/sdk/openwrt-21.02/target/linux/rtknet/drivers/net/rtl819x/rtl819x_swNic.c",
+          "present": true,
+          "byte_identical": false,
+          "sha256": "deb9b4c9c61bb6a565dc36934a7a073715d5b65a4d52e4c5c075bf063f134058"
+        },
+        "ax12": {
+          "path": "8197/RT8197F_RTL8367RB_Gesamtpaket/AX12v1_GPL_Paket/source_subset/rtl8197/rtknet/drivers/net/rtl819x/rtl819x_swNic.c",
+          "present": false,
+          "byte_identical": false
+        }
+      }
+    },
+    {
+      "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl819x_swNic.h",
+      "bytes": 19241,
+      "sha256": "783f37656c80da3413fafa363a777b21ee50751f530bc5e0ddd0dd9f8f3d0076",
+      "comparisons": {
+        "mr62x": {
+          "path": "8197/RT8197F_RTL8367RB_Gesamtpaket/MR62X_SDK_Paket/selected_sources/sdk/openwrt-21.02/target/linux/rtknet/drivers/net/rtl819x/rtl819x_swNic.h",
+          "present": true,
+          "byte_identical": true,
+          "sha256": "783f37656c80da3413fafa363a777b21ee50751f530bc5e0ddd0dd9f8f3d0076"
+        },
+        "ax12": {
+          "path": "8197/RT8197F_RTL8367RB_Gesamtpaket/AX12v1_GPL_Paket/source_subset/rtl8197/rtknet/drivers/net/rtl819x/rtl819x_swNic.h",
+          "present": false,
+          "byte_identical": false
+        }
+      }
+    },
+    {
+      "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl865xc_swNic.c",
+      "bytes": 69205,
+      "sha256": "d4eb0a0e8e01130b551a92f0691fac47401b90393bc1cde7b46e3b84e9f424d3",
+      "comparisons": {
+        "mr62x": {
+          "path": "8197/RT8197F_RTL8367RB_Gesamtpaket/MR62X_SDK_Paket/selected_sources/sdk/openwrt-21.02/target/linux/rtknet/drivers/net/rtl819x/rtl865xc_swNic.c",
+          "present": true,
+          "byte_identical": true,
+          "sha256": "d4eb0a0e8e01130b551a92f0691fac47401b90393bc1cde7b46e3b84e9f424d3"
+        },
+        "ax12": {
+          "path": "8197/RT8197F_RTL8367RB_Gesamtpaket/AX12v1_GPL_Paket/source_subset/rtl8197/rtknet/drivers/net/rtl819x/rtl865xc_swNic.c",
+          "present": false,
+          "byte_identical": false
+        }
+      }
+    },
+    {
+      "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/AsicDriver/rtl865x_asicL2.c",
+      "bytes": 343180,
+      "sha256": "662cca254ff20bf8e60795c5661ff65e0dc13dec0a49984138fd8619826e9836",
+      "comparisons": {
+        "mr62x": {
+          "path": "8197/RT8197F_RTL8367RB_Gesamtpaket/MR62X_SDK_Paket/selected_sources/sdk/openwrt-21.02/target/linux/rtknet/drivers/net/rtl819x/AsicDriver/rtl865x_asicL2.c",
+          "present": true,
+          "byte_identical": false,
+          "sha256": "7a3c271a803cb482463d199cc5c4f5e302c6fc22a2b758aba2161425010fa7b1"
+        },
+        "ax12": {
+          "path": "8197/RT8197F_RTL8367RB_Gesamtpaket/AX12v1_GPL_Paket/source_subset/rtl8197/rtknet/drivers/net/rtl819x/AsicDriver/rtl865x_asicL2.c",
+          "present": false,
+          "byte_identical": false
+        }
+      }
+    },
+    {
+      "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_port.c",
+      "bytes": 139423,
+      "sha256": "f38f14da47656dbee95e0b63b22052305f68b245bc1df4bfa3d8c391602800d1",
+      "comparisons": {
+        "mr62x": {
+          "path": "8197/RT8197F_RTL8367RB_Gesamtpaket/MR62X_SDK_Paket/selected_sources/sdk/openwrt-21.02/target/linux/rtknet/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_port.c",
+          "present": true,
+          "byte_identical": false,
+          "sha256": "a0300302adefb20f2af0c8175bd08054c69c0b95ad1bcde7490da45a0ead775a"
+        },
+        "ax12": {
+          "path": "8197/RT8197F_RTL8367RB_Gesamtpaket/AX12v1_GPL_Paket/source_subset/rtl8197/rtknet/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_port.c",
+          "present": true,
+          "byte_identical": true,
+          "sha256": "f38f14da47656dbee95e0b63b22052305f68b245bc1df4bfa3d8c391602800d1"
+        }
+      }
+    },
+    {
+      "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_cpu.c",
+      "bytes": 16457,
+      "sha256": "6c2209bcc001d8c0ce535d4ad5634724b3b41227b76f141d280309f745dd0eae",
+      "comparisons": {
+        "mr62x": {
+          "path": "8197/RT8197F_RTL8367RB_Gesamtpaket/MR62X_SDK_Paket/selected_sources/sdk/openwrt-21.02/target/linux/rtknet/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_cpu.c",
+          "present": false,
+          "byte_identical": false
+        },
+        "ax12": {
+          "path": "8197/RT8197F_RTL8367RB_Gesamtpaket/AX12v1_GPL_Paket/source_subset/rtl8197/rtknet/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_cpu.c",
+          "present": true,
+          "byte_identical": true,
+          "sha256": "6c2209bcc001d8c0ce535d4ad5634724b3b41227b76f141d280309f745dd0eae"
+        }
+      }
+    }
+  ],
+  "locations": [
+    {
+      "topic": "p0_rgmii_and_ipg",
+      "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/AsicDriver/rtl865x_asicL2.c",
+      "line": 7183,
+      "sha256": "662cca254ff20bf8e60795c5661ff65e0dc13dec0a49984138fd8619826e9836"
+    },
+    {
+      "topic": "new_descriptor_tx_length",
+      "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl819x_swNic.c",
+      "line": 1260,
+      "sha256": "f72dbbb08f9ca9ddc728543feff28392a2e3070e37958b9e093a8801b8ea5079"
+    },
+    {
+      "topic": "switch_rgmii_delay",
+      "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_port.c",
+      "line": 3138,
+      "sha256": "f38f14da47656dbee95e0b63b22052305f68b245bc1df4bfa3d8c391602800d1"
+    },
+    {
+      "topic": "switch_ssc",
+      "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_port.c",
+      "line": 4191,
+      "sha256": "f38f14da47656dbee95e0b63b22052305f68b245bc1df4bfa3d8c391602800d1"
+    },
+    {
+      "topic": "cpu_tag_length",
+      "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_cpu.c",
+      "line": 360,
+      "sha256": "6c2209bcc001d8c0ce535d4ad5634724b3b41227b76f141d280309f745dd0eae"
+    }
+  ],
+  "profiles": [
+    {
+      "name": "R76",
+      "path": "target/linux/realtek/rtl8197f/R76/config-4.4",
+      "sha256": "4194e93863c6bd50f2ecc4077449aa0510155bd9d90e2880dcb8b9d16094c4b8"
+    },
+    {
+      "name": "R101",
+      "path": "target/linux/realtek/rtl8197f/R101/config-4.4",
+      "sha256": "4177a0561516ca7695d40f9e430c791ecf5548675c624e8c1a7f94cec2345670"
+    },
+    {
+      "name": "R102",
+      "path": "target/linux/realtek/rtl8197f/R102/config-4.4",
+      "sha256": "3ef38b57ea11b7a18b9c1714b20ba99fb354e55cc31b2fc69b209234ab236142"
+    }
+  ]
+}
