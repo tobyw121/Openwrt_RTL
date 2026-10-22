@@ -3,7 +3,7 @@
 # Tenda MW5 cfg80211/nl80211 AP front-end for rtl8192cd Linux-6.6 port.
 [ "${MW5_WIFI_LIBRARY:-0}" = 1 ] || set -u
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
-VERSION='v44.65.17-rd05-netifd-luci'
+VERSION='v44.65.18-hostapd-runtime-state'
 LOG_DIR=/tmp/mw5-webui
 LOG_FILE=$LOG_DIR/wlan-apply.log
 RUNTIME_FILE=$LOG_DIR/mw5wifi.env
@@ -662,18 +662,33 @@ two_g_wait_for_client() {
 	return 1
 }
 
-# Require hostapd's completed setup, not just an nl80211 AP interface.
-# Record the log boundary before starting so a previous AP-ENABLED cannot
-# validate this attempt. No hostapd_cli package is needed on small images.
+hostapd_runtime_state() {
+	local reply state
+	command -v ubus >/dev/null 2>&1 && command -v jsonfilter >/dev/null 2>&1 || return 1
+	# hostapd-mini already exposes get_status through OpenWrt's ubus binding.
+	# Bound each query; do not require an additional hostapd_cli package.
+	reply="$(ubus -t 1 call "hostapd.$1" get_status 2>/dev/null)" || return 1
+	state="$(jsonfilter -s "$reply" -e '@.status' 2>/dev/null)" || return 1
+	[ -n "$state" ] || return 1
+	printf '%s\n' "$state"
+}
+
+# Asynchronous HT_SCAN completion may happen after hostapd -B detaches stdout.
+# Query the daemon itself; missing file output must not kill a working AP.
+# A current log event is only a compatibility fallback when no status is available.
 wait_hostapd_enabled() {
-	local ap_if="$1" ap_pid="$2" ap_first="$3" ap_wait=0 ap_events
+	local ap_if="$1" ap_pid="$2" ap_first="$3" ap_wait=0 ap_events ap_state
 	while [ "$ap_wait" -lt 20 ]; do
 		kill -0 "$ap_pid" 2>/dev/null || return 1
-		ap_events="$(tail -n "+$ap_first" "$LOG_FILE" 2>/dev/null | grep -F "$ap_if: AP-" || true)"
-		case "$(printf '%s\n' "$ap_events" | tail -n 1)" in
-			"$ap_if: AP-ENABLED"*) return 0 ;;
-			"$ap_if: AP-DISABLED"*) return 1 ;;
-		esac
+		if ap_state="$(hostapd_runtime_state "$ap_if")"; then
+			[ "$ap_state" != ENABLED ] || return 0
+		else
+			ap_events="$(tail -n "+$ap_first" "$LOG_FILE" 2>/dev/null | grep -F "$ap_if: AP-" || true)"
+			case "$(printf '%s\n' "$ap_events" | tail -n 1)" in
+				"$ap_if: AP-ENABLED"*) return 0 ;;
+				"$ap_if: AP-DISABLED"*) return 1 ;;
+			esac
+		fi
 		sleep 1
 		ap_wait=$((ap_wait + 1))
 	done

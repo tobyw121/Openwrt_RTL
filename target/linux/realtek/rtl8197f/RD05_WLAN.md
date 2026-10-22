@@ -107,3 +107,44 @@ weiterhin zurück. Ein zusätzlicher Test mit BusyBox 1.36.1 ohne TR_CLASSES
 reproduziert die alte Ablehnung und prüft die korrigierte Funktion unter ash.
 Der Test lässt sich mit `RTL8197F_BUSYBOX_NO_TR_CLASSES=/pfad/zu/busybox`
 zusätzlich zur normalen Hosttestsuite ausführen.
+
+## 5-GHz-AP wird trotz erfolgreichem WPA-Handshake wieder beendet
+
+Auf `43d4f72b8a` startet `wlan0` als AP auf Kanal 40/VHT80, sendet Beacons
+und schließt laut Benutzerlog bereits einen WPA2-Schlüsselaustausch ab.
+Unsere Startprüfung meldet danach dennoch `hostapd did not reach AP-ENABLED`
+und beendet den AP. Anschließend steht das Interface wieder auf `managed`,
+netifd meldet `retry_setup_failed=true` und LuCI zeigt keinen aktiven AP.
+
+Die bisherige Prüfung suchte ausschließlich im umgeleiteten stdout-Log.
+Bei 5 GHz kann hostapd zunächst `HT_SCAN` betreten und die AP-Einrichtung erst
+nach dem Hintergrundstart abschließen. Spätere Meldungen werden nicht
+zuverlässig in diese Datei geschrieben. Das fehlende Ereignis ist dann
+kein Beleg für einen fehlgeschlagenen AP-Start.
+
+Die Prüfung fragt nun mit begrenztem ubus-Timeout
+`hostapd.wlan0 get_status` beziehungsweise `hostapd.wlan1 get_status` ab und
+wertet das JSON-Feld `status` aus. `ENABLED` bei lebendem hostapd-Prozess
+bestätigt den Start auch ohne Logzeile. `HT_SCAN`, `DISABLED` und andere
+gemeldete Zustände werden nicht durch eine alte oder widersprüchliche
+`AP-ENABLED`-Zeile überstimmt. Nur wenn keine Statusantwort verfügbar ist,
+bleibt die bisherige Prüfung eines aktuellen Logereignisses als Fallback.
+Die vorhandene OpenWrt-hostapd-mini-Konfiguration enthält `CONFIG_UBUS=y`;
+ubus und jsonfilter sind bereits Teil des Systems. Es wird kein neues
+Paket benötigt. Ein vorhandenes nl80211-AP-Interface allein wird weiterhin
+nicht als Nachweis eines abgeschlossenen hostapd-Starts verwendet.
+
+Zusätzlich stoppt die Fehlerbehandlung während `SETUP` ausschließlich den
+eigenen AP. Die netifd-Meldung `PROCESS_KILL_ALL` erfolgt nur noch beim echten
+`TEARDOWN`; der bisherige Aufruf im Setup-Fehlerpfad verursachte das im Log
+beobachtete `Permission denied`. Fehler beim Registrieren des Interfaces oder
+hostapd-Prozesses führen ebenfalls zum Aufräumen und nicht zu einer falschen
+Aktivmeldung.
+
+Regressionstests prüfen einen erfolgreichen 5-GHz-Start ohne `AP-ENABLED` im
+Dateilog, den verzögerten Wechsel von `HT_SCAN` zu `ENABLED`, widersprüchliche
+Logzeilen, einen toten Daemon sowie Setup- und Teardown-Benachrichtigungen.
+Nach dem Neubau beide Bänder prüfen und 5 GHz länger als die bisherige
+Abschaltfrist von etwa 30 Sekunden verbunden lassen. Der passende Read-only-
+Statusbefehl ist `ubus -t 1 call hostapd.wlan0 get_status`; er gibt keine
+WLAN-Schlüssel aus.

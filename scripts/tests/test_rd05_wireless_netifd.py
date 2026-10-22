@@ -147,8 +147,8 @@ for_each_interface() {
     done
 }
 wireless_setup_failed() { echo "failed $*" >> "$TEST_LOG"; }
-wireless_add_vif() { echo "vif $*" >> "$TEST_LOG"; }
-wireless_add_process() { echo "process $*" >> "$TEST_LOG"; }
+wireless_add_vif() { echo "vif $*" >> "$TEST_LOG"; [ "$TEST_NOTIFY_FAIL" != vif ]; }
+wireless_add_process() { echo "process $*" >> "$TEST_LOG"; [ "$TEST_NOTIFY_FAIL" != process ]; }
 wireless_set_data() { echo "data $*" >> "$TEST_LOG"; }
 wireless_set_up() { echo up >> "$TEST_LOG"; }
 wireless_process_kill_all() { echo kill_all >> "$TEST_LOG"; }
@@ -162,7 +162,8 @@ wireless_process_kill_all() { echo kill_all >> "$TEST_LOG"; }
                 (path / 'ap.lock.d').mkdir()
             env = dict(os.environ, TEST_LOG=str(path / 'calls'), TEST_HELPER=str(helper),
                        TEST_COUNT=str(defaults.pop('count', 1)),
-                       TEST_FAIL_START=str(defaults.pop('fail_start', 0)))
+                       TEST_FAIL_START=str(defaults.pop('fail_start', 0)),
+                       TEST_NOTIFY_FAIL=str(defaults.pop('notify_fail', '')))
             env.update({'TEST_'+k: str(v) for k, v in defaults.items()})
             shell = ['sh']
             if os.environ.get('RTL8197F_BUSYBOX_NO_TR_CLASSES'):
@@ -221,7 +222,8 @@ wireless_process_kill_all() { echo kill_all >> "$TEST_LOG"; }
         result, calls = self.run_adapter(fail_start=1)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('failed HOSTAPD_START_FAILED', calls)
-        self.assertIn('kill_all', calls)
+        self.assertIn('stop 5g', calls)
+        self.assertNotIn('kill_all', calls)
         self.assertNotIn('vif ', calls)
         self.assertNotIn('\nup\n', calls)
 
@@ -232,6 +234,16 @@ wireless_process_kill_all() { echo kill_all >> "$TEST_LOG"; }
         self.assertIn('stop 5g', calls)
         self.assertIn('ip link set wlan0 down', calls)
         self.assertNotIn('wlan1', calls)
+        self.assertIn('kill_all', calls)
+
+    def test_failed_netifd_registration_cleans_up_without_teardown_notification(self):
+        for stage in ['vif','process']:
+            result, calls = self.run_adapter(notify_fail=stage)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('failed NETIFD_NOTIFY_FAILED', calls)
+            self.assertIn('stop 5g', calls)
+            self.assertNotIn('kill_all', calls)
+            self.assertNotIn('\nup\n', calls)
 
     def test_migration_preserves_settings_and_existing_luci_configuration(self):
         funcs = '\n'.join(shell_function(FRONT, name) for name in

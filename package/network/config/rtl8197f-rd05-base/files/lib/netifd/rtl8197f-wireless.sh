@@ -119,8 +119,11 @@ rd05_start_vif() {
 	fi
 	pid="$(cat "/var/run/mw5-wifi/hostapd-$rd05_band.pid" 2>/dev/null)"
 	case "$pid" in ''|*[!0-9]*) rd05_error=HOSTAPD_PID_MISSING; return 1 ;; esac
-	wireless_add_vif "$name" "$rd05_ifname"
-	wireless_add_process "$pid" /usr/sbin/hostapd 1
+	if ! wireless_add_vif "$name" "$rd05_ifname" ||
+	   ! wireless_add_process "$pid" /usr/sbin/hostapd 1; then
+		rd05_error=NETIFD_NOTIFY_FAILED
+		return 1
+	fi
 }
 
 drv_mac80211_setup() {
@@ -154,7 +157,9 @@ drv_mac80211_setup() {
 	mkdir -p /tmp/mw5-webui
 	for_each_interface '' rd05_start_vif
 	if [ -n "$rd05_error" ]; then
-		drv_mac80211_teardown
+		# This is still SETUP. PROCESS_KILL_ALL is only permitted by netifd
+		# in its TEARDOWN handler; stop our own AP without that notification.
+		rd05_stop_radio "$phy" "$rd05_band"
 		wireless_setup_failed "$rd05_error"
 		return 1
 	fi
@@ -162,11 +167,8 @@ drv_mac80211_setup() {
 	wireless_set_up
 }
 
-drv_mac80211_teardown() {
-	local phy band
-	json_select config
-	json_get_vars phy band
-	json_select ..
+rd05_stop_radio() {
+	local phy="$1" band="$2"
 	case "$phy:$band" in phy0:5g|phy1:2g) ;; *) return 1 ;; esac
 	if ! (
 		rd05_ap_lock || exit 1
@@ -176,6 +178,14 @@ drv_mac80211_teardown() {
 	) >/dev/null 2>&1; then
 		return 1
 	fi
+}
+
+drv_mac80211_teardown() {
+	local phy band
+	json_select config
+	json_get_vars phy band
+	json_select ..
+	rd05_stop_radio "$phy" "$band" || return 1
 	wireless_process_kill_all
 }
 

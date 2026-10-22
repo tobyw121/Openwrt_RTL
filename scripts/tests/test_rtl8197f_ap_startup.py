@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-2.0-or-later
 """Exercise actual shell policy and HAL interrupt dispatch on the host."""
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -45,6 +46,7 @@ mw5_network_guard post-driver
 
     def test_hostapd_requires_current_enabled_event(self):
         func = shell_function(BASE / 'usr/sbin/mw5-wifi', 'wait_hostapd_enabled')
+        func += '\nhostapd_runtime_state() { return 1; }\n'
         cases = [('', 1), ('wlan0: interface state UNINITIALIZED->HT_SCAN\n', 1),
                  ('wlan1: AP-ENABLED\n', 1), ('wlan0: AP-ENABLED\n', 0),
                  ('wlan0: AP-ENABLED\nwlan0: AP-DISABLED\n', 1)]
@@ -57,6 +59,97 @@ mw5_network_guard post-driver
                     script += f'LOG_FILE="{log}"\nwait_hostapd_enabled wlan0 $$ 2\n'
                     result = subprocess.run(['sh', '-c', script], capture_output=True)
                     self.assertEqual(result.returncode, expected, result.stderr)
+
+    def test_runtime_state_checks_the_requested_bss_and_real_json_status(self):
+        func = shell_function(BASE / 'usr/sbin/mw5-wifi', 'hostapd_runtime_state')
+        script = func + r'''
+ubus() {
+    [ "$*" = '-t 1 call hostapd.wlan0 get_status' ] || return 1
+    [ "$TEST_QUERY_FAIL" != 1 ] || return 1
+    printf '%s' "$TEST_REPLY"
+}
+jsonfilter() {
+    [ "$1:$3:$4" = '-s:-e:@.status' ] || return 1
+    printf '%s' "$2" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("status", ""))'
+}
+hostapd_runtime_state wlan0
+'''
+        for reply, query_fail, expected in [('{"status":"ENABLED"}',False,'ENABLED'),
+                ('{"status":"DISABLED","ssid":"ENABLED"}',False,'DISABLED'),
+                ('{"ssid":"ENABLED"}',False,''), ('invalid',False,''),
+                ('{"status":"ENABLED"}',True,'')]:
+            result = subprocess.run(['sh','-c',script], text=True, capture_output=True,
+                env=dict(os.environ, TEST_REPLY=reply, TEST_QUERY_FAIL='1' if query_fail else '0'))
+            self.assertEqual(result.returncode == 0, bool(expected), result.stderr)
+            self.assertEqual(result.stdout.strip(), expected)
+
+    def test_runtime_enabled_does_not_need_stdout_but_scanning_is_not_ready(self):
+        func = shell_function(BASE / 'usr/sbin/mw5-wifi', 'wait_hostapd_enabled')
+        with tempfile.TemporaryDirectory() as tmp:
+            log = Path(tmp)/'log'
+            for state, event, alive, expected in [
+                    ('ENABLED','',True,0), ('HT_SCAN','wlan0: AP-ENABLED\n',True,1),
+                    ('DISABLED','wlan0: AP-ENABLED\n',True,1), ('ENABLED','',False,1)]:
+                log.write_text(event)
+                script = func + r'''
+hostapd_runtime_state() { echo "$TEST_STATE"; }
+kill() { [ "$TEST_ALIVE" = 1 ]; }
+sleep() { :; }
+LOG_FILE="$TEST_LOG"
+wait_hostapd_enabled wlan0 123 1
+'''
+                result = subprocess.run(['sh','-c',script], text=True, capture_output=True,
+                    env=dict(os.environ,TEST_LOG=str(log),TEST_STATE=state,TEST_ALIVE='1' if alive else '0'))
+                self.assertEqual(result.returncode, expected, result.stderr)
+
+    def test_async_enabled_after_scan_is_accepted_without_file_event(self):
+        func = shell_function(BASE / 'usr/sbin/mw5-wifi', 'wait_hostapd_enabled')
+        with tempfile.TemporaryDirectory() as tmp:
+            log = Path(tmp)/'log'; log.write_text('wlan0: interface state UNINITIALIZED->HT_SCAN\n')
+            state = Path(tmp)/'count'; state.write_text('0')
+            script = func + r'''
+hostapd_runtime_state() {
+    count=$(cat "$TEST_COUNT")
+    echo $((count+1)) > "$TEST_COUNT"
+    if [ "$count" -lt 2 ]; then echo HT_SCAN; else echo ENABLED; fi
+}
+sleep() { :; }
+LOG_FILE="$TEST_LOG"
+wait_hostapd_enabled wlan0 $$ 1
+'''
+            result = subprocess.run(['sh','-c',script],text=True,capture_output=True,
+                env=dict(os.environ,TEST_LOG=str(log),TEST_COUNT=str(state)))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(state.read_text().strip(), '3')
+
+    def test_5g_start_accepts_live_daemon_without_ap_enabled_file_line(self):
+        funcs = '\n'.join(shell_function(BASE/'usr/sbin/mw5-wifi', name)
+                          for name in ['start_radio','wait_hostapd_enabled'])
+        with tempfile.TemporaryDirectory() as tmp:
+            script = funcs + r'''
+LOG_FILE="$TEST_DIR/log"; RUN_DIR="$TEST_DIR"; BRIDGE=br-lan
+: > "$LOG_FILE"
+wait_radio() { return 0; }
+write_hostapd_config() { :; }
+beacon_ok_read() { echo 0; }
+beacon_len_read() { echo 213; }
+ip() { :; }
+iw() { printf 'type AP\nchannel 40 (5200 MHz), width: 80 MHz\n'; }
+hostapd() {
+    echo $$ > "$3"
+    echo 'wlan0: interface state UNINITIALIZED->HT_SCAN'
+}
+hostapd_runtime_state() { echo ENABLED; }
+sleep() { :; }
+ensure_bridge_member() { :; }
+log() { :; }
+start_radio 5g wlan0 1 TestAP 40 80 psk2 'test password'
+'''
+            result = subprocess.run(['sh','-c',script],text=True,capture_output=True,
+                env=dict(os.environ,TEST_DIR=tmp))
+            self.assertEqual(result.returncode, 0, result.stderr+result.stdout)
+            self.assertIn('PASS: 5g AP active', result.stdout)
+            self.assertNotIn('AP-ENABLED', (Path(tmp)/'log').read_text())
 
     def test_quiet_phases_retain_diagnostics_and_errors(self):
         func = c_function(WLAN / 'rtl8197f_platform_glue.c',
