@@ -15,9 +15,9 @@ wan_up() {
 snapshot() {
 	local counters rx tx
 	counters="$(ethtool -S wan 2>/dev/null | awk '
-		$1 == "cpu_ifInOctets:" { i=$2 }
-		$1 == "cpu_ifOutOctets:" { o=$2 }
-		$1 == "cpu_fcs_errors:" { c=$2 }
+		$1 == "cpu_ifInOctets:" || $1 == "p07_ifInOctets:" { i=$2 }
+		$1 == "cpu_ifOutOctets:" || $1 == "p07_ifOutOctets:" { o=$2 }
+		$1 == "cpu_fcs_errors:" || $1 == "p07_dot3StatsFCSErrors:" { c=$2 }
 		END {
 			if (i !~ /^[0-9]+$/ || o !~ /^[0-9]+$/ || c !~ /^[0-9]+$/ ||
 			    length(i)>15 || length(o)>15 || length(c)>15) exit 1
@@ -103,25 +103,39 @@ restore() {
 	return "$rc"
 }
 
+fail() {
+	printf 'ERROR: %s\n' "$*" >&2
+	# A concurrent run owns its report. Never overwrite it on preflight failure.
+	if [ ! -d "$LOCK" ]; then
+		printf 'ERROR: %s\n' "$*" >"$REPORT"
+	fi
+	return 1
+}
+
 run_test() {
 	local before after delay result saved_ssc
 	case "$(cat /tmp/sysinfo/board_name 2>/dev/null)" in
-		xiaomi,r4-rd05) ;; *) echo 'Only Xiaomi RD05 is supported' >&2; return 2 ;;
+		xiaomi,r4-rd05) ;; *) fail 'Only Xiaomi RD05 is supported'; return 2 ;;
 	esac
-	[ -w "$PARAM" ] || { echo "Timing parameter unavailable: $PARAM" >&2; return 1; }
-	wan_up && { echo 'WAN is already up; refusing to interrupt the working link' >&2; return 1; }
-	command -v timeout >/dev/null 2>&1 || return 1
-	command -v udhcpc >/dev/null 2>&1 || return 1
-	before="$(snapshot)" || { echo 'CPU-port counters unavailable; cannot test timing' >&2; return 1; }
-	mkdir "$LOCK" 2>/dev/null || { echo 'A timing test is already running' >&2; return 1; }
+	[ -w "$PARAM" ] || { fail "Timing parameter unavailable: $PARAM"; return 1; }
+	wan_up && { fail 'WAN is already up; refusing to interrupt the working link'; return 1; }
+	local tool
+	for tool in timeout udhcpc ethtool awk ifstatus; do
+		command -v "$tool" >/dev/null 2>&1 || {
+			fail "Required command missing: $tool; no timing settings changed"
+			return 1
+		}
+	done
+	before="$(snapshot)" || { fail 'CPU-port counters unavailable; cannot test timing'; return 1; }
+	mkdir "$LOCK" 2>/dev/null || { fail 'A timing test is already running, or its lock cannot be created'; return 1; }
 	SAVED_DELAY="$(cat "$PARAM")"
-	case "$SAVED_DELAY" in [0-7]) ;; *) SAVED_DELAY=; rmdir "$LOCK"; return 1 ;; esac
+	case "$SAVED_DELAY" in [0-7]) ;; *) SAVED_DELAY=; rmdir "$LOCK"; fail 'Invalid original RX delay'; return 1 ;; esac
 	trap 'restore' EXIT
 	trap 'exit 130' INT
 	trap 'exit 143' TERM
 	saved_ssc="$(cat /sys/module/rtl8365mb/parameters/rd05_ext1_ssc 2>/dev/null)"
 	{
-		echo 'RD05 RGMII RX timing test v2; no defaults are changed'
+		echo 'RD05 RGMII RX timing test v3; no defaults are changed'
 		echo "original_rx_delay=$SAVED_DELAY ssc=$saved_ssc"
 		echo 'Only switch RX delay is varied; SSC, SoC timing, CRC validation and port tables are preserved.'
 		echo 'Fields: switch_in_bytes switch_out_bytes switch_fcs_errors soc_rx_packets soc_tx_packets'

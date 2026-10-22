@@ -32,7 +32,7 @@ class RGMIIProbeTests(unittest.TestCase):
     def run_probe(self, tmp, failure=''):
         path = Path(tmp)
         param = path/'delay'; param.write_text('5\n')
-        funcs = '\n'.join(shell_function(SCRIPT, name) for name in ['classify', 'restore', 'run_test'])
+        funcs = '\n'.join(shell_function(SCRIPT, name) for name in ['classify', 'restore', 'fail', 'run_test'])
         funcs = funcs.replace('$(cat /tmp/sysinfo/board_name 2>/dev/null)', 'xiaomi,r4-rd05')
         mocks = r'''
 wan_up() { [ -f "$TEST_DIR/lease" ]; }
@@ -40,6 +40,8 @@ snapshot() { printf '%s %s %s %s %s\n' "${count:-100}" "${count:-100}" 0 "${rx:-
 sleep() { :; }
 udhcpc() { :; }
 timeout() { :; }
+ethtool() { :; }
+ifstatus() { :; }
 probe_packets() {
     d=$(cat "$PARAM")
     [ "$d" != "$FAIL_AT" ] || return 1
@@ -87,6 +89,44 @@ snapshot
 '''
                 result = subprocess.run(['sh','-c',function+mock], capture_output=True)
                 self.assertEqual(result.returncode == 0, values == '12 34 5')
+
+    def test_older_p07_counters_are_supported(self):
+        function = shell_function(SCRIPT, 'snapshot')
+        script = function + r'''
+ethtool() { printf 'p07_ifInOctets: 956\np07_ifOutOctets: 0\np07_dot3StatsFCSErrors: 10\n'; }
+cat() { echo 0; }
+snapshot
+'''
+        self.assertEqual(subprocess.check_output(['sh', '-c', script], text=True).strip(),
+                         '956 0 10 0 0')
+
+    def test_missing_dependencies_are_reported_without_changing_timing(self):
+        funcs = '\n'.join(shell_function(SCRIPT, name) for name in ['fail', 'run_test'])
+        funcs = funcs.replace('$(cat /tmp/sysinfo/board_name 2>/dev/null)', 'xiaomi,r4-rd05')
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp)
+            (path/'delay').write_text('5\n')
+            script = 'PARAM="$TEST_DIR/delay"; REPORT="$TEST_DIR/report"; LOCK="$TEST_DIR/lock"\n'
+            script += funcs + r'''
+wan_up() { return 1; }
+command() { [ "$2" != "$MISSING_TOOL" ]; }
+run_test
+'''
+            for tool in ['timeout', 'udhcpc', 'ethtool', 'awk', 'ifstatus']:
+                with self.subTest(tool=tool):
+                    result = subprocess.run(['sh', '-c', script], text=True, capture_output=True,
+                        env=dict(os.environ, TEST_DIR=tmp, MISSING_TOOL=tool))
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn('Required command missing: '+tool, result.stderr)
+                    self.assertEqual((path/'report').read_text(), result.stderr)
+                    self.assertEqual((path/'delay').read_text(), '5\n')
+                    self.assertFalse((path/'lock').exists())
+            # Preflight must not replace a report owned by another test.
+            (path/'lock').mkdir()
+            (path/'report').write_text('active test\n')
+            subprocess.run(['sh', '-c', script], capture_output=True,
+                env=dict(os.environ, TEST_DIR=tmp, MISSING_TOOL='timeout'))
+            self.assertEqual((path/'report').read_text(), 'active test\n')
 
     def test_private_probe_uses_separate_pid_and_no_network_configuration(self):
         function = shell_function(SCRIPT, 'probe_packets')

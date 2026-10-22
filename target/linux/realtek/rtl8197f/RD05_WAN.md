@@ -242,3 +242,28 @@ adds CRC. Our driver follows that rule. This does not prove that the complete
 MAC/CRC configuration is correct, but it supplies no basis for blindly removing
 those four bytes. The previous legacy `rtl865xc_swNic.c` comparison alone was
 not sufficient to establish the new-descriptor rule.
+
+## Timing probe preflight failure and v3 diagnostics
+
+On firmware `26913f30ea`, a separate DHCP probe increased SoC TX from 140 to
+151 and switch CPU FCS errors from 140 to 151. User-port output and SoC RX
+remained zero. This is a sampled one-to-one correspondence, not proof of a
+particular clock or CRC-generation defect.
+
+A later report showed `rd05-rgmii-test` returning silently without creating
+its report. The v2 script has silent preflight returns for missing `timeout`
+and `udhcpc`. BusyBox's default configuration disables `timeout`; absence on
+the actual flashed image must be checked with `command -v timeout` or
+`sh -x /usr/sbin/rd05-rgmii-test`. The supplied `rd05-rgmii-boot.log` is a
+different report, not a timing sweep: it has ten CPU-port FCS errors and
+zero CPU-port output bytes, but does not contain a before/after sweep.
+
+V3 reports missing prerequisites explicitly, saves preflight failures when
+no other test owns the report, and leaves timing unchanged on those failures.
+The RD05 package selects BusyBox's timeout applet for future builds. It also
+accepts the older `p07_ifInOctets`, `p07_ifOutOctets`, and
+`p07_dot3StatsFCSErrors` names as alternatives to the newer `cpu_*` counters.
+This fixes the diagnostic, not the Ethernet datapath. Native tests cover
+missing commands, old counter names, concurrent report preservation and
+restoration after success, failure and termination. No new hardware result
+or full firmware build is available for v3 yet.

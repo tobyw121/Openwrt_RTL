@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rtl8197f-rd05-base
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 PKG_LICENSE:=GPL-2.0-or-later
 
 include $(INCLUDE_DIR)/package.mk
@@ -11,6 +11,14 @@ define Package/rtl8197f-rd05-base
   CATEGORY:=Network
   TITLE:=RTL8197F Xiaomi R4/RD05 board-only userspace defaults
   DEPENDS:=@TARGET_realtek_rtl8197f
+endef
+
+define Package/rtl8197f-rd05-base/config
+	config RTL8197F_RD05_DIAGNOSTICS
+		bool
+		depends on PACKAGE_rtl8197f-rd05-base
+		default y
+		select BUSYBOX_CONFIG_TIMEOUT
 endef
 
 define Package/rtl8197f-rd05-base/description
