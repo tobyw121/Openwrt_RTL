@@ -85,3 +85,25 @@ Der LAN-/WAN-Fehler mit FCS-Fehlern am Switch-CPU-Port ist hiervon getrennt.
 Diese Änderung behebt dessen elektrische beziehungsweise Frame-Verarbeitung
 nicht. Auf echter Hardware sind die neue LuCI-/netifd-Anbindung und das
 vollständige Firmware-Image noch zu prüfen; Hosttests ersetzen dies nicht.
+
+## Autostartfehler auf `00eadaa10e`: INVALID_SSID
+
+Der Benutzerlog zeigt beide Radios korrekt konfiguriert, aktiviert und mit
+`autostart=true`, aber mit `retry_setup_failed=true`. Beide Starts scheitern
+vor dem Laden des WLAN-Treibers mit `INVALID_SSID`. Es ist kein fehlender
+Autostart-Eintrag: Die SSID-Prüfung lehnt gültige Namen ab.
+
+Die Prüfung verwendete `tr -d '[:cntrl:]'`. OpenWrt deaktiviert standardmäßig
+`BUSYBOX_CONFIG_FEATURE_TR_CLASSES`. Ohne diese Option interpretiert BusyBox
+den Ausdruck als einzelne zu löschende Zeichen, einschließlich `n`, `t` und
+`r`. Dadurch verändern sich auch die beiden Standard-SSIDs und werden als
+ungültig bewertet. GNU-tr auf dem Entwicklungssystem zeigte diesen Fehler
+in den bisherigen Hosttests nicht.
+
+Die Korrektur verwendet stattdessen den grundlegenden oktalen Bytebereich
+`tr -d '\000-\037\177'`. Sie benötigt keine Zeichenklassen-Unterstützung,
+erhält normale SSIDs und weist Zeilenumbrüche, CR und weitere Steuerbytes
+weiterhin zurück. Ein zusätzlicher Test mit BusyBox 1.36.1 ohne TR_CLASSES
+reproduziert die alte Ablehnung und prüft die korrigierte Funktion unter ash.
+Der Test lässt sich mit `RTL8197F_BUSYBOX_NO_TR_CLASSES=/pfad/zu/busybox`
+zusätzlich zur normalen Hosttestsuite ausführen.

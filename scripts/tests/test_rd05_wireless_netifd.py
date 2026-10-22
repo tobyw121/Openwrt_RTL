@@ -14,6 +14,34 @@ ADAPTER = ROOT / 'package/network/config/rtl8197f-rd05-base/files/lib/netifd/rtl
 
 
 class RD05WirelessTests(unittest.TestCase):
+    def test_ssid_validation_preserves_normal_text_and_rejects_controls(self):
+        function = shell_function(ADAPTER, 'rd05_valid_text')
+        for value in ['Openwrt_5GHz', 'Openwrt_2,4GHz', '[:cntrl:]', "WiFi ' Küche"]:
+            result = subprocess.run(['sh','-c',function+'\nrd05_valid_text "$TEST_TEXT"'],
+                env=dict(os.environ, TEST_TEXT=value))
+            self.assertEqual(result.returncode, 0, repr(value))
+        for value in ['', *(f'AP{chr(c)}injected=1' for c in [*range(1,32),127])]:
+            result = subprocess.run(['sh','-c',function+'\nrd05_valid_text "$TEST_TEXT"'],
+                env=dict(os.environ, TEST_TEXT=value))
+            self.assertNotEqual(result.returncode, 0, repr(value))
+
+    @unittest.skipUnless(os.environ.get('RTL8197F_BUSYBOX_NO_TR_CLASSES'),
+                         'set RTL8197F_BUSYBOX_NO_TR_CLASSES to a BusyBox binary built without TR_CLASSES')
+    def test_busybox_without_tr_classes_reproduces_bug_and_accepts_fix(self):
+        busybox = Path(os.environ['RTL8197F_BUSYBOX_NO_TR_CLASSES']).resolve()
+        sample = 'Openwrt_5GHz'
+        broken = subprocess.check_output([str(busybox),'tr','-d','[:cntrl:]'], input=sample, text=True)
+        self.assertNotEqual(broken, sample, 'BusyBox fixture must have TR_CLASSES disabled')
+        function = shell_function(ADAPTER, 'rd05_valid_text')
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp)/'tr').symlink_to(busybox)
+            for value, success in [(sample, True), ('Openwrt_2,4GHz', True),
+                                   ('[:cntrl:]', True), ('AP\ninjected=1', False),
+                                   ('AP\rinjected=1', False), ('AP\x7f', False), ('', False)]:
+                result = subprocess.run([str(busybox),'ash','-c',function+'\nrd05_valid_text "$TEST_TEXT"'],
+                    env=dict(os.environ, PATH=tmp, TEST_TEXT=value))
+                self.assertEqual(result.returncode == 0, success, repr(value))
+
     def test_ap_lock_serializes_processes_and_releases_after_failure(self):
         function = shell_function(ADAPTER, 'rd05_ap_lock')
         with tempfile.TemporaryDirectory() as tmp:
@@ -136,7 +164,17 @@ wireless_process_kill_all() { echo kill_all >> "$TEST_LOG"; }
                        TEST_COUNT=str(defaults.pop('count', 1)),
                        TEST_FAIL_START=str(defaults.pop('fail_start', 0)))
             env.update({'TEST_'+k: str(v) for k, v in defaults.items()})
-            result = subprocess.run(['sh', '-c', mocks + script + '\n' + command],
+            shell = ['sh']
+            if os.environ.get('RTL8197F_BUSYBOX_NO_TR_CLASSES'):
+                # Also exercise the full setup/teardown callbacks with target-like
+                # ash/tr, while retaining mocked JSON and hardware boundaries.
+                busybox = Path(os.environ['RTL8197F_BUSYBOX_NO_TR_CLASSES']).resolve()
+                tools = path / 'bin'
+                tools.mkdir()
+                (tools / 'tr').symlink_to(busybox)
+                env['PATH'] = str(tools) + ':' + env['PATH']
+                shell = [str(busybox), 'ash']
+            result = subprocess.run([*shell, '-c', mocks + script + '\n' + command],
                                     env=env, text=True, capture_output=True)
             calls = (path / 'calls').read_text() if (path / 'calls').exists() else ''
             if busy:

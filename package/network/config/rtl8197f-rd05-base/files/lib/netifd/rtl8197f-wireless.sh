@@ -46,7 +46,11 @@ drv_mac80211_init_station_config() {
 }
 
 rd05_valid_text() {
-	[ -n "$1" ] && [ "$1" = "$(printf '%s' "$1" | LC_ALL=C tr -d '[:cntrl:]')" ]
+	# OpenWrt disables BusyBox FEATURE_TR_CLASSES by default. In that build
+	# '[:cntrl:]' deletes literal letters, rejecting perfectly valid SSIDs.
+	# Octal byte ranges work without optional character-class support and
+	# still reject embedded newlines/CR and other hostapd config injection.
+	[ -n "$1" ] && [ "$1" = "$(printf '%s' "$1" | LC_ALL=C tr -d '\000-\037\177')" ]
 }
 
 rd05_read_vif() {
