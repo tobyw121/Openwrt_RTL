@@ -207,7 +207,7 @@ dass schon Pakete beschleunigt wurden oder die Durchsatz-/Sicherheitstests
 bestanden sind. Flow-Admission kann nicht durch unsere alten Proc-NAT-Befehle
 oder durch einen parallelen privaten Cache ersetzt werden.
 
-**Gerätegrenzen:** MW5 bleibt wegen der bisherigen Speedtest-/Lastprobleme
+**Gerätegrenzen:** Die dauerhafte Aktivierung auf dem MW5 bleibt wegen der bisherigen Speedtest-/Lastprobleme
 gesperrt. Die Cudy-UART-Profile haben noch keinen Ethernet-Datenpfad. Beim RD05
 verhindert das fehlende WAN die Aktivierung. Für Regeln, die jedes Paket sehen
 müssen, sowie ungeprüfte SQM-/CAKE- oder Spezialkonfigurationen bleibt der
@@ -254,3 +254,44 @@ Der RD05 hat weiterhin einen ungeklärten CPU-Link-/FCS-Fehler. Diese Änderung
 behauptet weder dessen Behebung noch eine gemessene Durchsatzsteigerung.
 Ein vollständiger Firmwarebuild, das MW5-Imagebudget und Hardwaretests müssen
 noch geprüft werden. Bereits abgeschaltete instabile Fastpaths bleiben aus.
+
+## MW5: zeitlich begrenzter Software-Test
+
+`rtl8197f-accel test software 120` ist die ausdrückliche Ausnahme von der
+MW5-Sperre für einen 30–300 Sekunden langen Versuch (Standard: 120 Sekunden).
+Er testet den nativen Linux-Flowtable-Pfad, keinen Realtek-Software-Cache und
+kein Hardware-NAT. Er benötigt den aktuellen Treiber mit Policy-Nachweis,
+das optionale Paket `rtl8197f-flow-offload` einschließlich geladener Module,
+einen aktiven WAN-Zugang und eine aktive firewall4-Forward-Chain. Das Paket
+muss bei einem Neubau ausgewählt werden; seine IPv6-Abhängigkeit und das
+8-MiB-Flashbudget des MW5 sind vor dem Flashen zu prüfen. Es ist im normalen
+MW5-Image nicht automatisch enthalten. Keine Pakete mit abweichender Kernel-ABI installieren.
+
+Ablauf, vorzugsweise über UART:
+
+1. `rtl8197f-accel status` und `rtl8197f-accel verify` ausführen. Beide
+   Offloads müssen aus sein. Zunächst ohne Beschleunigung jeweils einen
+   LAN→WAN- und WLAN→WAN-Test durchführen; Download, Upload und CPU-Last
+   (`top`) aufschreiben. LAN↔LAN ist kein NAT-Leistungstest.
+2. `rtl8197f-accel test software 120` starten. Sobald „active“ erscheint,
+   am Client einen neuen Speedtest oder iperf3-Lauf zur WAN-Seite starten.
+   Gleiche Gegenstelle, Richtung und WLAN-Bedingungen verwenden.
+3. Nach Ablauf die Meldung über wiederhergestellte Einstellungen abwarten,
+   dann `rtl8197f-accel verify` ausführen. Bei einem Ausfall `logread | tail -60`
+   und `cat /proc/rd05-rtknet` über UART sichern.
+
+Der Versuch verwendet ausschließlich flüchtige UCI-Änderungen, keinen Commit.
+EXIT/HUP/INT/TERM lösen die Rückkehr aus; ein gesperrtes System kann diese
+Aufräumroutine nicht ausführen. Ein Neustart entfernt die flüchtigen Änderungen.
+Während des Versuchs keine Firewalländerungen, kein `mw5-accel apply` und
+kein `mw5-netdiag full` ausführen: Diese können Zustand und Messergebnis ändern.
+Bereits vorgemerkte Firewalländerungen und parallele Tests werden abgelehnt.
+Der Test überprüft die Anwesenheit einer fw4-Flow-Regel, nicht die tatsächliche
+Beschleunigung jedes Pakets. `verify` bleibt während des MW5-Versuchs absichtlich
+gesperrt; nach der Rückkehr prüft es wieder die strikte Policy.
+
+Bei fehlgeschlagener Rückkehr meldet das Werkzeug einen Fehler. Über UART
+`rtl8197f-accel enforce` ausführen und anschließend `verify` prüfen.
+Hardware-Routing/NAT bleibt auch bei diesem Versuch gesperrt; die bisherigen
+`mw5-accel hardware on/off`-Schalter sind kein Nachweis für Hardware-NAT
+und kein verlässlicher DMA-Leistungsvergleich.

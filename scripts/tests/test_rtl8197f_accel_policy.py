@@ -137,6 +137,7 @@ cat() { echo "$TEST_BOARD"; }
 uci() {
     [ "$1" != -q ] || shift
     case "$1:$2" in
+        changes:firewall) ;;
         get:firewall.@defaults\[0\]) echo "$TEST_SECTION" ;;
         get:firewall.@defaults\[0\].flow_offloading) echo "$TEST_SOFTWARE" ;;
         get:firewall.@defaults\[0\].flow_offloading_hw) echo 0 ;;
@@ -167,6 +168,67 @@ nft() {
                          TEST_MODULES='1' if modules else '0',TEST_WAN='true' if wan else 'false',
                          TEST_CHECK='1' if check else '0',TEST_RELOAD='1' if reload else '0'))
             return result, log.read_text() if log.exists() else ''
+
+    def test_mw5_bounded_test_restores_without_committing(self):
+        command = r'''
+sleep() { echo "sleep $*" >> "$TEST_LOG"; }
+RELOADS=0
+firewall_reload() {
+    RELOADS=$((RELOADS+1))
+    echo reload >> "$TEST_LOG"
+    if [ "$RELOADS" = 1 ]; then TEST_NFT=present; else TEST_NFT=absent; fi
+    [ "$TEST_RELOAD" = 1 ]
+}
+software_test 30
+'''
+        result, log = self.run_policy(command)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('original settings restored', result.stdout)
+        self.assertIn('sleep 30', log)
+        self.assertNotIn('commit', log)
+        self.assertIn('revert firewall.@defaults[0].flow_offloading\n', log)
+        self.assertIn('revert firewall.@defaults[0].flow_offloading_hw\n', log)
+        self.assertEqual(log.splitlines().count('reload'), 2)
+        for args in ({'check': False}, {'reload': False}):
+            result, log = self.run_policy(command, **args)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('revert firewall.@defaults[0].flow_offloading', log)
+            self.assertNotIn('commit', log)
+            self.assertNotIn('sleep 30', log)
+
+    def test_mw5_bounded_test_interrupted_wait_restores(self):
+        command = r"""
+sleep() { return 1; }
+RELOADS=0
+firewall_reload() {
+    RELOADS=$((RELOADS+1))
+    echo reload >> "$TEST_LOG"
+    if [ "$RELOADS" = 1 ]; then TEST_NFT=present; else TEST_NFT=absent; fi
+}
+software_test 30
+"""
+        result, log = self.run_policy(command)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('original settings restored', result.stdout)
+        self.assertIn('revert firewall.@defaults[0].flow_offloading', log)
+        self.assertNotIn('commit', log)
+
+    def test_mw5_bounded_test_preflight_does_not_mutate(self):
+        for command, args in [
+            ('software_test 29', {}), ('software_test 301', {}),
+            ('software_test abc', {}), ('software_test 9999999999999999', {}),
+            ('software_test 30', {'modules': False}),
+            ('software_test 30', {'wan': False}),
+            ('software_test 30', {'driver': False}),
+            ('software_test 30', {'software': '1'}),
+            ('software_test 30', {'nft': 'present'}),
+            ('software_test 30', {'board': 'tenda,ac23'}),
+            ("uci() { [ \"$2\" != changes ] || echo pending; }; software_test 30", {}),
+        ]:
+            with self.subTest(command=command, args=args):
+                result, log = self.run_policy(command, **args)
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertEqual(log, '')
 
     def test_configuration_disables_offload_without_replacing_firewall(self):
         for board in ('tenda,nova-mw5','xiaomi,r4-rd05','tenda,ac23','iball,wrd12gn','cudy,wr1500'):

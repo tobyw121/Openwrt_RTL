@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rtl8197f-flow-offload
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 PKG_LICENSE:=GPL-2.0-or-later
 
 include $(INCLUDE_DIR)/package.mk
@@ -17,7 +17,7 @@ define Package/rtl8197f-flow-offload/description
  Installs the standard Linux flowtable dependencies for rtl8197f-accel.
  Activation is explicit through rtl8197f-accel software on; this package
  does not enable software offload at boot or enable Realtek hardware NAT.
- MW5 remains locked pending stress validation and Cudy profiles are RAM-only.
+ MW5 permits only a bounded test software command; Cudy profiles are RAM-only.
 endef
 
 define Build/Compile

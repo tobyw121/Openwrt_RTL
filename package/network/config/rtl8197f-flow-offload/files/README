@@ -12,5 +12,9 @@ mode for per-packet logging/filtering and configurations requiring SQM.
 The dependency kmod-nft-offload requires the OpenWrt IPv6 feature. Installing
 this package does not turn on WAN IPv6 or change IPv6 firewall rules. Check
 the actual built image size; small-flash profiles do not include it by default.
-MW5 software activation is locked pending stress validation. Repair missing
+Permanent MW5 software activation is locked pending stress validation. Repair missing
 WAN connectivity before enabling it on RD05. Cudy profiles remain UART-only.
+
+MW5: rtl8197f-accel test software 120 permits a volatile, bounded experiment.
+Permanent MW5 activation and Realtek hardware NAT remain blocked.
+See target/linux/realtek/rtl8197f/ACCELERATION.md for prerequisites and rollback.

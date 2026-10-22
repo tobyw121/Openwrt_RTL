@@ -22,7 +22,7 @@ firewall_reload() {
 }
 
 configure() {
-	local software="${1:-0}"
+	local software="${1:-0}" persist="${2:-commit}"
 	case "$software" in 0|1) ;; *) return 2 ;; esac
 	supported_board || return 1
 	# Never create an incomplete firewall configuration if firewall4 is absent.
@@ -32,7 +32,7 @@ configure() {
 	}
 	uci -q set "firewall.@defaults[0].flow_offloading=$software" || return 1
 	uci -q set firewall.@defaults[0].flow_offloading_hw=0 || return 1
-	uci -q commit firewall || return 1
+	[ "$persist" = volatile ] || uci -q commit firewall || return 1
 }
 
 software_modules_available() {
@@ -44,8 +44,10 @@ software_preflight() {
 	supported_board || return 1
 	case "$(cat /tmp/sysinfo/board_name 2>/dev/null)" in
 		tenda,nova-mw5)
-			echo 'MW5 software offload remains locked pending speedtest/stress validation' >&2
-			return 1 ;;
+			[ "${1:-}" = mw5-test ] || {
+				echo 'MW5 software offload remains locked; use test software for a bounded experiment' >&2
+				return 1
+			} ;;
 		cudy,wr1500|cudy,re1500|cudy,m1500)
 			echo 'Cudy UART-only profiles do not yet have a validated network datapath' >&2
 			return 1 ;;
@@ -112,6 +114,53 @@ apply_mode() {
 		return 1
 	fi
 }
+
+# Subshell confines traps and test state. Never commit experimental settings.
+software_test() (
+	local seconds="${1:-120}" dirty=0 rc=0 restore_failed=0
+	case "$seconds" in ''|*[!0-9]*|????*) echo 'Duration must be 30..300 seconds' >&2; exit 2 ;; esac
+	[ "$seconds" -ge 30 ] && [ "$seconds" -le 300 ] || exit 2
+	[ "$(cat /tmp/sysinfo/board_name 2>/dev/null)" = tenda,nova-mw5 ] || {
+		echo 'Bounded test currently supports MW5 only' >&2; exit 1
+	}
+	software_preflight mw5-test || exit 1
+	# Avoid consuming or discarding another administrator's pending changes.
+	[ -z "$(uci -q changes firewall)" ] || {
+		echo 'Pending firewall changes exist; finish them before testing' >&2; exit 1
+	}
+	[ "$(uci -q get firewall.@defaults[0])" = defaults ] || exit 1
+	case "$(uci -q get firewall.@defaults[0].flow_offloading)" in ''|0) ;; *) exit 1 ;; esac
+	case "$(uci -q get firewall.@defaults[0].flow_offloading_hw)" in ''|0) ;; *) exit 1 ;; esac
+	[ "$(flow_rules_state)" = absent ] || exit 1
+	mkdir /tmp/mw5-flow-test.lock 2>/dev/null || {
+		echo 'Another MW5 flowtable test is active' >&2; exit 1
+	}
+	cleanup_test() {
+		trap '' HUP INT TERM
+		if [ "$dirty" = 1 ]; then
+			uci -q revert firewall.@defaults[0].flow_offloading || restore_failed=1
+			uci -q revert firewall.@defaults[0].flow_offloading_hw || restore_failed=1
+			if firewall_reload && [ "$restore_failed" = 0 ] && [ "$(flow_rules_state)" = absent ]; then
+				echo 'MW5 test finished: original settings restored, flow rules absent'
+			else
+				echo 'ERROR: rollback could not be verified; run rtl8197f-accel enforce' >&2
+				rc=1
+			fi
+		fi
+		rmdir /tmp/mw5-flow-test.lock
+		exit "$rc"
+	}
+	trap cleanup_test EXIT
+	trap 'rc=1; exit 1' HUP INT TERM
+	dirty=1
+	configure 1 volatile && fw4 check && firewall_reload || { rc=1; exit 1; }
+	[ "$(flow_rules_state fw4)" = present ] || { rc=1; exit 1; }
+	echo "MW5 Linux software flowtable active for $seconds seconds; hardware NAT remains disabled"
+	echo 'Run the same LAN/WLAN-to-WAN throughput test now; do not edit firewall settings during this test'
+	status
+	sleep "$seconds" || rc=1
+	exit "$rc"
+)
 
 flow_rules_state() {
 	local rules
@@ -182,8 +231,11 @@ case "${1:-status}" in
 	enforce) apply_mode 0 ;;
 	software)
 		case "${2:-}" in on) apply_mode 1 ;; off) apply_mode 0 ;; *) exit 2 ;; esac ;;
+	test)
+		[ "${2:-}" = software ] || exit 2
+		software_test "${3:-120}" ;;
 	hardware)
 		echo 'RTL865x hardware routing/NAT is not validated; hardware forwarding cannot be enabled' >&2
 		exit 1 ;;
-	*) echo 'Usage: rtl8197f-accel {status|verify|enforce|defaults|software on|software off}' >&2; exit 2 ;;
+	*) echo 'Usage: rtl8197f-accel {status|verify|enforce|defaults|software on|software off|test software [30..300]}' >&2; exit 2 ;;
 esac
