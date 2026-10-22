@@ -63,8 +63,11 @@ of installed RAM. Before attempting to load the artifact, confirm from the
 OEM boot log that at least 64 MiB of contiguous RAM exists and determine the
 bootloader's supported RAM transfer/jump commands. No command to write flash,
 replace the bootloader, or run an unverified TFTP/bootm procedure is supplied.
-Board-specific clocks and UART routing are inherited from our RTL8197F-VG
-platform implementation and still need validation on Cudy hardware.
+The CPU clock now uses the read-only GPL strap decoder, including frequency
+dividers and the 200 MHz startup mode. CP0 Count uses half that rate. Other
+clocks and UART routing are inherited from our RTL8197F-VG platform implementation
+and still need validation on Cudy hardware. See
+[the driver porting report](../../../../reverse-engineering/gpl-ax1500/DRIVER_PORTS.md).
 
 ## Runtime isolation and diagnostics
 

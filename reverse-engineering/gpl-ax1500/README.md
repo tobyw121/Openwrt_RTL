@@ -145,3 +145,6 @@ kein Hardwaretest für dieses Paket durchgeführt.
 Die darauf aufbauenden experimentellen Geräteprofile sind in
 [CUDY_AX1500.md](../../target/linux/realtek/rtl8197f/CUDY_AX1500.md) dokumentiert.
 Sie dienen zunächst ausschließlich dem UART-/RAM-Bring-up.
+
+Die nachfolgende CPU-Clock-Portierung und die Bewertung weiterer Treiber sind
+in [DRIVER_PORTS.md](DRIVER_PORTS.md) beschrieben.

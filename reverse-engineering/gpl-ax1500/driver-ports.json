@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "archive_sha256": "2413dbd852e6f039d402f8ffda62e20b9f7b88a38dde0e7d86a527078ed66b93",
+  "source_root": "GPL_for_AX1500_rtl8197/openwrt/21.02/",
+  "sources": [
+    {
+      "path": "target/linux/realtek/files-4.4/arch/mips/bsp/clk.c",
+      "sha256": "7f852336b9c1119fc450841093261da50bdf973fa5f917e6f842f517a7cd5f5c"
+    },
+    {
+      "path": "target/linux/realtek/files-4.4/arch/mips/bsp/timer.c",
+      "sha256": "b5ab6dbeaa8f1827aae821bbd15989372f6626b6918125d9d9b7630785991d37"
+    },
+    {
+      "path": "target/linux/realtek/files-4.4/arch/mips/bsp/bspchip.h",
+      "sha256": "d1a0ab9b55c7775ecc8cda512ebf2d9a566562f70ddf6f4c954d92f789f0c7de"
+    }
+  ],
+  "ports": [
+    {
+      "component": "RTL8197F CPU clock provider",
+      "kernel": "6.6.114",
+      "path": "target/linux/realtek/files-6.6/drivers/clk/clk-rtl8197f.c",
+      "compatible": "realtek,rtl8197f-cpu-clock",
+      "register_physical": 402653192,
+      "register_bytes": 4,
+      "read_only": true,
+      "frequency_selector_bits": [
+        18,
+        15
+      ],
+      "divider_selector_bits": [
+        20,
+        19
+      ],
+      "override_200mhz_bit": 14,
+      "active_boards": [
+        "cudy,wr1500",
+        "cudy,re1500",
+        "cudy,m1500"
+      ],
+      "hardware_validated": false,
+      "firmware_build_validated": false,
+      "existing_board_timer_policy_changed": false
+    }
+  ]
+}

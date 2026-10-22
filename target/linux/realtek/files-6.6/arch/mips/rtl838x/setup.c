@@ -163,6 +163,9 @@ void __init plat_time_init(void)
  */
 	struct device_node *np;
 	struct clk *clk;
+	bool cudy_strap_clock = of_machine_is_compatible("cudy,wr1500") ||
+			       of_machine_is_compatible("cudy,re1500") ||
+			       of_machine_is_compatible("cudy,m1500");
 
 	of_clk_init(NULL);
 
@@ -180,6 +183,8 @@ void __init plat_time_init(void)
 		}
 	}
 
+	if (!mips_hpt_frequency && cudy_strap_clock)
+		panic("Cudy RTL8197F: CPU strap clock unavailable");
 	if (!mips_hpt_frequency)
 		plat_time_init_fallback();
 
@@ -199,8 +204,11 @@ void __init plat_time_init(void)
 	 * let CONFIG_CEVT_R4K/CONFIG_CSRC_R4K provide the clockevent/clocksource.
 	 */
 	if (IS_ENABLED(CONFIG_RTL8197F)) {
-		/* fixed 1GHz CPU / 500MHz Count clock on RD05/RTL8197F-VG */
-		mips_hpt_frequency = 500000000;
+		/* Preserve the established timer policy on existing boards.
+		 * Cudy profiles use the GPL strap clock; Count runs at CPU/2.
+		 */
+		if (!cudy_strap_clock)
+			mips_hpt_frequency = 500000000;
 		cp0_compare_irq = 7;
 		cp0_perfcount_irq = -1;
 		pr_info("RTL8197F: using R4K CP0 timer, hpt_frequency=%u Hz, irq=%d\n",

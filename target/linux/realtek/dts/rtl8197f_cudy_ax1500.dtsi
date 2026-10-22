@@ -3,6 +3,19 @@
 #include "rtl8197f.dtsi"
 
 / {
+	/* GPL BSP BSP_HW_STRAP = 0x18000008; read at early clock init. */
+	cudy_cpu_clk: clock-controller@18000008 {
+		compatible = "realtek,rtl8197f-cpu-clock";
+		reg = <0x18000008 0x4>;
+		#clock-cells = <0>;
+	};
+
+	cpus {
+		cpu@0 {
+			clocks = <&cudy_cpu_clk>;
+		};
+	};
+
 	/* Initial UART-only bring-up window, not a measured physical RAM size.
 	 * Do not expose additional RAM before an OEM boot log confirms it.
 	 */

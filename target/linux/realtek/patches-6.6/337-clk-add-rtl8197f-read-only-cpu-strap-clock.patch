@@ -1,0 +1,24 @@
+From: OpenWrt RTL8197F bringup <noreply@example.invalid>
+Subject: [PATCH] clk: add read-only RTL8197F CPU strap clock
+
+Wire up the common-clock implementation supplied by the target overlay.
+Only device trees explicitly using the new compatible select this provider.
+
+--- a/drivers/clk/Kconfig
++++ b/drivers/clk/Kconfig
+@@ -34,0 +35,9 @@
++
++config COMMON_CLK_RTL8197F
++	bool "Realtek RTL8197F CPU strap clock"
++	depends on OF
++	depends on MACH_REALTEK_RTL || COMPILE_TEST
++	help
++	  Read the RTL8197F startup strap to expose the configured CPU rate.
++	  This does not change the CPU frequency or program a PLL.
++	  Used by experimental Cudy RTL8197F RAM-boot profiles.
+--- a/drivers/clk/Makefile
++++ b/drivers/clk/Makefile
+@@ -20,2 +20,3 @@
+ # hardware specific clock types
++obj-$(CONFIG_COMMON_CLK_RTL8197F) += clk-rtl8197f.o
+ # please keep this section sorted lexicographically by file path name
