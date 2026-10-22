@@ -1,4 +1,10 @@
 #!/bin/sh
+# The RD05 vendor cfg80211 port has fixed root interfaces. Keep LuCI's
+# nl80211/mac80211 configuration vocabulary, with a board-specific lifecycle.
+if [ "$(cat /tmp/sysinfo/board_name 2>/dev/null)" = xiaomi,r4-rd05 ] &&
+   [ -x /lib/netifd/rtl8197f-wireless.sh ]; then
+	exec /lib/netifd/rtl8197f-wireless.sh "$@"
+fi
 . /lib/netifd/netifd-wireless.sh
 . /lib/netifd/hostapd.sh
 . /lib/functions/system.sh

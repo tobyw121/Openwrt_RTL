@@ -1,0 +1,5 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Preserve real wireless sections; migrate only the old informational stub.
+[ "$(cat /tmp/sysinfo/board_name 2>/dev/null)" = xiaomi,r4-rd05 ] || exit 0
+/usr/sbin/mw5-wifi netifd-migrate

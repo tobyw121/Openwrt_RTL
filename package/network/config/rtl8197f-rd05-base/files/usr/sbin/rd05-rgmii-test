@@ -6,6 +6,7 @@ REPORT=/tmp/rd05-rgmii-test.log
 LOCK=/tmp/rd05-rgmii-test.lock
 SAVED_DELAY=
 PROBE_JOB=
+PROBE_TIMER=
 PROBE_LEASE=0
 
 wan_up() {
@@ -68,11 +69,23 @@ probe_packets() {
 	# A private DHCP transaction provides fresh traffic even when netifd's
 	# pending client defers a renew. /bin/true never installs an address/route.
 	# Its PID file is separate from netifd's /var/run/udhcpc-wan.pid.
-	timeout 4 udhcpc -f -n -q -t 1 -T 1 -C -B -i wan -s /bin/true \
+	udhcpc -f -n -q -t 1 -T 1 -C -B -i wan -s /bin/true \
 		-p "$LOCK/probe.pid" >"$LOCK/probe-output" 2>&1 &
 	PROBE_JOB=$!
+	# BusyBox timeout can be absent even in an updated target image. Own the
+	# foreground DHCP child and its deadline instead of relying on an applet.
+	(
+		sleep 4
+		kill -TERM "$PROBE_JOB" 2>/dev/null || exit 0
+		sleep 1
+		kill -KILL "$PROBE_JOB" 2>/dev/null || true
+	) &
+	PROBE_TIMER=$!
 	wait "$PROBE_JOB"
 	rc=$?
+	kill "$PROBE_TIMER" 2>/dev/null || true
+	wait "$PROBE_TIMER" 2>/dev/null || true
+	PROBE_TIMER=
 	PROBE_JOB=
 	echo "dhcp_probe_exit=$rc" >>"$REPORT"
 	case "$rc" in
@@ -85,8 +98,14 @@ probe_packets() {
 
 restore() {
 	local rc=0
+	if [ -n "${PROBE_TIMER:-}" ]; then
+		kill "$PROBE_TIMER" 2>/dev/null || true
+		wait "$PROBE_TIMER" 2>/dev/null || true
+		PROBE_TIMER=
+	fi
 	if [ -n "$PROBE_JOB" ]; then
 		kill "$PROBE_JOB" 2>/dev/null || true
+		kill -KILL "$PROBE_JOB" 2>/dev/null || true
 		wait "$PROBE_JOB" 2>/dev/null || true
 		PROBE_JOB=
 	fi
@@ -120,7 +139,7 @@ run_test() {
 	[ -w "$PARAM" ] || { fail "Timing parameter unavailable: $PARAM"; return 1; }
 	wan_up && { fail 'WAN is already up; refusing to interrupt the working link'; return 1; }
 	local tool
-	for tool in timeout udhcpc ethtool awk ifstatus; do
+	for tool in udhcpc ethtool awk ifstatus; do
 		command -v "$tool" >/dev/null 2>&1 || {
 			fail "Required command missing: $tool; no timing settings changed"
 			return 1
@@ -132,10 +151,10 @@ run_test() {
 	case "$SAVED_DELAY" in [0-7]) ;; *) SAVED_DELAY=; rmdir "$LOCK"; fail 'Invalid original RX delay'; return 1 ;; esac
 	trap 'restore' EXIT
 	trap 'exit 130' INT
-	trap 'exit 143' TERM
+	trap 'exit 143' TERM HUP
 	saved_ssc="$(cat /sys/module/rtl8365mb/parameters/rd05_ext1_ssc 2>/dev/null)"
 	{
-		echo 'RD05 RGMII RX timing test v3; no defaults are changed'
+		echo 'RD05 RGMII RX timing test v4; no defaults are changed'
 		echo "original_rx_delay=$SAVED_DELAY ssc=$saved_ssc"
 		echo 'Only switch RX delay is varied; SSC, SoC timing, CRC validation and port tables are preserved.'
 		echo 'Fields: switch_in_bytes switch_out_bytes switch_fcs_errors soc_rx_packets soc_tx_packets'
@@ -166,7 +185,7 @@ run_test() {
 	done
 	restore || return 1
 	SAVED_DELAY=
-	trap - EXIT INT TERM
+	trap - EXIT INT TERM HUP
 	echo "Report: $REPORT"
 }
 

@@ -1,9 +1,9 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Tenda MW5 cfg80211/nl80211 AP front-end for rtl8192cd Linux-6.6 port.
-set -u
+[ "${MW5_WIFI_LIBRARY:-0}" = 1 ] || set -u
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
-VERSION='v44.65.16-wlan-reopen-panic-fix-sgi'
+VERSION='v44.65.17-rd05-netifd-luci'
 LOG_DIR=/tmp/mw5-webui
 LOG_FILE=$LOG_DIR/wlan-apply.log
 RUNTIME_FILE=$LOG_DIR/mw5wifi.env
@@ -43,6 +43,66 @@ set_defaults() {
 }
 
 uci_get() { uci -q get "mw5wifi.$1" 2>/dev/null || true; }
+load_radio_tuning() {
+	# Keep successful board-specific lifecycle tuning without loading legacy
+	# SSIDs/keys over netifd's current configuration or clobbering JSON globals.
+	local tuning
+	tuning="$(uci_get radio2g.profile)"
+	[ -z "$tuning" ] || R2_PROFILE="$(sanitize_2g_profile "$tuning")"
+	tuning="$(uci_get radio2g.init_method)"
+	[ -z "$tuning" ] || R2_INIT_METHOD="$(sanitize_2g_init "$tuning")"
+	tuning="$(uci_get radio2g.short_gi)"
+	[ -z "$tuning" ] || R2_SHORT_GI="$(sanitize_bool "$tuning")"
+	tuning="$(uci_get radio5g.short_gi)"
+	[ -z "$tuning" ] || R5_SHORT_GI="$(sanitize_bool "$tuning")"
+	return 0
+}
+
+rd05_netifd_managed() {
+	[ "$(cat /tmp/sysinfo/board_name 2>/dev/null)" = xiaomi,r4-rd05 ] &&
+		[ -x /lib/netifd/rtl8197f-wireless.sh ]
+}
+
+rd05_migrate_wireless() {
+	rd05_netifd_managed || return 0
+	# Preserve an existing real wireless configuration and all of its keys.
+	uci -q show wireless 2>/dev/null | grep -q "='wifi-device'$" && return 0
+	load_config
+	mkdir -p /etc/config
+	[ -e /etc/config/wireless ] || touch /etc/config/wireless || return 1
+	uci -q delete wireless.mw5_cfg80211 2>/dev/null || true
+	local idx b enabled ssid channel width enc key
+	ENABLED="$(sanitize_bool "$ENABLED")"
+	for idx in 0 1; do
+		if [ "$idx" = 0 ]; then
+			b=5g; enabled="$R5_ENABLED"; ssid="$R5_SSID"; channel="$R5_CHANNEL"; width="$R5_WIDTH"; enc="$R5_ENCRYPTION"; key="$R5_KEY"
+		else
+			b=2g; enabled="$R2_ENABLED"; ssid="$R2_SSID"; channel="$R2_CHANNEL"; width="$R2_WIDTH"; enc="$R2_ENCRYPTION"; key="$R2_KEY"
+		fi
+		enabled="$(sanitize_bool "$enabled")"
+		case "$enc" in open) enc=none ;; mixed) enc=psk-mixed ;; esac
+		uci -q set "wireless.radio$idx=wifi-device" || return 1
+		uci -q set "wireless.radio$idx.type=mac80211" || return 1
+		uci -q set "wireless.radio$idx.phy=phy$idx" || return 1
+		uci -q set "wireless.radio$idx.serialize=1" || return 1
+		uci -q set "wireless.radio$idx.band=$b" || return 1
+		uci -q set "wireless.radio$idx.channel=$channel" || return 1
+		uci -q set "wireless.radio$idx.country=$REGDOMAIN" || return 1
+		if [ "$b:$width" = 5g:80 ]; then width=VHT80; else width="HT$width"; fi
+		uci -q set "wireless.radio$idx.htmode=$width" || return 1
+		uci -q set "wireless.radio$idx.disabled=$((1 - ENABLED * enabled))" || return 1
+		uci -q set "wireless.default_radio$idx=wifi-iface" || return 1
+		uci -q set "wireless.default_radio$idx.device=radio$idx" || return 1
+		uci -q set "wireless.default_radio$idx.ifname=wlan$idx" || return 1
+		uci -q set "wireless.default_radio$idx.mode=ap" || return 1
+		uci -q set "wireless.default_radio$idx.network=lan" || return 1
+		uci -q set "wireless.default_radio$idx.ssid=$ssid" || return 1
+		uci -q set "wireless.default_radio$idx.encryption=$enc" || return 1
+		uci -q set "wireless.default_radio$idx.key=$key" || return 1
+	done
+	uci -q commit wireless
+}
+
 load_config() {
 	set_defaults
 	[ -r "$RUNTIME_FILE" ] && . "$RUNTIME_FILE" 2>/dev/null || true
@@ -132,6 +192,8 @@ config mesh 'mesh'
 	option pairing '$(sq "$MESH_PAIRING")'
 	option key '$(sq "$MESH_KEY")'
 EOF_UCI
+	# RD05 netifd owns /etc/config/wireless; never overwrite LuCI edits.
+	rd05_netifd_managed && return 0
 	# Keep /etc/config/wireless informational: AP control is hostapd/nl80211,
 	# not the old rtl8192cd WEXT/netifd shim.
 	cat >/etc/config/wireless <<EOF_WIRELESS
@@ -288,6 +350,10 @@ write_hostapd_config() {
 		# v44.55: explicit conservative beacon timing for both vendor radios.
 		echo 'beacon_int=100'
 		echo 'dtim_period=2'
+		if [ "${MW5_WIFI_NETIFD:-0}" = 1 ]; then
+			echo "ignore_broadcast_ssid=${MW5_NETIFD_HIDDEN:-0}"
+			echo "ap_isolate=${MW5_NETIFD_ISOLATE:-0}"
+		fi
 		if [ "$band" = 2g ]; then
 			profile="$(sanitize_2g_profile "${R2_PROFILE:-auto}")"
 			case "$profile" in
@@ -2493,13 +2559,22 @@ two_g_alltest() {
 	[ "$result" = PASS ]
 }
 
+# The RD05 netifd adapter reuses the proven hostapd lifecycle in a subshell.
+[ "${MW5_WIFI_LIBRARY:-0}" = 1 ] && return 0
+
 case "${1:-}" in
+	netifd-migrate) rd05_migrate_wireless ;;
 	init) ensure_config ;;
 	init-defaults) set_defaults; write_config_file; echo 'cfg80211 defaults written' ;;
-	save) shift; save_settings "$@" ;;
-	apply) apply_cfg80211 ;;
+	save)
+		if rd05_netifd_managed; then
+			echo 'RD05 WLAN is managed by netifd; configure wireless through LuCI or UCI wireless' >&2
+			exit 1
+		fi
+		shift; save_settings "$@" ;;
+	apply) if rd05_netifd_managed; then wifi reload; else apply_cfg80211; fi ;;
 	apply-config) ensure_config; echo 'configuration written; AP state unchanged' ;;
-	stop) stop_all ;;
+	stop) if rd05_netifd_managed; then wifi down; else stop_all; fi ;;
 	status) show_status ;;
 	diag) wifi_diagnostics | tee "$LOG_DIR/wlan-diag.log" ;;
 	get) [ $# -eq 2 ] || exit 2; get_value "$2" ;;

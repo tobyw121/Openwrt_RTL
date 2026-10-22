@@ -267,3 +267,18 @@ This fixes the diagnostic, not the Ethernet datapath. Native tests cover
 missing commands, old counter names, concurrent report preservation and
 restoration after success, failure and termination. No new hardware result
 or full firmware build is available for v3 yet.
+
+## V4: Zeitbegrenzung ohne BusyBox-timeout
+
+Auch das neu gebaute Image `7d25e5d6eb` meldet beim Benutzer weiterhin
+`Required command missing: timeout`. Der vorherige Kconfig-Select lieferte
+somit in diesem Image kein nutzbares Applet. V4 entfernt diese Voraussetzung:
+Ein eigener Wächter beendet ausschließlich den privaten Vordergrund-DHCP-
+Prozess nach vier Sekunden mit TERM und nötigenfalls eine Sekunde später
+mit KILL. Nach Probeende wird der Wächter beendet. Auch beim Abbruch werden
+die eigenen Prozesse beendet und die ursprüngliche RX-Verzögerung hergestellt.
+Die netifd-DHCP-PID-Datei, Adressen und Routen werden nicht verändert.
+
+Hosttests prüfen zusätzlich einen echten hängenden Testprozess, der TERM
+ignoriert, sowie den gesamten Timing-Ablauf ohne verfügbares `timeout`.
+Das ist eine Reparatur des Diagnosewerkzeugs, kein nachgewiesener RGMII-Fix.

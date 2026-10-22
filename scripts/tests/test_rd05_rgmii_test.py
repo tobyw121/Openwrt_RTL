@@ -39,7 +39,7 @@ wan_up() { [ -f "$TEST_DIR/lease" ]; }
 snapshot() { printf '%s %s %s %s %s\n' "${count:-100}" "${count:-100}" 0 "${rx:-0}" "${count:-100}"; }
 sleep() { :; }
 udhcpc() { :; }
-timeout() { :; }
+command() { [ "$2" != timeout ]; }
 ethtool() { :; }
 ifstatus() { :; }
 probe_packets() {
@@ -112,7 +112,7 @@ wan_up() { return 1; }
 command() { [ "$2" != "$MISSING_TOOL" ]; }
 run_test
 '''
-            for tool in ['timeout', 'udhcpc', 'ethtool', 'awk', 'ifstatus']:
+            for tool in ['udhcpc', 'ethtool', 'awk', 'ifstatus']:
                 with self.subTest(tool=tool):
                     result = subprocess.run(['sh', '-c', script], text=True, capture_output=True,
                         env=dict(os.environ, TEST_DIR=tmp, MISSING_TOOL=tool))
@@ -125,7 +125,7 @@ run_test
             (path/'lock').mkdir()
             (path/'report').write_text('active test\n')
             subprocess.run(['sh', '-c', script], capture_output=True,
-                env=dict(os.environ, TEST_DIR=tmp, MISSING_TOOL='timeout'))
+                env=dict(os.environ, TEST_DIR=tmp, MISSING_TOOL='udhcpc'))
             self.assertEqual((path/'report').read_text(), 'active test\n')
 
     def test_private_probe_uses_separate_pid_and_no_network_configuration(self):
@@ -134,7 +134,8 @@ run_test
             path = Path(tmp)
             script = 'LOCK="$TEST_DIR"; REPORT="$TEST_DIR/report"; PROBE_JOB=; PROBE_LEASE=0\n'
             script += function + r"""
-timeout() { printf '%s\n' "$*" > "$TEST_DIR/args"; return "$PROBE_RC"; }
+udhcpc() { printf '%s\n' "$*" > "$TEST_DIR/args"; return "$PROBE_RC"; }
+sleep() { command sleep 0.01; }
 probe_packets
 rc=$?
 printf '%s %s\n' "$rc" "$PROBE_LEASE"
@@ -145,9 +146,28 @@ printf '%s %s\n' "$rc" "$PROBE_LEASE"
                         env=dict(os.environ,TEST_DIR=tmp,PROBE_RC=str(rc)))
                     self.assertEqual(result.strip(), f'{1 if rc == 127 else 0} {1 if rc == 0 else 0}')
                     args = (path/'args').read_text()
-                    self.assertIn('4 udhcpc -f -n -q -t 1 -T 1 -C -B -i wan -s /bin/true', args)
+                    self.assertIn('-f -n -q -t 1 -T 1 -C -B -i wan -s /bin/true', args)
                     self.assertIn('-p '+tmp+'/probe.pid', args)
                     self.assertNotIn('/var/run/', args)
+
+    def test_private_probe_deadline_kills_a_stuck_child_without_timeout(self):
+        function = shell_function(SCRIPT, 'probe_packets')
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp)
+            (path/'stuck.py').write_text('import signal,time\nsignal.signal(signal.SIGTERM, signal.SIG_IGN)\nwhile True: time.sleep(1)\n')
+            script = 'LOCK="$TEST_DIR"; REPORT="$TEST_DIR/report"; PROBE_JOB=; PROBE_LEASE=0\n'
+            script += function + r'''
+udhcpc() { exec python3 "$TEST_DIR/stuck.py"; }
+sleep() { command sleep 0.1; }
+probe_packets
+rc=$?
+printf '%s %s\n' "$rc" "$PROBE_LEASE"
+'''
+            result = subprocess.run(['sh', '-c', script], text=True, capture_output=True,
+                timeout=5, env=dict(os.environ, TEST_DIR=tmp))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout.strip(), '0 0')
+            self.assertIn('dhcp_probe_exit=137', (path/'report').read_text())
 
 
 if __name__ == '__main__':

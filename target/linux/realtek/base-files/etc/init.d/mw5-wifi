@@ -19,6 +19,13 @@ boot() {
 	. /lib/functions/rtl8197f-board.sh
 	rtl8197f_is_cudy_ram && return 0
 	[ -x /usr/sbin/mw5-wifi ] || return 0
+	if [ "$(cat /tmp/sysinfo/board_name 2>/dev/null)" = xiaomi,r4-rd05 ] &&
+	   [ -x /lib/netifd/rtl8197f-wireless.sh ]; then
+		/usr/sbin/mw5-wifi netifd-migrate || return 1
+		# netifd is the sole AP owner on RD05, including after first migration.
+		wifi reload
+		return
+	fi
 	/usr/sbin/mw5-wifi init >/dev/null 2>&1 || return 0
 	autoload="$(/usr/sbin/mw5-wifi get general.autoload 2>/dev/null || echo 0)"
 	[ "$autoload" = 1 ] || return 0

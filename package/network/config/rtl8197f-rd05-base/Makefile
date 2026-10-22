@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rtl8197f-rd05-base
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 PKG_LICENSE:=GPL-2.0-or-later
 
 include $(INCLUDE_DIR)/package.mk
@@ -10,15 +10,7 @@ define Package/rtl8197f-rd05-base
   SECTION:=net
   CATEGORY:=Network
   TITLE:=RTL8197F Xiaomi R4/RD05 board-only userspace defaults
-  DEPENDS:=@TARGET_realtek_rtl8197f
-endef
-
-define Package/rtl8197f-rd05-base/config
-	config RTL8197F_RD05_DIAGNOSTICS
-		bool
-		depends on PACKAGE_rtl8197f-rd05-base
-		default y
-		select BUSYBOX_CONFIG_TIMEOUT
+  DEPENDS:=@TARGET_realtek_rtl8197f +wifi-scripts +iwinfo +rpcd-mod-iwinfo +flock
 endef
 
 define Package/rtl8197f-rd05-base/description
@@ -35,11 +27,14 @@ define Package/rtl8197f-rd05-base/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) ./files/usr/sbin/rd05-rgmii-test $(1)/usr/sbin/rd05-rgmii-test
 	$(INSTALL_BIN) ./files/usr/sbin/rd05-ioctl $(1)/usr/sbin/rd05-ioctl
+	$(INSTALL_DIR) $(1)/lib/netifd
+	$(INSTALL_BIN) ./files/lib/netifd/rtl8197f-wireless.sh $(1)/lib/netifd/rtl8197f-wireless.sh
 	$(INSTALL_DIR) $(1)/etc/profile.d
 	$(INSTALL_BIN) ./files/etc/profile.d/99-rd05-uart-guard.sh $(1)/etc/profile.d/99-rd05-uart-guard.sh
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/etc/uci-defaults/98-rd05-firewall-flow-offload $(1)/etc/uci-defaults/98-rd05-firewall-flow-offload
 	$(INSTALL_BIN) ./files/etc/uci-defaults/99-rd05-dsa-network $(1)/etc/uci-defaults/99-rd05-dsa-network
+	$(INSTALL_BIN) ./files/etc/uci-defaults/99-rd05-wireless $(1)/etc/uci-defaults/99-rd05-wireless
 endef
 
 $(eval $(call BuildPackage,rtl8197f-rd05-base))
