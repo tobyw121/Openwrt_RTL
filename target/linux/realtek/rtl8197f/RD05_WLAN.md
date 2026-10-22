@@ -6,7 +6,7 @@ konnte WLAN funktionieren, obwohl LuCI keine Funkgeräte oder WLAN-Netzwerke
 anzeigte: netifd hatte weder `wifi-device`- noch `wifi-iface`-Abschnitte.
 
 Das RD05-Paket installiert jetzt einen netifd-Adapter und die Abhängigkeiten
-`wifi-scripts`, `iwinfo`, `rpcd-mod-iwinfo` sowie `flock`. Die vorhandene
+`wifi-scripts`, `iwinfo` und `rpcd-mod-iwinfo`. Die vorhandene
 mac80211-Konfigurationsschnittstelle delegiert ausschließlich auf dem RD05
 an diesen Adapter. Andere Geräte verwenden weiterhin ihre bisherige Verwaltung.
 Der Typ `mac80211` ist hier die LuCI-/UCI-Kompatibilitätsschnittstelle;
@@ -41,6 +41,12 @@ hostapd-Prozesse über netifd. Start/Stop beider Radios werden durch eine
 gemeinsame Sperre serialisiert; die vorhandenen L2-Reparaturschritte und
 Radio-Lifecycle-Einstellungen bleiben erhalten. Ein fehlgeschlagener Start
 wird nicht als aktives Funkgerät gemeldet.
+
+Die Sperre verwendet atomisches `mkdir` und benötigt kein zusätzliches
+`flock`-Paket. Nach höchstens 20 Sekunden Wartezeit wird abgebrochen, ohne
+eine fremde Sperre zu entfernen. Normaler Abschluss und HUP/INT/TERM räumen
+die eigene Sperre auf. Nach einem SIGKILL kann sie bis zum Neustart unter
+`/var/run/rd05-wlan-apply.lock.d` bestehen bleiben.
 
 Unterstützt werden zunächst **ein AP pro Radio**, feste Kanäle, HT20/HT40
 und bei 5 GHz VHT20/VHT40/VHT80, offene Netze und WPA/WPA2-PSK mit

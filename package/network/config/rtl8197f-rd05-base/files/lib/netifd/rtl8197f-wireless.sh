@@ -4,6 +4,23 @@
 # mac80211 is the UCI/UI schema here; the packet path remains rtl8192cd.
 . /lib/netifd/netifd-wireless.sh
 init_wireless_driver "$@"
+RD05_AP_LOCK=/var/run/rd05-wlan-apply.lock.d
+
+rd05_ap_lock() {
+	local waited=0
+	# mkdir is atomic and available in the base system. Do not remove another
+	# operation's lock on timeout, or reclaim a possibly still active lock.
+	while ! mkdir "$RD05_AP_LOCK" 2>/dev/null; do
+		[ "$waited" -lt 20 ] || {
+			echo 'RD05 WLAN operation lock unavailable; retry or reboot after an interrupted operation' >&2
+			return 1
+		}
+		sleep 1
+		waited=$((waited + 1))
+	done
+	trap 'rmdir "$RD05_AP_LOCK"' EXIT
+	trap 'exit 1' HUP INT TERM
+}
 
 drv_mac80211_cleanup() {
 	:
@@ -77,10 +94,7 @@ rd05_start_vif() {
 	# Do not source the AP front-end into netifd's JSON/global namespace.
 	if ! (
 		umask 077
-		flock -w 20 9 || exit 1
-		# Explicit unlock also releases the lock if hostapd inherited fd 9.
-		trap 'flock -u 9' EXIT
-		trap 'exit 1' HUP INT TERM
+		rd05_ap_lock || exit 1
 		MW5_WIFI_LIBRARY=1 . /usr/sbin/mw5-wifi
 		set_defaults
 		load_radio_tuning
@@ -95,7 +109,7 @@ rd05_start_vif() {
 		rm -f "$RUN_DIR/hostapd-$rd05_band.conf"
 		start_radio "$rd05_band" "$rd05_ifname" 1 "$ssid" "$rd05_channel" "$rd05_width" "$rd05_enc" "$key" || exit 1
 		mw5_rtknet_reseed netifd-post-ap
-	) 9>/var/run/rd05-wlan-apply.lock >>/tmp/mw5-webui/netifd-wlan.log 2>&1; then
+	) >>/tmp/mw5-webui/netifd-wlan.log 2>&1; then
 		rd05_error=HOSTAPD_START_FAILED
 		return 1
 	fi
@@ -150,14 +164,14 @@ drv_mac80211_teardown() {
 	json_get_vars phy band
 	json_select ..
 	case "$phy:$band" in phy0:5g|phy1:2g) ;; *) return 1 ;; esac
-	(
-		flock -w 20 9 || exit 1
-		trap 'flock -u 9' EXIT
-		trap 'exit 1' HUP INT TERM
+	if ! (
+		rd05_ap_lock || exit 1
 		MW5_WIFI_LIBRARY=1 . /usr/sbin/mw5-wifi
 		stop_hostapd_band "$band"
 		case "$band" in 5g) ip link set wlan0 down ;; 2g) ip link set wlan1 down ;; esac
-	) 9>/var/run/rd05-wlan-apply.lock >/dev/null 2>&1
+	) >/dev/null 2>&1; then
+		return 1
+	fi
 	wireless_process_kill_all
 }
 

@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rtl8197f-rd05-base
-PKG_RELEASE:=6
+PKG_RELEASE:=7
 PKG_LICENSE:=GPL-2.0-or-later
 
 include $(INCLUDE_DIR)/package.mk
@@ -10,7 +10,7 @@ define Package/rtl8197f-rd05-base
   SECTION:=net
   CATEGORY:=Network
   TITLE:=RTL8197F Xiaomi R4/RD05 board-only userspace defaults
-  DEPENDS:=@TARGET_realtek_rtl8197f +wifi-scripts +iwinfo +rpcd-mod-iwinfo +flock
+  DEPENDS:=@TARGET_realtek_rtl8197f +wifi-scripts +iwinfo +rpcd-mod-iwinfo
 endef
 
 define Package/rtl8197f-rd05-base/description

@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import time
 import unittest
 from test_mw5_stability import ROOT, BASE, shell_function
 
@@ -13,6 +14,52 @@ ADAPTER = ROOT / 'package/network/config/rtl8197f-rd05-base/files/lib/netifd/rtl
 
 
 class RD05WirelessTests(unittest.TestCase):
+    def test_ap_lock_serializes_processes_and_releases_after_failure(self):
+        function = shell_function(ADAPTER, 'rd05_ap_lock')
+        with tempfile.TemporaryDirectory() as tmp:
+            env = dict(os.environ, RD05_AP_LOCK=tmp+'/lock', TEST_LOG=tmp+'/events')
+            body = function + r'''
+rd05_ap_lock || exit 1
+echo "enter $1" >> "$TEST_LOG"
+sleep 0.1
+echo "exit $1" >> "$TEST_LOG"
+exit "$2"
+'''
+            first = subprocess.Popen(['sh','-c',body,'test','first','1'], env=env)
+            try:
+                deadline = time.monotonic()+3
+                while not Path(tmp+'/events').exists() and time.monotonic() < deadline:
+                    time.sleep(0.01)
+                second = subprocess.run(['sh','-c',body,'test','second','0'], env=env, timeout=4)
+                self.assertEqual(first.wait(timeout=3), 1)
+                self.assertEqual(second.returncode, 0)
+                self.assertEqual(Path(tmp+'/events').read_text().splitlines(),
+                                 ['enter first','exit first','enter second','exit second'])
+                self.assertFalse(Path(tmp+'/lock').exists())
+            finally:
+                if first.poll() is None:
+                    first.kill()
+                    first.wait()
+
+    def test_ap_lock_timeout_preserves_another_owners_lock(self):
+        function = shell_function(ADAPTER, 'rd05_ap_lock')
+        with tempfile.TemporaryDirectory() as tmp:
+            lock = Path(tmp)/'lock'
+            lock.mkdir()
+            result = subprocess.run(['sh','-c', function+'\nsleep() { :; }; rd05_ap_lock'],
+                env=dict(os.environ, RD05_AP_LOCK=str(lock)), text=True, capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('lock unavailable', result.stderr)
+            self.assertTrue(lock.is_dir())
+
+    def test_ap_lock_releases_on_termination(self):
+        function = shell_function(ADAPTER, 'rd05_ap_lock')
+        with tempfile.TemporaryDirectory() as tmp:
+            result = subprocess.run(['sh','-c', function+'\nrd05_ap_lock; kill -TERM $$'],
+                env=dict(os.environ, RD05_AP_LOCK=tmp+'/lock'))
+            self.assertEqual(result.returncode, 1)
+            self.assertFalse(Path(tmp+'/lock').exists())
+
     def test_real_frontend_can_be_loaded_without_dispatch_or_nounset(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / 'frontend'
@@ -54,6 +101,8 @@ ip() { echo "ip $*" >> "$TEST_LOG"; }
             script = script.replace('cat "/var/run/mw5-wifi/hostapd-$rd05_band.pid"', 'printf 123')
             mocks = r'''
 add_driver() { :; }
+flock() { return 127; }
+sleep() { :; }
 json_select() { :; }
 json_get_vars() {
     for v in "$@"; do
@@ -80,6 +129,9 @@ wireless_process_kill_all() { echo kill_all >> "$TEST_LOG"; }
                             channel='40', mode='ap', ssid="My ' AP", encryption='psk2',
                             key='a test passphrase', bridge='br-lan', hidden='1', isolate='1')
             defaults.update(values)
+            busy = defaults.pop('busy_lock', False)
+            if busy:
+                (path / 'ap.lock.d').mkdir()
             env = dict(os.environ, TEST_LOG=str(path / 'calls'), TEST_HELPER=str(helper),
                        TEST_COUNT=str(defaults.pop('count', 1)),
                        TEST_FAIL_START=str(defaults.pop('fail_start', 0)))
@@ -87,7 +139,17 @@ wireless_process_kill_all() { echo kill_all >> "$TEST_LOG"; }
             result = subprocess.run(['sh', '-c', mocks + script + '\n' + command],
                                     env=env, text=True, capture_output=True)
             calls = (path / 'calls').read_text() if (path / 'calls').exists() else ''
+            if busy:
+                self.assertTrue((path / 'ap.lock.d').is_dir())
             return result, calls
+
+    def test_busy_ap_lock_does_not_start_or_stop_a_radio(self):
+        for command in ['drv_mac80211_setup radio0', 'drv_mac80211_teardown radio0']:
+            result, calls = self.run_adapter(command=command, busy_lock=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertNotIn('start ', calls)
+            self.assertNotIn('stop ', calls)
+            self.assertNotIn('kill_all', calls)
 
     def test_both_radios_register_with_netifd_after_hostapd_start(self):
         for args, iface, width in [({}, 'wlan0', '80'),
