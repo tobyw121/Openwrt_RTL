@@ -1,0 +1,16 @@
+Linux software flowtable integration for RTL8197F / OpenWrt 24.10.
+
+Explicit activation: rtl8197f-accel software on
+Status/check: rtl8197f-accel status; rtl8197f-accel verify
+Return to normal per-packet forwarding: rtl8197f-accel software off
+
+This is Linux nf_flow_table under firewall4/conntrack ownership, not the
+proprietary Realtek cache. Hardware NAT remains unavailable. Established
+offloaded traffic does not traverse every regular forward hook. Use strict
+mode for per-packet logging/filtering and configurations requiring SQM.
+
+The dependency kmod-nft-offload requires the OpenWrt IPv6 feature. Installing
+this package does not turn on WAN IPv6 or change IPv6 firewall rules. Check
+the actual built image size; small-flash profiles do not include it by default.
+MW5 software activation is locked pending stress validation. Repair missing
+WAN connectivity before enabling it on RD05. Cudy profiles remain UART-only.

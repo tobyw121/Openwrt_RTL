@@ -1,6 +1,7 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-2.0-or-later
-# Strict routed firewall policy. Never enables a forwarding shortcut.
+# firewall4-owned Linux software offload, or strict per-packet processing.
+# Proprietary forwarding and hardware NAPT remain blocked in the NIC driver.
 PROC=/proc/rd05-rtknet
 
 supported_board() {
@@ -8,7 +9,7 @@ supported_board() {
 		xiaomi,r4-rd05|tenda,nova-mw5|tenda,ac23|tenda,lynx-rtl8197f|iball,wrd12gn|\
 		cudy,wr1500|cudy,re1500|cudy,m1500) return 0 ;;
 	esac
-	echo 'No strict acceleration policy defined for this board' >&2
+	echo 'No acceleration policy defined for this board' >&2
 	return 1
 }
 
@@ -21,20 +22,104 @@ firewall_reload() {
 }
 
 configure() {
+	local software="${1:-0}"
+	case "$software" in 0|1) ;; *) return 2 ;; esac
 	supported_board || return 1
 	# Never create an incomplete firewall configuration if firewall4 is absent.
 	[ "$(uci -q get firewall.@defaults[0] 2>/dev/null)" = defaults ] || {
 		echo 'Firewall defaults section unavailable; no settings changed' >&2
 		return 1
 	}
-	uci -q set firewall.@defaults[0].flow_offloading=0 || return 1
+	uci -q set "firewall.@defaults[0].flow_offloading=$software" || return 1
 	uci -q set firewall.@defaults[0].flow_offloading_hw=0 || return 1
 	uci -q commit firewall || return 1
 }
 
+software_modules_available() {
+	[ -d /sys/module/nf_flow_table_inet ] && [ -d /sys/module/nft_flow_offload ]
+}
+
+software_preflight() {
+	local wan
+	supported_board || return 1
+	case "$(cat /tmp/sysinfo/board_name 2>/dev/null)" in
+		tenda,nova-mw5)
+			echo 'MW5 software offload remains locked pending speedtest/stress validation' >&2
+			return 1 ;;
+		cudy,wr1500|cudy,re1500|cudy,m1500)
+			echo 'Cudy UART-only profiles do not yet have a validated network datapath' >&2
+			return 1 ;;
+	esac
+	grep -q '^firewall_policy mode=strict routed_shortcuts=0 tc_flowtable_hw=0 ' "$PROC" 2>/dev/null || {
+		echo 'Updated NIC driver policy unavailable; proprietary forwarding state cannot be verified' >&2
+		return 1
+	}
+	software_modules_available || {
+		echo 'Linux flowtable modules unavailable; build/install rtl8197f-flow-offload and load its modules' >&2
+		return 1
+	}
+	[ "$(firewall4_state)" = present ] || {
+		echo 'Active firewall4 forward hook unavailable' >&2; return 1
+	}
+	wan="$(ifstatus wan 2>/dev/null)" || return 1
+	printf '%s\n' "$wan" | grep -Eq '"up"[[:space:]]*:[[:space:]]*true' || {
+		echo 'WAN is not up; repair the base datapath before enabling offload' >&2
+		return 1
+	}
+}
+
+restore_options() {
+	local software="$1" hardware="$2"
+	if [ -n "$software" ]; then
+		uci -q set "firewall.@defaults[0].flow_offloading=$software" || return 1
+	else
+		uci -q delete firewall.@defaults[0].flow_offloading >/dev/null 2>&1 || true
+	fi
+	if [ -n "$hardware" ]; then
+		uci -q set "firewall.@defaults[0].flow_offloading_hw=$hardware" || return 1
+	else
+		uci -q delete firewall.@defaults[0].flow_offloading_hw >/dev/null 2>&1 || true
+	fi
+	uci -q commit firewall
+}
+
+apply_mode() {
+	local software="$1" old_sw old_hw
+	supported_board || return 1
+	[ "$(uci -q get firewall.@defaults[0] 2>/dev/null)" = defaults ] || {
+		echo 'Firewall defaults section unavailable; no settings changed' >&2
+		return 1
+	}
+	case "$software" in
+		1) software_preflight || return 1 ;;
+		0) ;;
+		*) return 2 ;;
+	esac
+	old_sw="$(uci -q get firewall.@defaults[0].flow_offloading 2>/dev/null || true)"
+	old_hw="$(uci -q get firewall.@defaults[0].flow_offloading_hw 2>/dev/null || true)"
+	configure "$software" || {
+		restore_options "$old_sw" "$old_hw"
+		return 1
+	}
+	if ! fw4 check; then
+		echo 'firewall4 validation failed; restoring previous offload options' >&2
+		restore_options "$old_sw" "$old_hw" || return 1
+		return 1
+	fi
+	if ! firewall_reload; then
+		echo 'Firewall reload failed; restoring previous offload options' >&2
+		restore_options "$old_sw" "$old_hw" && firewall_reload
+		return 1
+	fi
+}
+
 flow_rules_state() {
 	local rules
-	rules="$(nft list ruleset 2>/dev/null)" || { echo unknown; return; }
+	if [ "${1:-all}" = fw4 ]; then
+		rules="$(nft list table inet fw4 2>/dev/null)" || { echo unknown; return; }
+	else
+		rules="$(nft list ruleset 2>/dev/null)" || { echo unknown; return; }
+	fi
 	if printf '%s\n' "$rules" | grep -Eq 'flow (add|offload)[[:space:]]+@'; then
 		echo present
 	else
@@ -54,11 +139,16 @@ firewall4_state() {
 
 status() {
 	supported_board || return 1
-	echo 'policy=strict-per-packet-routed-firewall'
+	case "$(uci -q get firewall.@defaults[0].flow_offloading 2>/dev/null)" in
+		0) echo 'policy=strict-per-packet-routed-firewall' ;;
+		1) echo 'policy=linux-software-flowtable-firewall4' ;;
+		*) echo 'policy=unknown' ;;
+	esac
 	echo "flow_offloading=$(uci -q get firewall.@defaults[0].flow_offloading 2>/dev/null || echo unknown)"
 	echo "flow_offloading_hw=$(uci -q get firewall.@defaults[0].flow_offloading_hw 2>/dev/null || echo unknown)"
 	echo "fw4_forward_hook=$(firewall4_state)"
 	echo "nft_flow_rules=$(flow_rules_state)"
+	echo "fw4_flow_rules=$(flow_rules_state fw4)"
 	if [ -r "$PROC" ]; then
 		grep -E '^(driver=|firewall_policy |mw5_accel |mw5_legacy_accel |hwaccel_rx |hwaccel_tx |napt )' "$PROC"
 	else
@@ -67,19 +157,33 @@ status() {
 }
 
 verify() {
+	local software
 	status || return 1
-	[ "$(uci -q get firewall.@defaults[0].flow_offloading)" = 0 ] || return 1
+	software="$(uci -q get firewall.@defaults[0].flow_offloading)"
 	[ "$(uci -q get firewall.@defaults[0].flow_offloading_hw)" = 0 ] || return 1
 	[ "$(firewall4_state)" = present ] || return 1
-	[ "$(flow_rules_state)" = absent ] || return 1
 	grep -q '^firewall_policy mode=strict routed_shortcuts=0 tc_flowtable_hw=0 ' "$PROC" 2>/dev/null || return 1
-	echo 'strict_forwarding_policy=PASS (not a connectivity or isolation test)'
+	case "$software" in
+		0)
+			[ "$(flow_rules_state)" = absent ] || return 1
+			echo 'strict_forwarding_policy=PASS (not a connectivity or isolation test)' ;;
+		1)
+			software_preflight || return 1
+			[ "$(flow_rules_state fw4)" = present ] || return 1
+			echo 'software_flowtable_policy=PASS (admission by firewall4; no hardware NAT proof)' ;;
+		*) return 1 ;;
+	esac
 }
 
 case "${1:-status}" in
 	status) status ;;
 	verify) verify ;;
 	defaults) configure ;;
-	enforce) configure && firewall_reload ;;
-	*) echo 'Usage: rtl8197f-accel {status|verify|enforce|defaults}' >&2; exit 2 ;;
+	enforce) apply_mode 0 ;;
+	software)
+		case "${2:-}" in on) apply_mode 1 ;; off) apply_mode 0 ;; *) exit 2 ;; esac ;;
+	hardware)
+		echo 'RTL865x hardware routing/NAT is not validated; hardware forwarding cannot be enabled' >&2
+		exit 1 ;;
+	*) echo 'Usage: rtl8197f-accel {status|verify|enforce|defaults|software on|software off}' >&2; exit 2 ;;
 esac

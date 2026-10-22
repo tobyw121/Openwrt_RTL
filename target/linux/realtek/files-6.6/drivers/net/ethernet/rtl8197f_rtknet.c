@@ -62,7 +62,7 @@
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.40-strict-firewall"
+#define DRV_VERSION			"1.8.41-offload-integration"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -8330,20 +8330,21 @@ static int rtl8197f_rtk_napt_mangle_port(const struct flow_action_entry *act,
                                          __be16 *src, __be16 *dst)
 {
     u32 val = be32_to_cpu((__force __be32)act->mangle.val);
+    u32 mask = be32_to_cpu((__force __be32)act->mangle.mask);
 
-    switch (act->mangle.offset) {
-    case 0:
-        if ((__force __be32)act->mangle.mask == ~cpu_to_be32(0xffff))
-            *dst = cpu_to_be16(val);
-        else
-            *src = cpu_to_be16(val >> 16);
-        break;
-    case 2:
+    /* Linux nf_flow_table emits aligned 32-bit edits at offset zero.
+     * Accept exactly one whole port, never an arbitrary partial edit or a
+     * value that also changes supposedly preserved bits. Do not silently
+     * treat unknown masks as a source-port rewrite.
+     */
+    if (act->mangle.offset || (val & mask))
+        return -EOPNOTSUPP;
+    if (mask == 0xffff0000)
         *dst = cpu_to_be16(val);
-        break;
-    default:
-        return -EINVAL;
-    }
+    else if (mask == 0x0000ffff)
+        *src = cpu_to_be16(val >> 16);
+    else
+        return -EOPNOTSUPP;
     return 0;
 }
 
@@ -8400,6 +8401,8 @@ static int rtl8197f_rtk_napt_rule_to_key(struct rtl8197f_rtknet_priv *priv,
         case FLOW_ACTION_MANGLE:
             switch (act->mangle.htype) {
             case FLOW_ACT_MANGLE_HDR_TYPE_IP4:
+                if (act->mangle.mask)
+                    return -EOPNOTSUPP;
                 if (act->mangle.offset == offsetof(struct iphdr, saddr))
                     memcpy(&nsrc, &act->mangle.val, sizeof(nsrc));
                 else if (act->mangle.offset == offsetof(struct iphdr, daddr))
@@ -8422,11 +8425,11 @@ static int rtl8197f_rtk_napt_rule_to_key(struct rtl8197f_rtknet_priv *priv,
                     return ret;
                 break;
             case FLOW_ACT_MANGLE_HDR_TYPE_ETH:
-                /* L2 rewrite remains under Linux/neighbour control.  Do not
-                 * infer or install an RTL865x next-hop from an incomplete
-                 * pedit sequence in this first safe backend.
+                /* No complete ASIC next-hop/MAC encoder exists yet.
+                 * Ignoring this mandatory action would falsely acknowledge
+                 * a rule that hardware cannot execute. Fail back instead.
                  */
-                break;
+                return -EOPNOTSUPP;
             default:
                 return -EOPNOTSUPP;
             }

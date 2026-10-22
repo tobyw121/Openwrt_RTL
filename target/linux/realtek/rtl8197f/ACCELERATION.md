@@ -1,5 +1,10 @@
 # Realtek-Beschleunigung unter OpenWrt 24.10 / Linux 6.6.114
 
+Portierungsstand: Ein optionaler, firewall4-gesteuerter Linux-Software-Offload-
+Modus und bestehende Hardware-Paketassists sind eingebunden. Das autonome
+Realtek-Hardware-Routing/NAT ist noch nicht vollständig portiert und bleibt
+gesperrt. Details und Gerätegrenzen stehen unter „Bedienung und Prüfung“.
+
 ## Umfang und verbindliche Policy
 
 Diese Bestandsaufnahme betrifft die RTL8197F/FS/FH-, RTL865x- und RTL83xx-
@@ -10,7 +15,7 @@ GPL-Quellgruppen mit überprüften Pfaden und SHA256 stehen in
 Die weiteren WLAN-Einträge beziehen sich auf den bereits vorhandenen Treiber;
 ein zusätzlicher vollständiger WLAN-Quellbaum ist in dieser GPL nicht enthalten.
 
-**Strikte Policy:** Gerouteter Verkehr soll den regulären Linux-/Netfilter-
+**Strikte Standardpolicy:** Gerouteter Verkehr soll den regulären Linux-/Netfilter-
 Pfad behalten. Kein privater Realtek-Cache und keine autonome Hardware-NAT-
 Tabelle darf die Weiterleitungsentscheidung übernehmen. DMA-, Queue- und
 Paketverarbeitungshilfen sind davon getrennt. firewall4 verwaltet weiterhin
@@ -25,7 +30,10 @@ Folgepakete nutzen jedoch einen früheren Flowtable-Pfad und durchlaufen
 nicht mehr alle normalen Forward-Hooks. Das verändert unter anderem die
 Beobachtung durch Zähler, Logging und bestimmte Paketregeln. Wegen der hier
 geforderten vollständigen regulären Firewallverarbeitung wird auch dieses
-Offloading in der strikten Standardkonfiguration abgeschaltet.
+Offloading in der strikten Standardkonfiguration abgeschaltet. Der nachfolgend
+beschriebene optionale Software-Modus nutzt stattdessen bewusst die normale
+OpenWrt-Flowtable-Semantik mit Firewallprüfung bei der Aufnahme einer Verbindung.
+Die proprietären Treiber-Fastpaths bleiben in beiden Modi gesperrt.
 
 ## Software-Weiterleitung und private Hooks
 
@@ -38,7 +46,7 @@ Offloading in der strikten Standardkonfiguration abgeschaltet.
 | PPTP / L2TP FastPath | `fast_pptp_core.c`, `fast_l2tp_core.c` | Normale Tunnel-/Routing-Verarbeitung; kein paralleler proprietärer Tunnelpfad |
 | Realtek Filter-/Conntrack-/NAT-Hooks | `rtl_ps_hooks.c`, `filter_ipv4.c`, `filter_ipv6.c`, `filter_v2.c` | Keine Übernahme von Linux-4.4-Conntrack-Interna oder iptables-Tabellenaufrufen in firewall4 |
 | Unser MW5 Exact-Flow-Cache | RX-Cache mit NAT-/MAC-Umschreibung und direktem `dev_queue_xmit()` | Unter strikter Policy im Kernel gesperrt, auch bei alten Aktivierungsargumenten |
-| Linux Software-Flowtable | Standard `nf_flow_table`, nicht Realtek-spezifisch | UCI `flow_offloading=0`; kein automatisches Einschalten als vermeintlicher Firewall-kompatibler Ersatz |
+| Linux Software-Flowtable | Standard `nf_flow_table`, nicht Realtek-spezifisch | Standard aus; expliziter, firewall4-gesteuerter Software-Modus mit Vorprüfung und Rückkehr zum strikten Modus |
 
 Der GPL-Fastpath ruft stellenweise `rtl_ipt_do_table()` und private Hook-
 Hilfen auf (`fastpath_core.c`, u. a. um Zeile 1163). Das bildet weder die
@@ -124,6 +132,8 @@ Checksum/SG/TSO/QoS werden dadurch nicht pauschal freigeschaltet.
 
 ## Bedienung und Prüfung
 
+### Strikter Standardmodus
+
 Nach einem Build mit diesen Änderungen:
 
 ```sh
@@ -154,6 +164,80 @@ Ein PASS ist ein Konfigurationsnachweis, kein Beweis für funktionierende
 Verkabelung, VLAN-Isolation oder Internetzugang. Auf den Cudy-UART-Profilen
 ist der Ethernet-Treiber deaktiviert; dort ist ein vollständiges PASS noch
 nicht zu erwarten.
+
+### Optionaler Software-Flowtable-Modus
+
+Die Portierung des Software-Weiterleitungspfads verwendet die vorhandene
+Linux-6.6-Implementierung statt eines zweiten Realtek-NAT-Caches. Das optionale
+Paket `rtl8197f-flow-offload` zieht `firewall4` und `kmod-nft-offload` mit deren
+Kernel-Abhängigkeiten ein. Es installiert keine eigenen Firewallregeln und
+aktiviert beim Installieren keinen Beschleuniger. OpenWrts `kmod-nft-offload`
+setzt das IPv6-Buildfeature voraus; das bedeutet nicht, dass WAN-IPv6 aktiviert
+wird. Auf kleinen Flash-Profilen ist das Paket nicht standardmäßig ausgewählt.
+
+Auf einem unterstützten, bereits funktionierenden Router mit dem neuen Treiber
+und geladenen Flowtable-Modulen:
+
+```sh
+rtl8197f-accel software on
+rtl8197f-accel verify
+```
+
+Zurück zur vollständigen regulären Paketverarbeitung:
+
+```sh
+rtl8197f-accel software off
+```
+
+Die Aktivierung verlangt einen aktiven firewall4-Forward-Hook, den neuen
+Treiber-Policynachweis, geladene `nf_flow_table_inet`-/`nft_flow_offload`-Module
+und ein als `up` gemeldetes WAN. Sie setzt `flow_offloading=1`, hält
+`flow_offloading_hw=0` und prüft das Ergebnis mit `fw4 check` vor dem Reload.
+Bei einem Konfigurations-/Prüf-/Reload-Fehler werden die bisherigen beiden
+Offload-Optionen wiederhergestellt; nach einem Reload-Fehler wird zusätzlich
+ein Reload mit den alten Optionen versucht. Ein Fehler bleibt ein Fehler und
+wird nicht als erfolgreicher Rollback oder erfolgreicher Offload ausgegeben.
+
+firewall4 generiert die Flowtable-Regeln; Conntrack/NAT/Flow-Lebensdauer bleiben
+im Standard-Linux-Backend. `verify` unterscheidet diesen Modus vom strikten
+Modus und verlangt hier vorhandene Flow-Regeln in `table inet fw4` sowie
+weiterhin erfüllte Geräte-/Backend-Voraussetzungen. Eine fremde Flow-Regel
+allein reicht nicht aus. Ein PASS bedeutet nicht,
+dass schon Pakete beschleunigt wurden oder die Durchsatz-/Sicherheitstests
+bestanden sind. Flow-Admission kann nicht durch unsere alten Proc-NAT-Befehle
+oder durch einen parallelen privaten Cache ersetzt werden.
+
+**Gerätegrenzen:** MW5 bleibt wegen der bisherigen Speedtest-/Lastprobleme
+gesperrt. Die Cudy-UART-Profile haben noch keinen Ethernet-Datenpfad. Beim RD05
+verhindert das fehlende WAN die Aktivierung. Für Regeln, die jedes Paket sehen
+müssen, sowie ungeprüfte SQM-/CAKE- oder Spezialkonfigurationen bleibt der
+strikte Modus die passende Einstellung. Dieser Software-Modus ist kein
+portierter proprietärer Realtek-Fastpath und kein Hardware-NAT.
+
+### Hardware-Port: konkreter Stand und fehlende Teile
+
+DMA, NAPI/BQL, die vorhandenen Netdev-Paketassists und die TC-Anbindung sind
+bereits Linux-6.6-Code im Zweig. Der historische Hardware-NAPT-Encoder ist
+jedoch **kein vollständiger funktionsfähiger Hardware-Routing-Port**. Neu ist
+seine strengere Übersetzung der von Linux-6.6-Flowtable erzeugten Aktionen:
+
+- TCP-/UDP-Portedits akzeptieren ausschließlich die zwei vollständigen,
+  ausgerichteten Portmasken von `nf_flow_table_offload.c`; unbekannte Masken,
+  unpassende Offsets und Werte in beizubehaltenden Bits werden abgewiesen.
+- IPv4-Adressedits verlangen einen vollständigen Austausch ohne Teilmaske.
+- Ethernet-MAC-Edits werden nicht mehr ignoriert. Ohne vollständigen ASIC-
+  Next-Hop-/MAC-Encoder wird die Regel abgewiesen und bleibt im Linux-Pfad.
+
+Deshalb gibt es weiterhin keine Hardware-Aktivierung. Noch erforderlich sind
+insbesondere vollständige ARP-/Next-Hop-/Netif-/MAC-Abbildung, verifizierte
+Hash-/Byteordnungs-/Kollisionsbehandlung am Chip, Aktivitäts-/Timeoutabgleich,
+Löschung bei Conntrack-/Route-/Nachbar-/Firewall-/Netdev-Änderungen und eine
+nachgewiesene WAN/LAN-/DSA-Isolation. Erst dann darf eine Regel erfolgreich als
+Hardware-offloaded bestätigt werden. Die bestehende Lösch-/Flush-Infrastruktur
+und Native-Tests sind dafür Grundlagen, kein Ersatz für den Hardware-Nachweis.
+
+`rtl8197f-accel hardware on` wird daher ausdrücklich mit einem Fehler beendet.
+Kein Schalter wird angeboten, der diese fehlende Portierung nur übergeht.
 
 ## Hardware-Abnahme vor weiterer Leistungsoptimierung
 
