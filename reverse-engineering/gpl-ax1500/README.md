@@ -141,3 +141,7 @@ Aus diesem Paket ist bislang kein belegter neuer WLAN-Leistungsfix abgeleitet.
 Validierung dieser Analyse: Archiv inventarisiert, relevante Quellen gelesen,
 sechs Kerndateien per SHA256 und Git-Inhalt verglichen. Kein Firmwarebuild und
 kein Hardwaretest für dieses Paket durchgeführt.
+
+Die darauf aufbauenden experimentellen Geräteprofile sind in
+[CUDY_AX1500.md](../../target/linux/realtek/rtl8197f/CUDY_AX1500.md) dokumentiert.
+Sie dienen zunächst ausschließlich dem UART-/RAM-Bring-up.

@@ -1,0 +1,18 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Runtime evidence only: no flash reads, MMIO writes or network reconfiguration.
+board="$(cat /tmp/sysinfo/board_name 2>/dev/null)"
+case "$board" in
+	cudy,wr1500) profile=R76 ;;
+	cudy,re1500) profile=R101 ;;
+	cudy,m1500) profile=R102 ;;
+	*) echo 'Only Cudy WR1500/RE1500/M1500 RAM profiles are supported' >&2; exit 1 ;;
+esac
+printf 'board=%s gpl_profile=%s status=experimental-uart-ram-only\n' "$board" "$profile"
+echo 'RAM is capped at 64 MiB; MemTotal does not identify physical capacity.'
+for path in /etc/openwrt_release /proc/cmdline /proc/cpuinfo /proc/meminfo /proc/interrupts /proc/mtd; do
+	printf '\n%s\n' "$path"
+	cat "$path" 2>/dev/null || true
+done
+printf '\nkernel diagnostics\n'
+dmesg | tail -100

@@ -2,6 +2,48 @@
 
 include ./common.mk
 
+# Cudy GPL profiles R76/R101/R102: UART-only RAM bring-up. There is no
+# verified stock image wrapper, full partition map or calibration schema yet.
+# Keep the loader at +32 MiB inside the 64 MiB diagnostic RAM window. The
+# existing loader-overlap gate checks the decompressed kernel against it.
+define Device/cudy_ax1500_ram
+  DEVICE_VENDOR := Cudy
+  DEVICE_VARIANT := experimental UART RAM boot
+  KERNEL := kernel-bin | append-dtb | lzma | rtl8197f-loader-kernel
+  KERNEL_INITRAMFS := kernel-bin | append-dtb | lzma | rtl8197f-loader-kernel | check-size 31744k
+  KERNEL_INITRAMFS_SUFFIX := -ram-loader.bin
+  RTL8197F_LOADADDR := 0x82000000
+  RTL8197F_LZMA_TEXT_START := 0x82000000
+  RTL8197F_KERNEL_CMDLINE := console=ttyS0,115200n8 rdinit=/sbin/init clk_ignore_unused
+  DEVICE_PACKAGES += rtl8197f-cudy-ax1500-base -uboot-envtools
+  # Deliberately override Device/Default's sysupgrade.bin.
+  IMAGES :=
+endef
+
+define Device/cudy_wr1500
+  $(Device/cudy_ax1500_ram)
+  DEVICE_MODEL := WR1500
+  DEVICE_DTS := rtl8197f_cudy_wr1500
+  SUPPORTED_DEVICES += cudy,wr1500
+endef
+TARGET_DEVICES += cudy_wr1500
+
+define Device/cudy_re1500
+  $(Device/cudy_ax1500_ram)
+  DEVICE_MODEL := RE1500
+  DEVICE_DTS := rtl8197f_cudy_re1500
+  SUPPORTED_DEVICES += cudy,re1500
+endef
+TARGET_DEVICES += cudy_re1500
+
+define Device/cudy_m1500
+  $(Device/cudy_ax1500_ram)
+  DEVICE_MODEL := M1500
+  DEVICE_DTS := rtl8197f_cudy_m1500
+  SUPPORTED_DEVICES += cudy,m1500
+endef
+TARGET_DEVICES += cudy_m1500
+
 define Device/realtek_rtl8197f_evb
   DEVICE_VENDOR := Realtek
   DEVICE_MODEL := RTL8197F Evaluation Board

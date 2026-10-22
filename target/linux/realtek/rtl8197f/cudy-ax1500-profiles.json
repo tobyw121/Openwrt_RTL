@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "gpl_archive_sha256": "2413dbd852e6f039d402f8ffda62e20b9f7b88a38dde0e7d86a527078ed66b93",
+  "source_root": "GPL_for_AX1500_rtl8197/openwrt/21.02/",
+  "boards": {
+    "cudy,wr1500": {
+      "gpl_profile": "R76",
+      "integration_status": "experimental-uart-ram-only",
+      "hardware_revision": null,
+      "physical_ram_bytes": null,
+      "diagnostic_ram_window_bytes": 67108864,
+      "diagnostic_ram_window_is_measured": false,
+      "soc_config": "RTL8197F_VG_V672",
+      "flash_bytes_from_gpl": 16777216,
+      "oem_kernel_offset_from_gpl": 262144,
+      "oem_rootfs_offset_from_gpl": 2818048,
+      "external_rtl8367rb_vc_from_gpl": true,
+      "wlan_build_option_from_gpl": "CONFIG_RTL8852AE_BACKPORTS=y",
+      "pcie_radio_id": null,
+      "flash_upgrade_supported": false,
+      "sources": [
+        {
+          "path": "target/linux/realtek/rtl8197f/R76/config-4.4",
+          "sha256": "4194e93863c6bd50f2ecc4077449aa0510155bd9d90e2880dcb8b9d16094c4b8"
+        },
+        {
+          "path": "package/boot/rtl819x-SDK-v3.6.0-bootcode/src/def-rtl8197fh_vg_8367rb_vc_R76-config",
+          "sha256": "c9ce9e88e9f346b7f9efe118ac7329907bdc3362c19eafd6ed6a201b12a86e9a"
+        },
+        {
+          "path": "target/linux/realtek/image/rtl8197f.mk",
+          "sha256": "06f3ed6bb4b610e1a1e4b19ffbc0c558311f72a0879a1271fe456034ea58bd2b"
+        }
+      ],
+      "remaining_validation": [
+        "hardware revision and RAM capacity",
+        "OEM RAM-loading procedure",
+        "flash partitions and read mapping",
+        "SMI wiring and physical port order",
+        "integrated and PCIe radio identities, firmware and factory calibration",
+        "LED/button wiring and polarity"
+      ]
+    },
+    "cudy,re1500": {
+      "gpl_profile": "R101",
+      "integration_status": "experimental-uart-ram-only",
+      "hardware_revision": null,
+      "physical_ram_bytes": null,
+      "diagnostic_ram_window_bytes": 67108864,
+      "diagnostic_ram_window_is_measured": false,
+      "soc_config": "RTL8197F_VG_V672",
+      "flash_bytes_from_gpl": 16777216,
+      "oem_kernel_offset_from_gpl": 262144,
+      "oem_rootfs_offset_from_gpl": 2818048,
+      "external_rtl8367rb_vc_from_gpl": false,
+      "wlan_build_option_from_gpl": "CONFIG_RTL8852AE_BACKPORTS=y",
+      "pcie_radio_id": null,
+      "flash_upgrade_supported": false,
+      "sources": [
+        {
+          "path": "target/linux/realtek/rtl8197f/R101/config-4.4",
+          "sha256": "4177a0561516ca7695d40f9e430c791ecf5548675c624e8c1a7f94cec2345670"
+        },
+        {
+          "path": "package/boot/rtl819x-SDK-v3.6.0-bootcode/src/def-rtl8197fh_vg_8367rb_vc_R101-config",
+          "sha256": "424eae71ab822efa309804961dba4e68e3af8bc5c2459d131206980c3608e1da"
+        },
+        {
+          "path": "target/linux/realtek/image/rtl8197f.mk",
+          "sha256": "06f3ed6bb4b610e1a1e4b19ffbc0c558311f72a0879a1271fe456034ea58bd2b"
+        }
+      ],
+      "remaining_validation": [
+        "hardware revision and RAM capacity",
+        "OEM RAM-loading procedure",
+        "flash partitions and read mapping",
+        "internal switch port mapping",
+        "integrated and PCIe radio identities, firmware and factory calibration",
+        "LED/button wiring and polarity"
+      ]
+    },
+    "cudy,m1500": {
+      "gpl_profile": "R102",
+      "integration_status": "experimental-uart-ram-only",
+      "hardware_revision": null,
+      "physical_ram_bytes": null,
+      "diagnostic_ram_window_bytes": 67108864,
+      "diagnostic_ram_window_is_measured": false,
+      "soc_config": "RTL8197F_VG_V672",
+      "flash_bytes_from_gpl": 16777216,
+      "oem_kernel_offset_from_gpl": 262144,
+      "oem_rootfs_offset_from_gpl": 2818048,
+      "external_rtl8367rb_vc_from_gpl": true,
+      "wlan_build_option_from_gpl": "CONFIG_RTL8852AE_BACKPORTS=y",
+      "pcie_radio_id": null,
+      "flash_upgrade_supported": false,
+      "sources": [
+        {
+          "path": "target/linux/realtek/rtl8197f/R102/config-4.4",
+          "sha256": "3ef38b57ea11b7a18b9c1714b20ba99fb354e55cc31b2fc69b209234ab236142"
+        },
+        {
+          "path": "package/boot/rtl819x-SDK-v3.6.0-bootcode/src/def-rtl8197fh_vg_8367rb_vc_R102-config",
+          "sha256": "af40224bb381c7d0d8b6ec639843bcaf5809d91b9b31688a1dc7c895a781bd68"
+        },
+        {
+          "path": "target/linux/realtek/image/rtl8197f.mk",
+          "sha256": "06f3ed6bb4b610e1a1e4b19ffbc0c558311f72a0879a1271fe456034ea58bd2b"
+        }
+      ],
+      "remaining_validation": [
+        "hardware revision and RAM capacity",
+        "OEM RAM-loading procedure",
+        "flash partitions and read mapping",
+        "SMI wiring and physical port order",
+        "integrated and PCIe radio identities, firmware and factory calibration",
+        "LED/button wiring and polarity"
+      ]
+    }
+  }
+}

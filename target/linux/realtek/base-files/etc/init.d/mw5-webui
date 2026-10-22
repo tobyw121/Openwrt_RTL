@@ -18,6 +18,8 @@ seed_dynamic_hostname() {
 }
 
 boot() {
+	. /lib/functions/rtl8197f-board.sh
+	rtl8197f_is_cudy_ram && return 0
 	mkdir -p /tmp/mw5-webui
 	seed_dynamic_hostname
 	# v44.61 self-heal: upgrades from older rollback states may have a saved

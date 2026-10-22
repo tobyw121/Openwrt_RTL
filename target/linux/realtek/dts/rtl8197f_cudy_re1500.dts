@@ -1,0 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+// Cudy GPL R101: initial RAM-only profile; board revision unverified.
+
+#include "rtl8197f_cudy_ax1500.dtsi"
+
+/ {
+	compatible = "cudy,re1500", "realtek,rtl8197f-vg", "realtek,rtl8197f-soc";
+	model = "Cudy RE1500 (experimental RAM boot)";
+};

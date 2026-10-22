@@ -21,6 +21,14 @@ filter_port_list_reverse() {
 board=$(board_name)
 board_config_update
 
+case "$board" in
+cudy,wr1500|cudy,re1500|cudy,m1500)
+	# UART-only RAM profiles have no validated Ethernet/WLAN interfaces yet.
+	board_config_flush
+	exit 0
+	;;
+esac
+
 lan_list=$(ls -1 -v -d /sys/class/net/lan* 2>/dev/null | xargs -n1 basename | xargs)
 
 case $board in

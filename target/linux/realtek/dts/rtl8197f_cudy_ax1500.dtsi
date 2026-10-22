@@ -1,0 +1,39 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+
+#include "rtl8197f.dtsi"
+
+/ {
+	/* Initial UART-only bring-up window, not a measured physical RAM size.
+	 * Do not expose additional RAM before an OEM boot log confirms it.
+	 */
+	memory@0 {
+		device_type = "memory";
+		reg = <0x00000000 0x04000000>;
+	};
+
+	chosen {
+		bootargs = "console=ttyS0,115200n8 rdinit=/sbin/init clk_ignore_unused";
+		stdout-path = "serial0:115200n8";
+	};
+};
+
+&uart0 {
+	interrupt-parent = <&intc>;
+	interrupts = <9 1>;
+	status = "okay";
+};
+
+/* Flash layout/byte mapping and board wiring still need hardware evidence.
+ * Keep even read probes off until the board revision is identified. No
+ * factory calibration, PCI radio ID, switch GPIO or port map is assumed.
+ */
+&spi0 { status = "disabled"; };
+&spirom0 { status = "disabled"; };
+&gpio0 { status = "disabled"; };
+&ethernet0 { status = "disabled"; };
+&ethdiag0 { status = "disabled"; };
+&switchcore { status = "disabled"; };
+&wlan { status = "disabled"; };
+&pcie0 { status = "disabled"; };
+&usb_host { status = "disabled"; };
+&usb_otg { status = "disabled"; };

@@ -20,6 +20,12 @@ tplink_sg2xxx_fix_mtdparts() {
 }
 
 platform_check_image() {
+	case "$(board_name)" in
+	cudy,wr1500|cudy,re1500|cudy,m1500)
+		echo 'Cudy AX1500: RAM bring-up only; flash layout is not validated.' >&2
+		return 1
+		;;
+	esac
 	return 0
 }
 
@@ -27,6 +33,10 @@ platform_do_upgrade() {
         local board=$(board_name)
 
         case "$board" in
+        cudy,wr1500|cudy,re1500|cudy,m1500)
+                echo 'Cudy AX1500: flash upgrades are not implemented.' >&2
+                return 1
+                ;;
         xiaomi,r4-rd05|\
         tenda,ac23|\
 	tenda,lynx-rtl8197f)
