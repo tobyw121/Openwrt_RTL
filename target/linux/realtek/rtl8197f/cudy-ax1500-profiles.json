@@ -39,7 +39,20 @@
         "SMI wiring and physical port order",
         "integrated and PCIe radio identities, firmware and factory calibration",
         "LED/button wiring and polarity"
-      ]
+      ],
+      "oem_upgrade_evidence": {
+        "source_commit": "5a0a0ff46fae351efdcdb26dc2a51bd8a5b25b22",
+        "source_path": "fullflash-templates/WR1500-R76-oem_Firmware_flash.bin",
+        "sha256": "89f0a7a5a9b2bcb14ff98ac26f6989c3b48d83269b4fcf07ff26cd3248d5574a",
+        "kind": "OEM upgrade container; not a raw SPI backup",
+        "version": "2.3.10",
+        "kernel": "4.4.176",
+        "compiled_console": "ttyS0,38400",
+        "wifi6_module": "rtk_wifi6.ko",
+        "radio_reference": "rtl8832bre/RFE50; PCI aliases are not a live PCI ID",
+        "report": "reverse-engineering/wr1500-r76/README.md",
+        "factory_data_present": false
+      }
     },
     "cudy,re1500": {
       "gpl_profile": "R101",

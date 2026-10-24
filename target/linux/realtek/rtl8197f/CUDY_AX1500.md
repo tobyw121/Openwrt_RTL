@@ -6,6 +6,13 @@ WR1500 is the first planned hardware test; RE1500 and M1500 remain untested.
 Hardware revisions have not been identified, so support for every revision
 sold under these names is not implied.
 
+The newly supplied **WR1500/R76 OEM upgrade image** has now been analyzed:
+[WR1500 R76 findings](../../../../reverse-engineering/wr1500-r76/README.md).
+It supplies a compiled OEM partition map, Realtek bootcode, Wi-Fi-6 module
+and firmware/table references plus GPIO/SMI candidates. It is not a raw SPI
+backup and does not include the unit's original cfg/bdinfo contents. The
+existing UART/RAM-only integration remains unchanged.
+
 ## Evidence and current integration
 
 Source: [Cudy AX1500 GPL analysis](../../../../reverse-engineering/gpl-ax1500/README.md).
@@ -27,8 +34,10 @@ validated flash map. In particular, they do not identify all OEM settings,
 signatures, factory data or the correct Linux auto-map byte shift.
 
 The GPL enables `CONFIG_RTL8852AE_BACKPORTS`, but does not supply a corresponding
-complete chip driver source tree. No physical PCI ID, firmware/calibration
-mapping or working radio initialization has been confirmed on these units.
+complete chip driver source tree. The R76 image now adds `rtk_wifi6.ko`,
+RTL8832BRE/RFE50 tables and embedded 8192XB firmware as binary references.
+The live PCI ID, per-unit calibration and working radio initialization under
+our Linux-6.6 port have not been confirmed on these units.
 The RD05/MW5/AC23 radio profiles are therefore not assigned to the Cudy models.
 The RE1500 must not inherit the WR1500 external-switch topology.
 

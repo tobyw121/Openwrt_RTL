@@ -1,0 +1,907 @@
+{
+  "schema": 1,
+  "board": "cudy,wr1500",
+  "profile": "R76",
+  "source_commit": "5a0a0ff46fae351efdcdb26dc2a51bd8a5b25b22",
+  "source_path": "fullflash-templates/WR1500-R76-oem_Firmware_flash.bin",
+  "image_size": 15180020,
+  "image_sha256": "89f0a7a5a9b2bcb14ff98ac26f6989c3b48d83269b4fcf07ff26cd3248d5574a",
+  "classification": "OEM combined bootloader/signature/firmware upgrade image, not a full raw SPI backup",
+  "file_layout": [
+    {
+      "name": "bootloader",
+      "offset": "0x0",
+      "size": "0x20000"
+    },
+    {
+      "name": "OEM signature block plus zero padding",
+      "offset": "0x20000",
+      "size": "0x10000"
+    },
+    {
+      "name": "uImage",
+      "offset": "0x30000",
+      "data_size": 2151442,
+      "header_crc32_valid": true,
+      "data_crc32_valid": true
+    },
+    {
+      "name": "Realtek cr6c header",
+      "offset": "0x30040",
+      "ram_entry": "0x80a00000",
+      "burn_address": "0x40000"
+    },
+    {
+      "name": "kernel LZMA-alone stream",
+      "offset": "0x32858",
+      "compressed_size": 2140941
+    },
+    {
+      "name": "SquashFS 4 XZ",
+      "offset": "0x2a0000",
+      "bytes_used": 12423466,
+      "block_size": 262144,
+      "inode_count": 3172
+    }
+  ],
+  "physical_partitions_from_kernel": [
+    {
+      "name": "u-boot",
+      "offset": "0x0",
+      "size": "0x20000",
+      "end": "0x20000",
+      "kernel_record_offset": "0x62bf98"
+    },
+    {
+      "name": "cfg",
+      "offset": "0x20000",
+      "size": "0x10000",
+      "end": "0x30000",
+      "kernel_record_offset": "0x62bfb8"
+    },
+    {
+      "name": "bdinfo",
+      "offset": "0x30000",
+      "size": "0x10000",
+      "end": "0x40000",
+      "kernel_record_offset": "0x62bfd8"
+    },
+    {
+      "name": "firmware",
+      "offset": "0x40000",
+      "size": "0xec0000",
+      "end": "0xf00000",
+      "kernel_record_offset": "0x62bff8"
+    },
+    {
+      "name": "kernel",
+      "offset": "0x40000",
+      "size": "0x270000",
+      "end": "0x2b0000",
+      "kernel_record_offset": "0x62c018"
+    },
+    {
+      "name": "rootfs",
+      "offset": "0x2b0000",
+      "size": "0xc50000",
+      "end": "0xf00000",
+      "kernel_record_offset": "0x62c038"
+    },
+    {
+      "name": "rootfs_data",
+      "offset": "0xf00000",
+      "size": "0xf0000",
+      "end": "0xff0000",
+      "kernel_record_offset": "0x62c058"
+    },
+    {
+      "name": "backup",
+      "offset": "0xff0000",
+      "size": "0x10000",
+      "end": "0x1000000",
+      "kernel_record_offset": "0x62c078"
+    }
+  ],
+  "upgrade_mapping": {
+    "skip_file_bytes": "0x30000",
+    "firmware_partition_start": "0x40000",
+    "rootfs_flash_offset": "0x2b0000",
+    "not_in_package": [
+      "cfg",
+      "bdinfo",
+      "rootfs_data",
+      "backup"
+    ],
+    "source": "/lib/upgrade/platform.sh: dd_skip=192 KiB; MTD partition table in kernel"
+  },
+  "bootloader": {
+    "kind": "Realtek BSP bootcode; partition name u-boot is not evidence of U-Boot",
+    "version_marker": "OEM_BOOT 00000002",
+    "gzip_offset": "0x8d60",
+    "unpacked_size": 141344,
+    "unpacked_sha256": "ddbd081a815a4c363502985eeb0ca2882bfac7959dd25eba7bb45f85cd7d2342"
+  },
+  "kernel": {
+    "size": 6718440,
+    "sha256": "2bf072c19ccd18f8e688b195bfc878682f0a8e9af3f7deefd28d9b8550d0dd28",
+    "base": "0x80000000",
+    "version": "Linux version 4.4.176 (jenkins@release_server) (gcc version 6.4.1 20180425 (Realtek MSDK-6.4.1 Build 3055) ) #1 Mon Dec 15 16:40:19 CST 2025",
+    "compiled_cmdline": "console=ttyS0,38400 root=/dev/mtdblock5",
+    "decoded_kallsyms_count": 21521,
+    "kallsyms_export_cross_checks": 0,
+    "symbols_limit": "Recovered absolute addresses/tokens; zero export-table cross-checks; selected code checked against GPL and disassembly"
+  },
+  "firmware_metadata": {
+    "metadata_version": "1.1",
+    "compat_version": "1.0",
+    "supported_devices": [
+      "R76"
+    ],
+    "version": {
+      "dist": "OpenWrt",
+      "version": "21.02-SNAPSHOT",
+      "revision": "2.3.10",
+      "target": "realtek/rtl8197f",
+      "board": "R76"
+    }
+  },
+  "rootfs_extraction": {
+    "file_and_symlink_entries": 2963,
+    "regular_files": 2532,
+    "unpacked_regular_file_bytes": 41581540,
+    "all_regular_files_read_successfully": true
+  },
+  "modules": [
+    {
+      "path": "/lib/modules/4.4.176/cfg80211.ko",
+      "size": 327280,
+      "sha256": "3863c9f0656474aa069ad3cfacedfb81593cb51727bf2a3edc190c3c04afd841",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "version": [
+          "backported from Linux (v5.2.8-0-gd36a8d2fb62c) using backports v5.2.8-1-0-ga33d4e95"
+        ],
+        "alias": [
+          "net-pf-16-proto-16-family-nl80211"
+        ],
+        "license": [
+          "GPL"
+        ],
+        "srcversion": [
+          "94141634CB91A48CDE0E0DB"
+        ],
+        "depends": [
+          "compat"
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 632
+    },
+    {
+      "path": "/lib/modules/4.4.176/compat.ko",
+      "size": 111668,
+      "sha256": "799b5a5c1ed3b81955d78dd4dede903455273dedce3ca337d1ab7debea4a1b63",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "version": [
+          "backported from Linux (v5.2.8-0-gd36a8d2fb62c) using backports v5.2.8-1-0-ga33d4e95"
+        ],
+        "license": [
+          "GPL",
+          "GPL",
+          "GPL",
+          "GPL"
+        ],
+        "srcversion": [
+          "0146EDF60E93EA4C76BE372"
+        ],
+        "depends": [
+          ""
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 437
+    },
+    {
+      "path": "/lib/modules/4.4.176/gpio-button-hotplug.ko",
+      "size": 13976,
+      "sha256": "9152bea9d00e53b16c7d7d9af186b6bdaee6ff1087419dbbfdbd8749d98cd388",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "alias": [
+          "platform:gpio-keys",
+          "of:N*T*Cgpio-keys*",
+          "of:N*T*Cgpio-keys-polled*"
+        ],
+        "license": [
+          "GPL v2"
+        ],
+        "depends": [
+          ""
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 93
+    },
+    {
+      "path": "/lib/modules/4.4.176/hyfi-bridging.ko",
+      "size": 144224,
+      "sha256": "b378b8eb5cce5282057e09c8b2050a21cd75e994fad46e8132982b90a4bab531",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "license": [
+          "GPL v2"
+        ],
+        "depends": [
+          ""
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 361
+    },
+    {
+      "path": "/lib/modules/4.4.176/ipt_TRIGGER.ko",
+      "size": 5612,
+      "sha256": "1cfaccccf2256c01e9cae5d39ab63d960194329f7705233bc7d8305bc46b1c3f",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "license": [
+          "GPL"
+        ],
+        "depends": [
+          ""
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 28
+    },
+    {
+      "path": "/lib/modules/4.4.176/ipv6-pass-through.ko",
+      "size": 6024,
+      "sha256": "5a18abf67e32412482504c2a4e8c57c836c81026d623b7186bdf7e7274345658",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "license": [
+          "Proprietary"
+        ],
+        "depends": [
+          ""
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 50
+    },
+    {
+      "path": "/lib/modules/4.4.176/mcore.ko",
+      "size": 26680,
+      "sha256": "f384e4998677681dfefdc971a161a4420c24ecadd92cd337fd6920c3eb51ba4a",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "license": [
+          "Proprietary"
+        ],
+        "depends": [
+          ""
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 118
+    },
+    {
+      "path": "/lib/modules/4.4.176/nat46.ko",
+      "size": 40892,
+      "sha256": "76d7a86b74fba58014efb9972d37722c51b39d328acb2e4a5feff070a11f6c1c",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "license": [
+          "GPL"
+        ],
+        "depends": [
+          ""
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 207
+    },
+    {
+      "path": "/lib/modules/4.4.176/nf_conntrack_amanda.ko",
+      "size": 5616,
+      "sha256": "24320279b4428fcb590d41c8354c690622eb466048c5bb1f0f8499e1d2697fe9",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "alias": [
+          "nfct-helper-amanda",
+          "ip_conntrack_amanda"
+        ],
+        "license": [
+          "GPL"
+        ],
+        "depends": [
+          ""
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 39
+    },
+    {
+      "path": "/lib/modules/4.4.176/nf_conntrack_broadcast.ko",
+      "size": 2188,
+      "sha256": "5ab25fa1cf49e43c33e228837093136309cd65724b170a6b1f67c9ae0a8f94e7",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "license": [
+          "GPL"
+        ],
+        "depends": [
+          ""
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 15
+    },
+    {
+      "path": "/lib/modules/4.4.176/nf_conntrack_snmp.ko",
+      "size": 3056,
+      "sha256": "0294a8dc8e0c583e9ab8644f5e420d2f572afcd3aafed6cc8132366cf7218a6b",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "alias": [
+          "nfct-helper-snmp"
+        ],
+        "license": [
+          "GPL"
+        ],
+        "depends": [
+          "nf_conntrack_broadcast"
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 22
+    },
+    {
+      "path": "/lib/modules/4.4.176/nf_nat_amanda.ko",
+      "size": 2836,
+      "sha256": "4f1e4f8adda630e62f318a66033e96205bac6a38bf39d65fb0b64964b0dd0323",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "alias": [
+          "ip_nat_amanda"
+        ],
+        "license": [
+          "GPL"
+        ],
+        "depends": [
+          "nf_conntrack_amanda"
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 24
+    },
+    {
+      "path": "/lib/modules/4.4.176/rtk_wifi6.ko",
+      "size": 7494584,
+      "sha256": "0dd6634566f18f025f7ebd0f48fc26b9bfea65ee922e9901050871acb40befa3",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "version": [
+          "v2.0.0.1 2021/09/22",
+          "backported from Linux (v5.2.8-0-gd36a8d2fb62c) using backports v5.2.8-1-0-ga33d4e95"
+        ],
+        "license": [
+          "GPL"
+        ],
+        "srcversion": [
+          "533BB7E5866E52F63B9ACCB"
+        ],
+        "alias": [
+          "pci:v000010ECd00000192sv*sd*bc*sc*i*",
+          "pci:v000010ECd0000B832sv*sd*bc*sc*i*",
+          "pci:v000010ECd0000B814sv*sd*bc*sc*i*"
+        ],
+        "depends": [
+          "cfg80211,compat,ther_ctrl"
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 25725
+    },
+    {
+      "path": "/lib/modules/4.4.176/rtl8192cd.ko",
+      "size": 2689132,
+      "sha256": "43f212df4c40529120b8fc6c915d7479a5c9c3dd83d7fa4ca7750b58aa6adf70",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "version": [
+          "backported from Linux (v5.2.8-0-gd36a8d2fb62c) using backports v5.2.8-1-0-ga33d4e95"
+        ],
+        "license": [
+          "GPL"
+        ],
+        "srcversion": [
+          "533BB7E5866E52F63B9ACCB"
+        ],
+        "depends": [
+          "compat,cfg80211,ther_ctrl"
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 7199
+    },
+    {
+      "path": "/lib/modules/4.4.176/ther_ctrl.ko",
+      "size": 5696,
+      "sha256": "808591ad05113aa5e16ed47be17b5269631810f15181edd1e5eebe48afe41cf6",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "license": [
+          "GPL"
+        ],
+        "version": [
+          "backported from Linux (v5.2.8-0-gd36a8d2fb62c) using backports v5.2.8-1-0-ga33d4e95"
+        ],
+        "srcversion": [
+          "9DD436BE8427AC5937D2840"
+        ],
+        "depends": [
+          "compat"
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 47
+    },
+    {
+      "path": "/lib/modules/4.4.176/tun.ko",
+      "size": 29100,
+      "sha256": "34c23f329b54cc204b3679bcc9b5f8ed7cfbee5dabaff0b7393f709f9a936dde",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "alias": [
+          "devname:net/tun",
+          "char-major-10-200"
+        ],
+        "license": [
+          "GPL"
+        ],
+        "depends": [
+          ""
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 138
+    },
+    {
+      "path": "/lib/modules/4.4.176/vlan.ko",
+      "size": 7296,
+      "sha256": "5396f964898de6921865aeefd6be0f42b74ed85fb1ee713359b826eaeb72ef57",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "license": [
+          "Proprietary"
+        ],
+        "depends": [
+          ""
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 44
+    },
+    {
+      "path": "/lib/modules/4.4.176/wan_detect.ko",
+      "size": 19064,
+      "sha256": "ede5127ae5e62f74518db9c5ea3e90c535da40952a0e3c5520e0ee58e11143c6",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "license": [
+          "Proprietary"
+        ],
+        "depends": [
+          ""
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 118
+    },
+    {
+      "path": "/lib/modules/4.4.176/wireguard.ko",
+      "size": 163736,
+      "sha256": "90eb0b2e68bebdf897504c38ffb76f2f851db390c5b0e4add721bf552d48b2de",
+      "elf": "ELF32 little-endian MIPS",
+      "modinfo": {
+        "alias": [
+          "net-pf-16-proto-16-family-wireguard",
+          "rtnl-link-wireguard"
+        ],
+        "version": [
+          "1.0.20210219"
+        ],
+        "license": [
+          "GPL v2"
+        ],
+        "srcversion": [
+          "F16335B87929B25905A29A4"
+        ],
+        "depends": [
+          ""
+        ],
+        "vermagic": [
+          "4.4.176 mod_unload MIPS32_R2 32BIT "
+        ]
+      },
+      "symbol_entries": 329
+    }
+  ],
+  "wifi_tables": [
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/AP_2G/PHY_REG.txt",
+      "size": 33,
+      "sha256": "cb5bd2042d8d447d624681b1e181546ea53a0d1d9ea5dd7fb788aadf6a48c7cb",
+      "non_comment_lines": 1,
+      "comment_only": false,
+      "placeholder_only": true
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/AP_2G/RadioA.txt",
+      "size": 37,
+      "sha256": "33423d37d4ab389e013a8d53426bab8a2b5effb1d97cfb46151367d058354d7f",
+      "non_comment_lines": 1,
+      "comment_only": false,
+      "placeholder_only": true
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/AP_2G/RadioB.txt",
+      "size": 37,
+      "sha256": "33423d37d4ab389e013a8d53426bab8a2b5effb1d97cfb46151367d058354d7f",
+      "non_comment_lines": 1,
+      "comment_only": false,
+      "placeholder_only": true
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/AP_2G/TXPWR_ByRate.txt",
+      "size": 2320,
+      "sha256": "6af9815c433fe60ebdeffe897168b709e17b68d5ba20ab0f6a1fd3f64e50d6fa",
+      "non_comment_lines": 24,
+      "comment_only": false,
+      "placeholder_only": false
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/AP_2G/TXPWR_LMT.txt",
+      "size": 24953,
+      "sha256": "46b2a75d96b9c22a83cbe3aeac118c184fb25c2cd549fb7fb96ab04fe9da7ac8",
+      "non_comment_lines": 397,
+      "comment_only": false,
+      "placeholder_only": false
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/AP_2G/TXPWR_LMT_RU.txt",
+      "size": 16215,
+      "sha256": "77206460f3d2d3958e2f9a14ff77dcd9be4e798c86f8ff3cf2147bd9b295395e",
+      "non_comment_lines": 267,
+      "comment_only": false,
+      "placeholder_only": false
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/AP_2G/TXPWR_TrackTSSI.txt",
+      "size": 2478,
+      "sha256": "680292ba58c5037d9cbec39d7619f42d0c6ea046e18785fb389a499cc76a9a54",
+      "non_comment_lines": 20,
+      "comment_only": false,
+      "placeholder_only": false
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/AP_5G/PHY_REG.txt",
+      "size": 33,
+      "sha256": "820332547fe26b27b92492e99f8a42f62ff31938ddf47f33b6f1b7c9cbc65456",
+      "non_comment_lines": 1,
+      "comment_only": false,
+      "placeholder_only": true
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/AP_5G/PHY_REG_GAIN.txt",
+      "size": 34,
+      "sha256": "f50c63561e394216c447d49bc32cd52fd2889cf7991d9ad1c38a84bb6bb001f2",
+      "non_comment_lines": 1,
+      "comment_only": false,
+      "placeholder_only": true
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/AP_5G/RadioA.txt",
+      "size": 37,
+      "sha256": "54c4c30ce765826b1447d2fb955c80f5f68abfc74836afcfd22cf3fed700f3ea",
+      "non_comment_lines": 1,
+      "comment_only": false,
+      "placeholder_only": true
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/AP_5G/RadioB.txt",
+      "size": 37,
+      "sha256": "54c4c30ce765826b1447d2fb955c80f5f68abfc74836afcfd22cf3fed700f3ea",
+      "non_comment_lines": 1,
+      "comment_only": false,
+      "placeholder_only": true
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/AP_5G/TXPWR_ByRate.txt",
+      "size": 2327,
+      "sha256": "636f5593c10879f4c68a6fd57d2e6de76d7d82bd6d2de1a4db4e572e40d53df6",
+      "non_comment_lines": 24,
+      "comment_only": false,
+      "placeholder_only": false
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/AP_5G/TXPWR_LMT.txt",
+      "size": 26098,
+      "sha256": "05c528b7d10ebf006546eadc29b93d3e57a17ba1b75ab951e423ad508149041c",
+      "non_comment_lines": 399,
+      "comment_only": false,
+      "placeholder_only": false
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/AP_5G/TXPWR_LMT_RU.txt",
+      "size": 16215,
+      "sha256": "17716c458e18adecb2e85509eb5ad28e8ffbbcda7773031ee14464af426a47e2",
+      "non_comment_lines": 267,
+      "comment_only": false,
+      "placeholder_only": false
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/AP_5G/TXPWR_TrackTSSI.txt",
+      "size": 2396,
+      "sha256": "b3238a9d0139c85c8a227aafa70c0eb52dcff4d191fe5e9abca8964b99ff9dd8",
+      "non_comment_lines": 20,
+      "comment_only": false,
+      "placeholder_only": false
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/PHY_REG.txt",
+      "size": 25327,
+      "sha256": "7ac5d832e9542dd84e96b4cac88ea969598aa6219da85afdd73ae55fb0f89e0e",
+      "non_comment_lines": 1318,
+      "comment_only": false,
+      "placeholder_only": false
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/PHY_REG_GAIN.txt",
+      "size": 3550,
+      "sha256": "29a94695f044938778de739182d5ec7c1f3d5cb86b9682c79ae1e0d227b993cf",
+      "non_comment_lines": 129,
+      "comment_only": false,
+      "placeholder_only": false
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/RadioA.txt",
+      "size": 20233,
+      "sha256": "3677ddb8a85a2eb714b7d697f704b4c26f4f8183a54e8c5ecc5a8d10d5757415",
+      "non_comment_lines": 807,
+      "comment_only": false,
+      "placeholder_only": false
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/RadioB.txt",
+      "size": 20061,
+      "sha256": "76f90cf32576d2df3aa5546cc1ed6083d7f234540df74cf39d0900ddfa6b7217",
+      "non_comment_lines": 793,
+      "comment_only": false,
+      "placeholder_only": false
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/TXPWR_ByRate.txt",
+      "size": 2327,
+      "sha256": "636f5593c10879f4c68a6fd57d2e6de76d7d82bd6d2de1a4db4e572e40d53df6",
+      "non_comment_lines": 24,
+      "comment_only": false,
+      "placeholder_only": false
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/TXPWR_LMT.txt",
+      "size": 26076,
+      "sha256": "4525ec62c20d56492f21cd8eb808abcd6745a042ec04d32b3b344b783a6fa2b1",
+      "non_comment_lines": 399,
+      "comment_only": false,
+      "placeholder_only": false
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/TXPWR_LMT_RU.txt",
+      "size": 16193,
+      "sha256": "31134285c23d931de7389d5827f0d8d996add280440c40a2ac1949c783642ea9",
+      "non_comment_lines": 267,
+      "comment_only": false,
+      "placeholder_only": false
+    },
+    {
+      "path": "/etc/conf/rtl8832bre/RFE50/TXPWR_TrackTSSI.txt",
+      "size": 2403,
+      "sha256": "8e5c10bfc228da5364796961ae599d3fa8cbe3aa61b21e25e3106dc4b1ea7e68",
+      "non_comment_lines": 20,
+      "comment_only": false,
+      "placeholder_only": false
+    }
+  ],
+  "embedded_firmware": [
+    {
+      "symbol": "array_8192xb_u1_ap",
+      "offset_in_module": "0x4b2ee4",
+      "size": 385464,
+      "sha256": "e460f4fbea2ffab4fc38e79848a947c25be93e3e2bce3d30b808f4ff3d65a0fa"
+    },
+    {
+      "symbol": "array_8192xb_u2_ap",
+      "offset_in_module": "0x454ce0",
+      "size": 385536,
+      "sha256": "f9b4e66dba9b8ef505056493fa1a1f49e245049e89754b15894a66b29c4c96a2"
+    }
+  ],
+  "selected_kernel_functions": [
+    {
+      "name": "init_8197f_p0",
+      "address": "0x802780d8",
+      "size": 384,
+      "sha256": "221e6abdc02bfed7dc0437cf420872d2e042ca6742d52a391921b1c11d586b66"
+    },
+    {
+      "name": "RTL83XX_init",
+      "address": "0x802a0cc8",
+      "size": 1424,
+      "sha256": "bd3235465a9239fb9055ace812279f71da1090b6f38ca96b8624a07ea2a5ad70"
+    },
+    {
+      "name": "smi_init",
+      "address": "0x80273784",
+      "size": 180,
+      "sha256": "677a34489af9ff900cfe1f5cfc2c1f996c39ddbf1210ac365f6da6fd7df99c77"
+    },
+    {
+      "name": "smi_init_83xx",
+      "address": "0x80273838",
+      "size": 188,
+      "sha256": "0a9b6db664d57321d975d60ebe09831a2e00603b8b70c2167ca0bc0924795c0b"
+    },
+    {
+      "name": "rtl819x_gpio_peripheral_init",
+      "address": "0x806424e4",
+      "size": 220,
+      "sha256": "a6badcfec6a176851141acc3a74c18359d95841ea5e712abc2046c093dd67e75"
+    }
+  ],
+  "gpio_compiled_assignments": {
+    "reset_led": 33,
+    "wps_led": 57,
+    "reset_button": 54,
+    "wps_button": 34,
+    "switch_reset": 58,
+    "smi_if_bond_97fn": {
+      "mdc": 56,
+      "mdio": 55
+    },
+    "smi_other_bonds": {
+      "mdc": 29,
+      "mdio": 31
+    },
+    "limit": "BSP numbers from compiled initialization plus GPL labels; actual bond and electrical behavior not measured"
+  },
+  "switch_p0_compiled_setup": {
+    "function": "0x802780d8",
+    "tx_delay": 1,
+    "rx_delay": 0,
+    "cpu_tag_rx_tx_bits": "enabled in OEM router path; not a drop-in Linux DSA setup",
+    "external_rgmii_timing_sequence": "rtk_port_rgmiiDelayExt_set(ext_id=0x10,0,2); on successful SSC enable: set(ext_id=0x10,1,0)",
+    "limits": "Static program behavior, not register readback from a running router; do not copy to RD05/MW5"
+  },
+  "oem_port_mapping": {
+    "lan_ports": [
+      3,
+      0,
+      1
+    ],
+    "wan_port": 2,
+    "logical_cpu_links": [
+      "6@eth0",
+      "5@eth1"
+    ],
+    "source": "/etc/board.d/02_network; physical label order unverified"
+  },
+  "references": [
+    {
+      "path": "/etc/openwrt_release",
+      "size": 233,
+      "sha256": "5393e0e69fa967b68d4447e7e239cfd1d957524961a976e8b7cc7c58f2374abf"
+    },
+    {
+      "path": "/etc/rom_version",
+      "size": 23,
+      "sha256": "3abb82c5250fe8f0b3f0a51d93d487a7af875738e623897c372d92683bad5e82"
+    },
+    {
+      "path": "/etc/rom_release",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/etc/board.d/02_network",
+      "size": 1334,
+      "sha256": "7e1275e8cf0339b6ea831ca74d14dd8bc7aa01b1b73fa3371ce24b3a13d06f75"
+    },
+    {
+      "path": "/lib/realtek.sh",
+      "size": 2067,
+      "sha256": "607893059bf6b1be54aa016ad59873d1217836dec86a119cff7cf19e557b3c91"
+    },
+    {
+      "path": "/lib/upgrade/platform.sh",
+      "size": 4326,
+      "sha256": "39d84b1dfaa39723db2150a519391f3c15bf797990cb48bf954877e2db72d18b"
+    },
+    {
+      "path": "/bin/startup.sh",
+      "size": 5085,
+      "sha256": "99536ea2a0cd2c2485a27eea3a6ddece0c03a3ac60b6b1c80f7c1e8f9e8b0878"
+    },
+    {
+      "path": "/etc/modules.d/90-backports-5.2.8-1",
+      "size": 160,
+      "sha256": "64a3d0b905b38c847b2715de826c059ba7d1f544cae8390133c357f9833342bb"
+    },
+    {
+      "path": "/etc/init.d/rtl865x_switch_reinit",
+      "size": 2620,
+      "sha256": "73b1deb5de5bf829c15a34b6575ec2d18c5e228d05c25a6bc2ac7ce76359d478"
+    },
+    {
+      "path": "/etc/init.d/rtl-fast-nat",
+      "size": 441,
+      "sha256": "4cd71f3c02170b6461a15522520816a5cf25472670a1bc2373eb2fd0768afaa9"
+    },
+    {
+      "path": "/lib/wifi/rtl8192x.sh",
+      "size": 12008,
+      "sha256": "61d319ffd839f9440d27567c72997e23d39003df7628f63368642903f04f0b98"
+    },
+    {
+      "path": "/lib/wifi/rtl8197f.sh",
+      "size": 11322,
+      "sha256": "28c1be2820b8f5e338f58c54fd104f88fcbc55b1aac869c3a0ce1f27f3efeba7"
+    }
+  ],
+  "limits": [
+    "No OEM signature verification or proof of authenticity; uImage and compression integrity checks only",
+    "No per-device cfg/bdinfo/efuse values recovered from this upgrade package",
+    "PCI alias support does not establish the live device PCI ID or chip revision",
+    "No execution of OEM programs, no full C-source recovery, no hardware validation",
+    "Existing UART/RAM-only Cudy profile remains experimental; no flash/network enabling based on this analysis"
+  ]
+}
