@@ -1,0 +1,36 @@
+{
+  "source": "User-pasted RD05 OEM kernel log; readbacks at uptime 526.925576 to 526.947404",
+  "registers": {
+    "0xbb804000": "0x804a1485",
+    "0xbb804058": "0x00000001",
+    "0xbb804100": "0x00001001",
+    "0xbb804104": "0x16972039",
+    "0xbb80414c": "0x060f7d46",
+    "0xbb805108": "0x00080000",
+    "0xb8000850": "0xdbffff7f"
+  },
+  "decoded": {
+    "MACCR_CF_FCDSC": 72,
+    "old_port_CF_FCDSC": 36,
+    "P0_RX_delay": 6,
+    "P0_TX_delay": 0,
+    "OEM_CPU_TAG_RX": true,
+    "OEM_CPU_TAG_TX": true,
+    "OEM_router_mode": true
+  },
+  "comparison": {
+    "P0_PCR": "matches 0x16972039",
+    "PITCR": "matches 0x00001001",
+    "EXTPCR0": "matches 0x00080000",
+    "PAD_CTRL_1": "matches 0xdbffff7f",
+    "P0_CPU_tag_bits": "intentionally disabled for Linux DSA opaque-tag transport",
+    "MACCR1_router_mode": "intentionally disabled for Linux DSA opaque-tag transport",
+    "MACCR_CF_FCDSC": "corrected RD05-only from 36 to measured and GPL-confirmed 72 pages in 1.8.44"
+  },
+  "GPL_reference": "rtl865x_asicL2.c Setting_RTL8197F_PHY(): (MACCR & ~CF_FCDSC_MASK) | (0x48 << CF_FCDSC_OFFSET)",
+  "limits": [
+    "SoC P0 timings do not measure external-switch EXT1 timing/SSC registers",
+    "Matching configuration fields does not prove restored Ethernet or explain all FCS errors",
+    "Retain Linux DSA tag ownership; do not copy OEM router bits wholesale"
+  ]
+}

@@ -393,3 +393,34 @@ capture, lower console logging temporarily, submit each read command
 separately, then retrieve dmesg and restore the saved console level. The
 proc `read` request outputs to the kernel log; plain `cat memory` is empty
 by design. No MMIO write command is required for those readbacks.
+
+## Complete OEM P0/MAC readback: 1.8.44
+
+Suppressing console logging during the read requests produced intact OEM
+values. See [p0-readback.json](../../../../reverse-engineering/rd05-oem-runtime/p0-readback.json).
+P0 PCR=0x16972039, PITCR=0x1001, EXTPCR0=0x80000 and PAD_CTRL_1=0xdbffff7f
+match the port. OEM P0GMIICR=0x060f7d46 differs from our 0x000f7d46 only in
+the two CPU-tag bits, while MACCR1=1 differs in the router bit. Those three
+controls remain deliberately disabled to preserve the Linux DSA wire tag.
+Both paths use SoC RX delay 6 and TX delay 0; this does not measure the
+external-switch EXT1 delay/SSC configuration.
+
+MACCR differs: OEM=0x804a1485 versus port=0x804a1245. The difference is
+entirely CF_FCDSC[10:4]: 0x48 (72 pages) versus 0x24 (36 pages).
+The GPL `Setting_RTL8197F_PHY()` explicitly sets 0x48 in that field. Version
+1.8.44 applies only that MAC flow-control tolerance field for RD05 in P0
+initialization, including reseeds. It does not execute the OEM internal-PHY
+calibration routine, overwrite the whole MACCR, or enable OEM router mode.
+MW5 and other boards retain their existing CF_FCDSC values.
+
+The native P0 MMIO test now checks exact 0x804a1245 -> 0x804a1485 conversion,
+idempotence, preservation of unrelated bits and other-board values, alongside
+the existing tag/timing checks. All 18 selected native tests pass and the
+Ethernet object compiles for MIPS/Linux 6.6.114. A complete firmware build and
+hardware retest are still needed: neither this field match nor the preceding
+FIFO correction is proof of working Ethernet.
+
+For the next hardware test, keep TX mode 0. Expect DMA_CR0 ending in a0ce,
+MACCR=0x804a1485 with the observed initial bits, RX6/TX0, and opaque DSA
+tag transport. Compare wired RX, physical LAN/WAN egress, FCS deltas, LAN
+ARP/DHCP and the WAN lease against the previous failed capture.

@@ -62,7 +62,7 @@
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.43-rd05-oem-fifo"
+#define DRV_VERSION			"1.8.44-rd05-oem-mac-flow"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -191,6 +191,9 @@
 #define RTL_RTK_SWCORE_MACCTRL1		0x5100
 #define RTL_RTK_SWCORE_EXTPCR0		0x5108
 #define RTL_RTK_MACCR_P0_GIGA_LINK	BIT(12)
+#define RTL_RTK_MACCR_FCDSC_SHIFT	4
+#define RTL_RTK_MACCR_FCDSC_MASK		GENMASK(10, 4)
+#define RTL_RTK_RD05_MACCR_FCDSC		(0x48U << RTL_RTK_MACCR_FCDSC_SHIFT)
 #define RTL_RTK_MACCR1_P0_ROUTER_MODE	BIT(0)
 #define RTL_RTK_MACCR1_RMD_TAG_MASK	GENMASK(7, 6)
 #define RTL_RTK_PITCR_P0_EXT_INTERFACE	BIT(0)
@@ -2546,6 +2549,14 @@ static void rtl8197f_rtk_init_p0_rgmii(struct rtl8197f_rtknet_priv *priv,
 
 	val = readl(priv->swcore + RTL_RTK_SWCORE_MACCR);
 	val |= RTL_RTK_MACCR_P0_GIGA_LINK;
+	if (rd05) {
+		/* OEM MACCR=0x804a1485: CF_FCDSC=0x48 (72 pages).
+		 * GPL Setting_RTL8197F_PHY() confirms that field value. Apply
+		 * only the MAC flow-control tolerance, not the internal-PHY
+		 * calibration routine or OEM router/CPU-tag policy. */
+		val &= ~RTL_RTK_MACCR_FCDSC_MASK;
+		val |= RTL_RTK_RD05_MACCR_FCDSC;
+	}
 	writel(val, priv->swcore + RTL_RTK_SWCORE_MACCR);
 
 	if (priv->system) {

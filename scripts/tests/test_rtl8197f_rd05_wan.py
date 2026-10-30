@@ -158,6 +158,11 @@ int main(void) {
             assert(!!(maccr1 & RTL_RTK_MACCR1_P0_ROUTER_MODE) == (b == 3 && old_dt));
             assert(gmii & RTL_RTK_P0GMIICR_CONF_DONE);
             assert((gmii & RTL_RTK_P0GMIICR_RX_DELAY_MASK) == rx_default[b]);
+            u32 maccr = readl(p.swcore + RTL_RTK_SWCORE_MACCR);
+            assert((maccr & RTL_RTK_MACCR_FCDSC_MASK) ==
+                   (b < 2 ? RTL_RTK_RD05_MACCR_FCDSC : RTL_RTK_MACCR_FCDSC_MASK));
+            assert((maccr & ~RTL_RTK_MACCR_FCDSC_MASK) ==
+                   (0xffffffffU & ~RTL_RTK_MACCR_FCDSC_MASK));
             if (b == 1 || b == 3) {
                 assert((readl(p.swcore + RTL_RTK_SWCORE_PITCR) & RTL_RTK_PITCR_FIX_IPG_MASK) == RTL_RTK_PITCR_FIX_IPG_8BYTE);
                 assert((readl(p.swcore + RTL_RTK_SWCORE_EXTPCR0) & RTL_RTK_EXTPCR0_TX_IPG_MASK) == RTL_RTK_EXTPCR0_TX_IPG_8BYTE);
@@ -171,6 +176,12 @@ int main(void) {
                 assert(readl(p.system + RTL_RTK_SYSTEM_PAD_CTRL_1) == ((0xffffffffU & 0x019fffff) | 0xda600000));
         }
     }
+    board = "xiaomi,r4-rd05"; system[0] = 0x81970001;
+    writel(0x804a1245, p.swcore + RTL_RTK_SWCORE_MACCR);
+    rtl8197f_rtk_init_p0_rgmii(&p,"oem-maccr-match");
+    assert(readl(p.swcore + RTL_RTK_SWCORE_MACCR) == 0x804a1485);
+    rtl8197f_rtk_init_p0_rgmii(&p,"oem-maccr-reseed");
+    assert(readl(p.swcore + RTL_RTK_SWCORE_MACCR) == 0x804a1485);
     board = boards[0]; system[0] = chip_ids[0];
     writel(0xdbffff7f, p.system + RTL_RTK_SYSTEM_PAD_CTRL_1);
     rtl8197f_rtk_init_p0_rgmii(&p,"logged-pad-regression");
