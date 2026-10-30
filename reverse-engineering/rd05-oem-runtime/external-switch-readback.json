@@ -1,0 +1,48 @@
+{
+  "source": "User-pasted RD05 OEM rtl83xx_getAsicReg readbacks at uptime 2108 through 2182; repeated timing/CPU values agree",
+  "registers": {
+    "0x1305": "0x0010",
+    "0x1307": "0x0005",
+    "0x13f9": "0x0124",
+    "0x13f7": "0x0000",
+    "0x1d52": "0x2473",
+    "0x1d53": "0x0001",
+    "0x1d54": "0x05fa",
+    "0x1d55": "0x000f",
+    "0x1219": "0x0080",
+    "0x121a": "0x02b9",
+    "0x1303": "0x07d6",
+    "0x1304": "0x7544",
+    "0x1d70": "0x2000",
+    "0x1d78": "0x001f",
+    "0x12c7": "0x0076",
+    "0x12cf": "0xffff",
+    "0x00ee": "0x4800",
+    "0x03f7": "0x0000"
+  },
+  "decoded": {
+    "external_interface_1_mode": "RGMII",
+    "coarse_tx_delay": 0,
+    "rx_delay": 5,
+    "fine_tx_tap": 4,
+    "ssc_enabled": true,
+    "cpu_port_mask": "0x80",
+    "cpu_tag_format_oem": "4 bytes (CPU_CTRL bit9 set)",
+    "cpu_tag_format_linux_dsa": "8 bytes (bit9 clear)",
+    "mac7_force": "0x0076",
+    "mac7_force_enable": "0xffff",
+    "port7_crc_skip": false
+  },
+  "changes": {
+    "kernel_patch": "338-net-dsa-realtek-rd05-prepare-ext1-before-bootstrap.patch",
+    "fine_tap_default": "4 on RD05 only, explicit parameter overrides preserved",
+    "profile_version": 39,
+    "profile_migration": "previous profiles backed up to .pre-v39 before OEM defaults are applied",
+    "DSA_tag_format": "retain Linux 8-byte header; do not copy OEM 0x02b9 wholesale"
+  },
+  "limits": [
+    "Raw 0x00ee differs by bits 0x30; those bits are not changed without field-specific evidence",
+    "Correcting timing/configuration is not proof of recovered ARP, DHCP or Internet",
+    "CPU path diagnostics and profile apply remain RD05-only"
+  ]
+}

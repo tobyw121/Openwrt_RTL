@@ -1,0 +1,71 @@
+From: OpenAI <noreply@openai.com>
+Subject: [PATCH] net: dsa: realtek: initialize RD05 EXT1 before CPU bootstrap
+
+OEM readback shows EXT1 debug/mux and MAC7 force-link state before traffic.
+The old bootstrap log still showed default debug routing and zero force-link
+registers. Apply the existing EXT1 setup first, with an exact RD05 gate, and
+propagate failures before changing VLAN/flood/isolation state. Default the
+RD05 fine TX-clock tap to measured OEM value 4, preserving explicit overrides.
+Keep DSA tag
+format and CRC validation; no settings are applied to MW5 or other boards.
+
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -1131,6 +1131,7 @@
+  */
+ static unsigned int rtl8367d_rd05_ext1_tx_delay;
+ static unsigned int rtl8367d_rd05_ext1_txc_tap;
++static bool rtl8367d_rd05_ext1_txc_explicit;
+ static unsigned int rtl8367d_rd05_ext1_rx_delay = 5;
+ static bool rtl8367d_rd05_ext1_ssc = true;
+ 
+@@ -3685,6 +3686,30 @@
+ 	       mb->chip_info && mb->chip_info->rtl8367d;
+ }
+ 
++static int rtl8367d_rd05_prepare_link(struct realtek_priv *priv)
++{
++	struct rtl8365mb *mb = priv->chip_data;
++	int ret;
++
++	if (!rtl8367d_rd05_board(mb))
++		return 0;
++
++	/* OEM EXT1 TXC=0x0124: fine tap 4. Keep explicit module/runtime
++	 * overrides, including zero, and leave every other board untouched. */
++	if (!READ_ONCE(rtl8367d_rd05_ext1_txc_explicit))
++		WRITE_ONCE(rtl8367d_rd05_ext1_txc_tap, 4);
++
++	/* Program mux/debug/MAC7 routing before bootstrap traffic, rather
++	 * than relying on a later phylink callback or userspace calibration.
++	 * Selected coarse/fine timing and SSC remain under the existing knobs. */
++	ret = rtl8367d_ext1_config_rgmii(priv);
++	if (ret)
++		return ret;
++
++	return rtl8367d_ext_config_forcemode(priv, 7, true, SPEED_1000,
++					    DUPLEX_FULL, true, true);
++}
++
+ static int rtl8367d_rd05_force_dsa_cpu_path(struct realtek_priv *priv)
+ {
+ 	struct rtl8365mb *mb = priv->chip_data;
+@@ -3731,6 +3756,10 @@
+ 
+ 	if (!cpu_mask || !user_mask)
+ 		return 0;
++
++	ret = rtl8367d_rd05_prepare_link(priv);
++	if (ret)
++		return ret;
+ 
+ 	/* RD05: UTP0..4 plus CPU7/EXT1/MAC7, wired to RTL8197F P0, share one
+ 	 * untagged VID9 switching domain.  netifd/DSA still decides which Linux
+@@ -3984,6 +4013,7 @@
+ 	if (tap > 7)
+ 		return -EINVAL;
+ 	WRITE_ONCE(rtl8367d_rd05_ext1_txc_tap, tap);
++	WRITE_ONCE(rtl8367d_rd05_ext1_txc_explicit, true);
+ 	return rtl8367d_rd05_reapply_runtime();
+ }
+ 

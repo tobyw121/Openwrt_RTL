@@ -1,6 +1,6 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-2.0-or-later
-# RD05 RTL8197F P0 <-> RTL8367D EXT1 RGMII calibration helper, v38.3.
+# RD05 RTL8197F P0 <-> RTL8367D EXT1 RGMII calibration helper, v39.0 (OEM-measured fine TX tap).
 
 set -eu
 
@@ -51,6 +51,12 @@ validate() {
 	[ "$4" -ge 0 ] && [ "$4" -le 7 ] || fail "switch fine TX-clock tap must be 0..7"
 	[ "$5" -ge 0 ] && [ "$5" -le 7 ] || fail "switch RX delay must be 0..7"
 	[ "$6" -ge 0 ] && [ "$6" -le 1 ] || fail "SSC must be 0 or 1"
+}
+need_board() {
+	case "$(cat /tmp/sysinfo/board_name 2>/dev/null)" in
+		xiaomi,r4-rd05) ;;
+		*) fail "only Xiaomi RD05 may change this RGMII profile" ;;
+	esac
 }
 need_params() {
 	[ -w "$SOC/rd05_p0_tx_delay" ] || fail "$SOC/rd05_p0_tx_delay is unavailable"
@@ -145,8 +151,8 @@ save_conf() {
 	tmp="${CONF}.tmp.$$"
 	umask 077
 	cat > "$tmp" <<EOC
-# RD05 v38 calibrated RGMII settings.
-PROFILE_VERSION=38
+# RD05 v39 calibrated RGMII settings.
+PROFILE_VERSION=39
 SOC_TX=$SOC_TX
 SOC_RX=$SOC_RX
 SW_TX=$SW_TX
@@ -158,9 +164,9 @@ EOC
 	echo "saved $CONF"
 }
 load_conf() {
-	# SDK baseline from the RTL8197F-VG + RTL8367D family-D BSP/DAL.
-	PROFILE_VERSION=38
-	SOC_TX=0; SOC_RX=6; SW_TX=0; SW_TXC=0; SW_RX=5; SSC=1
+	# OEM readback 0x13f9=0x0124: fine TX tap 4; coarse TX0/RX5, SSC on.
+	PROFILE_VERSION=39
+	SOC_TX=0; SOC_RX=6; SW_TX=0; SW_TXC=4; SW_RX=5; SSC=1
 
 	if [ -r "$CONF" ]; then
 		PROFILE_VERSION=0
@@ -169,25 +175,25 @@ load_conf() {
 	fi
 
 	case "${PROFILE_VERSION:-0}" in
-		38)
+		39)
 			;;
 		*)
-			old="${CONF}.pre-v38"
+			old="${CONF}.pre-v39"
 			if [ -r "$CONF" ] && [ ! -e "$old" ]; then
 				cp -p "$CONF" "$old" 2>/dev/null || cp "$CONF" "$old" 2>/dev/null || true
 			fi
-			echo "migrating ${CONF} from profile ${PROFILE_VERSION:-unversioned} to v38 SDK baseline" >&2
-			PROFILE_VERSION=38
-			SOC_TX=0; SOC_RX=6; SW_TX=0; SW_TXC=0; SW_RX=5; SSC=1
+			echo "migrating ${CONF} from profile ${PROFILE_VERSION:-unversioned} to v39 OEM baseline" >&2
+			PROFILE_VERSION=39
+			SOC_TX=0; SOC_RX=6; SW_TX=0; SW_TXC=4; SW_RX=5; SSC=1
 			tmp="${CONF}.tmp.$$"
 			umask 077
 			cat > "$tmp" <<EOC
-# RD05 v38 SDK baseline; previous file saved as ${old} when available.
-PROFILE_VERSION=38
+# RD05 v39 OEM baseline; previous file saved as ${old} when available.
+PROFILE_VERSION=39
 SOC_TX=0
 SOC_RX=6
 SW_TX=0
-SW_TXC=0
+SW_TXC=4
 SW_RX=5
 SSC=1
 EOC
@@ -305,15 +311,19 @@ EOT
 
 cmd="${1:-status}"; shift || true
 case "$cmd" in
+	status|version|help|-h|--help) ;;
+	*) need_board ;;
+esac
+case "$cmd" in
 	status) show_status ;;
 	apply) [ "$#" -eq 6 ] || { usage; exit 2; }; apply_values "$@"; show_status ;;
 	load) load_conf; show_status ;;
 	save) save_conf ;;
-	sdk|restore) apply_values 0 6 0 0 5 1; show_status ;;
+	sdk|restore) apply_values 0 6 0 4 5 1; show_status ;;
 	safe) apply_values 0 6 0 0 2 0; show_status ;;
 	tx-auto) tx_auto "${1:-}" ;;
 	rx-auto) rx_auto "${1:-}" ;;
-	version) echo "rd05-rgmii-calibrate v38.3 release 11" ;;
+	version) echo "rd05-rgmii-calibrate v39.0 release 12" ;;
 	help|-h|--help) usage ;;
 	*) usage; exit 2 ;;
 esac

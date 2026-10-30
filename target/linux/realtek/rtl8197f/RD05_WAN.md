@@ -424,3 +424,47 @@ For the next hardware test, keep TX mode 0. Expect DMA_CR0 ending in a0ce,
 MACCR=0x804a1485 with the observed initial bits, RX6/TX0, and opaque DSA
 tag transport. Compare wired RX, physical LAN/WAN egress, FCS deltas, LAN
 ARP/DHCP and the WAN lease against the previous failed capture.
+
+## External RTL8367D readback: OEM fine TX tap 4, profile v39
+
+The OEM `8367read` proc requests succeeded. Repeated register values are
+recorded in [external-switch-readback.json](../../../../reverse-engineering/rd05-oem-runtime/external-switch-readback.json).
+The measured EXT1 mode is RGMII (0x1305=0x10), coarse TX0/RX5
+(0x1307=5), fine TX tap **4** (0x13f9=0x0124, bits 5:3=4), and SSC
+enabled with 0x2473/1/0x5fa/0xf at 0x1d52–0x1d55. Our previous fine tap
+was zero (0x13f9=0x0104). The coarse timing and SSC already matched.
+
+The old bootstrap diagnostic also showed debug0/debug1=0x784/0x4444,
+TOP_CON0=0 and zero MAC7 force/enable state, whereas the OEM reports
+0x7d6/0x7544, TOP_CON0=0x2000 and MAC7=0x76/enable=0xffff.
+Patch 338 calls the existing EXT1 mux/debug/routing and force-link setup
+before bootstrap CPU traffic. It requires both the RD05 board and D-family
+chip and propagates setup failures before changing the private port tables.
+The kernel selects the measured fine tap 4 on that board unless an explicit
+module/runtime tap override was supplied; explicit zero remains supported.
+
+The RD05 calibration package is release 12. Its v39 baseline keeps
+SoC TX0/RX6, switch coarse TX0/RX5 and SSC=1, changing only SW_TXC to 4.
+Older persistent profiles are backed up to `.pre-v39` and migrated so they
+cannot silently restore the former zero tap. Current v39 saved profiles are
+preserved. `sdk`/`restore` selects the measured tap as well. Mutating helper
+commands now require the exact `xiaomi,r4-rd05` board; MW5 cannot migrate
+the file or apply RD05 parameters.
+
+OEM CPU_CTRL=0x2b9 versus our 0xb9 is the **4-byte versus 8-byte CPU-tag
+format** bit. Linux rtl8_4 needs the existing 8-byte tag, so that difference
+is intentional. CPU mask 0x80 agrees. OEM port7 misc=0x4800 and our former
+0x4830 both leave CRC-skip disabled; unknown bits 0x30 are not copied blindly.
+No CRC bypass, VLAN leak or OEM routing shortcut is introduced.
+
+Validation covers old-profile backup/migration, preservation of a saved v39
+profile, SDK restore, refusal to modify MW5, exact-board/chip initialization,
+error propagation and preservation of explicit fine-tap overrides. All 23
+selected native/shell tests pass. The patched switch object compiles for
+MIPS/Linux 6.6.114; patch 338 applies without fuzz to the prepared tree.
+Full-image build and physical Ethernet recovery still need verification.
+
+After rebuilding, `rd05-rgmii-calibrate status` should show SW_TXC=4 and
+`/tmp/rd05-rgmii-boot.log` should show the applied profile. The kernel reapply
+log should report ext_txc=0x124 with the observed other EXT fields. Keep
+TX descriptor mode 0 for the next LAN ARP/DHCP/WAN test.
