@@ -282,3 +282,22 @@ Die netifd-DHCP-PID-Datei, Adressen und Routen werden nicht verändert.
 Hosttests prüfen zusätzlich einen echten hängenden Testprozess, der TERM
 ignoriert, sowie den gesamten Timing-Ablauf ohne verfügbares `timeout`.
 Das ist eine Reparatur des Diagnosewerkzeugs, kein nachgewiesener RGMII-Fix.
+
+## OEM-Laufzeitreferenz und erneuter Ausfall auf 7647623f0e
+
+Die aktuellen Hardwareausgaben zeigen weiterhin WAN-DHCP pending, null
+SoC-RX und null physische Ausgabe an WAN/LAN2. Der PC sendet ARP-Anfragen
+auch mit passender Quelladresse 192.168.1.3, ohne eine Antwort zu erhalten.
+Die externen CPU-Port-FCS-Zähler sind kumulativ; die einzelnen Aufnahmen
+erlauben keinen neuen exakten Fehler-pro-TX-Vergleich.
+
+Die anschließend gelieferten OEM-Archive enthalten vollständige RX-/TX-
+Descriptor-Dumps, VLAN-/Netif-Tabellen und interne ASIC-Zähler. Analyse und
+maschinenlesbare Belege liegen unter
+[RD05 OEM runtime](../../../../reverse-engineering/rd05-oem-runtime/README.md).
+Belegte Vergleichspunkte sind OEM-TX-DP=0x2 gegenüber DSA-DP=0x1 sowie
+KSEG0-Pufferadressen gegenüber der KSEG1-Darstellung im aktuellen Treiber.
+Ihre Bedeutung muss einschließlich OEM-Port-Remapping und DMA-Adressierung
+geklärt werden. Der OEM-interne CPU-CRC-Zähler ist nicht derselbe Messpunkt
+wie der externe DSA-CPU-Port-FCS-Zähler. Die Archive liefern keine numerischen
+RGMII-/SSC-/CPUICR-Registerwerte und belegen noch keinen Ethernet-Fix.

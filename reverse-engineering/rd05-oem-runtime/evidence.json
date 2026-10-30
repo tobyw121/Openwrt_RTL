@@ -1,0 +1,215 @@
+{
+  "schema": 1,
+  "board": "xiaomi,r4-rd05",
+  "sources": [
+    {
+      "name": "OEM_Infos_rd05.txt",
+      "size": 355791,
+      "sha256": "e30ebda1bbef5a5b27ab5d6da71ccff001074dd8364e143bf96dc5cda242810b"
+    },
+    {
+      "name": "rd05-proc-rtl865x.tar.zst",
+      "size": 58171,
+      "sha256": "4dd4a1d13d91902acfc68fe11f674aeabd0863d8d3acd5ca3e92c4ea2ce9cbfc"
+    },
+    {
+      "name": "rd05-oem-hw-dump.tar.gz",
+      "size": 2280786,
+      "sha256": "82b4afdeae27f68702903777b3e0f6d8a9a13cd3a696b5c7f1dafb6bd4a5e0ef"
+    }
+  ],
+  "rings": {
+    "rx": {
+      "source_member": "rd05-proc-rtl865x/rxRing.txt",
+      "sha256": "8b72cb31ce24efcacb0b9698316f57f41949d571a82d535362d418e010454671",
+      "total_entries": 2058,
+      "rings": {
+        "0": {
+          "entries": 2048,
+          "stride": 32,
+          "first_descriptor_address": "0x84e40000",
+          "ownership": {
+            "SWCORE": 2048
+          },
+          "buffer_size_values": {
+            "1700": 2048
+          }
+        },
+        "1": {
+          "entries": 2,
+          "stride": 32,
+          "first_descriptor_address": "0x84d82080",
+          "ownership": {
+            "SWCORE": 2
+          },
+          "buffer_size_values": {
+            "1700": 2
+          }
+        },
+        "2": {
+          "entries": 2,
+          "stride": 32,
+          "first_descriptor_address": "0x84d82400",
+          "ownership": {
+            "SWCORE": 2
+          },
+          "buffer_size_values": {
+            "1700": 2
+          }
+        },
+        "3": {
+          "entries": 2,
+          "stride": 32,
+          "first_descriptor_address": "0x84d82580",
+          "ownership": {
+            "SWCORE": 2
+          },
+          "buffer_size_values": {
+            "1700": 2
+          }
+        },
+        "4": {
+          "entries": 2,
+          "stride": 32,
+          "first_descriptor_address": "0x84d82e80",
+          "ownership": {
+            "SWCORE": 2
+          },
+          "buffer_size_values": {
+            "1700": 2
+          }
+        },
+        "5": {
+          "entries": 2,
+          "stride": 32,
+          "first_descriptor_address": "0x84d82f80",
+          "ownership": {
+            "SWCORE": 2
+          },
+          "buffer_size_values": {
+            "1700": 2
+          }
+        }
+      }
+    },
+    "tx": {
+      "source_member": "rd05-proc-rtl865x/txRing.txt",
+      "sha256": "5eceb5513dd5c2389c5e2ce6453e613f9bf5344a1d649a0aa1385d099d0aa194",
+      "total_entries": 774,
+      "rings": {
+        "0": {
+          "entries": 768,
+          "stride": 32,
+          "first_descriptor_address": "0x84e68000",
+          "ownership": {
+            "CPU": 768
+          },
+          "packet_and_buffer_lengths_equal": true,
+          "dp_field_values": {
+            "0x2": 768
+          },
+          "dvid_values": {
+            "9": 768
+          },
+          "first_six_words": [
+            "0x17b8c",
+            "0x84cbc8ce",
+            "0x2f70000",
+            "0x9",
+            "0x2000000",
+            "0x0"
+          ]
+        },
+        "1": {
+          "entries": 2,
+          "stride": 32,
+          "first_descriptor_address": "0x84d6c900",
+          "ownership": {
+            "CPU": 2
+          },
+          "packet_and_buffer_lengths_equal": true,
+          "dp_field_values": {
+            "0x0": 2
+          },
+          "dvid_values": {
+            "0": 2
+          },
+          "first_six_words": [
+            "0x0",
+            "0x0",
+            "0x0",
+            "0x0",
+            "0x0",
+            "0x0"
+          ]
+        },
+        "2": {
+          "entries": 2,
+          "stride": 32,
+          "first_descriptor_address": "0x84d6c800",
+          "ownership": {
+            "CPU": 2
+          },
+          "packet_and_buffer_lengths_equal": true,
+          "dp_field_values": {
+            "0x0": 2
+          },
+          "dvid_values": {
+            "0": 2
+          },
+          "first_six_words": [
+            "0x0",
+            "0x0",
+            "0x0",
+            "0x0",
+            "0x0",
+            "0x0"
+          ]
+        },
+        "3": {
+          "entries": 2,
+          "stride": 32,
+          "first_descriptor_address": "0x84d5c400",
+          "ownership": {
+            "CPU": 2
+          },
+          "packet_and_buffer_lengths_equal": true,
+          "dp_field_values": {
+            "0x0": 2
+          },
+          "dvid_values": {
+            "0": 2
+          },
+          "first_six_words": [
+            "0x0",
+            "0x0",
+            "0x0",
+            "0x0",
+            "0x0",
+            "0x0"
+          ]
+        }
+      }
+    }
+  },
+  "observed_oem_facts": {
+    "kernel": "4.4.176",
+    "boot_detected_soc": "8197FH-VG",
+    "boot_detected_switch": "8367D",
+    "boot_detected_pci_id": "10ec:f812",
+    "boot_reported_ram_bytes": 134217728,
+    "soc_vlan9_member_mask": "0x11f",
+    "soc_vlan8_member_mask": "0x10",
+    "soc_cpu_counter_crc_align_errors": 2271,
+    "soc_cpu_counter_success_not_inferred_from_crc": true
+  },
+  "limitations": [
+    "Separate uploads are not an atomic or necessarily same-boot snapshot",
+    "No numeric devmem readbacks in the supplied serial log",
+    "No external-switch raw RGMII/SSC register snapshot",
+    "ASIC CPU counters refer to a different domain from external-switch cpu_fcs_errors",
+    "Ring words are metadata, not captured packet payloads",
+    "DP and address form differences require OEM execution-path analysis before changing DSA defaults",
+    "No hardware fix proven by these files"
+  ]
+}
