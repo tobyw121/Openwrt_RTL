@@ -62,7 +62,7 @@
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.41-offload-integration"
+#define DRV_VERSION			"1.8.42-rd05-oem-buffer-addresses"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -710,7 +710,15 @@ MODULE_PARM_DESC(mw5_drop_invalid_untagged,
  */
 static int rd05_txdesc_mode;
 module_param_named(rd05_txdesc_mode, rd05_txdesc_mode, int, 0644);
-MODULE_PARM_DESC(rd05_txdesc_mode, "RD05 RTL8197F TX mode: 0 direct P0/RGMII, 1 legacy DP40/EXT2 loop, 2..12 diagnostics");
+MODULE_PARM_DESC(rd05_txdesc_mode, "RD05 RTL8197F TX mode: 0 direct P0/RGMII, 1 legacy DP40/EXT2 loop, 2..12 diagnostics, 13 OEM DP2 comparison");
+
+/* RD05 OEM runtime rings use KSEG0 packet pointers and KSEG1 CDPs.
+ * Snapshot this choice at probe: switching aliases while RX is armed would
+ * invalidate completion-address checks. Use the boot/module parameter =0
+ * to reproduce the previous address policy for an A/B comparison. */
+static bool rd05_oem_buffer_alias = true;
+module_param_named(rd05_oem_buffer_alias, rd05_oem_buffer_alias, bool, 0444);
+MODULE_PARM_DESC(rd05_oem_buffer_alias, "RD05 only: OEM KSEG0 packet-buffer addresses; boot/load-time option, rings unchanged");
 
 /* Manual SoC-side RGMII timing controls. RX defaults to the OEM chip-ID
  * branch on RD05; a value 0..7 overrides it for bounded hardware diagnostics.
@@ -951,6 +959,7 @@ struct rtl8197f_rtknet_priv {
 	u32 msg_enable;
 	bool desc_addr_kseg1;
 	bool desc_addr_physical;
+	bool rd05_oem_buffer_alias;
 	bool rx_poll_fallback;
 	bool sdk_trxrdy;
 	bool sdk_cpuicr1_init;
@@ -1724,6 +1733,24 @@ static u32 rtl8197f_rtk_hw_dma_addr(struct rtl8197f_rtknet_priv *priv,
 		addr = (addr & 0x1fffffff) | 0xa0000000;
 
 	return addr;
+}
+
+static bool rtl8197f_rtk_rd05_oem_buffers(void)
+{
+	return of_machine_is_compatible("xiaomi,r4-rd05") &&
+	       READ_ONCE(rd05_oem_buffer_alias);
+}
+
+static u32 rtl8197f_rtk_buffer_dma_addr(struct rtl8197f_rtknet_priv *priv,
+				      dma_addr_t dma)
+{
+	/* Only the descriptor's packet pointer changes representation. Keep
+	 * original DMA handles for sync/unmap, and keep CDPs/ring bases under
+	 * rtl8197f_rtk_hw_dma_addr(). OEM mdata is 0x8..., CDP is 0xa.... */
+	if (priv->rd05_oem_buffer_alias && !priv->is_mw5)
+		return (lower_32_bits(dma) & 0x1fffffff) | 0x80000000;
+
+	return rtl8197f_rtk_hw_dma_addr(priv, dma);
 }
 
 static u32 rtl8197f_rtk_rd05_legacy_dma_addr(dma_addr_t dma)
@@ -4025,7 +4052,7 @@ static int rtl8197f_rtk_alloc_rx_buf(struct rtl8197f_rtknet_priv *priv,
 		priv->rx_dma[idx] = dma;
 	}
 
-	desc->addr = cpu_to_le32(rtl8197f_rtk_hw_dma_addr(priv, dma));
+	desc->addr = cpu_to_le32(rtl8197f_rtk_buffer_dma_addr(priv, dma));
 	desc->opts2 = 0;
 	desc->opts3 = 0;
 	desc->opts4 = 0;
@@ -5464,7 +5491,7 @@ static void rtl8197f_rtk_mw5_rxdesc_trace(struct rtl8197f_rtknet_priv *priv,
 	priv->mw5_rx_desc_trace++;
 	desc_dma = priv->rx_desc_dma + idx * priv->desc_stride;
 	actual_addr = le32_to_cpu(READ_ONCE(desc->addr));
-	expected_addr = rtl8197f_rtk_hw_dma_addr(priv, priv->rx_dma[idx]);
+	expected_addr = rtl8197f_rtk_buffer_dma_addr(priv, priv->rx_dma[idx]);
 	if (actual_addr != expected_addr)
 		priv->mw5_rx_addr_mismatch++;
 
@@ -5600,7 +5627,7 @@ static void rtl8197f_rtk_mw5_rearm_rx_slot(struct rtl8197f_rtknet_priv *priv,
 		memset(rtl8197f_rtk_rx_data(priv, idx), 0,
 		       min_t(u32, priv->rx_buf_size, 64));
 
-	desc->addr = cpu_to_le32(rtl8197f_rtk_hw_dma_addr(priv, priv->rx_dma[idx]));
+	desc->addr = cpu_to_le32(rtl8197f_rtk_buffer_dma_addr(priv, priv->rx_dma[idx]));
 	desc->opts2 = 0;
 	desc->opts3 = 0;
 	desc->opts4 = 0;
@@ -5750,7 +5777,7 @@ static int rtl8197f_rtk_rx_poll(struct rtl8197f_rtknet_priv *priv, int budget)
 		if (priv->is_mw5)
 			dma_rmb();
 		if (unlikely(le32_to_cpu(READ_ONCE(desc->addr)) !=
-		    rtl8197f_rtk_hw_dma_addr(priv, priv->rx_dma[idx]))) {
+		    rtl8197f_rtk_buffer_dma_addr(priv, priv->rx_dma[idx]))) {
 			priv->mw5_rx_addr_mismatch++;
 			priv->rx_bad_desc++;
 			ndev->stats.rx_errors++;
@@ -5929,7 +5956,7 @@ static int rtl8197f_rtk_rx_poll(struct rtl8197f_rtknet_priv *priv, int budget)
 			ndev->stats.rx_bytes += len;
 		}
 
-		desc->addr = cpu_to_le32(rtl8197f_rtk_hw_dma_addr(priv, priv->rx_dma[idx]));
+		desc->addr = cpu_to_le32(rtl8197f_rtk_buffer_dma_addr(priv, priv->rx_dma[idx]));
 
 recycle:
 		work_done++;
@@ -5955,7 +5982,7 @@ recycle:
 		/* Re-arm every slot with the software-owned RX buffer address.  This
 		 * also repairs an address field if a malformed completion corrupted it.
 		 */
-		desc->addr = cpu_to_le32(rtl8197f_rtk_hw_dma_addr(priv,
+		desc->addr = cpu_to_le32(rtl8197f_rtk_buffer_dma_addr(priv,
 								  priv->rx_dma[idx]));
 		desc->opts2 = 0;
 		desc->opts3 = 0;
@@ -6293,6 +6320,15 @@ static void rtl8197f_rtk_rd05_txdesc_meta(struct rtl8197f_rtknet_priv *priv,
 		break;
 	case 12:
 		m->extspa = 0x2;
+		break;
+	case 13:
+		/* OEM ring snapshot: DP=2. Diagnostic only: preserve the wire
+		 * DSA tag and avoid importing the OEM private VID9/router path. */
+		m->port_mask = BIT(1);
+		m->dp_ext = 0;
+		m->extspa = 0;
+		m->hwlookup = false;
+		m->bridge = false;
 		break;
 	default:
 		break;
@@ -6873,7 +6909,7 @@ static netdev_tx_t rtl8197f_rtk_start_xmit(struct sk_buff *skb,
 		if (hw_qos)
 			o2 |= (qid & 7) << RTL_RTK_TX_QID_SHIFT |
 			      (qid & 7) << RTL_RTK_TX_PQID_SHIFT;
-		desc->addr = cpu_to_le32(rtl8197f_rtk_hw_dma_addr(priv, mapped[seg]));
+		desc->addr = cpu_to_le32(rtl8197f_rtk_buffer_dma_addr(priv, mapped[seg]));
 		desc->opts2 = cpu_to_le32(o2);
 		desc->opts3 = cpu_to_le32(base_opts3);
 		desc->opts4 = cpu_to_le32(base_opts4);
@@ -9055,6 +9091,12 @@ static int rtl8197f_rtk_rd05_proc_show(struct seq_file *m, void *v)
 		   priv->desc_dwords, priv->desc_stride,
 		   priv->desc_addr_kseg1, priv->sdk_crc_lengths,
 		   rtl8197f_rtk_read(priv, RTL_RTK_TXRINGCR));
+	if (of_machine_is_compatible("xiaomi,r4-rd05"))
+		seq_printf(m, "rd05_oem_dma buffer_alias=%s ring_base=0x%08x rx_buffer0=0x%08x txdesc_mode=%d\n",
+			   priv->rd05_oem_buffer_alias ? "kseg0" : "legacy",
+			   rtl8197f_rtk_hw_dma_addr(priv, priv->rx_desc_dma),
+			   priv->rx_dma ? rtl8197f_rtk_buffer_dma_addr(priv, priv->rx_dma[0]) : 0,
+			   READ_ONCE(rd05_txdesc_mode));
 	seq_puts(m, "firewall_policy mode=strict routed_shortcuts=0 tc_flowtable_hw=0 dma_path=linux\n");
 	seq_printf(m, "mw5_accel enabled=%u sw=%u hw=%u hw_engine=coherent-dma+dsa-wlan-egress asic_l34_safe=%u rings=%u/%u coherent_rx=%u coherent_tx=%u page_pool=%u hw_packets=%llu hw_fallback=%llu hw_flow_attempts=%llu hw_flow_rejects=%llu\n",
 		   priv->is_mw5 && READ_ONCE(mw5_accel_enable),
@@ -9884,6 +9926,7 @@ static int rtl8197f_rtk_probe(struct platform_device *pdev)
 	priv->ndev = ndev;
 	priv->is_mw5 = of_machine_is_compatible("tenda,nova-mw5");
 	priv->is_iball = of_machine_is_compatible("iball,wrd12gn");
+	priv->rd05_oem_buffer_alias = rtl8197f_rtk_rd05_oem_buffers();
 	mutex_init(&priv->napt_lock);
 	spin_lock_init(&priv->accel_sw_lock);
 	INIT_LIST_HEAD(&priv->accel_sw_flows);

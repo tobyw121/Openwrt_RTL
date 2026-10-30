@@ -1,0 +1,50 @@
+From: OpenAI <noreply@openai.com>
+Subject: [PATCH] net: dsa: realtek: confine RD05 CPU policy to its board
+
+The private VID9/flood/isolation policy and calibration handle describe the
+RD05 board, not every RTL8367D user. Require the exact machine compatible
+before programming that policy or publishing its runtime calibration target.
+The MW5 C-family path and generic chip initialization remain unchanged.
+
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -3679,6 +3679,12 @@
+ 	return regmap_write(priv->map, RTL8367D_MIRROR_CTRL_REG, mirror_ctrl);
+ }
+ 
++static bool rtl8367d_rd05_board(struct rtl8365mb *mb)
++{
++	return of_machine_is_compatible("xiaomi,r4-rd05") &&
++	       mb->chip_info && mb->chip_info->rtl8367d;
++}
++
+ static int rtl8367d_rd05_force_dsa_cpu_path(struct realtek_priv *priv)
+ {
+ 	struct rtl8365mb *mb = priv->chip_data;
+@@ -3714,7 +3720,7 @@
+ 	int ret;
+ 	int i;
+ 
+-	if (!mb->chip_info->rtl8367d)
++	if (!rtl8367d_rd05_board(mb))
+ 		return 0;
+ 
+ 	for (i = 0; i < priv->num_ports; i++) {
+@@ -4263,7 +4269,7 @@
+ 		goto out_teardown_irq;
+ 	}
+ 
+-	if (mb->chip_info && mb->chip_info->rtl8367d) {
++	if (rtl8367d_rd05_board(mb)) {
+ 		mutex_lock(&rtl8367d_rd05_runtime_lock);
+ 		rtl8367d_rd05_runtime_priv = priv;
+ 		mutex_unlock(&rtl8367d_rd05_runtime_lock);
+@@ -4287,7 +4293,7 @@
+ 	struct realtek_priv *priv = ds->priv;
+ 	struct rtl8365mb *mb = priv->chip_data;
+ 
+-	if (mb->chip_info && mb->chip_info->rtl8367d) {
++	if (rtl8367d_rd05_board(mb)) {
+ 		mutex_lock(&rtl8367d_rd05_runtime_lock);
+ 		if (rtl8367d_rd05_runtime_priv == priv)
+ 			rtl8367d_rd05_runtime_priv = NULL;

@@ -301,3 +301,54 @@ Ihre Bedeutung muss einschließlich OEM-Port-Remapping und DMA-Adressierung
 geklärt werden. Der OEM-interne CPU-CRC-Zähler ist nicht derselbe Messpunkt
 wie der externe DSA-CPU-Port-FCS-Zähler. Die Archive liefern keine numerischen
 RGMII-/SSC-/CPUICR-Registerwerte und belegen noch keinen Ethernet-Fix.
+
+## RD05-only implementation: 1.8.42
+
+The uploaded runtime descriptors establish separate address representations:
+packet pointers are KSEG0 (`0x8...`), while ring CDPs use KSEG1 (`0xa...`).
+The RD05 now reproduces that distinction for TX/RX packet pointers, including
+RX allocation, rearming and expected-address validation. Ring bases, original
+Linux DMA handles, cache synchronization and unmapping remain unchanged.
+This is an OEM-matching bring-up change; restored traffic is not yet measured.
+
+The policy is selected once at probe and only for `xiaomi,r4-rd05`. The
+read-only boot/load option `rd05_oem_buffer_alias=0` restores the previous
+packet-address policy. For the built-in driver the kernel command-line option
+is `rtl8197f_rtknet.rd05_oem_buffer_alias=0`. Changing it on a live RX ring is
+deliberately unsupported. `/proc/rd05-rtknet` now includes a `rd05_oem_dma`
+line with the selected alias, RX ring address, first RX buffer address and
+TX descriptor diagnostic mode.
+
+TX mode 13 adds an explicit RD05-only DP=2 comparison. It retains the DSA
+wire tag, keeps HWLOOKUP/bridge shortcuts off, and does not import OEM VID9
+metadata. Mode 0 remains the default; DP=2 is not a proven physical-port fix.
+
+Patch 337 also requires the exact RD05 compatible before applying its private
+external-switch CPU/VLAN/flood/isolation policy or publishing the calibration
+target. Generic chip initialization remains separate. MW5 does not select the
+new buffer policy or TX mode; its existing address results, DSA metadata,
+RGMII settings and switch initialization are preserved.
+
+Validation: native tests execute the actual address/metadata functions and
+the switch board predicate across RD05, MW5, AC23 and WRD12GN. They cover
+the legacy option, ring-address preservation, KSEG0/KSEG1/physical forms,
+null chip information and diagnostic-mode isolation. Existing RD05 WAN,
+MW5 stability and watchdog tests pass. Ethernet and patched switch objects
+compile for MIPS against Linux 6.6.114. Patch 337 applies without fuzz to the
+prepared switch tree. A complete firmware build and hardware validation are
+still required.
+
+After flashing, first collect with default TX mode 0:
+
+```sh
+cat /proc/rd05-rtknet
+ethtool -S wan
+ethtool -S lan2
+ifstatus wan
+```
+
+The expected new line is `rd05_oem_dma buffer_alias=kseg0 ... txdesc_mode=0`;
+the RX ring address should retain `0xa...`, the armed packet address should
+be `0x8...`. The success criteria remain increasing SoC RX and physical
+user-port output, followed by LAN ARP/DHCP and a WAN lease. Address readback
+alone is not a passing Ethernet test.
