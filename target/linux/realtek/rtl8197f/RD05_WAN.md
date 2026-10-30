@@ -352,3 +352,44 @@ the RX ring address should retain `0xa...`, the armed packet address should
 be `0x8...`. The success criteria remain increasing SoC RX and physical
 user-port output, followed by LAN ARP/DHCP and a WAN lease. Address readback
 alone is not a passing Ethernet test.
+
+## OEM register readback and RD05 FIFO correction: 1.8.43
+
+Hardware retesting of 1.8.42 showed that KSEG0 packet addressing alone did
+not restore traffic. In the DP13 test, LAN2 physical output and SoC RX stayed
+zero; external CPU FCS errors rose from 207 to 222 across a window containing
+both diagnostic and default mode. Mode 0 was restored. No successful DP2
+egress or one-to-one per-packet explanation can be inferred from that window.
+
+The next OEM UART capture finally contains clean repeated kernel-log register
+readbacks. See [register-readback.json](../../../../reverse-engineering/rd05-oem-runtime/register-readback.json).
+
+| Register | OEM | Previous port |
+| --- | --- | --- |
+| CPUICR | `0xe4000000` | `0xe4000000` |
+| CPUICR1 | `0x002081d3` | `0x002081d3` |
+| DMA_CR0 | `0x0003a0ce` | `0x000330d7` |
+
+The GPL `rtl865x_asicCom.h` defines LOW_FIFO_MARK_VALUE=0xa0 and the
+8197F-VG high watermark=0xce. Both `rtl865x_start()` and the NIC restart
+path apply those values after writing the CPUICR burst size. This corroborates
+the running RD05 measurement and establishes an actual policy mismatch.
+
+Version 1.8.43 corrects only the RD05 DMA_CR0 watermark fields to 0xa0/0xce
+at that existing point in startup. It preserves the upper register bits and
+all other boards' 0x30/0xd7 policy, including MW5. It does not copy ring-size
+registers: OEM DMA_CR1=0x5fe0 describes its 768-entry TX ring; our 64-entry
+ring still requires 0x7e0. A native regression executes the production policy
+across RD05/MW5/AC23/WRD12GN/generic and multiple starting register values.
+
+This fixes a measured configuration mismatch, not a proven sole root cause.
+LAN/WAN recovery still needs an on-device retest. Expect the RD05 startup
+DMA_CR0 readback to end in `a0ce` (0x0003a0ce with the observed upper bits).
+
+The MAC/P0 commands were corrupted by UART input overrun, so those values
+remain missing. The supplied +0x834/+0x838 system values are not the RGMII
+PAD_CTRL_1 register: our actual pad control is +0x850. For further OEM
+capture, lower console logging temporarily, submit each read command
+separately, then retrieve dmesg and restore the saved console level. The
+proc `read` request outputs to the kernel log; plain `cat memory` is empty
+by design. No MMIO write command is required for those readbacks.

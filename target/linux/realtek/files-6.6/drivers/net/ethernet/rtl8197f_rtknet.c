@@ -62,7 +62,7 @@
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.42-rd05-oem-buffer-addresses"
+#define DRV_VERSION			"1.8.43-rd05-oem-fifo"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -1733,6 +1733,22 @@ static u32 rtl8197f_rtk_hw_dma_addr(struct rtl8197f_rtknet_priv *priv,
 		addr = (addr & 0x1fffffff) | 0xa0000000;
 
 	return addr;
+}
+
+static u32 rtl8197f_rtk_dma_fifo_watermarks(u32 val)
+{
+	/* RD05 OEM readback: DMA_CR0=0x0003a0ce. GPL rtl865x_start()
+	 * uses LOW_FIFO_MARK_VALUE=0xa0 and VG HIGH_FIFO_MARK=0xce,
+	 * after setting CPUICR burst size. Preserve every other board's
+	 * existing policy and all non-watermark bits. */
+	val &= ~(RTL_RTK_DMA_CR0_LOW_FIFO_MARK_MASK |
+		 RTL_RTK_DMA_CR0_HIGH_FIFO_MARK_MASK);
+	if (of_machine_is_compatible("xiaomi,r4-rd05"))
+		return val | RTL_RTK_DMA_CR0_LOW_FIFO_MARK(0xa0) |
+		       RTL_RTK_DMA_CR0_HIGH_FIFO_MARK(0xce);
+
+	return val | RTL_RTK_DMA_CR0_LOW_FIFO_MARK(0x30) |
+	       RTL_RTK_DMA_CR0_HIGH_FIFO_MARK(0xd7);
 }
 
 static bool rtl8197f_rtk_rd05_oem_buffers(void)
@@ -4542,17 +4558,12 @@ static void rtl8197f_rtk_hw_start(struct rtl8197f_rtknet_priv *priv)
 		val |= RTL_RTK_CPUICR_EXCLUDE_CRC;
 	rtl8197f_rtk_write(priv, RTL_RTK_CPUICR, val);
 
-	/* Restore the 8197F SDK reinit FIFO watermarks after programming CPUICR burst
-	 * size.  v5ag proved the external RTL8367D forwards frames to port7 while
-	 * eth0 RX remains exactly zero; use the vendor reinit values and then kick
-	 * RXCMD/TRXRDY again so the CPUIF DMA state machine samples descriptor base,
-	 * CPUQDM and FIFO thresholds in the same order as the OEM driver.
+	/* CPUICR burst-size changes reset the high FIFO watermark. Apply the
+	 * board policy afterwards, as in the SDK; RD05 now follows its measured
+	 * OEM/VG values, while MW5 and other boards retain their existing values.
 	 */
-	val = rtl8197f_rtk_read(priv, RTL_RTK_DMA_CR0);
-	val &= ~(RTL_RTK_DMA_CR0_LOW_FIFO_MARK_MASK |
-		 RTL_RTK_DMA_CR0_HIGH_FIFO_MARK_MASK);
-	val |= RTL_RTK_DMA_CR0_LOW_FIFO_MARK(0x30) |
-	       RTL_RTK_DMA_CR0_HIGH_FIFO_MARK(0xd7);
+	val = rtl8197f_rtk_dma_fifo_watermarks(
+		rtl8197f_rtk_read(priv, RTL_RTK_DMA_CR0));
 	rtl8197f_rtk_write(priv, RTL_RTK_DMA_CR0, val);
 	readl(priv->base + RTL_RTK_DMA_CR0);
 

@@ -1,0 +1,63 @@
+{
+  "source": "OEM UART register readback uploaded after the 1.8.42 DP13 retest",
+  "sha256": "36d11416352848f6900def0ddff5edeff291b3107f88bbd664b476c231af0ff6",
+  "size": 36328,
+  "registers": {
+    "0xb8010000": {
+      "name": "CPUICR",
+      "value": "0xe4000000"
+    },
+    "0xb801003c": {
+      "name": "DMA_CR0",
+      "value": "0x0003a0ce"
+    },
+    "0xb8010040": {
+      "name": "DMA_CR1",
+      "value": "0x00005fe0"
+    },
+    "0xb8010044": {
+      "name": "DMA_CR2",
+      "value": "0x007f02ff"
+    },
+    "0xb8010048": {
+      "name": "raw register at DMA+0x48",
+      "value": "0x00000040"
+    },
+    "0xb80100a4": {
+      "name": "CPUICR1",
+      "value": "0x002081d3"
+    },
+    "0xb8000834": {
+      "name": "system register +0x834; not PAD_CTRL_1",
+      "value": "0x33320000"
+    },
+    "0xb8000838": {
+      "name": "system register +0x838",
+      "value": "0x20000000"
+    }
+  },
+  "comparison_with_1_8_42": {
+    "CPUICR": "identical",
+    "CPUICR1": "identical",
+    "DMA_CR0_oem_low_high": [
+      "0xa0",
+      "0xce"
+    ],
+    "DMA_CR0_port_low_high": [
+      "0x30",
+      "0xd7"
+    ],
+    "DMA_CR1": "ring-size dependent; do not copy OEM 768-entry ring value into 64-entry build"
+  },
+  "missing_readbacks": [
+    "MACCR at 0xbb804000",
+    "MACCR1 at 0xbb804058",
+    "P0/PCR/PITCR block at 0xbb804100",
+    "PAD_CTRL_1 at 0xb8000850",
+    "EXTPCR0 at 0xbb805108"
+  ],
+  "limits": [
+    "UART input overrun and interleaved output; only clean repeated dmesg values accepted",
+    "Matching OEM FIFO values does not prove this is the only cause of the Ethernet failure"
+  ]
+}

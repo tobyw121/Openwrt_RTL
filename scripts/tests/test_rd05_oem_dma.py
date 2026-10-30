@@ -44,6 +44,37 @@ int main(void) {
                             str(source), '-o', str(binary)], check=True)
             subprocess.run([str(binary)], check=True)
 
+    def test_fifo_watermarks_match_rd05_oem_and_preserve_other_boards(self):
+        definitions = '\n'.join(line for line in DRIVER.read_text().splitlines()
+                                if line.startswith('#define RTL_RTK_DMA_CR0_'))
+        code = r'''
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <assert.h>
+typedef uint32_t u32;
+static const char *board;
+static bool of_machine_is_compatible(const char *s) { return !strcmp(s,board); }
+''' + definitions + '\n' + c_function(DRIVER, 'static u32 rtl8197f_rtk_dma_fifo_watermarks(') + r'''
+int main(void) {
+ const char *boards[]={"xiaomi,r4-rd05","tenda,nova-mw5","tenda,ac23","iball,wrd12gn","generic"};
+ const u32 values[]={0,0xffffffff,0x000330d7,0x0003a0ce,0xa5a51234};
+ for(int b=0;b<5;b++) for(int i=0;i<5;i++) {
+  board=boards[b];
+  u32 result=rtl8197f_rtk_dma_fifo_watermarks(values[i]);
+  assert(result==((values[i]&0xffff0000)|(b==0 ? 0xa0ce : 0x30d7)));
+ }
+ return 0;
+}
+'''
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / 'test.c'
+            binary = Path(tmp) / 'test'
+            source.write_text(code)
+            subprocess.run(['cc', '-Wall', '-Werror', '-fsanitize=undefined',
+                            str(source), '-o', str(binary)], check=True)
+            subprocess.run([str(binary)], check=True)
+
     def test_board_scope_dma_handles_ring_addresses_and_tx_metadata(self):
         code = r'''
 #include <assert.h>
