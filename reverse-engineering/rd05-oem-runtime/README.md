@@ -1,5 +1,9 @@
 # RD05: hochgeladene OEM-Laufzeitdaten
 
+Die Prüfung des später hochgeladenen SDK-/Rekonstruktionsarchivs steht in
+[reconstructed-archive-review.md](reconstructed-archive-review.md), mit
+Prüfsummen und Vergleichsergebnissen im verlinkten JSON-Bericht.
+
 Ausgewertet: `OEM_Infos_rd05.txt`, `rd05-proc-rtl865x.tar.zst` und
 `rd05-oem-hw-dump.tar.gz`. Dateigrößen, SHA256 und die aus den Ring-Dumps
 ermittelten Werte stehen in [evidence.json](evidence.json).

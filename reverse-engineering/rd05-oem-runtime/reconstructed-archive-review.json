@@ -1,0 +1,164 @@
+{
+  "archive": "rekonstruiert.7z",
+  "archive_sha256": "997544a011dbc7a0d13b6f54a80ed032b20b2b594c7a4ff780f321663e9e3456",
+  "files": 12759,
+  "uncompressed_bytes": 754411475,
+  "blob_package_checksums_verified": 848,
+  "blob_package_checksum_failures": 0,
+  "firmware": [
+    {
+      "name": "init_ram.bin",
+      "size": 9184,
+      "sha256": "508e1356f9a3e7c050ea639f67aa3f7944c3cdcdc8b3af4cf94acf8bc636ef1b",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": []
+    },
+    {
+      "name": "rtl8197ffw.bin",
+      "size": 35408,
+      "sha256": "1a5c02235032bae6517c1cbe72a76d29193939c7d4a7e3d4f03614fa904e5b9c",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": []
+    },
+    {
+      "name": "rtl8197ffw_61d6ef42.bin",
+      "size": 56080,
+      "sha256": "61d6ef42cd8ff6af6c83649fdf18ea654abc9a62a43cc12f9369a2732a509515",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": [
+        "package/kernel/rtl8192cd-rtl8197f/src/WlanHAL/Data/8197F/rtl8197Ffw.bin"
+      ]
+    },
+    {
+      "name": "rtl8812ffw.bin",
+      "size": 138824,
+      "sha256": "0ca6845be068bc29e5f00d7188e9f5b0f238b59aad12e2f369917a21583ea896",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": [
+        "package/kernel/rtl8192cd-rtl8197f/src/WlanHAL/Data/8812F/rtl8812Ffw.bin"
+      ]
+    },
+    {
+      "name": "rtl8812ffwmp.bin",
+      "size": 77264,
+      "sha256": "d129b2dff9a67a48fab2ddc381382377c2e1102145e89eaf835e421fc864e991",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": [
+        "package/kernel/rtl8192cd-rtl8197f/src/WlanHAL/Data/8812F/rtl8812FfwMP.bin",
+        "package/kernel/rtl8192cd-rtl8197f/src/WlanHAL/Data/8822B/rtl8822BfwMP.bin",
+        "package/kernel/rtl8192cd-rtl8197f/src/WlanHAL/Data/8822C/rtl8822CfwMP.bin"
+      ]
+    },
+    {
+      "name": "rtl8812fw.bin",
+      "size": 11962,
+      "sha256": "0e6a2bc6dc1e82456c2ab6fdc398e6ddc10a252bc5a287c5d955290c71306e90",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": [
+        "package/kernel/rtl8192cd-rtl8197f/src/data_8812/rtl8812fw.bin"
+      ]
+    },
+    {
+      "name": "rtl8812fw_n.bin",
+      "size": 23746,
+      "sha256": "4b22f36500a6f75551b6beeba9f6f4ddc7313a97fbddd04bdfe6ebd0da5f8ea1",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": [
+        "package/kernel/rtl8192cd-rtl8197f/src/data_8812/rtl8812fw_n.bin"
+      ]
+    },
+    {
+      "name": "rtl8812fw_n_8a030a2e.bin",
+      "size": 17956,
+      "sha256": "8a030a2e7db03c1a655ffb3e9d01e15dce166aeeaeaa0167378db30f288cf85f",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": []
+    },
+    {
+      "name": "rtl8812fw_n_bd40c59a.bin",
+      "size": 18264,
+      "sha256": "bd40c59a15e4a6c2358496721a927b4f74a74fcce8f071f5f3ea9a0150b74aec",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": []
+    },
+    {
+      "name": "rtl8812fw_n_2g.bin",
+      "size": 21282,
+      "sha256": "51451e79d778c67ca8a990dea38ddc5728c94fcf0077733fa5e8b794a247b17e",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": [
+        "package/kernel/rtl8192cd-rtl8197f/src/data_8812/rtl8812fw_n_2g.bin"
+      ]
+    },
+    {
+      "name": "rtl8814afw.bin",
+      "size": 37088,
+      "sha256": "888232460ab7caab5955e5ced35976762e5e5d13e76b4e5ff97632969c68632b",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": [
+        "package/kernel/rtl8192cd-rtl8197f/src/WlanHAL/Data/8814A/rtl8814Afw.bin"
+      ]
+    },
+    {
+      "name": "rtl8814afwmp.bin",
+      "size": 35304,
+      "sha256": "aada7f978dbb33a7657730b2aa0a280d8efb94c3ac54cd1163a6133de7d02642",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": []
+    },
+    {
+      "name": "rtl8814afwmp_c1dc2563.bin",
+      "size": 45848,
+      "sha256": "c1dc25639b9b2ccad076e866ecc7e9f3d8548524148dc0b64417959a547c5bc8",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": []
+    },
+    {
+      "name": "rtl8814afwmp_da04ffe4.bin",
+      "size": 42168,
+      "sha256": "da04ffe428b2380ee6cb5ac3dc4d2cf16a16e98f8da01831f86c79cb6ae39a4a",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": [
+        "package/kernel/rtl8192cd-rtl8197f/src/WlanHAL/Data/8814A/rtl8814AfwMP.bin"
+      ]
+    },
+    {
+      "name": "rtl8814afwmp_f0152251.bin",
+      "size": 35872,
+      "sha256": "f0152251d7402159d870f5e2de30281e519d1725b8a9b02190ecb2dce0bdd4fd",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": []
+    },
+    {
+      "name": "rtl8814bfw.bin",
+      "size": 114488,
+      "sha256": "1d5d7de2d2965b2a0a68bc2db6367abc4447dbe807febba9df637459d875b79a",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": [
+        "package/kernel/rtl8192cd-rtl8197f/src/WlanHAL/Data/8814B/rtl8814Bfw.bin",
+        "package/kernel/rtl8192cd-rtl8197f/src/WlanHAL/Data/8814B/rtl8814BfwMP.bin"
+      ]
+    },
+    {
+      "name": "rtl8814bfwextmp.bin",
+      "size": 254688,
+      "sha256": "44a057776d22fe12a83ea1e915115ce7f6c1aabc2bd5d838c5c3ce44b4b2fb26",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": [
+        "package/kernel/rtl8192cd-rtl8197f/src/WlanHAL/Data/8814B/rtl8814BfwExtMP.bin"
+      ]
+    },
+    {
+      "name": "wfo_rtl8192cd.bin",
+      "size": 317192,
+      "sha256": "24a63c4d3f1db9231d6ad5a37705ff51c728a144d55b2a87c8eebcc996716321",
+      "raw_matches_c_array": true,
+      "existing_tree_matches": [
+        "package/kernel/rtl8192cd-rtl8197f/src/pe/wfo_rtl8192cd.bin"
+      ]
+    }
+  ],
+  "table_manifest_records": 148,
+  "tables_with_exact_tree_match": 130,
+  "validation_scope": "Static inspection and byte/hash comparisons only. No uploaded scripts executed; no hardware or firmware-build test. Internal hashes do not authenticate external provenance."
+}
