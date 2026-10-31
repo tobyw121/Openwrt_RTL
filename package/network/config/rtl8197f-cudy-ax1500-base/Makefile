@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rtl8197f-cudy-ax1500-base
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 PKG_LICENSE:=GPL-2.0-or-later
 
 include $(INCLUDE_DIR)/package.mk
@@ -9,13 +9,14 @@ include $(INCLUDE_DIR)/package.mk
 define Package/rtl8197f-cudy-ax1500-base
   SECTION:=utils
   CATEGORY:=Utilities
-  TITLE:=Cudy WR1500/RE1500/M1500 UART bring-up diagnostics
+  TITLE:=Cudy AX1500 UART/SPI/PCI bring-up diagnostics
   DEPENDS:=@TARGET_realtek_rtl8197f
 endef
 
 define Package/rtl8197f-cudy-ax1500-base/description
  Read-only diagnostics for experimental Cudy AX1500 RAM boot profiles.
- Does not configure flash, Ethernet, WLAN, LEDs or GPIOs.
+ Reports PCI identity on the R76 SPI profile. Does not write flash or
+ configure Ethernet, WLAN, LEDs or GPIOs.
 endef
 
 define Build/Compile

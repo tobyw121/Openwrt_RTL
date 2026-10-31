@@ -55,6 +55,17 @@ properties:
     $ref: /schemas/types.yaml#/definitions/uint32
     description: First flash byte accepted by program and erase callbacks.
 
+  realtek,read-shift-probes:
+    $ref: /schemas/types.yaml#/definitions/uint32-array
+    minItems: 4
+    maxItems: 4
+    description: |
+      Two offset/magic pairs for read-only mapping detection. Magic values
+      describe four consecutive bytes in big-endian notation. Both distinct
+      offsets must match exactly one compensation shift in 0..3, otherwise
+      probing fails. Requires unchanged OEM signatures at these offsets.
+      Cannot be combined with a writable window.
+
   realtek,writable-size:
     $ref: /schemas/types.yaml#/definitions/uint32
     description: Size of the only writable flash window.
@@ -74,6 +85,13 @@ required:
   - reg
 
 allOf:
+  - if:
+      required:
+        - realtek,read-shift-probes
+    then:
+      properties:
+        realtek,writable-offset: false
+        realtek,writable-size: false
   - if:
       required:
         - realtek,writable-offset

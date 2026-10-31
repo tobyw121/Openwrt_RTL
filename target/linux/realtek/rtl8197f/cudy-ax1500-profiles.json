@@ -129,6 +129,33 @@
         "integrated and PCIe radio identities, firmware and factory calibration",
         "LED/button wiring and polarity"
       ]
+    },
+    "cudy,ax1500-r76": {
+      "gpl_profile": "R76",
+      "related_board": "cudy,wr1500",
+      "integration_status": "experimental-ram-readonly-spi-pci",
+      "hardware_revision": null,
+      "physical_ram_bytes": null,
+      "diagnostic_ram_window_bytes": 67108864,
+      "diagnostic_ram_window_is_measured": false,
+      "console_baud": 38400,
+      "flash_bytes_from_dump": 16777216,
+      "flash_upgrade_supported": false,
+      "pcie_radio_id": null,
+      "flash_mapping": "two signature probes; exact unique shift 0..3; read only; reject mismatch",
+      "source": {
+        "path": "fullflash-templates/Cudy_AX1500.bin",
+        "commit": "b2d07b498939386caf8e45eae3162ddbfe47e36a",
+        "sha256": "f50f3147274a82fcbf4fef7a0c7500aeb7868b60e4e17975faea588237abd188"
+      },
+      "report": "reverse-engineering/cudy-ax1500-r76/README.md",
+      "remaining_validation": [
+        "physical hardware revision and RAM capacity",
+        "OEM RAM-loading commands and successful initramfs boot",
+        "live auto-map read shift",
+        "live switch ID, SMI bond/wiring and physical port order",
+        "live PCI radio ID, Wi-Fi-6 source port, per-device factory/eFuse calibration"
+      ]
     }
   }
 }

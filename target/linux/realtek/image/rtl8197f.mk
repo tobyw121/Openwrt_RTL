@@ -44,6 +44,17 @@ define Device/cudy_m1500
 endef
 TARGET_DEVICES += cudy_m1500
 
+# Complete R76 SPI dump: UART + read-only flash + PCI identification in RAM.
+define Device/cudy_ax1500_r76
+  $(Device/cudy_ax1500_ram)
+  DEVICE_MODEL := AX1500 / WR1500 R76
+  DEVICE_VARIANT := experimental RAM boot, read-only SPI
+  DEVICE_DTS := rtl8197f_cudy_ax1500-r76
+  RTL8197F_KERNEL_CMDLINE := console=ttyS0,38400n8 rdinit=/sbin/init clk_ignore_unused
+  SUPPORTED_DEVICES += cudy,ax1500-r76
+endef
+TARGET_DEVICES += cudy_ax1500_r76
+
 define Device/realtek_rtl8197f_evb
   DEVICE_VENDOR := Realtek
   DEVICE_MODEL := RTL8197F Evaluation Board

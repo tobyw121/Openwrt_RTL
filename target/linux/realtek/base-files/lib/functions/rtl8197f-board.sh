@@ -2,7 +2,7 @@
 
 rtl8197f_is_cudy_ram() {
 	case "$(cat /tmp/sysinfo/board_name 2>/dev/null)" in
-		cudy,wr1500|cudy,re1500|cudy,m1500) return 0 ;;
+		cudy,wr1500|cudy,re1500|cudy,m1500|cudy,ax1500-r76) return 0 ;;
 	esac
 	return 1
 }

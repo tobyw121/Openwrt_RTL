@@ -3,12 +3,14 @@
 # Runtime evidence only: no flash reads, MMIO writes or network reconfiguration.
 board="$(cat /tmp/sysinfo/board_name 2>/dev/null)"
 case "$board" in
-	cudy,wr1500) profile=R76 ;;
+	cudy,wr1500|cudy,ax1500-r76) profile=R76 ;;
 	cudy,re1500) profile=R101 ;;
 	cudy,m1500) profile=R102 ;;
-	*) echo 'Only Cudy WR1500/RE1500/M1500 RAM profiles are supported' >&2; exit 1 ;;
+	*) echo 'Only Cudy AX1500 bring-up profiles are supported' >&2; exit 1 ;;
 esac
-printf 'board=%s gpl_profile=%s status=experimental-uart-ram-only\n' "$board" "$profile"
+status=experimental-uart-ram-only
+[ "$board" = cudy,ax1500-r76 ] && status=experimental-ram-readonly-spi-pci
+printf 'board=%s gpl_profile=%s status=%s\n' "$board" "$profile" "$status"
 echo 'RAM is capped at 64 MiB; MemTotal does not identify physical capacity.'
 for path in /etc/openwrt_release /proc/cmdline /proc/cpuinfo /proc/meminfo /proc/interrupts /proc/mtd; do
 	printf '\n%s\n' "$path"
@@ -16,3 +18,14 @@ for path in /etc/openwrt_release /proc/cmdline /proc/cpuinfo /proc/meminfo /proc
 done
 printf '\nkernel diagnostics\n'
 dmesg | tail -100
+if [ "$board" = cudy,ax1500-r76 ]; then
+	printf '\nPCI inventory (sysfs only)\n'
+	for dev in /sys/bus/pci/devices/*; do
+		[ -d "$dev" ] || continue
+		printf '%s\n' "${dev##*/}"
+		for field in vendor device subsystem_vendor subsystem_device class; do
+			printf '%s=' "$field"
+			cat "$dev/$field" 2>/dev/null || true
+		done
+	done
+fi

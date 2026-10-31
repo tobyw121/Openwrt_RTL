@@ -1,0 +1,96 @@
+{
+  "schema": 1,
+  "board": "cudy,ax1500-r76",
+  "oem_profile": "R76",
+  "source_size": 16777216,
+  "source_sha256": "f50f3147274a82fcbf4fef7a0c7500aeb7868b60e4e17975faea588237abd188",
+  "classification": "complete raw SPI layout; includes per-device cfg/bdinfo",
+  "uimage": {
+    "offset": 262144,
+    "payload_size": 2158610,
+    "header_crc32_valid": true,
+    "data_crc32_valid": true,
+    "timestamp": 1737421377,
+    "load_field": 262144,
+    "entry": 2157969408,
+    "os": 5,
+    "arch": 5,
+    "type": 2,
+    "compression": 3
+  },
+  "realtek_header": {
+    "signature": "cr6c",
+    "burn_address": 262144,
+    "ram_entry": 2157969408
+  },
+  "kernel": {
+    "size": 6743460,
+    "sha256": "7d7e41a50d6659b5c84c524205bcca25306e2e98a5949c61032810ff84fd003e",
+    "lzma_spi_offset": 272472,
+    "version_string": "Linux version 4.4.176 (jenkins@release_server) (gcc version 6.4.1 20180425 (Realtek MSDK-6.4.1 Build 3055) ) #1 Tue Jan 21 09:16:46 CST 2025",
+    "compiled_console": "console=ttyS0,38400 root=/dev/mtdblock5"
+  },
+  "squashfs": {
+    "offset": 2818048,
+    "bytes_used": 12538076,
+    "inodes": 2996,
+    "block_size": 262144,
+    "compression": "XZ"
+  },
+  "partitions": [
+    {
+      "name": "u-boot",
+      "offset": 0,
+      "size": 131072,
+      "kernel_record_offset": 6496152
+    },
+    {
+      "name": "cfg",
+      "offset": 131072,
+      "size": 65536,
+      "kernel_record_offset": 6496184
+    },
+    {
+      "name": "bdinfo",
+      "offset": 196608,
+      "size": 65536,
+      "kernel_record_offset": 6496216
+    },
+    {
+      "name": "firmware",
+      "offset": 262144,
+      "size": 15466496,
+      "kernel_record_offset": 6496248
+    },
+    {
+      "name": "kernel",
+      "offset": 262144,
+      "size": 2555904,
+      "kernel_record_offset": 6496280
+    },
+    {
+      "name": "rootfs",
+      "offset": 2818048,
+      "size": 12910592,
+      "kernel_record_offset": 6496312
+    },
+    {
+      "name": "rootfs_data",
+      "offset": 15728640,
+      "size": 983040,
+      "kernel_record_offset": 6496344
+    },
+    {
+      "name": "backup",
+      "offset": 16711680,
+      "size": 65536,
+      "kernel_record_offset": 6496376
+    }
+  ],
+  "cfg_and_bdinfo_nonblank": true,
+  "limits": [
+    "No hardware revision, physical RAM capacity, live switch/PCI ID or read-shift measurement.",
+    "Header CRCs verify consistency, not OEM authenticity.",
+    "No executable was run; cfg/bdinfo and OEM userspace are not exported."
+  ]
+}

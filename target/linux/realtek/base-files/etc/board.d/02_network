@@ -22,8 +22,8 @@ board=$(board_name)
 board_config_update
 
 case "$board" in
-cudy,wr1500|cudy,re1500|cudy,m1500)
-	# UART-only RAM profiles have no validated Ethernet/WLAN interfaces yet.
+cudy,wr1500|cudy,re1500|cudy,m1500|cudy,ax1500-r76)
+	# RAM bring-up profiles have no validated Ethernet/WLAN interfaces yet.
 	board_config_flush
 	exit 0
 	;;

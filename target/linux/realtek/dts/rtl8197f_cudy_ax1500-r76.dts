@@ -1,0 +1,54 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+// R76 raw SPI evidence: fullflash-templates/Cudy_AX1500.bin.
+
+#include "rtl8197f_cudy_ax1500.dtsi"
+
+/ {
+	compatible = "cudy,ax1500-r76", "cudy,wr1500", "realtek,rtl8197f-vg", "realtek,rtl8197f-soc";
+	model = "Cudy AX1500 / WR1500 R76 (experimental SPI diagnostics)";
+
+	chosen {
+		bootargs = "console=ttyS0,38400n8 rdinit=/sbin/init clk_ignore_unused";
+		stdout-path = "serial0:38400n8";
+	};
+};
+
+&uart0 {
+	current-speed = <38400>;
+};
+
+/* Read-only auto-map uses the bootloader's existing SPI setup. No active
+ * controller commands, GPIO probing or erase/program callbacks are enabled.
+ */
+&spirom0 {
+	reg = <0x10000000 0x01000000>;
+	reg-names = "automap";
+	/delete-property/ realtek,read-shift;
+	realtek,read-shift-probes = <0x40000 0x27051956 0x2b0000 0x68737173>;
+	label = "cudy-r76-oem-spi";
+	status = "okay";
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* Prefix prevents automatic OEM rootfs/overlay or firmware splitting
+		 * during an OpenWrt initramfs diagnostic boot. Offsets are physical.
+		 */
+		partition@0 { label = "oem-u-boot"; reg = <0 0x20000>; read-only; };
+		partition@20000 { label = "oem-cfg"; reg = <0x20000 0x10000>; read-only; };
+		partition@30000 { label = "oem-bdinfo"; reg = <0x30000 0x10000>; read-only; };
+		partition@40000 { label = "oem-kernel"; reg = <0x40000 0x270000>; read-only; };
+		partition@2b0000 { label = "oem-rootfs"; reg = <0x2b0000 0xc50000>; read-only; };
+		partition@f00000 { label = "oem-rootfs_data"; reg = <0xf00000 0xf0000>; read-only; };
+		partition@ff0000 { label = "oem-backup"; reg = <0xff0000 0x10000>; read-only; };
+	};
+};
+
+/* Enumerate the radio for identification only. No incompatible 4.4 WLAN
+ * module or MW5/RD05 calibration/profile is assigned to this device.
+ */
+&pcie0 {
+	status = "okay";
+};

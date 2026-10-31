@@ -1,5 +1,18 @@
 # Cudy WR1500 / RE1500 / M1500
 
+## New raw-SPI R76 profile
+
+`fullflash-templates/Cudy_AX1500.bin` now supplies a complete 16 MiB R76
+layout, including cfg/bdinfo. Select **Cudy AX1500 / WR1500 R76** for the new
+experimental RAM profile `cudy_ax1500_r76`. It uses 38400 baud, read-only
+signature-checked flash mapping and PCI enumeration. The three original
+UART-only profiles described below are retained unchanged.
+
+Analysis, exact build commands and remaining hardware limitations:
+[Cudy R76 SPI target](../../../../reverse-engineering/cudy-ax1500-r76/README.md).
+This is not yet a flashable/full-network router profile. Ethernet, switch
+and WLAN startup remain disabled; no OEM Linux-4.4 module is used on 6.6.
+
 These devices now have separate experimental **UART/RAM bring-up profiles**
 in the RTL8197F target. They are not flashable router firmware support yet.
 WR1500 is the first planned hardware test; RE1500 and M1500 remain untested.

@@ -24,6 +24,7 @@
     defined(CONFIG_BOARD_TENDA_NOVA_MW5) || \
     defined(CONFIG_BOARD_TENDA_AC23) || \
     defined(CONFIG_BOARD_CUDY_WR1500) || \
+    defined(CONFIG_BOARD_CUDY_AX1500_R76) || \
     defined(CONFIG_BOARD_CUDY_RE1500) || \
     defined(CONFIG_BOARD_CUDY_M1500) || \
     defined(CONFIG_BOARD_REALTEK_RTL8197F_EVB) || \

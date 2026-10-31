@@ -34,6 +34,8 @@
 #include <linux/sizes.h>
 #include <linux/slab.h>
 
+#include "rtl8197f-spirom-shift.h"
+
 #define RTL8197F_SPIC_CTRLR0		0x000
 #define RTL8197F_SPIC_CTRLR1		0x004
 #define RTL8197F_SPIC_SSIENR		0x008
@@ -115,6 +117,7 @@ struct rtl8197f_spirom {
 	bool status_bit_shift_valid;
 	bool command_mode_valid;
 	bool write_enabled;
+	bool read_shift_probed;
 };
 
 static inline u32 rtl8197f_spirom_ctrl_read(struct rtl8197f_spirom *rom,
@@ -571,6 +574,11 @@ static int rtl8197f_spirom_read(struct mtd_info *mtd, loff_t from,
 
 	if (from < 0 || from > rom->size || len > rom->size - from)
 		return -EINVAL;
+	/* The mapping cannot address bytes before its virtual window. Do not
+	 * silently return shifted boot bytes in the optional diagnostic mode.
+	 */
+	if (len && rom->read_shift_probed && from < rom->read_shift)
+		return -EINVAL;
 
 	/* RD05 auto-map byte reads are shifted by +1.  Keep partition offsets in
 	 * the OEM coordinate system and compensate only for mapped reads.
@@ -668,6 +676,43 @@ static int rtl8197f_spirom_erase(struct mtd_info *mtd,
 	return ret;
 }
 
+static int rtl8197f_spirom_detect_read_shift(struct rtl8197f_spirom *rom)
+{
+	struct device_node *np = rom->dev->of_node;
+	u32 probes[4];
+	u8 windows[2][7], magic[2][4];
+	int i, byte, shift;
+
+	if (!of_find_property(np, "realtek,read-shift-probes", NULL))
+		return 0;
+	/* This optional path is diagnostic only. Never infer write addressing. */
+	if (of_find_property(np, "realtek,writable-offset", NULL) ||
+	    of_find_property(np, "realtek,writable-size", NULL) ||
+	    of_property_count_u32_elems(np, "realtek,read-shift-probes") != 4 ||
+	    of_property_read_u32_array(np, "realtek,read-shift-probes", probes, 4))
+		return -EINVAL;
+	if (probes[0] == probes[2])
+		return -EINVAL;
+	for (i = 0; i < 2; i++) {
+		u32 offset = probes[i * 2], value = probes[i * 2 + 1];
+
+		if (offset < 3 || rom->size < 7 || offset > rom->size - 4)
+			return -EINVAL;
+		for (byte = 0; byte < 7; byte++)
+			windows[i][byte] = readb(rom->base + offset - 3 + byte);
+		for (byte = 0; byte < 4; byte++)
+			magic[i][byte] = value >> (24 - 8 * byte);
+	}
+	shift = rtl8197f_spirom_select_shift(windows, magic);
+	if (shift < 0)
+		return dev_err_probe(rom->dev, shift,
+				     "no unique read mapping matches both flash signatures\n");
+	rom->read_shift = shift;
+	rom->read_shift_probed = true;
+	dev_info(rom->dev, "read-only signature probes selected read_shift=%d\n", shift);
+	return 0;
+}
+
 static int rtl8197f_spirom_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -705,6 +750,9 @@ static int rtl8197f_spirom_probe(struct platform_device *pdev)
 				 &rom->baud_div))
 		rom->baud_div = RTL8197F_DEFAULT_BAUD_DIV;
 	rom->baud_div = clamp_t(u32, rom->baud_div, 2, 0xffff);
+	ret = rtl8197f_spirom_detect_read_shift(rom);
+	if (ret)
+		return ret;
 
 	if (!of_property_read_u32(dev->of_node, "realtek,writable-offset",
 				  &writable_offset) &&
