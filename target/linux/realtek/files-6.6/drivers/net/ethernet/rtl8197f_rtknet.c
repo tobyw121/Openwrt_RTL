@@ -62,7 +62,7 @@
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.45-rd05-tx-snapshot"
+#define DRV_VERSION			"1.8.46-rd05-coherent-tx-test"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -739,6 +739,18 @@ static bool rtl8197f_rtk_rd05_snapshot_claim(bool rd05)
 		old = seen;
 	}
 	return false;
+}
+
+/* Sampled only by ndo_open after old rings have been closed/freed. */
+static bool rd05_tx_coherent;
+module_param_named(rd05_tx_coherent, rd05_tx_coherent, bool, 0600);
+MODULE_PARM_DESC(rd05_tx_coherent, "RD05 diagnostic coherent TX buffers; default off, takes effect after eth0 down/up");
+
+static bool rtl8197f_rtk_rd05_tx_coherent_policy(bool mw5, bool previous)
+{
+	if (!mw5 && of_machine_is_compatible("xiaomi,r4-rd05"))
+		return READ_ONCE(rd05_tx_coherent);
+	return previous;
 }
 
 static bool rd05_oem_buffer_alias = true;
@@ -6726,7 +6738,8 @@ static netdev_tx_t rtl8197f_rtk_start_xmit(struct sk_buff *skb,
 		priv->tx_csum_sw_fallback++;
 	}
 
-	coherent_tx = priv->is_mw5 && priv->tx_coherent_enabled;
+	coherent_tx = priv->tx_coherent_enabled &&
+		(priv->is_mw5 || of_machine_is_compatible("xiaomi,r4-rd05"));
 	hw_sg = !coherent_tx && !!(ndev->features & NETIF_F_SG);
 	/* v44.66.9 normal MW5 TX keeps the upstream 0x8899/protocol-4 eight-byte
 	 * CPU tag in the skb and carries it over the physical RTL8197F P0/RGMII cascade.
@@ -6769,9 +6782,9 @@ static netdev_tx_t rtl8197f_rtk_start_xmit(struct sk_buff *skb,
 		memcpy(rd05_snapshot, skb->data, rd05_snapshot_len);
 	}
 
-	/* Non-MW5 boards keep the streaming DMA path. MW5 copies into a fixed
-	 * coherent slot only after it owns a ring index, so hardware never reads
-	 * from reusable skb storage. */
+	/* The normal non-MW5 path uses streaming DMA. MW5 and the armed
+	 * RD05 diagnostic copy into a fixed slot only after acquiring a ring
+	 * index; no slot is overwritten while still owned by hardware. */
 	if (!coherent_tx) {
 		mapped_len[0] = skb_headlen(skb);
 		mapped[0] = dma_map_single(priv->dev, skb->data, mapped_len[0], DMA_TO_DEVICE);
@@ -7100,6 +7113,11 @@ static int rtl8197f_rtk_open(struct net_device *ndev)
 		priv->rx_page_pool_enabled = false;
 	}
 
+	/* An armed RD05 diagnostic is latched here, never in the live TX
+	 * path. Free/clean continues using the old allocation until ndo_stop.
+	 * MW5 and all other boards retain their existing policy. */
+	priv->tx_coherent_enabled = rtl8197f_rtk_rd05_tx_coherent_policy(
+		priv->is_mw5, priv->tx_coherent_enabled);
 	ret = rtl8197f_rtk_alloc_rings(priv);
 	if (ret)
 		return ret;
@@ -9182,6 +9200,11 @@ static int rtl8197f_rtk_rd05_proc_show(struct seq_file *m, void *v)
 			   rtl8197f_rtk_hw_dma_addr(priv, priv->rx_desc_dma),
 			   priv->rx_dma ? rtl8197f_rtk_buffer_dma_addr(priv, priv->rx_dma[0]) : 0,
 			   READ_ONCE(rd05_txdesc_mode));
+	if (!priv->is_mw5 && of_machine_is_compatible("xiaomi,r4-rd05"))
+		seq_printf(m, "rd05_tx_buffer requested=%u active=%u copies=%llu stride=%u\n",
+			READ_ONCE(rd05_tx_coherent), priv->tx_coherent_enabled,
+			(unsigned long long)priv->tx_coherent_copies,
+			priv->tx_coherent_stride);
 	seq_puts(m, "firewall_policy mode=strict routed_shortcuts=0 tc_flowtable_hw=0 dma_path=linux\n");
 	seq_printf(m, "mw5_accel enabled=%u sw=%u hw=%u hw_engine=coherent-dma+dsa-wlan-egress asic_l34_safe=%u rings=%u/%u coherent_rx=%u coherent_tx=%u page_pool=%u hw_packets=%llu hw_fallback=%llu hw_flow_attempts=%llu hw_flow_rejects=%llu\n",
 		   priv->is_mw5 && READ_ONCE(mw5_accel_enable),

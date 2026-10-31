@@ -620,3 +620,9 @@ The quota may capture unrelated background traffic before ARP. If that happens,
 inspect the recorded frames before deciding whether to rearm. No unlimited trace
 is needed. Reconnect WAN after diagnostics. This change is not a claimed LAN/WAN
 fix and has not been validated by a full image build or physical retest.
+
+## Coherent TX diagnostic, 1.8.46
+
+See [the RD05-only A-B-A DMA buffer test](RD05_TX_DMA_AB.md) for implementation
+scope, build commands, the reopen-only parameter and complete PC/UART steps.
+Streaming TX remains the RD05 default; this is not a proven hardware fix.
