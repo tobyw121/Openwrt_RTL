@@ -288,9 +288,11 @@ CONFIG_CSRC_R4K=y
 CONFIG_IRQ_MIPS_CPU=y
 CONFIG_MIPS_EXTERNAL_TIMER=y
 CONFIG_EARLY_PRINTK=y
-CONFIG_CMDLINE_BOOL=y
-CONFIG_CMDLINE="console=ttyS0,115200n8 lpj=5000000 rootfstype=squashfs,jffs2 clk_ignore_unused"
-CONFIG_CMDLINE_OVERRIDE=y
+# Use each appended DT chosen/bootargs: WR1500 is 38400, MW5/RD05 115200.
+# A builtin override or appended fallback defeats the per-device console/root.
+# CONFIG_CMDLINE_BOOL is not set
+CONFIG_CMDLINE=""
+# CONFIG_CMDLINE_OVERRIDE is not set
 CONFIG_BLK_DEV_LOOP=y
 CONFIG_BLK_DEV_LOOP_MIN_COUNT=8
 CONFIG_DEVTMPFS=y

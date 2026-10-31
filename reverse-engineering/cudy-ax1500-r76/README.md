@@ -1,5 +1,32 @@
 # Cudy AX1500 / WR1500 R76: SPI-Analyse und Geräteprofil
 
+## Durchgehende 38400-Baud-Konsole
+
+Der Benutzer-Bootlog mit Revision `0d4d248aae` erreicht die OpenWrt-Shell,
+zeigt aber beim Übergang nach prom_init zeitweise Zeichenmüll. Die gemeinsame
+Kernelkonfiguration hatte trotz korrekter WR1500-DT- und Loader-Werte noch
+`CONFIG_CMDLINE_OVERRIDE=y` mit `console=ttyS0,115200n8` erzwungen.
+
+Diese eingebaute Override-/Append-Kommandozeile ist jetzt deaktiviert.
+`CONFIG_MIPS_CMDLINE_FROM_DTB=y` bleibt gesetzt: Kernel und Console verwenden
+die boardbezogenen `/chosen/bootargs`. WR1500/R76 verwendet 38400, MW5 und
+RD05 behalten 115200 aus ihren DTs. Der ursprüngliche UART0-Takt wird nicht
+geändert. Das askconsole-Login erbt die Console-Einstellungen. Der neue
+Kernel muss vollständig neu gebaut werden; ein neues Rootfs allein reicht
+nicht zur Beseitigung der frühen Umschaltung.
+
+Tabby: 38400, 8N1, keine Flusssteuerung. Nach dem Update auf dem Router:
+
+```sh
+cat /proc/cmdline
+stty -F /dev/ttyS0 -a
+```
+
+Erwartet: genau die WR1500-Console mit `38400n8`, keine zusätzliche
+115200-Console; stty meldet 38400. Die Tests prüfen die gemeinsame
+Konfiguration und die kompilierten DTs für WR1500 RAM/Flash sowie MW5/RD05.
+Der Fix ist noch nicht durch einen erneuten WR1500-Hardwareboot bestätigt.
+
 ## Ein Profil für RAM und Fullflash
 
 Neu: **`cudy_ax1500_r76`** erzeugt
