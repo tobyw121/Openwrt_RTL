@@ -1,0 +1,61 @@
+--- a/include/osdep_service_linux.h
++++ b/include/osdep_service_linux.h
+@@ -499,7 +499,11 @@
+ 
+ static inline void rtw_thread_exit(_completion *comp)
+ {
++	#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0)
++	kthread_complete_and_exit(comp, 0);
++#else
+ 	complete_and_exit(comp, 0);
++#endif
+ }
+ 
+ static inline _thread_hdl_ rtw_thread_start(int (*threadfn)(void *data),
+@@ -1030,7 +1034,7 @@
+ #if defined(CONFIG_RTL_ETH_RECYCLED_SKB)
+ extern int rtk_fc_fastfwd_netif_rx(struct sk_buff *skb);
+ 	skb->dev = ndev;
+-	skb->from_dev = ndev;
++	/* Mainline RX uses skb->dev; vendor from_dev is not part of Linux. */
+ 	rtk_fc_fastfwd_netif_rx(skb);
+ #else
+ extern int fwdEngine_wifi_rx(struct sk_buff *skb);
+@@ -1045,7 +1049,7 @@
+ 	skb->dev = ndev;
+ 	skb->data-=14;
+ 	skb->len+=14;
+-	skb->from_dev = ndev;
++	/* Mainline RX uses skb->dev; vendor from_dev is not part of Linux. */
+ 
+ 	if(is_highpri_pkt(skb->data))
+ 		ret = RE8670_RX_CONTINUE;
+@@ -1114,7 +1118,7 @@
+ 	return ret;
+ #else
+ 	skb->dev = ndev;
+-	skb->from_dev = ndev;
++	/* Mainline RX uses skb->dev; vendor from_dev is not part of Linux. */
+ 	return netif_rx(skb);
+ #endif
+ }
+--- a/os_dep/linux/os_intfs.c
++++ b/os_dep/linux/os_intfs.c
+@@ -88,7 +88,7 @@
+ 	}
+ 
+ 	_rtw_memcpy(adapter_mac_addr(padapter), sa->sa_data, ETH_ALEN); /* set mac addr to adapter */
+-	_rtw_memcpy(pnetdev->dev_addr, sa->sa_data, ETH_ALEN); /* set mac addr to net_device */
++	eth_hw_addr_set(pnetdev, sa->sa_data); /* set mac addr to net_device */
+ 
+ 	rtw_ps_deny(padapter, PS_DENY_IOCTL);
+ 	LeaveAllPowerSaveModeDirect(padapter); /* leave PS mode for guaranteeing to access hw register successfully */
+@@ -648,7 +648,7 @@
+ 	/* alloc netdev name */
+ 	rtw_init_netdev_name(ndev, name);
+ 
+-	_rtw_memcpy(ndev->dev_addr, adapter_mac_addr(adapter), ETH_ALEN);
++	eth_hw_addr_set(ndev, adapter_mac_addr(adapter));
+ 
+ 	/* Tell the network stack we exist */
+ 

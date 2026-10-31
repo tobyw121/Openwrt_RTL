@@ -15,6 +15,14 @@ MODELS = ('wr1500', 're1500', 'm1500')
 
 
 class CudyAX1500Tests(unittest.TestCase):
+    def test_wr1500_console_matches_oem_without_expanding_ram(self):
+        dts = (ROOT / 'target/linux/realtek/dts/rtl8197f_cudy_wr1500.dts').read_text()
+        self.assertIn('console=ttyS0,38400n8', dts)
+        self.assertIn('current-speed = <38400>', dts)
+        self.assertNotIn('0x08000000', dts)
+        image = IMAGE.read_text().split('define Device/cudy_wr1500', 1)[1].split('endef', 1)[0]
+        self.assertIn('RTL8197F_KERNEL_CMDLINE := console=ttyS0,38400n8', image)
+
     def test_make_profiles_clear_inherited_flash_images(self):
         # Evaluate the real GNU make templates, including their shared parent.
         text = IMAGE.read_text().replace('include ./common.mk', '')

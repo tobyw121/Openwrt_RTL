@@ -1,5 +1,10 @@
 # Cudy WR1500 / RE1500 / M1500
 
+WR1500's original UART profile now also uses 38400 baud in its DT and loader.
+The newly found RTL8832BR/RTL8197F G6 source and its incomplete Linux-6.6
+port are tracked in [the WLAN port report](../../../../reverse-engineering/wr1500-wifi6/README.md).
+No working WLAN startup is claimed by the UART correction.
+
 ## New raw-SPI R76 profile
 
 `fullflash-templates/Cudy_AX1500.bin` now supplies a complete 16 MiB R76

@@ -6,4 +6,12 @@
 / {
 	compatible = "cudy,wr1500", "realtek,rtl8197f-vg", "realtek,rtl8197f-soc";
 	model = "Cudy WR1500 (experimental RAM boot)";
+	chosen {
+		bootargs = "console=ttyS0,38400n8 rdinit=/sbin/init clk_ignore_unused";
+		stdout-path = "serial0:38400n8";
+	};
+};
+
+&uart0 {
+	current-speed = <38400>;
 };

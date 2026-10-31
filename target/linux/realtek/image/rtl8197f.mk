@@ -23,6 +23,7 @@ endef
 define Device/cudy_wr1500
   $(Device/cudy_ax1500_ram)
   DEVICE_MODEL := WR1500
+  RTL8197F_KERNEL_CMDLINE := console=ttyS0,38400n8 rdinit=/sbin/init clk_ignore_unused
   DEVICE_DTS := rtl8197f_cudy_wr1500
   SUPPORTED_DEVICES += cudy,wr1500
 endef
