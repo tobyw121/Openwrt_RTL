@@ -62,7 +62,7 @@
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.44-rd05-oem-mac-flow"
+#define DRV_VERSION			"1.8.45-rd05-tx-snapshot"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -719,6 +719,28 @@ MODULE_PARM_DESC(rd05_txdesc_mode, "RD05 RTL8197F TX mode: 0 direct P0/RGMII, 1 
  * Snapshot this choice at probe: switching aliases while RX is armed would
  * invalidate completion-address checks. Use the boot/module parameter =0
  * to reproduce the previous address policy for an A/B comparison. */
+/* Opt-in bounded capture; each arm permits at most eight packets. */
+static unsigned int rd05_tx_snapshot_budget;
+module_param_named(rd05_tx_snapshot_budget, rd05_tx_snapshot_budget, uint, 0600);
+MODULE_PARM_DESC(rd05_tx_snapshot_budget, "RD05 only: capture up to 8 TX descriptor/96-byte packet pairs; default off");
+
+static bool rtl8197f_rtk_rd05_snapshot_claim(bool rd05)
+{
+	unsigned int old = READ_ONCE(rd05_tx_snapshot_budget);
+
+	if (!rd05)
+		return false;
+	while (old) {
+		unsigned int remaining = min_t(unsigned int, old, 8) - 1;
+		unsigned int seen = cmpxchg(&rd05_tx_snapshot_budget, old, remaining);
+
+		if (seen == old)
+			return true;
+		old = seen;
+	}
+	return false;
+}
+
 static bool rd05_oem_buffer_alias = true;
 module_param_named(rd05_oem_buffer_alias, rd05_oem_buffer_alias, bool, 0444);
 MODULE_PARM_DESC(rd05_oem_buffer_alias, "RD05 only: OEM KSEG0 packet-buffer addresses; boot/load-time option, rings unchanged");
@@ -6663,6 +6685,11 @@ static netdev_tx_t rtl8197f_rtk_start_xmit(struct sk_buff *skb,
 	u16 mw5_wire_mask = 0;
 	u8 dsa_port = 0xff;
 	int dsa_meta, ret = 0;
+	u8 rd05_snapshot[96];
+	u32 rd05_snapshot_dw[6];
+	unsigned int rd05_snapshot_len = 0;
+	unsigned int rd05_snapshot_pkt_len = 0;
+	unsigned int rd05_snapshot_idx = 0;
 
 	if (!skb_is_gso(skb) &&
 	    skb->len > ndev->mtu + ETH_HLEN + VLAN_HLEN +
@@ -6727,6 +6754,20 @@ static netdev_tx_t rtl8197f_rtk_start_xmit(struct sk_buff *skb,
 	needed = nr_frags + 1;
 	if (needed > MAX_SKB_FRAGS + 1)
 		return NETDEV_TX_BUSY;
+
+	/* Copy while the CPU still owns the streaming buffer. Never read
+	 * skb data after dma_map_single() for this diagnostic. Only linear,
+	 * single-descriptor packets are captured; SG is outside this probe.
+	 */
+	if (!priv->is_mw5 && needed == 1 &&
+	    unlikely(READ_ONCE(rd05_tx_snapshot_budget)) &&
+	    rtl8197f_rtk_rd05_snapshot_claim(
+		    of_machine_is_compatible("xiaomi,r4-rd05"))) {
+		rd05_snapshot_len = min_t(unsigned int, skb_headlen(skb),
+					 sizeof(rd05_snapshot));
+		rd05_snapshot_pkt_len = skb->len;
+		memcpy(rd05_snapshot, skb->data, rd05_snapshot_len);
+	}
 
 	/* Non-MW5 boards keep the streaming DMA path. MW5 copies into a fixed
 	 * coherent slot only after it owns a ring index, so hardware never reads
@@ -6937,6 +6978,15 @@ static netdev_tx_t rtl8197f_rtk_start_xmit(struct sk_buff *skb,
 		desc->opts4 = cpu_to_le32(base_opts4);
 		desc->opts5 = cpu_to_le32(base_opts5);
 		rtl8197f_rtk_desc_clear_padding(priv, desc);
+		if (rd05_snapshot_len) {
+			rd05_snapshot_idx = idx;
+			rd05_snapshot_dw[0] = o1 | RTL_RTK_DESC_OWN;
+			rd05_snapshot_dw[1] = le32_to_cpu(desc->addr);
+			rd05_snapshot_dw[2] = o2;
+			rd05_snapshot_dw[3] = base_opts3;
+			rd05_snapshot_dw[4] = base_opts4;
+			rd05_snapshot_dw[5] = base_opts5;
+		}
 		priv->tx_dma[idx] = coherent_tx ? 0 : mapped[seg];
 		priv->tx_len[idx] = mapped_len[seg];
 		priv->tx_dma_is_page[idx] = coherent_tx ? false : mapped_page[seg];
@@ -6987,6 +7037,19 @@ static netdev_tx_t rtl8197f_rtk_start_xmit(struct sk_buff *skb,
 			le32_to_cpu(rtl8197f_rtk_tx_desc(priv, idx)->opts2),
 			base_opts3, base_opts4, base_opts5);
 	spin_unlock_irqrestore(&priv->tx_lock, flags);
+	/* Log only saved CPU-owned copies, after releasing tx_lock/IRQ disable.
+	 * OWN below is the published value, not a completion observation.
+	 */
+	if (rd05_snapshot_len) {
+		dev_info(priv->dev,
+			 "RD05-TX-SNAPSHOT idx=%u packet_len=%u captured=%u DW=%08x/%08x/%08x/%08x/%08x/%08x\n",
+			 rd05_snapshot_idx, rd05_snapshot_pkt_len, rd05_snapshot_len,
+			 rd05_snapshot_dw[0], rd05_snapshot_dw[1],
+			 rd05_snapshot_dw[2], rd05_snapshot_dw[3],
+			 rd05_snapshot_dw[4], rd05_snapshot_dw[5]);
+		print_hex_dump(KERN_INFO, "RD05-TX-BYTES ", DUMP_PREFIX_OFFSET,
+			       16, 1, rd05_snapshot, rd05_snapshot_len, false);
+	}
 	return NETDEV_TX_OK;
 
 map_error:

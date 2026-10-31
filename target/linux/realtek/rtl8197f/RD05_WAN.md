@@ -536,3 +536,83 @@ ifstatus wan
 Stop PC tcpdump with Ctrl+C. Compare counter deltas, not historical totals.
 A successful local test needs ARP replies and increasing SoC RX; WAN additionally
 needs a DHCP lease from the Fritzbox. Do not disable CRC checks to obtain a pass.
+
+## RD05 paired TX snapshots (1.8.45)
+
+The manual OEM memory reads selected completed, CPU-owned descriptors 0..7
+while the live TX position was 545. Reused/free packet buffers cannot be tied
+to those old entries. Do not interpret those memory dumps as corrupt OEM frames.
+
+`rd05_tx_snapshot_budget` now arms an opt-in capture of at most eight linear,
+single-descriptor RD05 transmissions. Default is zero. The driver copies up to
+96 packet bytes before streaming DMA mapping, saves the exact descriptor fields
+before publishing OWN, and logs only local copies after releasing the TX lock.
+`DW0` shows the intended published OWN value; it is not a completion readback.
+No post-map packet-buffer CPU reads are introduced. Non-RD05 boards cannot
+consume the quota or emit snapshots. No timing, CRC or forwarding policy changes.
+
+This validates software publication, not the bytes actually fetched by DMA or
+wire FCS. Hardware FCS counters and external packet capture remain separate
+observations. Opt-in printk can perturb timing; keep console loglevel low during
+the short capture. Packet prefixes may contain private traffic; isolate WAN
+and use only controlled ARP/ping traffic when sharing logs.
+
+Build on the PC in the already configured RD05 tree:
+
+```sh
+cd ~/Downloads/openwrt/github/Openwrt_RTL
+git switch MW5_Stable
+git pull --ff-only origin MW5_Stable
+make defconfig
+grep '^CONFIG_TARGET_realtek_rtl8197f_DEVICE_xiaomi_r4_rd05=y' .config
+make target/linux/clean
+make download -j8
+make -j"$(nproc)" V=s
+```
+
+If the profile check is empty, select Realtek/RTL8197F/Xiaomi Mi WiFi R4 (RD05)
+with `make menuconfig` before building. Use `make -j1 V=s` to diagnose a failed
+parallel build. Images are in `bin/targets/realtek/rtl8197f/`.
+
+After flashing the new OpenWrt image, disconnect WAN, attach PC to LAN2 and
+access the router over UART. Router, one line at a time:
+
+```sh
+ethtool -i eth0
+read saved_lvl rest < /proc/sys/kernel/printk
+dmesg -n 1
+ethtool -S lan2 > /tmp/rd05-tx-before.txt
+echo 8 > /sys/module/rtl8197f_rtknet/parameters/rd05_tx_snapshot_budget
+ping -I br-lan -c 5 192.168.1.3
+ethtool -S lan2 > /tmp/rd05-tx-after.txt
+cat /proc/rd05-rtknet > /tmp/rd05-tx-state.txt
+echo 0 > /sys/module/rtl8197f_rtknet/parameters/rd05_tx_snapshot_budget
+dmesg > /tmp/rd05-tx-dmesg.txt
+dmesg -n "$saved_lvl"
+tar -czf /tmp/rd05-tx-diag.tar.gz -C /tmp rd05-tx-before.txt rd05-tx-after.txt rd05-tx-state.txt rd05-tx-dmesg.txt
+```
+
+Before running those router commands, start the PC capture:
+
+```sh
+sudo ip link set enx14ebb6300bb2 up
+sudo ip addr replace 192.168.1.3/24 dev enx14ebb6300bb2
+PCAP=$(mktemp "$HOME/rd05-openwrt-tx-XXXXXX.pcap")
+echo "$PCAP"
+sudo tcpdump -U -ni enx14ebb6300bb2 -s 256 -w - 'arp or icmp' > "$PCAP"
+```
+
+Stop tcpdump with Ctrl+C after the router test. Send the PCAP and router log;
+if wired SSH is still unavailable, display the following over UART:
+
+```sh
+grep -E 'RD05-TX-SNAPSHOT|RD05-TX-BYTES' /tmp/rd05-tx-dmesg.txt
+cat /tmp/rd05-tx-before.txt
+cat /tmp/rd05-tx-after.txt
+cat /tmp/rd05-tx-state.txt
+```
+
+The quota may capture unrelated background traffic before ARP. If that happens,
+inspect the recorded frames before deciding whether to rearm. No unlimited trace
+is needed. Reconnect WAN after diagnostics. This change is not a claimed LAN/WAN
+fix and has not been validated by a full image build or physical retest.
