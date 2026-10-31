@@ -1,0 +1,53 @@
+From: OpenWrt RTL8197F bringup <noreply@example.invalid>
+Subject: [PATCH] net: dsa: realtek: close chip-ID window on read errors
+
+The binary-guided RD05 reconstruction confirms the 0x13c2 unlock/read/lock
+sequence. Preserve the successful path and close the window on error too.
+Keep the first transport failure if the cleanup write also fails.
+
+---
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -4428,33 +4428,28 @@
+ 	rtl8365mb_irq_teardown(priv);
+ }
+ 
+ static int rtl8365mb_get_chip_id_and_ver(struct regmap *map, u32 *id, u32 *ver)
+ {
+-	int ret;
+-
+-	/* For some reason we have to write a magic value to an arbitrary
+-	 * register whenever accessing the chip ID/version registers.
++	int ret, reset_ret;
++
++	/* The ID/version window is opened by 0x13c2 = 0x0249.
++	 * Always close it after a successful unlock, even on an SMI read error.
+ 	 */
+ 	ret = regmap_write(map, RTL8365MB_MAGIC_REG, RTL8365MB_MAGIC_VALUE);
+ 	if (ret)
+ 		return ret;
+ 
+ 	ret = regmap_read(map, RTL8365MB_CHIP_ID_REG, id);
+ 	if (ret)
+-		return ret;
++		goto reset_magic;
+ 
+ 	ret = regmap_read(map, RTL8365MB_CHIP_VER_REG, ver);
+-	if (ret)
+-		return ret;
+-
+-	/* Reset magic register */
+-	ret = regmap_write(map, RTL8365MB_MAGIC_REG, 0);
+-	if (ret)
+-		return ret;
+-
+-	return 0;
++
++reset_magic:
++	reset_ret = regmap_write(map, RTL8365MB_MAGIC_REG, 0);
++	return ret ? ret : reset_ret;
+ }
+ 
+ static int rtl8365mb_detect(struct realtek_priv *priv)
+ {
+ 	struct rtl8365mb *mb = priv->chip_data;

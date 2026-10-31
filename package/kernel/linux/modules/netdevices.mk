@@ -780,7 +780,7 @@ $(eval $(call KernelPackage,switch-rtl8367))
 
 define KernelPackage/switch-rtl8367b
   SUBMENU:=$(NETWORK_DEVICES_MENU)
-  TITLE:=Realtek RTL8367R/B switch support
+  TITLE:=Realtek RTL8367R/B/C/D swconfig switch support
   DEPENDS:=+kmod-switch-rtl8366-smi
   KCONFIG:=CONFIG_RTL8367B_PHY
   FILES:=$(LINUX_DIR)/drivers/net/phy/rtl8367b.ko
@@ -788,7 +788,8 @@ define KernelPackage/switch-rtl8367b
 endef
 
 define KernelPackage/switch-rtl8367b/description
- Realtek RTL8367R/B switch support
+ Realtek RTL8367R/B/C/D switch support, including RTL8367D/RB-VC.
+ Uses swconfig, not DSA; requires an explicitly configured SMI board node.
 endef
 
 $(eval $(call KernelPackage,switch-rtl8367b))

@@ -1,0 +1,160 @@
+--- a/os_dep/osdep_service_linux.c
++++ b/os_dep/osdep_service_linux.c
+@@ -498,7 +498,10 @@
+ 	struct path path;
+ 	int error = 0;
+ 
+-	return kern_path(pathname, LOOKUP_FOLLOW, &path);
++	error = kern_path(pathname, LOOKUP_FOLLOW, &path);
++	if (!error)
++		path_put(&path);
++	return error;
+ }
+ 
+ /*
+@@ -507,6 +510,32 @@
+ * @param path the path of the file to test
+ * @return Linux specific error code
+ */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
++static int isFileReadable(const char *path, u32 *sz)
++{
++	struct file *fp;
++	char byte;
++	int ret;
++	loff_t size;
++
++	fp = filp_open(path, O_RDONLY, 0);
++	if (IS_ERR(fp))
++		return PTR_ERR(fp);
++	ret = readFile(fp, &byte, 1);
++	if (ret >= 0) {
++		ret = 0;
++		if (sz) {
++			size = i_size_read(file_inode(fp));
++			if (size < 0 || size > U32_MAX)
++				ret = -EFBIG;
++			else
++				*sz = size;
++		}
++	}
++	filp_close(fp, NULL);
++	return ret;
++}
++#else
+ static int isFileReadable(const char *path, u32 *sz)
+ {
+ 	struct file *fp;
+@@ -541,6 +570,7 @@
+ 	}
+ 	return ret;
+ }
++#endif
+ 
+ /*
+ * Open the file with @param path and retrive the file content into memory starting from @param buf for @param sz at most
+@@ -549,6 +579,24 @@
+ * @param sz how many bytes to read at most
+ * @return the byte we've read, or Linux specific error code
+ */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
++static int retriveFromFile(const char *path, u8 *buf, u32 sz)
++{
++	struct file *fp;
++	int ret;
++
++	if (!path || !buf)
++		return -EINVAL;
++	if (sz > INT_MAX)
++		return -EFBIG;
++	ret = openFile(&fp, path, O_RDONLY, 0);
++	if (ret)
++		return ret;
++	ret = readFile(fp, buf, sz);
++	closeFile(fp);
++	return ret;
++}
++#else
+ static int retriveFromFile(const char *path, u8 *buf, u32 sz)
+ {
+ 	int ret = -1;
+@@ -580,6 +628,7 @@
+ 	}
+ 	return ret;
+ }
++#endif
+ 
+ /*
+ * Open the file with @param path and wirte @param sz byte of data starting from @param buf into the file
+@@ -588,6 +637,24 @@
+ * @param sz how many bytes to write at most
+ * @return the byte we've written, or Linux specific error code
+ */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
++static int storeToFile(const char *path, u8 *buf, u32 sz)
++{
++	struct file *fp;
++	int ret;
++
++	if (!path || !buf)
++		return -EINVAL;
++	if (sz > INT_MAX)
++		return -EFBIG;
++	ret = openFile(&fp, path, O_CREAT | O_WRONLY, 0600);
++	if (ret)
++		return ret;
++	ret = writeFile(fp, buf, sz);
++	closeFile(fp);
++	return ret;
++}
++#else
+ static int storeToFile(const char *path, u8 *buf, u32 sz)
+ {
+ 	int ret = 0;
+@@ -619,6 +686,7 @@
+ 	}
+ 	return ret;
+ }
++#endif
+ 
+ 
+ /*
+@@ -799,7 +867,11 @@
+ 
+ 	rtw_init_netdev_name(pnetdev, ifname);
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0)
++	eth_hw_addr_set(pnetdev, adapter_mac_addr(padapter));
++#else
+ 	_rtw_memcpy(pnetdev->dev_addr, adapter_mac_addr(padapter), ETH_ALEN);
++#endif
+ 
+ 	if (rtnl_lock_needed)
+ 		ret = register_netdev(pnetdev);
+@@ -839,7 +911,11 @@
+ inline u32 rtw_random32(void)
+ {
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
++	return get_random_u32();
++#else
+ 	return prandom_u32();
++#endif
+ #elif (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18))
+ 	u32 random_int;
+ 	get_random_bytes(&random_int , 4);
+@@ -897,9 +973,14 @@
+ 	if (   (handler->type == RTW_OS_HANDLER_TASKLET)
+ 	    && (handler->cpu_id < WORK_CPU_UNBOUND)
+ 	    && (handler->task_data.csd.func == NULL)) {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
++		INIT_CSD(&handler->task_data.csd, _schedule_tasklet_handler,
++			 &handler->task);
++#else
+ 		handler->task_data.csd.func = _schedule_tasklet_handler;
+ 		handler->task_data.csd.info = &handler->task;
+ 		smp_store_release(&handler->task_data.csd.flags, 0);
++#endif
+ 	}
+ }
+ 

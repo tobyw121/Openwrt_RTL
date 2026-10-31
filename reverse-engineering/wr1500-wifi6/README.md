@@ -1,5 +1,62 @@
 # WR1500: Patchübernahme und Wi-Fi-6-Portierungsstand
 
+## Ergänzung: G6-OS-Port und Rekonstruktionsarchiv, 31.10.2026
+
+Der neue [OS-Service-Patch](linux66-os-service-api.patch) wird nach
+`linux66-first-api.patch` auf den separat extrahierten G6-Quellbaum angewandt.
+Er ist kein Patch für das gleichnamige oder ähnlich aufgebaute rtl8192cd-Paket.
+
+Tatsächlich umgesetzt und als `os_dep/osdep_service_linux.o` für MIPS LE /
+Linux 6.6.114 übersetzt:
+
+- kernel_read/kernel_write-basierte Dateihelfer ohne get_fs/set_fs für
+  Kernel ab 5.10; Fehler werden weitergegeben, neue Dateien mit 0600 angelegt;
+- Größenprüfung für die int/u32-Schnittstellen der Dateihelfer;
+- path_put nach erfolgreicher Verzeichnisauflösung;
+- eth_hw_addr_set statt Schreiben in dev_addr;
+- get_random_u32 statt entfernter prandom_u32-API;
+- INIT_CSD statt Zugriff auf interne csd.flags für die SMP-Initialisierung.
+
+Nach dieser Änderung wurde der vollständige Modulbau erneut versucht.
+Die nächste tatsächlich beobachtete Sperre ist
+`platform/platform_mips_97f_pci.c`: alte pci_dma_sync_single_*,
+pci_map_single/pci_unmap_single und pci_alloc_consistent/pci_free_consistent.
+Ein Namensaustausch allein reicht nicht: Der OEM nutzt auch ungeprüfte
+DMA-Mappings in void-TX-Helfern und einen virt_to_phys-Fallback. Für einen
+betriebsfähigen Port müssen Mappingfehler bis zu TX-Aufrufern durchgereicht,
+bereits angelegte Mappings auf Fehlerpfaden abgebaut und die Ownership-/
+Cache-Regeln der PHL-Ringe geprüft werden. Der weitere cfg80211- und
+OpenWrt-Backports-Abgleich ist danach weiterhin nötig. Ein fertiges
+rtk_wifi6.ko oder ein AX-AP-Start wird nicht behauptet.
+
+### Was von rtl8192cd wiederverwendbar ist
+
+| Bereich | Bewertung |
+| --- | --- |
+| Kernel-6.6-/Backports-Buildmuster | Als Vorlage nutzbar |
+| netifd/hostapd/nl80211-Integration | Erfahrungen und ABI-Prüfungen nutzbar; die G6-cfg80211-Callbacks müssen eigene Adapterzustände verwenden |
+| Board-/Factory-Validierung | Prinzip nutzbar; RD05-H601-Offsets/RFE nicht als WR1500-Daten übernehmen |
+| PCIe-HAL und TX/RX-Deskriptoren | Kein direkter Ersatz: G6 hat eigene PHL-/HAL-Strukturen und AX-Hardwarepfade |
+| Firmware und RFE50 | RTL8832BR-spezifische G6-/OEM-Daten erforderlich |
+| Private Fast-NAT-/Bridge-Shortcuts | Nicht als OpenWrt-Datenpfad übernehmen |
+
+Im G6-Pfad steht in `os_dep/linux/pci_intf.c` ausdrücklich
+`PCI_DEVICE(0x10ec, 0xb832)` unter `CONFIG_RTL8832BR`. Im aktuellen
+rtl8192cd-PCI-Wrapper fehlt diese Chipunterstützung. Die ID dort lediglich
+einzutragen würde einen falschen HAL auf AX-Hardware starten.
+Der richtige Ausbau besteht daher aus einem separaten G6-Backend/Modul mit
+unseren OpenWrt-Anpassungsmustern, nicht dem Vermischen der AC- und AX-HALs.
+
+Das neu eingereichte [Rekonstruktionsarchiv](../rd05-reconstructed-v2/README.md)
+enthält keinen RTL8832BR-/G6-HAL und keine entsprechenden Funktionssymbole.
+Es verbessert die RD05-Switch-/rtl8192cd-Referenz, ersetzt aber die G6-Quelle
+nicht. `RTW_WKARD_PWRLIMIT_DISABLE`, private RX-/NAT-Hooks sowie Firmware- und
+regulatorische Vorgaben bleiben vor jedem späteren RF-Betrieb zu bereinigen.
+
+Die folgenden Abschnitte dokumentieren frühere Prüfstände. Insbesondere ist
+die R76-RAM-Freigabe inzwischen mit MemTotal 120140 kB am Gerät bestätigt;
+das belegt keine WLAN-Funktion.
+
 ## Bestätigte PCI-ID und fehlendes Diagnosepaket
 
 Der Benutzer hat unter `r0-4608f15f18` für `0000:00:00.0` tatsächlich

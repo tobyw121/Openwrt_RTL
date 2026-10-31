@@ -1,0 +1,8 @@
+{
+  "commit": "8303e9b2a004a6c3754aaa1edb32cfc7c0cfe55b",
+  "path": "target/linux/generic/files/drivers/net/phy/rtl8367b.c",
+  "url": "https://raw.githubusercontent.com/openwrt/openwrt/8303e9b2a004a6c3754aaa1edb32cfc7c0cfe55b/target/linux/generic/files/drivers/net/phy/rtl8367b.c",
+  "sha256": "75e89e2be29ce453aa3e1449331a214c7ba18b9c1efc7c797fcb6b9dbc28873a",
+  "branch": "openwrt-25.12",
+  "adaptation": "Keep Linux 6.6/platform-data ABI; VLAN allocation/unbind fixes; explicit 0x6642/0x0030 D-family backend; separate swconfig compatible."
+}
