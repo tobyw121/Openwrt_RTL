@@ -1,3 +1,13 @@
+> **Version 1.2: OEM-Panic beim Deep-Lesen.** Version 1.1 nicht erneut ausführen.
+> Die Adresse `803fae9c` entspricht im archivierten RD05-OEM-Kernel
+> `rtl8192cd_proc_get_user_ie_info`. Ein genauer Pfadnachweis aus dem betroffenen
+> Lauf fehlt, aber der Absturz ereignete sich im Prozess `dd` während der Reads.
+> Ungeprüfte Vendor-Dateien werden ab 1.2 ausschließlich inventarisiert und als
+> `inventory-only-unverified-callback` markiert. Die bisherige Beschreibung des
+> breiten Lesemodus unten dokumentiert Version 1.1 und gilt dafür nicht mehr.
+> Noch keinen weiteren Hardwarelauf starten; zuerst Crash-/Restdaten sichern,
+> sofern sie den Neustart überlebt haben. Keine vollständige Erfassung behaupten.
+
 # RD05 OEM-Zustandsbericht ohne MTD-Dumps
 
 `rd05-oem-collect.sh` ist ein eigenständiges Shellskript für die vorhandene

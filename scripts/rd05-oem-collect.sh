@@ -3,7 +3,7 @@
 # Standalone OEM BusyBox collector. Never reads MTD/NVMEM/flash contents.
 # No GPIO export, configuration changes, module operations or listener/upload.
 umask 077
-VERSION=1.1
+VERSION=1.2
 OUTPUT=/tmp
 ROOT=
 LABEL=snapshot
@@ -302,9 +302,10 @@ discover_states() {
         elif [ "$selected" -ge 2048 ]; then
             printf 'node-limit\t%s\n' "$logical" >> "$BASE_WORK/inventory/realtek-decisions.tsv"
         else
-            printf '%s\n' "$logical" >> "$BASE_WORK/inventory/realtek-eligible.txt"
-            printf 'eligible\t%s\n' "$logical" >> "$BASE_WORK/inventory/realtek-decisions.tsv"
-            selected=$((selected + 1))
+            # OEM 4.4.176 stack-protector panic during the first deep read.
+            # Filename filtering cannot establish callback safety. Inventory
+            # unknown nodes only; base ring/counter allowlist remains separate.
+            printf 'inventory-only-unverified-callback\t%s\n' "$logical" >> "$BASE_WORK/inventory/realtek-decisions.tsv"
         fi
     done < "$list"
 }

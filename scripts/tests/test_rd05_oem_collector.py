@@ -115,7 +115,7 @@ class RD05OEMCollectorTests(unittest.TestCase):
                 regular = {m.name.split('/', 1)[1]: t.extractfile(m).read()
                            for m in t if m.isfile()}
             decisions = regular['inventory/realtek-decisions.tsv'].decode()
-            self.assertIn('eligible\t/proc/wlan0/stats', decisions)
+            self.assertIn('inventory-only-unverified-callback\t/proc/wlan0/stats', decisions)
             self.assertIn('excluded-command-or-sensitive\t/proc/wlan0/mib_gkeytbl', decisions)
             samples = [data for name, data in regular.items()
                        if name.startswith('live/') and name.endswith('.tar.gz')]
@@ -124,12 +124,8 @@ class RD05OEMCollectorTests(unittest.TestCase):
                 with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as t:
                     snapshot = {m.name.removeprefix('./'): t.extractfile(m).read()
                                 for m in t if m.isfile()}
-                state = gzip.decompress(snapshot['realtek-state.txt.gz'])
-                self.assertIn(b'path=/proc/wlan0/stats ', state)
-                self.assertIn(b'rx=123 tx=456\n', state)
-                self.assertIn(b'path=/proc/rtl865x/new_vendor_state ', state)
-                self.assertIn(b'state=ready\n', state)
-                self.assertNotIn(b'FORBIDDEN_', state)
+                self.assertNotIn('files/proc/wlan0/stats', snapshot)
+                self.assertNotIn('files/proc/rtl865x/new_vendor_state', snapshot)
                 self.assertFalse(any(b'FORBIDDEN_' in v for v in snapshot.values()))
             self.assertFalse(any(name.startswith('live-raw-') for name in regular))
 
