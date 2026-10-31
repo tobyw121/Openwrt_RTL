@@ -1,5 +1,9 @@
 # Cudy AX1500 / WR1500 R76: SPI-Analyse und Geräteprofil
 
+Aktueller zusammengeführter Stand einschließlich Geräteboot und Benutzer-PDF:
+[Hardware, WLAN, Switch und offene Anbindungen – 31.10.2026](STATUS-2026-10-31.md).
+Die folgenden Abschnitte enthalten auch historische Prüfstände.
+
 ## Basispakete automatisch auswählen
 
 Das einzelne R76-Geräteprofil enthält jetzt `rtl8197f-cudy-r76-base`.
