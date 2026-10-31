@@ -4,6 +4,48 @@ Aktueller zusammengeführter Stand einschließlich Geräteboot und Benutzer-PDF:
 [Hardware, WLAN, Switch und offene Anbindungen – 31.10.2026](STATUS-2026-10-31.md).
 Die folgenden Abschnitte enthalten auch historische Prüfstände.
 
+## Eigene Defconfig für AX1500 / WR1500
+
+Wie beim RD05 gibt es eine direkt kopierbare Konfiguration:
+[`configs/rtl8197f_ax1500_defconfig`](../../configs/rtl8197f_ax1500_defconfig).
+Sie wählt genau `cudy_ax1500_r76`, beide Image-Arten sowie das R76-Basispaket.
+LuCI, firewall4, SSH, Netzwerk-/WLAN-Userspace und Diagnosewerkzeuge werden
+über dessen Abhängigkeiten ausgewählt; keine manuelle menuconfig-Auswahl nötig.
+
+PC, aus einer beliebigen bisherigen Geräteauswahl auf AX1500 wechseln:
+
+```sh
+cd ~/Downloads/openwrt/github/Openwrt_RTL
+git pull --ff-only origin MW5_Stable
+cp configs/rtl8197f_ax1500_defconfig .config
+make defconfig
+make download -j8
+make -j"$(nproc)" V=s
+```
+
+Die Kopie ersetzt die bisherige Build-Konfiguration. Das einzelne Profil
+erzeugt den `*-ram-loader.bin` und standardmäßig den 16-MiB-
+`*-squashfs-spi-full.bin` unter `bin/targets/realtek/rtl8197f/`. Fullflash
+benötigt die vorhandene Vorlage `fullflash-templates/Cudy_AX1500.bin`;
+`RTL8197F_BUILD_FULLFLASH=0` unterdrückt diese Ausgabe ausdrücklich.
+Der Konfigurationshelfer `rtl8197f-cudy-defaults.py` ist für diese neue
+Defconfig nicht zusätzlich erforderlich.
+
+Die Defconfig aktiviert keine noch fehlende WR1500-Switch-/WLAN-Anbindung.
+Nach einem Imagewechsel auf dem Router über UART (38400 Baud) einzeln:
+
+```sh
+cat /etc/openwrt_release
+```
+
+```sh
+opkg status rtl8197f-cudy-r76-base
+```
+
+```sh
+cudy-ax1500-diag
+```
+
 Nach Übernahme der PDF als Hardwaregrundlage: R76 nutzt jetzt 128 MiB RAM,
 getrennte LAN-/WAN-Defaults und ein installiertes Hardwareprofil mit der
 Buchsenbelegung. Das Ethernet-DT hinterlegt die OEM-Ringgeometrie, bleibt
