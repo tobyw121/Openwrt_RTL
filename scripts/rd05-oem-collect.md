@@ -1,3 +1,24 @@
+## Version 1.3: vorhandene Treiberdateien sichern
+
+Mit `--drivers` werden vorhandene reguläre Realtek-WLAN-/Netzwerkmodule aus
+`/lib/modules` und `/usr/lib/modules` kopiert, ergänzt um cfg80211/compat/mac80211
+und ther_ctrl, sofern vorhanden. Unter `drivers/` stehen Dateien, Manifest und
+verfügbare SHA256-Prüfsummen. Grenze: 64 Dateien und insgesamt 16 MiB zusätzlich.
+Bei weniger als 32 MiB gemeldetem MemAvailable wird die Extraktion protokolliert
+übersprungen. Es werden keine Module geladen/entladen und keine Flashpartitionen
+angefasst. Fest eingebaute Treiber haben keine eigenständige .ko-Datei; diese Option
+rekonstruiert keinen C-Quelltext und extrahiert keinen Kernel aus RAM oder MTD.
+
+Auf OEM nach Übertragen der neuen Skriptversion:
+
+```sh
+sh /tmp/rd05-oem-collect.sh --version
+sh /tmp/rd05-oem-collect.sh --label drivers --drivers --duration 60 --interval 5
+```
+
+Die ungeprüften Deep-Lesehandler bleiben gesperrt. Die Moduldateien werden lokal
+mit den Basis-Snapshots archiviert. Kein Firmware-Build erforderlich.
+
 > **Version 1.2: OEM-Panic beim Deep-Lesen.** Version 1.1 nicht erneut ausführen.
 > Die Adresse `803fae9c` entspricht im archivierten RD05-OEM-Kernel
 > `rtl8192cd_proc_get_user_ie_info`. Ein genauer Pfadnachweis aus dem betroffenen

@@ -3,13 +3,14 @@
 # Standalone OEM BusyBox collector. Never reads MTD/NVMEM/flash contents.
 # No GPIO export, configuration changes, module operations or listener/upload.
 umask 077
-VERSION=1.2
+VERSION=1.3
 OUTPUT=/tmp
 ROOT=
 LABEL=snapshot
 DURATION=60
 INTERVAL=5
 DEEP=0
+DRIVERS=0
 REGISTERS=0
 PCAP_IFACE=
 MAX_FILES=20000
@@ -34,7 +35,8 @@ Usage: sh rd05-oem-collect.sh [options]
   --label NAME       Archive label, e.g. idle or ping
   --duration SEC     Live observation, 60..600 seconds (default 60)
   --interval SEC     Target pause between snapshots, 1..60 (default 5)
-  --deep             Inventory and read additional Realtek proc/debug states
+  --drivers          Copy existing Realtek-related .ko files (max 16 MiB)
+  --deep             Inventory additional Realtek state paths (no unknown reads)
   --rd05-registers   Issue the documented RD05 MMIO/8367 READ requests
                      through /proc/rtl865x; briefly reduce console loglevel
   --capture IFACE    Optional bounded ARP/ICMP/DHCP PCAP if tcpdump exists
@@ -71,6 +73,7 @@ while [ "$#" -gt 0 ]; do
             shift 2 ;;
         --rd05-registers) REGISTERS=1; shift ;;
         --deep) DEEP=1; shift ;;
+        --drivers) DRIVERS=1; shift ;;
         *) die "Unknown option: $1" ;;
     esac
 done
@@ -259,6 +262,49 @@ deep_allowed() {
             return 1 ;;
     esac
     return 0
+}
+
+extract_drivers() {
+    local base path rel name bytes total count available
+    [ "$DRIVERS" -eq 1 ] || return 0
+    total=0
+    count=0
+    mkdir -p "$BASE_WORK/drivers"
+    if [ -z "$ROOT" ]; then
+        available=$(awk '/^MemAvailable:/{print $2}' /proc/meminfo)
+        if [ -n "$available" ] && [ "$available" -lt 32768 ]; then
+            echo 'Extraction skipped: less than 32 MiB MemAvailable' > "$BASE_WORK/drivers/summary.txt"
+            return 0
+        fi
+    fi
+    printf 'result\tbytes\tpath\n' > "$BASE_WORK/drivers/manifest.tsv"
+    for base in /lib/modules /usr/lib/modules; do
+        [ -d "$ROOT$base" ] || continue
+        # A fixed local list, no recursive device/sysfs traversal.
+        find "$ROOT$base" -type f > "$BASE_WORK/drivers/candidates.txt"
+        while IFS= read -r path; do
+            name=${path##*/}
+            case "$name" in rtl*.ko|rtk*.ko|rtw*.ko|ther_ctrl.ko|cfg80211.ko|compat.ko|mac80211.ko) ;; *) continue ;; esac
+            rel=${path#"$ROOT"}
+            bytes=$(wc -c < "$path")
+            case "$bytes" in ''|*[!0-9]*) continue ;; esac
+            if [ "$count" -ge 64 ] || [ "$((total + bytes))" -gt 16777216 ]; then
+                printf 'size-limit\t%s\t%s\n' "$bytes" "$rel" >> "$BASE_WORK/drivers/manifest.tsv"
+                continue
+            fi
+            mkdir -p "$BASE_WORK/drivers/files${rel%/*}"
+            if cp "$path" "$BASE_WORK/drivers/files$rel"; then
+                total=$((total + bytes)); count=$((count + 1))
+                printf 'copied\t%s\t%s\n' "$bytes" "$rel" >> "$BASE_WORK/drivers/manifest.tsv"
+                if have sha256sum; then
+                    sha256sum "$BASE_WORK/drivers/files$rel" >> "$BASE_WORK/drivers/sha256.txt"
+                fi
+            else
+                printf 'copy-error\t%s\t%s\n' "$bytes" "$rel" >> "$BASE_WORK/drivers/manifest.tsv"
+            fi
+        done < "$BASE_WORK/drivers/candidates.txt"
+    done
+    printf 'copied_files=%s\ncopied_bytes=%s\n' "$count" "$total" > "$BASE_WORK/drivers/summary.txt"
 }
 
 discover_states() {
@@ -462,9 +508,10 @@ Virtual files are copied up to 512 KiB; command output is capped at <=1 MiB.
 New queries stop after $MAX_SECONDS seconds; packaging follows afterward.
 Files at the size limit may be truncated. Kernel-hung reads cannot be made safe
 by a shell watchdog. Reads of vendor diagnostics can affect timing or latch counters.
-No MTD contents/hashes, /dev/mem, NVMEM/eFuse, rootfs binaries, UCI/NVRAM dumps,
+No MTD contents/hashes, /dev/mem, NVMEM/eFuse, UCI/NVRAM dumps,
 process environments or WPA/hostapd configuration are intentionally collected.
-Deep mode excludes sensitive filenames; unknown vendor outputs are not redacted.
+Driver module extraction explicitly enabled: $DRIVERS (up to 16 MiB extra).
+Deep mode inventories unknown vendor files without reading them.
 No GPIO writes/exports, network configuration, firewall changes or services started.
 PCI sysfs devices are enumerated; no PCI config/resource memory is read.
 GPIO data describes registered controllers and exported lines; not every physical pin.
@@ -610,6 +657,7 @@ echo "Live observation: at least $DURATION seconds, target pause $INTERVAL secon
 observe || die 'Live snapshot failed; partial data retained'
 net_snapshot after
 query dmesg-after dmesg
+extract_drivers
 echo 'Packing local archive...'
 parent=${WORK%/*}
 name=${WORK##*/}

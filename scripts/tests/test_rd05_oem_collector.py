@@ -69,6 +69,22 @@ class RD05OEMCollectorTests(unittest.TestCase):
             for name, value in files.items():
                 self.assertEqual((root / name).read_text(), value)
 
+    def test_driver_extraction_preserves_binary_and_excludes_other_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, out, _ = self.fixture(Path(tmp))
+            modules = root / 'lib/modules/4.4.176'
+            modules.mkdir(parents=True)
+            payload = b'\x7fELF' + bytes(range(256)) * 8192
+            (modules/'rtl8192cd.ko').write_bytes(payload)
+            (modules/'unrelated.ko').write_bytes(b'FORBIDDEN_UNRELATED')
+            result = self.invoke(root, out, extra=['--drivers'])
+            self.assertEqual(result.returncode, 0, result.stderr)
+            with tarfile.open(next(out.glob('*.tar.gz'))) as t:
+                files = {m.name.split('/', 1)[1]: t.extractfile(m).read()
+                         for m in t if m.isfile()}
+            self.assertEqual(files['drivers/files/lib/modules/4.4.176/rtl8192cd.ko'], payload)
+            self.assertFalse(any(name.endswith('unrelated.ko') for name in files))
+
     def test_stalled_reader_is_bounded_and_reported(self):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
