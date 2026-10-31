@@ -1,5 +1,48 @@
 # Cudy AX1500 / WR1500 R76: SPI-Analyse und Geräteprofil
 
+## Basispakete automatisch auswählen
+
+Das einzelne R76-Geräteprofil enthält jetzt `rtl8197f-cudy-r76-base`.
+Dieses Paket wählt das Diagnosepaket, ip-full, ip-bridge, ethtool,
+dnsmasq, odhcpd-ipv6only, firewall4, Dropbear, LuCI, uhttpd samt ubus-Modul,
+rpcd, kmod-cfg80211, wifi-scripts, iw, iwinfo, rpcd-mod-iwinfo, wireless-regdb,
+hostapd-mini, tcpdump-mini und pciutils über Kconfig-Abhängigkeiten aus.
+Die üblichen OpenWrt-Kernpakete wie base-files, netifd, procd und UCI
+kommen weiterhin aus dem Target. RE1500/M1500 und MW5/RD05 erhalten dieses
+R76-Paket nicht zusätzlich in ihren Geräteprofilen.
+
+Für das bereits gewählte R76-Profil ist keine manuelle Paketauswahl in
+menuconfig nötig. Bestehende .config mit früher abgewählten Paketen:
+
+```sh
+cd ~/Downloads/openwrt/github/Openwrt_RTL
+git pull --ff-only origin MW5_Stable
+rm -f tmp/.packageinfo tmp/.config-package.in
+python3 scripts/rtl8197f-cudy-defaults.py
+make defconfig
+make download -j8
+make -j"$(nproc)" V=s
+```
+
+Der Helfer setzt das Basispaket, Diagnosepaket, SquashFS und ramdisk auf y,
+erhält andere Konfiguration und legt vor der ersten Änderung eine Sicherung
+`.config.before-cudy-defaults` an. `make defconfig` löst die Paketabhängigkeiten
+auf. Er verweigert fremde Geräteprofile. Für eine bewusst angepasste Auswahl
+mit anderen konfliktbehafteten DNS-/Hostapd-Varianten muss das Sammelpaket
+entsprechend angepasst oder abgewählt werden.
+
+Auf dem Router nach dem nächsten Firmwarewechsel:
+
+```sh
+opkg status rtl8197f-cudy-r76-base
+cudy-ax1500-diag
+```
+
+Die Auswahl baut keine fehlenden WLAN-/Switch-Treiber nach. Ethernet/WLAN
+und die beschreibbare Overlay-Anbindung bleiben separate offene Arbeiten;
+LuCI ist ohne Netzwerkschnittstelle noch nicht vom PC erreichbar. Die
+bestehenden Fullflash-Größenprüfungen gelten auch mit dem größeren Rootfs.
+
 
 ## Rootfs-Bootkorrektur nach Geräteprüfung
 

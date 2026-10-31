@@ -50,6 +50,7 @@ define Device/cudy_ax1500_r76
   $(Device/cudy_ax1500_ram)
   DEVICE_MODEL := AX1500 / WR1500 R76
   DEVICE_VARIANT := experimental
+  DEVICE_PACKAGES += rtl8197f-cudy-r76-base
   DEVICE_DTS := rtl8197f_cudy_ax1500-r76-fullflash rtl8197f_cudy_ax1500-r76
   RTL8197F_KERNEL_CMDLINE := console=ttyS0,38400n8 rootfstype=squashfs clk_ignore_unused
   KERNEL_INITRAMFS := kernel-bin | append-cudy-r76-ram-dtb | lzma | rtl8197f-loader-kernel console=ttyS0,38400n8 rdinit=/sbin/init clk_ignore_unused | check-size 31744k
