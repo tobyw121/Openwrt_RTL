@@ -1,4 +1,4 @@
-# RD05 TX DMA buffer A/B diagnostic (1.8.46)
+# RD05 TX DMA buffer A/B diagnostic (introduced in 1.8.46)
 
 The prior 1.8.45 trace showed valid-looking software ARP/DHCP and matching
 PH_LEN/M_LEN (+4 FCS), but an empty external PCAP and increasing external CPU-port
@@ -49,7 +49,9 @@ make -j"$(nproc)" V=s
 If the profile check is empty select Realtek/RTL8197F/Xiaomi Mi WiFi R4 (RD05)
 with `make menuconfig` first. For a build failure use `make -j1 V=s`.
 Images: `bin/targets/realtek/rtl8197f/`. After flashing, `ethtool -i eth0`
-must identify `1.8.46-rd05-coherent-tx-test`.
+must identify `1.8.47-rd05-dsa-auditfix` in the audit-fix source package.
+The diagnostic policy is unchanged from 1.8.46; this version adds ownership
+fixes and DSA policy checks, not a demonstrated DMA/FCS repair.
 
 ## PC capture (PC attached to LAN2)
 

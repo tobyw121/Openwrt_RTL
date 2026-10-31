@@ -33,19 +33,13 @@ lan_list=$(ls -1 -v -d /sys/class/net/lan* 2>/dev/null | xargs -n1 basename | xa
 
 case $board in
 xiaomi,r4-rd05)
-	# RD05 mainline DSA layout from the RTL8367D switch node:
-	#   lan1 + lan2 -> LAN bridge
-	#   wan         -> routed WAN DHCP
-	# Keep an OEM rtl865x fallback for diagnostic/vendor-kernel boots only.
-	if [ -e /sys/class/net/lan1 ] && [ -e /sys/class/net/lan2 ]; then
-		lan_list="lan1 lan2"
-		[ -e /sys/class/net/wan ] && wan_list="wan"
-	elif [ -e /sys/class/net/eth2 ]; then
-		lan_list="eth0 eth1"
-		wan_list="eth2"
-	else
-		lan_list="eth0"
-	fi
+	# Deterministic native DSA defaults, even if switch probe is deferred.
+	# eth0 is the CPU conduit, never a fallback LAN/WAN port. OEM eth0/1/2
+	# names describe a different driver and are not valid in this profile.
+	# lan3/lan4 remain unbridged diagnostic candidates until jack mapping
+	# is confirmed. Do not derive LAN membership by enumerating lan*.
+	lan_list="lan1 lan2"
+	wan_list="wan"
 	;;
 
 tenda,nova-mw5)
@@ -73,12 +67,8 @@ esac
 
 case $board in
 xiaomi,r4-rd05)
-	# Routed DSA user ports, without the managed-switch bridge/VLAN layer.
-	if [ "$lan_list" = eth0 ]; then
-		ucidef_set_interface_lan "$lan_list"
-	else
-		ucidef_set_interfaces_lan_wan "$lan_list" "${wan_list:-wan}"
-	fi
+	# Routed DSA user ports, without a managed-switch bridge/VLAN layer.
+	ucidef_set_interfaces_lan_wan "$lan_list" "$wan_list"
 	;;
 tenda,nova-mw5)
 	# The MW5 is a two-port DSA router, not a managed-switch platform.  Do not
@@ -171,7 +161,7 @@ esac
 
 ucidef_set_interface_macaddr "lan" $lan_mac
 case $board in
-	tenda,nova-mw5)
+	xiaomi,r4-rd05|tenda,nova-mw5)
 		# No target-wide bridge object: config_generate must create br-lan from
 		# the LAN interface only, while WAN remains the routed DSA slave.
 		;;

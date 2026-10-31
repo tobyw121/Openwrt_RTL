@@ -27,12 +27,13 @@ Status / diagnostics:
   ports                        DSA port carrier/speed/bridge summary
   mib [DEV]                    SDK-style MIB view translated to ethtool -S
   cpu-path                     Show CPU-port evidence: eth0 tc/RX + port MIB
+  check                        Read-only RD05 DSA/topology/counter report
   rd05-vendor-reseed           Private ioctl: replay SDK SWCORE/L2/ACL/CPUIF init
   rd05-rxstart                 Private ioctl: replay SDK sidebands and kick RX/TRXRDY
   rgmii [ARGS...]               Run rd05-rgmii-calibrate (status/apply/tx-auto/rx-auto/save)
 
 swconfig replacement:
-  bridge-init [BR]             Create/enable bridge VLAN filtering on BR
+  bridge-init [BR]             Enable VLAN filtering (not supported by RD05 bootstrap)
   vlan-add VID PORTSPEC...     Add VID membership: 9 lan1:u lan2:u wan:t
   vlan-del VID PORT...         Remove VID from ports
   pvid PORT VID                Set a DSA port PVID/untagged VLAN
@@ -68,6 +69,21 @@ MATCH syntax is native tc flower syntax, e.g.:
   ip_proto udp dst_port 67 src_port 68
   vlan_id 9 ip_proto tcp dst_port 22
 EOF
+}
+
+# Exact board guard, independent of whether the DSA interfaces exist yet.
+rd05_board() {
+	[ "$(cat /tmp/sysinfo/board_name 2>/dev/null)" = "xiaomi,r4-rd05" ] && return 0
+	[ -r /proc/device-tree/compatible ] || return 1
+	tr '\000' '\n' < /proc/device-tree/compatible | grep -qx 'xiaomi,r4-rd05'
+}
+
+require_vlan_support() {
+	if rd05_board; then
+		echo "RD05: VLAN mutation refused: fixed VID9 bootstrap has no validated bridge/VLAN offload." >&2
+		echo "No configuration changed. Use rd05-dsa-check; untagged LAN/WAN remains the supported test scope." >&2
+		exit 95
+	fi
 }
 
 need() { command -v "$1" >/dev/null 2>&1 || { echo "missing required tool: $1" >&2; exit 127; }; }
@@ -122,13 +138,74 @@ cmd_cpu_path() {
 	echo "== eth0 RX/tc evidence =="
 	ethtool -S eth0 2>/dev/null | grep -E 'rd05_rx_|tc_|rxtrace|p0[567]_|p07_|reg_cpui|rx_desc|tx_desc' || true
 	echo; echo "== DSA port MIBs =="
-	for d in $DSA_PORTS; do [ -e "/sys/class/net/$d" ] && { echo "-- $d"; ethtool -S "$d" 2>/dev/null | grep -E 'ifIn|ifOut|Broadcast|Multicast|Discards|Drop|rx_|tx_' || true; }; done
+	for d in $DSA_PORTS; do [ -e "/sys/class/net/$d" ] && { echo "-- $d"; ethtool -S "$d" 2>/dev/null | grep -E 'ifIn|ifOut|Broadcast|Multicast|Discards|Drop|rx_|tx_|cpu_|user_' || true; }; done
 }
 
-cmd_bridge_init() { need ip; br="${1:-$DEFAULT_BR}"; ip link show "$br" >/dev/null 2>&1 || ip link add name "$br" type bridge; ip link set dev "$br" type bridge vlan_filtering 1; ip link set dev "$br" up; }
-cmd_vlan_add() { need bridge; [ $# -ge 2 ] || { usage; exit 2; }; vid="$1"; shift; for spec in "$@"; do p="$(port_base "$spec")"; mode="$(port_mode "$spec")"; [ -e "/sys/class/net/$p" ] || { echo "skip missing port $p" >&2; continue; }; if [ "$mode" = tagged ]; then bridge vlan add dev "$p" vid "$vid" 2>/dev/null || true; else bridge vlan add dev "$p" vid "$vid" pvid untagged 2>/dev/null || true; fi; done; bridge vlan show; }
-cmd_vlan_del() { need bridge; [ $# -ge 2 ] || { usage; exit 2; }; vid="$1"; shift; for p in "$@"; do p="$(port_base "$p")"; [ -e "/sys/class/net/$p" ] && bridge vlan del dev "$p" vid "$vid" 2>/dev/null || true; done; bridge vlan show; }
-cmd_pvid() { need bridge; [ $# -eq 2 ] || { usage; exit 2; }; bridge vlan add dev "$1" vid "$2" pvid untagged; bridge vlan show dev "$1"; }
+valid_vid() {
+	case "$1" in ''|*[!0-9]*) echo "invalid VLAN ID: $1" >&2; return 2 ;; esac
+	[ "${#1}" -le 4 ] && [ "$1" -ge 1 ] && [ "$1" -le 4094 ] || {
+		echo "VLAN ID must be in 1..4094" >&2; return 2;
+	}
+}
+
+validate_ports() {
+	for spec in "$@"; do
+		case "$spec" in *:t|*:u) p="${spec%:*}" ;; *:*) echo "invalid port mode: $spec" >&2; return 2 ;; *) p="$spec" ;; esac
+		case "$p" in ''|*[!a-zA-Z0-9_.-]*) echo "invalid port name: $p" >&2; return 2 ;; esac
+		[ -e "/sys/class/net/$p" ] || { echo "missing port: $p" >&2; return 1; }
+	done
+}
+
+cmd_bridge_init() {
+	require_vlan_support
+	need ip
+	br="${1:-$DEFAULT_BR}"
+	ip link show "$br" >/dev/null 2>&1 || ip link add name "$br" type bridge
+	ip link set dev "$br" type bridge vlan_filtering 1
+	ip link set dev "$br" up
+}
+
+cmd_vlan_add() {
+	[ $# -ge 2 ] || { usage; exit 2; }
+	require_vlan_support
+	need bridge
+	vid="$1"; shift
+	valid_vid "$vid"
+	validate_ports "$@"
+	for spec in "$@"; do
+		p="$(port_base "$spec")"
+		if [ "$(port_mode "$spec")" = tagged ]; then
+			bridge vlan add dev "$p" vid "$vid"
+		else
+			bridge vlan add dev "$p" vid "$vid" pvid untagged
+		fi
+	done
+	bridge vlan show
+}
+
+cmd_vlan_del() {
+	[ $# -ge 2 ] || { usage; exit 2; }
+	require_vlan_support
+	need bridge
+	vid="$1"; shift
+	valid_vid "$vid"
+	validate_ports "$@"
+	for spec in "$@"; do
+		bridge vlan del dev "$(port_base "$spec")" vid "$vid"
+	done
+	bridge vlan show
+}
+
+cmd_pvid() {
+	[ $# -eq 2 ] || { usage; exit 2; }
+	require_vlan_support
+	need bridge
+	valid_vid "$2"
+	validate_ports "$1"
+	bridge vlan add dev "$(port_base "$1")" vid "$2" pvid untagged
+	bridge vlan show dev "$(port_base "$1")"
+}
+
 cmd_swconfig_show() { echo "Global attributes:"; echo "\tenable_vlan: $(cat /sys/class/net/$DEFAULT_BR/bridge/vlan_filtering 2>/dev/null || echo 0)"; echo "Ports:"; cmd_ports; echo "VLANs:"; bridge vlan show || true; }
 
 cmd_flow() { [ $# -eq 1 ] || { usage; exit 2; }; case "$1" in on) v=1 ;; off) v=0 ;; *) usage; exit 2 ;; esac; uci -q set firewall.@defaults[0].flow_offloading="$v"; uci -q commit firewall; /etc/init.d/firewall reload 2>/dev/null || true; cmd_flow_status; }
@@ -167,6 +244,7 @@ case "$cmd" in
 	ports) cmd_ports "$@" ;;
 	mib) cmd_mib "$@" ;;
 	cpu-path) cmd_cpu_path "$@" ;;
+	check) need rd05-dsa-check; exec rd05-dsa-check "$@" ;;
 	rd05-vendor-reseed) cmd_rd05_vendor_reseed "$@" ;;
 	rd05-rxstart) cmd_rd05_rxstart "$@" ;;
 	rgmii) cmd_rgmii "$@" ;;

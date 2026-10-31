@@ -8,7 +8,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rtl8367d-compat
 PKG_VERSION:=2026.07.26
-PKG_RELEASE:=12
+PKG_RELEASE:=13
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -21,7 +21,8 @@ endef
 
 define Package/rtl8367d-compat/description
   User-space compatibility layer for Realtek SDK/swconfig/private-ioctl style
-  switch workflows on RTL8197F/RD05 and RTL8367-family switches.  It uses DSA, bridge VLANs,
+  switch workflows on RTL8197F/RD05 and RTL8367-family switches. It uses DSA,
+  bridge VLANs where supported (RD05 fixed-VID bootstrap refuses VLAN writes),
   ethtool, tc flower and nftables flowtables instead of legacy kernel hooks.
   It also installs rd05-raw for bounded AF_PACKET/PCAP and Magic-frame tests.
 endef

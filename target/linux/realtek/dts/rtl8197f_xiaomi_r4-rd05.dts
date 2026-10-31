@@ -57,10 +57,11 @@
 	 * selects MDC=H0, MDIO=G7 and reset=H2 for 8197FH/VG boards, matching
 	 * those exported GPIO numbers with this driver's A0..H7 numbering.
 	 *
-	 * Xiaomi's userspace models the two LAN ports as eth0/eth1 and WAN as eth2;
-	 * keep that logical layout by labelling RTL8367 ports 0/1 as LAN and port 2
-	 * as WAN.  Ports 3/4 are present in the switch core but disabled here until
-	 * hardware probing proves whether they are routed on RD05.
+	 * The OEM can assign WAN dynamically to eth0/eth1/eth2; those names are
+	 * not proof of the copper-port or physical-jack numbering. Preserve the
+	 * current bring-up map (P0/P1 LAN candidates, P2 WAN candidate) until
+	 * per-jack measurements confirm it. Ports 3/4 are exposed for diagnosis,
+	 * but are NOT members of br-lan and must not be bridged automatically.
 	 *
 	 * The DSA node uses the upstream RTL8365MB-family compatible. Silicon is
 	 * identified by chip number/version, and GPIO58/H2 is the active-low reset.
@@ -80,12 +81,13 @@
 			#size-cells = <0>;
 
 			/*
-			 * RD05 port bring-up: PHY1 and PHY2 are proven working as LAN2/WAN.
-			 * The first physical LAN jack did not link on PHY0, PHY3 or PHY4 when
-			 * only one candidate was exposed at a time.  Keep all remaining copper
-			 * candidates published and bridged during bring-up.  The one that shows
-			 * carrier with a cable in the first LAN jack can be renamed to lan1 in a
-			 * final clean DTS after hardware validation.
+			 * Prior project notes report PHY1/PHY2 link events as LAN2/WAN;
+			 * this is not an independently verified physical-jack map. The first
+			 * LAN jack remains unresolved. lan3/lan4 are diagnostic candidates
+			 * only: exposed, normally administratively down, and not bridged by
+			 * board defaults. Probe one cable at a time in an isolated test net.
+			 * Once measured, update DTS and board.d together; do not infer jack
+			 * identity from OEM SDK ports 16/17 or eth0/eth1/eth2 names.
 			 */
 			port@0 {
 				reg = <0>;

@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rtl8197f-rd05-base
-PKG_RELEASE:=9
+PKG_RELEASE:=10
 PKG_LICENSE:=GPL-2.0-or-later
 
 include $(INCLUDE_DIR)/package.mk
@@ -27,6 +27,7 @@ define Package/rtl8197f-rd05-base/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) ./files/usr/sbin/rd05-rgmii-test $(1)/usr/sbin/rd05-rgmii-test
 	$(INSTALL_BIN) ./files/usr/sbin/rd05-ioctl $(1)/usr/sbin/rd05-ioctl
+	$(INSTALL_BIN) ./files/usr/sbin/rd05-dsa-check $(1)/usr/sbin/rd05-dsa-check
 	$(INSTALL_DIR) $(1)/lib/netifd
 	$(INSTALL_BIN) ./files/lib/netifd/rtl8197f-wireless.sh $(1)/lib/netifd/rtl8197f-wireless.sh
 	$(INSTALL_DIR) $(1)/etc/profile.d

@@ -626,3 +626,23 @@ fix and has not been validated by a full image build or physical retest.
 See [the RD05-only A-B-A DMA buffer test](RD05_TX_DMA_AB.md) for implementation
 scope, build commands, the reopen-only parameter and complete PC/UART steps.
 Streaming TX remains the RD05 default; this is not a proven hardware fix.
+
+
+## 1.8.47 RD05 DSA audit fixes (2026-10-31)
+
+See [adapted audit patch scope](RD05_DSA_AUDIT.md) for exact scope and tests.
+
+- Free skb on both failed TX linearization paths before returning NETDEV_TX_OK.
+- Use deterministic lan1/lan2 + wan defaults; never bridge the CPU conduit as
+  a fallback while the switch is probing. Candidate lan3/lan4 stay unbridged.
+- Preserve restored/custom UCI network and DHCP configuration. Do not delete
+  every device section at package installation.
+- Read back CPU mask, per-port isolation and PVID fields in normal RD05 mode;
+  abort on mismatch/SMI error and attempt to stop CPU7. This is not a wire test.
+- Refuse unsupported RD05 bridge/VLAN writes in rtl8367dctl rather than hide
+  kernel errors. No dynamic VLAN/FDB/bridge-offload callbacks were added.
+- Add rd05-dsa-check and offline source regression tests.
+
+Physical jack mapping, external packet delivery, CPU-port FCS errors,
+RGMII/DMA behaviour, tagged WAN and a full firmware build remain unverified.
+No DMA defaults, ring sizes, tag format, RGMII delays or GPIO values changed.

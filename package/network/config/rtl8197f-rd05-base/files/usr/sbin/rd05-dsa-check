@@ -1,0 +1,140 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Reports only. Never changes links, UCI, module parameters or switch policy.
+# ethtool counters may cause the driver's normal MIB latch/read operation.
+
+usage() {
+	cat <<'EOF'
+Usage: rd05-dsa-check [--ports | --help]
+
+Default: topology, selected UCI values, bounded driver/counter diagnostics.
+--ports: logical port state only; useful before/after moving a test cable.
+
+No interface is brought up, bridged, reset or recalibrated. Down candidate
+ports cannot prove jack wiring. Port labels below are NOT a verified jack map.
+Exit 0: report completed, not a hardware pass; 1: topology warnings;
+2: invalid arguments or not an RD05. Logs contain network/MAC information.
+EOF
+}
+
+mode=full
+case "${1:-}" in
+	--help|-h) usage; exit 0 ;;
+	--ports) mode=ports ;;
+	'') ;;
+	*) usage >&2; exit 2 ;;
+esac
+[ $# -le 1 ] || { usage >&2; exit 2; }
+
+board="$(cat /tmp/sysinfo/board_name 2>/dev/null)"
+if [ "$board" != xiaomi,r4-rd05 ]; then
+	if [ ! -r /proc/device-tree/compatible ] ||
+	   ! tr '\000' '\n' </proc/device-tree/compatible | grep -qx 'xiaomi,r4-rd05'; then
+		echo 'This helper is only for Xiaomi R4/RD05.' >&2
+		exit 2
+	fi
+fi
+
+warnings=0
+warn() { echo "WARNING: $*"; warnings=$((warnings + 1)); }
+read_net() { cat "/sys/class/net/$1/$2" 2>/dev/null || printf '%s\n' unavailable; }
+master_of() {
+	local path
+	path="$(readlink "/sys/class/net/$1/master" 2>/dev/null)"
+	[ -n "$path" ] && printf '%s\n' "${path##*/}" || printf '%s\n' none
+}
+run() {
+	printf '\n$'; printf ' %s' "$@"; printf '\n'
+	if ! command -v "$1" >/dev/null 2>&1; then
+		echo "unavailable: $1"
+		return 0
+	fi
+	if command -v timeout >/dev/null 2>&1; then
+		timeout 8 "$@" 2>&1 || echo "command failed or timed out: $*"
+	else
+		"$@" 2>&1 || echo "command failed: $*"
+	fi
+}
+
+printf 'RD05 DSA audit report / 1.8.47\n'
+printf 'Collected: '; date -u '+%Y-%m-%dT%H:%M:%SZ'
+printf 'Kernel: '; uname -r
+printf '\nLogical map: P0=lan1, P1=lan2, P2=wan, P3=lan3, P4=lan4.\n'
+printf 'Physical jack mapping is unverified; lan3/lan4 are unbridged candidates.\n'
+printf 'eth0 is the DSA CPU conduit, NOT a LAN bridge member.\n\n'
+printf '%-7s %-12s %-10s %-12s %-10s\n' device operstate carrier master phys_port
+for dev in eth0 lan1 lan2 wan lan3 lan4; do
+	if [ ! -d "/sys/class/net/$dev" ]; then
+		printf '%-7s missing\n' "$dev"
+		case "$dev" in eth0|lan1|lan2|wan) warn "$dev is missing; inspect DSA probe logs." ;; esac
+		continue
+	fi
+	master="$(master_of "$dev")"
+	printf '%-7s %-12s %-10s %-12s %-10s\n' "$dev" \
+		"$(read_net "$dev" operstate)" "$(read_net "$dev" carrier)" \
+		"$master" "$(read_net "$dev" phys_port_name)"
+	case "$dev:$master" in
+		eth0:none) ;;
+		eth0:*) warn "CPU conduit eth0 is enslaved to $master; do not use it as a LAN fallback." ;;
+		wan:br-lan) warn 'wan is in br-lan; this contradicts separated WAN/LAN defaults.' ;;
+		lan3:none|lan4:none) ;;
+		lan3:*|lan4:*) warn "$dev is in $master, but its physical jack identity is not confirmed." ;;
+	esac
+done
+
+if [ "$mode" = ports ]; then
+	echo 'Carrier alone is not a packet, VLAN-isolation or physical-jack proof.'
+	[ "$warnings" -eq 0 ]; exit $?
+fi
+
+run ethtool -i eth0
+run ip -d link show
+run bridge link show
+run bridge vlan show
+
+printf '\n== Selected configuration (no passwords) ==\n'
+if command -v uci >/dev/null 2>&1; then
+	for key in network.lan.device network.wan.device network.wan.proto \
+		dhcp.lan.ignore 'firewall.@defaults[0].flow_offloading' \
+		'firewall.@defaults[0].flow_offloading_hw'; do
+		printf '%s=%s\n' "$key" "$(uci -q get "$key" 2>/dev/null || echo unset)"
+	done
+else
+	echo 'uci unavailable'
+fi
+
+printf '\n== RD05 module parameters (read only) ==\n'
+for path in /sys/module/rtl8197f_rtknet/parameters/rd05_* \
+	/sys/module/rtl8365mb/parameters/rd05_*; do
+	[ -r "$path" ] || continue
+	value="$(cat "$path" 2>/dev/null)"
+	printf '%s=%s\n' "$path" "$value"
+	case "${path##*/}:$value" in
+		rd05_portmap_mode:0|rd05_portmap_mode:1|rd05_extcpu_mode:0|rd05_ingress_cpu_mode:0) ;;
+		rd05_portmap_mode:*|rd05_extcpu_mode:*|rd05_ingress_cpu_mode:*)
+			warn 'Non-default switch diagnostics can alter CPU tags or port isolation.' ;;
+	esac
+done
+
+[ ! -r /proc/rd05-rtknet ] || run cat /proc/rd05-rtknet
+for dev in eth0 lan1 lan2 wan lan3 lan4; do
+	[ -d "/sys/class/net/$dev" ] || continue
+	run ethtool -S "$dev"
+done
+
+printf '\n== Relevant boot messages (last 100 matching lines) ==\n'
+if command -v dmesg >/dev/null 2>&1; then
+	dmesg 2>/dev/null | grep -E 'rtl836[57]|RTL836[57]|RD05|rd05|rtl8197f-rtknet' | tail -n 100
+fi
+
+cat <<'EOF'
+
+Interpretation:
+- Link-up and increasing software TX counters do not establish wire delivery.
+- Compare cpu_fcs_errors before/after traffic; increasing errors are a warning.
+- Counter value 18446744073709551615 means a read error, NOT a valid measurement.
+- Fixed VID9 bootstrap is not dynamic bridge/VLAN offload. Tagged WAN is unverified.
+- Use an isolated LAN and UART; do not auto-bridge the candidate ports.
+- This report does not validate the hardware or repair an existing configuration.
+EOF
+[ "$warnings" -eq 0 ]

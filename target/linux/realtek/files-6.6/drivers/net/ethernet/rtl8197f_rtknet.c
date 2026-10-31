@@ -62,7 +62,7 @@
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.46-rd05-coherent-tx-test"
+#define DRV_VERSION			"1.8.47-rd05-dsa-auditfix"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -6755,6 +6755,8 @@ static netdev_tx_t rtl8197f_rtk_start_xmit(struct sk_buff *skb,
 	     skb_shinfo(skb)->nr_frags > max_t(unsigned int, 1, mw5_sg_max_frags))) {
 		if (skb_linearize(skb)) {
 			ndev->stats.tx_dropped++;
+			/* skb_linearize() does not consume skb on failure. */
+			dev_kfree_skb_any(skb);
 			return NETDEV_TX_OK;
 		}
 		priv->tx_sg_guard_linearize++;
@@ -6762,6 +6764,8 @@ static netdev_tx_t rtl8197f_rtk_start_xmit(struct sk_buff *skb,
 	nr_frags = hw_sg ? skb_shinfo(skb)->nr_frags : 0;
 	if (!hw_sg && skb_is_nonlinear(skb) && skb_linearize(skb)) {
 		ndev->stats.tx_dropped++;
+		/* NETDEV_TX_OK transfers ownership, including this error path. */
+		dev_kfree_skb_any(skb);
 		return NETDEV_TX_OK;
 	}
 	needed = nr_frags + 1;

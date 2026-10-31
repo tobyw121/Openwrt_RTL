@@ -1,0 +1,100 @@
+From: RD05 source maintenance <noreply@example.invalid>
+Subject: [PATCH] net: dsa: realtek: verify RD05 CPU-only isolation readback
+
+For the exact RD05/family-D bootstrap already gated by patch 337, read back
+CPU membership, per-port isolation and PVID fields. Propagate read failures
+and mismatches; try to stop CPU7 on failure instead of proceeding silently.
+No new register definitions or timing values are introduced. Deliberate
+experimental port/tag modes are reported as unverified, not called safe.
+
+This checks programmed fields, not the 4K VLAN table, chip identity, jack
+wiring, wire-level isolation or a functioning Ethernet data path. It adds no
+bridge/VLAN offload callbacks and does not change the default VID9 policy.
+
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -3759,3 +3759,56 @@
++/* Read back only fields already programmed by the RD05 bootstrap. This is
++ * not a VLAN-table or wire-level test. Never turn a failed SMI read into zero.
++ */
++static int rtl8367d_rd05_expect_reg(struct realtek_priv *priv, u32 reg,
++				    u32 mask, u32 expected)
++{
++	u32 actual;
++	int ret;
++
++	ret = regmap_read(priv->map, reg, &actual);
++	if (ret) {
++		dev_err(priv->dev, "RD05 policy readback failed reg=0x%x: %d\n",
++			reg, ret);
++		return ret;
++	}
++	if ((actual & mask) != (expected & mask)) {
++		dev_err(priv->dev,
++			"RD05 policy mismatch reg=0x%x mask=0x%x got=0x%x expected=0x%x\n",
++			reg, mask, actual, expected);
++		return -EIO;
++	}
++	return 0;
++}
++
++static int rtl8367d_rd05_verify_isolation(struct realtek_priv *priv,
++					 u32 cpu_mask, u32 user_mask)
++{
++	int port, ret;
++	u32 expected;
++
++	ret = rtl8367d_rd05_expect_reg(priv, RTL8365MB_CPU_PORT_MASK_REG,
++		RTL8365MB_RTL8367D_PHY_PORTS_MASK, cpu_mask);
++	if (ret)
++		return ret;
++
++	for (port = 0; port < priv->num_ports; port++) {
++		if (dsa_is_unused_port(priv->ds, port))
++			continue;
++		expected = dsa_is_cpu_port(priv->ds, port) ? user_mask : cpu_mask;
++		ret = rtl8367d_rd05_expect_reg(priv,
++			RTL8365MB_PORT_ISOLATION_REG(port),
++			RTL8365MB_RTL8367D_PHY_PORTS_MASK, expected);
++		if (ret)
++			return ret;
++		ret = rtl8367d_rd05_expect_reg(priv,
++			RTL8367D_VLAN_PVID_CTRL_REG(port),
++			RTL8367D_VLAN_PVID_CTRL_MASK, RTL8367D_RD05_OEM_VID);
++		if (ret)
++			return ret;
++	}
++	return 0;
++}
++
+ static int rtl8367d_rd05_force_dsa_cpu_path(struct realtek_priv *priv)
+ {
+ 	struct rtl8365mb *mb = priv->chip_data;
+@@ -3922,6 +3975,27 @@
+ 	/* DSA owns STP state. Do not globally force all ports forwarding here;
+ 	 * doing so can bypass bridge/WAN isolation during netifd setup.
+ 	 */
++
++	/* Only the normal CPU7/rtl8_4 policy promises CPU-only isolation.
++	 * Deliberate diagnostic masks/tag modes must never be reported as safe.
++	 */
++	if (mode <= 1 && !ingress_mode && !extcpu_mode) {
++		ret = rtl8367d_rd05_verify_isolation(priv, cpu_mask, user_mask);
++		if (ret) {
++			int stop_ret;
++
++			stop_ret = rtl8367d_ext_config_forcemode(priv, 7, false,
++							 0, 0, false, false);
++			if (stop_ret)
++				dev_err(priv->dev,
++					"RD05 could not stop CPU link after policy failure: %d\n",
++					stop_ret);
++			return ret;
++		}
++	} else {
++		dev_warn(priv->dev,
++			 "RD05 diagnostic CPU/port mode: normal isolation not verified\n");
++	}
+ 
+ 	regmap_read(priv->map, RTL8365MB_CPU_PORT_MASK_REG, &reg_cpu_mask);
+ 	regmap_read(priv->map, RTL8365MB_CPU_CTRL_REG, &reg_cpu_ctrl);
