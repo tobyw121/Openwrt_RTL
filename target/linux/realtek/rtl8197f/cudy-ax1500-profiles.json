@@ -141,7 +141,7 @@
       "console_baud": 38400,
       "flash_bytes_from_dump": 16777216,
       "flash_upgrade_supported": false,
-      "pcie_radio_id": null,
+      "pcie_radio_id": "10ec:b832",
       "flash_mapping": "two signature probes; exact unique shift 0..3; read only; reject mismatch",
       "source": {
         "path": "fullflash-templates/Cudy_AX1500.bin",
@@ -155,7 +155,15 @@
         "live auto-map read shift",
         "live switch ID, SMI bond/wiring and physical port order",
         "live PCI radio ID, Wi-Fi-6 source port, per-device factory/eFuse calibration"
-      ]
+      ],
+      "pcie_runtime_evidence": {
+        "firmware_revision": "r0-4608f15f18",
+        "source": "owner sysfs vendor/device/class output, 2026-10-31",
+        "address": "0000:00:00.0",
+        "class": "0x028000",
+        "driver_bound": false,
+        "limits": "Enumeration does not prove RF operation, firmware compatibility or factory calibration."
+      }
     }
   }
 }

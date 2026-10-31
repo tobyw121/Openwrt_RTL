@@ -27,5 +27,11 @@ if [ "$board" = cudy,ax1500-r76 ]; then
 			printf '%s=' "$field"
 			cat "$dev/$field" 2>/dev/null || true
 		done
+		if [ -L "$dev/driver" ]; then
+			printf 'driver='
+			readlink "$dev/driver"
+		else
+			echo 'driver=unbound'
+		fi
 	done
 fi

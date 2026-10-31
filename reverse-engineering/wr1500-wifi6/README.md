@@ -1,5 +1,46 @@
 # WR1500: Patchübernahme und Wi-Fi-6-Portierungsstand
 
+## Bestätigte PCI-ID und fehlendes Diagnosepaket
+
+Der Benutzer hat unter `r0-4608f15f18` für `0000:00:00.0` tatsächlich
+vendor `0x10ec`, device `0xb832` und class `0x028000` gelesen. Es existiert
+kein driver-Symlink: PCIe-Enumeration ist vorhanden, aber kein WLAN-Treiber
+gebunden. Die PCI-Identität wird im Cudy-Profil jetzt als Runtime-Beleg
+geführt. Sie ist kein Beleg für funktionierenden Funkbetrieb.
+
+Die Benutzer-.config enthält das R76-Geräteprofil, aber keine aktive Auswahl
+von `rtl8197f-cudy-ax1500-base`; auch opkg meldet kein installiertes Paket.
+Warum die DEVICE_PACKAGES-Vorauswahl im konkreten Build nicht übernommen
+wurde, ist ohne dessen generierte Metadaten nicht abschließend bewiesen.
+Das Basispaket erhält deshalb zusätzlich einen ausdrücklichen Kconfig-
+Default für die Cudy-Profile (Einzel- und Mehrgeräteauswahl). Eine vorhandene
+explizite Abwahl wird dadurch nicht überschrieben. Der reale Installations-
+Make-Schritt wurde auf sein ausführbares `/usr/sbin/cudy-ax1500-diag` geprüft.
+Die Diagnose zeigt bei vorhandener PCI-Funktion nun auch `driver=unbound`.
+
+PC, um die bereits gespeicherte Paketabwahl zu korrigieren:
+
+```sh
+cd ~/Downloads/openwrt/github/Openwrt_RTL
+git pull --ff-only origin MW5_Stable
+rm -f tmp/.packageinfo tmp/.config-package.in
+sed -i '/^CONFIG_PACKAGE_rtl8197f-cudy-ax1500-base=/d; /^# CONFIG_PACKAGE_rtl8197f-cudy-ax1500-base is not set$/d' .config
+printf '%s\n' 'CONFIG_PACKAGE_rtl8197f-cudy-ax1500-base=y' >> .config
+make defconfig
+grep '^CONFIG_PACKAGE_rtl8197f-cudy-ax1500-base=' .config
+make -j"$(nproc)" V=s
+```
+
+Nach dem nächsten regulären Firmwarewechsel auf dem Router einzeln:
+
+```sh
+opkg status rtl8197f-cudy-ax1500-base
+cudy-ax1500-diag
+```
+
+Das behebt das fehlende Diagnosepaket. Es ersetzt weder die nachfolgend
+beschriebene Wi-Fi-6-Portierung noch eine Ethernet-/Switch-Anbindung.
+
 Stand 2026-10-31. Der Benutzerpatch
 `Openwrt_RTL_MW5_WR1500_RD05_changes_20261031.patch` wird gezielt übernommen:
 Die bereits integrierten RD05-Korrekturen (einschließlich identischem Patch

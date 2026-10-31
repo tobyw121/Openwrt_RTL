@@ -15,6 +15,29 @@ MODELS = ('wr1500', 're1500', 'm1500')
 
 
 class CudyAX1500Tests(unittest.TestCase):
+    def test_diag_package_defaults_and_actual_install_recipe(self):
+        package = ROOT / 'package/network/config/rtl8197f-cudy-ax1500-base'
+        source = (package / 'Makefile').read_text()
+        source = '\n'.join(line for line in source.splitlines() if not line.startswith('include '))
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / 'root'
+            makefile = Path(tmp) / 'Makefile'
+            makefile.write_text(source + '''
+$(eval $(Package/rtl8197f-cudy-ax1500-base))
+$(info PACKAGE_DEFAULT=$(DEFAULT))
+INSTALL_DIR=mkdir -p
+INSTALL_BIN=install -m755
+install:
+	$(call Package/rtl8197f-cudy-ax1500-base/install,$(DEST))
+''')
+            output = subprocess.check_output(['make', '-sf', str(makefile),
+                'DEST='+str(dest), 'install'], cwd=package, text=True)
+            self.assertIn('PACKAGE_DEFAULT=y if TARGET_realtek_rtl8197f_DEVICE_cudy_ax1500_r76', output)
+            self.assertIn('TARGET_DEVICE_realtek_rtl8197f_DEVICE_cudy_ax1500_r76', output)
+            installed = dest / 'usr/sbin/cudy-ax1500-diag'
+            self.assertEqual(installed.read_bytes(), (package/'files/cudy-ax1500-diag').read_bytes())
+            self.assertTrue(installed.stat().st_mode & 0o111)
+
     def test_wr1500_console_matches_oem_without_expanding_ram(self):
         dts = (ROOT / 'target/linux/realtek/dts/rtl8197f_cudy_wr1500.dts').read_text()
         self.assertIn('console=ttyS0,38400n8', dts)

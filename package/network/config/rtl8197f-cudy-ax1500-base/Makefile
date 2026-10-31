@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rtl8197f-cudy-ax1500-base
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 PKG_LICENSE:=GPL-2.0-or-later
 
 include $(INCLUDE_DIR)/package.mk
@@ -11,6 +11,7 @@ define Package/rtl8197f-cudy-ax1500-base
   CATEGORY:=Utilities
   TITLE:=Cudy AX1500 UART/SPI/PCI bring-up diagnostics
   DEPENDS:=@TARGET_realtek_rtl8197f
+  DEFAULT:=y if TARGET_realtek_rtl8197f_DEVICE_cudy_ax1500_r76 || TARGET_DEVICE_realtek_rtl8197f_DEVICE_cudy_ax1500_r76 || TARGET_realtek_rtl8197f_DEVICE_cudy_re1500 || TARGET_DEVICE_realtek_rtl8197f_DEVICE_cudy_re1500 || TARGET_realtek_rtl8197f_DEVICE_cudy_m1500 || TARGET_DEVICE_realtek_rtl8197f_DEVICE_cudy_m1500
 endef
 
 define Package/rtl8197f-cudy-ax1500-base/description
