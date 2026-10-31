@@ -1,5 +1,9 @@
 # RD05: hochgeladene OEM-Laufzeitdaten
 
+Die gezielte binärgestützte RD05-Rekonstruktion ist in
+[rd05-reconstruction-v1-review.md](rd05-reconstruction-v1-review.md) mit
+unabhängig geprüften Byte-/Hash-Zuordnungen bewertet.
+
 Die zusätzlich geprüfte TP-Link-GPL ist in
 [ax1500v3-gpl-review.md](ax1500v3-gpl-review.md) eingeordnet.
 

@@ -1,0 +1,75 @@
+{
+  "archive": "rd05_rekonstruiert1.zip",
+  "archive_bytes": 62501792,
+  "archive_sha256": "fc9fd3f5b81f356ad464572befb084064999687dc397d30c9e4853d47fa0215a",
+  "zip_entries": 17430,
+  "uncompressed_bytes": 284727012,
+  "zip_crc_validation": "passed for all extracted entries",
+  "contents_manifest": {
+    "checked": 17429,
+    "failures": 0
+  },
+  "kernel": {
+    "bytes": 9780680,
+    "sha256": "aa48d325730b95c0658090ba9f943f71bdd9888dc57f609a3989ba58f0f8f5cc",
+    "identical_to_repository_rd05_kernel": true
+  },
+  "function_intervals": {
+    "checked": 7073,
+    "hash_failures": 0,
+    "boundary_limit": "next distinct kallsyms symbol; not original function size"
+  },
+  "data_matches": {
+    "checked": 72,
+    "unique_payloads": 43,
+    "hash_size_offset_failures": 0,
+    "limit": "byte identity does not prove runtime use"
+  },
+  "reference_comparison": {
+    "known_gpl_files_identical": 611,
+    "known_gpl_missing_or_different": 0,
+    "current_worktree_wlan_identical": 2577,
+    "current_worktree_wlan_different": 1,
+    "current_worktree_wlan_missing": 0,
+    "limit": "compared to local worktree including pre-existing changes"
+  },
+  "targets": [
+    {
+      "name": "swNic_init",
+      "address_hex": "0x80299be4",
+      "size": 2284,
+      "sha256": "d0a2218794eaef240e0ec306c5c1da6b02490b12487cf2d0e46eda84445d3af8"
+    },
+    {
+      "name": "New_swNic_init",
+      "address_hex": "0x802b91ac",
+      "size": 1556,
+      "sha256": "58ee5ff94240c12769657556eb9e38c56971e3c55e219ea8a76bdde073a6a069"
+    },
+    {
+      "name": "RTL83XX_init_switch_mode",
+      "address_hex": "0x802f7fa0",
+      "size": 1044,
+      "sha256": "0946b6820f876a62600f8674184d839f75f2d5c3fb5329da122cf1d93769d46b"
+    },
+    {
+      "name": "switch_probe",
+      "address_hex": "0x802fae20",
+      "size": 360,
+      "sha256": "fa1b3f2d5e46761d8c05ccecee4928e85f79fd2db44d1befd33226883460f16a"
+    },
+    {
+      "name": "rtk_switch_init",
+      "address_hex": "0x802ffa14",
+      "size": 144,
+      "sha256": "a07258e4d1032ef6fde31d18e0d3c97ebbd4af8b7eb8792849e89bfdc46ec2d1"
+    },
+    {
+      "name": "dal_rtl8367d_switch_init",
+      "address_hex": "0x80315670",
+      "size": 8,
+      "sha256": "2b12957b7b20557a2b2214ff0d4c70070be49dbb12c48fe1b778f48a6fc3cd43"
+    }
+  ],
+  "validation_scope": "Static byte/hash comparison and selected MIPS control-flow inspection. No execution of uploaded scripts or test programs. Lift instruction semantics, claimed differential tests and hardware behavior not independently validated."
+}
