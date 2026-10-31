@@ -4,6 +4,12 @@ Aktueller zusammengeführter Stand einschließlich Geräteboot und Benutzer-PDF:
 [Hardware, WLAN, Switch und offene Anbindungen – 31.10.2026](STATUS-2026-10-31.md).
 Die folgenden Abschnitte enthalten auch historische Prüfstände.
 
+Nach Übernahme der PDF als Hardwaregrundlage: R76 nutzt jetzt 128 MiB RAM,
+getrennte LAN-/WAN-Defaults und ein installiertes Hardwareprofil mit der
+Buchsenbelegung. Das Ethernet-DT hinterlegt die OEM-Ringgeometrie, bleibt
+wegen der offenen CPU-/SMI-Anbindung jedoch deaktiviert. Das ist noch
+keine Freigabe eines funktionierenden LAN-/WLAN-Treibers.
+
 ## Basispakete automatisch auswählen
 
 Das einzelne R76-Geräteprofil enthält jetzt `rtl8197f-cudy-r76-base`.

@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rtl8197f-cudy-ax1500-base
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 PKG_LICENSE:=GPL-2.0-or-later
 
 include $(INCLUDE_DIR)/package.mk
@@ -46,6 +46,7 @@ $(eval $(call BuildPackage,rtl8197f-cudy-ax1500-base))
 define Package/rtl8197f-cudy-r76-base/install
 	$(INSTALL_DIR) $(1)/usr/share/cudy-r76
 	echo 'Cudy R76 base packages; network hardware support is separate.' > $(1)/usr/share/cudy-r76/packages.info
+	$(INSTALL_DATA) ./files/r76-hardware.json $(1)/usr/share/cudy-r76/hardware.json
 endef
 
 $(eval $(call BuildPackage,rtl8197f-cudy-r76-base))

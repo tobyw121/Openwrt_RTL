@@ -9,13 +9,23 @@ case "$board" in
 	*) echo 'Only Cudy AX1500 bring-up profiles are supported' >&2; exit 1 ;;
 esac
 status=experimental-uart-ram-only
-[ "$board" = cudy,ax1500-r76 ] && status=experimental-ram-readonly-spi-pci
+[ "$board" = cudy,ax1500-r76 ] && status=experimental-fullflash-128m-readonly-spi-pci
 printf 'board=%s gpl_profile=%s status=%s\n' "$board" "$profile" "$status"
-echo 'RAM is capped at 64 MiB; MemTotal does not identify physical capacity.'
+if [ "$board" = cudy,ax1500-r76 ]; then
+	echo 'R76 DT enables 128 MiB DDR2 from OEM evidence; MemTotal excludes kernel reservations.'
+	printf '\nWR1500 hardware profile\n'
+	cat /usr/share/cudy-r76/hardware.json 2>/dev/null || true
+else
+	echo 'RAM is capped at 64 MiB; MemTotal does not identify physical capacity.'
+fi
 for path in /etc/openwrt_release /proc/cmdline /proc/cpuinfo /proc/meminfo /proc/interrupts /proc/mtd; do
 	printf '\n%s\n' "$path"
 	cat "$path" 2>/dev/null || true
 done
+printf '\nnetwork interfaces\n'
+ip -br link 2>/dev/null || cat /proc/net/dev
+printf '\nnetwork defaults\n'
+cat /etc/board.json 2>/dev/null || true
 printf '\nkernel diagnostics\n'
 dmesg | tail -100
 if [ "$board" = cudy,ax1500-r76 ]; then

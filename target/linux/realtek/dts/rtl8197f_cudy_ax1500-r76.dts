@@ -7,6 +7,13 @@
 	compatible = "cudy,ax1500-r76", "cudy,wr1500", "realtek,rtl8197f-vg", "realtek,rtl8197f-soc";
 	model = "Cudy AX1500 / WR1500 R76 (experimental SPI diagnostics)";
 
+	/* OEM bootloader and WR1500 hardware report agree on 128 MiB DDR2.
+	 * Scope this to R76: RE1500/M1500 retain their diagnostic RAM window.
+	 */
+	memory@0 {
+		reg = <0x00000000 0x08000000>;
+	};
+
 	chosen {
 		bootargs = "console=ttyS0,38400n8 rdinit=/sbin/init clk_ignore_unused";
 		stdout-path = "serial0:38400n8";
@@ -51,4 +58,14 @@
  */
 &pcie0 {
 	status = "okay";
+};
+
+/* OEM ring 0 geometry from the WR1500 hardware report. Additional OEM
+ * rings remain unused. This does not select a CPU port, descriptor bit
+ * format or SMI wiring: Ethernet stays disabled until those are known.
+ */
+&ethernet0 {
+	realtek,rx-ring-size = <900>;
+	realtek,tx-ring-size = <768>;
+	realtek,descriptor-dwords = <8>;
 };

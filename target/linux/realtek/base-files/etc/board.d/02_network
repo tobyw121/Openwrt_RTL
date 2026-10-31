@@ -22,7 +22,16 @@ board=$(board_name)
 board_config_update
 
 case "$board" in
-cudy,wr1500|cudy,re1500|cudy,m1500|cudy,ax1500-r76)
+cudy,ax1500-r76)
+	# WR1500 report: jack LAN1=P3, LAN2=P0, LAN3=P1, WAN=P2.
+	# DSA labels are the contract for the future switch binding; never use
+	# the unclassified CPU conduit eth0 as a fallback or bridge WAN to LAN.
+	# Keep defaults deterministic even while hardware probe is unavailable.
+	ucidef_set_interfaces_lan_wan "lan1 lan2 lan3" "wan"
+	board_config_flush
+	exit 0
+	;;
+cudy,wr1500|cudy,re1500|cudy,m1500)
 	# RAM bring-up profiles have no validated Ethernet/WLAN interfaces yet.
 	board_config_flush
 	exit 0

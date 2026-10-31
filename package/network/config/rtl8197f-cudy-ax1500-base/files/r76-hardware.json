@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "board": "cudy,ax1500-r76",
+  "model": "Cudy WR1500 / AX1500",
+  "hardware_revision": "1.0",
+  "source": "Cudy_WR1500_AX1500_Hardwareanalyse_2026-10-31.pdf",
+  "source_accepted_by_owner": true,
+  "ram_bytes": 134217728,
+  "flash_bytes": 16777216,
+  "console_baud": 38400,
+  "switch": {
+    "chip": "RTL8367D",
+    "oem_api": "1.4",
+    "ports": [
+      {"jack": "LAN1", "port": 3, "label": "lan1", "oem_pvid": 1},
+      {"jack": "LAN2", "port": 0, "label": "lan2", "oem_pvid": 1},
+      {"jack": "LAN3", "port": 1, "label": "lan3", "oem_pvid": 1},
+      {"jack": "WAN", "port": 2, "label": "wan", "oem_pvid": 2}
+    ],
+    "unassigned_port": 4,
+    "smi_gpio": null,
+    "reset_gpio": null,
+    "physical_cpu_port": null,
+    "dsa_tagger": null,
+    "enabled_in_openwrt": false
+  },
+  "ethernet": {
+    "rx_ring0_descriptors": 900,
+    "tx_ring0_descriptors": 768,
+    "descriptor_stride_bytes": 32,
+    "additional_rings_enabled": false,
+    "oem_soc_rgmii_reference": {"tx_delay": 0, "rx_delay": 5, "vg_rx_delay": 6},
+    "rgmii_runtime_configuration_resolved": false
+  },
+  "wifi": {
+    "2g": {
+      "chip": "RTL8192FE", "oem_driver": "rtl8192cd",
+      "oem_driver_version": "3.8.0", "oem_interface": "wlan1",
+      "oem_channel": 6, "oem_width_mhz": 40, "oem_txpower_dbm": 20,
+      "factory_layout_resolved": false, "enabled_in_openwrt": false
+    },
+    "5g": {
+      "chip": "RTL8832BR", "oem_driver": "rtk_wifi6",
+      "oem_driver_version": "2.0.0.1", "oem_interface": "wlan0",
+      "bus": "pci", "pci_id": "10ec:b832", "pci_address": "0000:00:00.0",
+      "streams": 2, "rfe": 50, "oem_firmware_version": "V0.27.88.0",
+      "oem_rf_directory": "/etc/conf/rtl8832bre/RFE50",
+      "oem_channel": 36, "oem_width_mhz": 80, "oem_txpower_dbm": 12,
+      "linux66_driver_complete": false, "enabled_in_openwrt": false
+    }
+  },
+  "policy": {
+    "oem_txpower_values_are_not_regulatory_overrides": true,
+    "oem_vlan_masks_are_not_dsa_port_masks": true,
+    "routed_traffic_uses_openwrt_firewall": true,
+    "oem_fast_nat_enabled": false,
+    "oem_hw_nat_enabled": false
+  }
+}
