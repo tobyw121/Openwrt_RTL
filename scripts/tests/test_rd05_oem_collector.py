@@ -1,10 +1,13 @@
 """Exercise the standalone collector against an offline OEM proc/sys fixture."""
 from pathlib import Path
 import os
+import io
+import gzip
 import subprocess
 import tarfile
 import tempfile
 import unittest
+from test_mw5_stability import shell_function
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / 'scripts/rd05-oem-collect.sh'
@@ -42,9 +45,9 @@ class RD05OEMCollectorTests(unittest.TestCase):
         out.mkdir()
         return root, out, files
 
-    def invoke(self, root, out, env=None):
+    def invoke(self, root, out, env=None, extra=()):
         return subprocess.run([os.environ.get('COLLECTOR_TEST_SHELL', 'sh'), str(SCRIPT), '--root', str(root),
-                               '--duration', '0', '--output', str(out)],
+                               '--duration', '0', '--output', str(out), *extra],
                               capture_output=True, text=True, timeout=35, env=env)
 
     def test_inventory_no_flash_or_configuration_and_originals_preserved(self):
@@ -91,6 +94,81 @@ class RD05OEMCollectorTests(unittest.TestCase):
                                         capture_output=True, text=True)
                 self.assertNotEqual(result.returncode, 0)
             self.assertEqual(list(out.iterdir()), [])
+
+    def test_deep_discovery_repeated_compressed_snapshots_and_exclusions(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, out, _ = self.fixture(Path(tmp))
+            for name, value in {
+                'proc/wlan0/stats': 'rx=123 tx=456\n',
+                'proc/wlan0/rf_finetune': 'rfe=0\n',
+                'proc/rtl865x/new_vendor_state': 'state=ready\n',
+                'proc/wlan0/mib_gkeytbl': 'FORBIDDEN_WIFI_KEY',
+                'proc/wlan0/reset_stats': 'FORBIDDEN_RESET',
+                'proc/rtl865x/memory': 'FORBIDDEN_MMIO_ENDPOINT',
+            }.items():
+                p = root / name
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_text(value)
+            result = self.invoke(root, out, extra=['--deep'])
+            self.assertEqual(result.returncode, 0, result.stderr)
+            with tarfile.open(next(out.glob('*.tar.gz'))) as t:
+                regular = {m.name.split('/', 1)[1]: t.extractfile(m).read()
+                           for m in t if m.isfile()}
+            decisions = regular['inventory/realtek-decisions.tsv'].decode()
+            self.assertIn('eligible\t/proc/wlan0/stats', decisions)
+            self.assertIn('excluded-command-or-sensitive\t/proc/wlan0/mib_gkeytbl', decisions)
+            samples = [data for name, data in regular.items()
+                       if name.startswith('live/') and name.endswith('.tar.gz')]
+            self.assertEqual(len(samples), 2)
+            for data in samples:
+                with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as t:
+                    snapshot = {m.name.removeprefix('./'): t.extractfile(m).read()
+                                for m in t if m.isfile()}
+                state = gzip.decompress(snapshot['realtek-state.txt.gz'])
+                self.assertIn(b'path=/proc/wlan0/stats ', state)
+                self.assertIn(b'rx=123 tx=456\n', state)
+                self.assertIn(b'path=/proc/rtl865x/new_vendor_state ', state)
+                self.assertIn(b'state=ready\n', state)
+                self.assertNotIn(b'FORBIDDEN_', state)
+                self.assertFalse(any(b'FORBIDDEN_' in v for v in snapshot.values()))
+            self.assertFalse(any(name.startswith('live-raw-') for name in regular))
+
+    def test_observation_spans_full_minute_even_with_slow_reads(self):
+        # Execute the actual scheduler with a monotonic clock and sleep mock.
+        # No wall-clock minute is needed to verify boundary/final snapshots.
+        source = shell_function(SCRIPT, 'observe')
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            for cost in (0, 2, 17, 65):
+                work = base / str(cost)
+                work.mkdir()
+                clock = work / 'clock'
+                clock.write_text('0\n')
+                script = r'''
+BASE_WORK=$1
+CLOCK=$BASE_WORK/clock
+COST=$2
+DURATION=60
+INTERVAL=5
+monotonic() { cat "$CLOCK"; }
+sleep() { n=$(cat "$CLOCK"); echo "$((n + $1))" > "$CLOCK"; }
+start_capture() { :; }
+stop_capture() { :; }
+live_snapshot() {
+    n=$(cat "$CLOCK")
+    printf '%s %s\n' "$1" "$n" >> "$BASE_WORK/calls"
+    echo "$((n + COST))" > "$CLOCK"
+}
+''' + source + '\nobserve\n'
+                result = subprocess.run([os.environ.get('COLLECTOR_TEST_SHELL', 'sh'),
+                                         '-c', script, 'sh', str(work), str(cost)],
+                                        capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                starts = [int(line.split()[1]) for line in (work/'calls').read_text().splitlines()]
+                self.assertEqual(starts[0], 0)
+                self.assertGreaterEqual(starts[-1], 60)
+                self.assertGreaterEqual(len(starts), 2)
+                self.assertIn('requested_seconds=60', (work/'live/window.txt').read_text())
 
 
 if __name__ == '__main__':

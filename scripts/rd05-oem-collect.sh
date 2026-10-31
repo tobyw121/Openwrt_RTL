@@ -3,13 +3,16 @@
 # Standalone OEM BusyBox collector. Never reads MTD/NVMEM/flash contents.
 # No GPIO export, configuration changes, module operations or listener/upload.
 umask 077
-VERSION=1.0
+VERSION=1.1
 OUTPUT=/tmp
 ROOT=
-DURATION=20
+LABEL=snapshot
+DURATION=60
+INTERVAL=5
+DEEP=0
 REGISTERS=0
 PCAP_IFACE=
-MAX_FILES=768
+MAX_FILES=20000
 MAX_KB=12288
 MAX_FILE_BYTES=524288
 MAX_SECONDS=300
@@ -19,12 +22,19 @@ LOCK=
 CHILD=
 TIMER=
 SAVED_LOGLEVEL=
+BASE_WORK=
+CAP_PID=
+CAP_TIMER=
+PHASE=inventory
 
 usage() {
     cat <<'EOF'
 Usage: sh rd05-oem-collect.sh [options]
   --output DIR       Existing local directory (default /tmp)
-  --duration SEC     Counter observation interval, 0..120 (default 20)
+  --label NAME       Archive label, e.g. idle or ping
+  --duration SEC     Live observation, 60..600 seconds (default 60)
+  --interval SEC     Target pause between snapshots, 1..60 (default 5)
+  --deep             Inventory and read additional Realtek proc/debug states
   --rd05-registers   Issue the documented RD05 MMIO/8367 READ requests
                      through /proc/rtl865x; briefly reduce console loglevel
   --capture IFACE    Optional bounded ARP/ICMP/DHCP PCAP if tcpdump exists
@@ -34,7 +44,9 @@ Usage: sh rd05-oem-collect.sh [options]
 
 Requires root for a live run. No extra packages, timeout or flock required.
 Writes a private directory and .tar.gz beside it; keeps both, never uploads.
-Default: no PCAP, no register requests. No MTD partition contents or hashes.
+Default: 60-second repeated sampling, no PCAP or register requests.
+Deep mode reads discovered vendor state files; command/sensitive names excluded.
+No MTD partition contents or hashes.
 The archive contains device/network identities; review before publishing.
 EOF
 }
@@ -44,10 +56,13 @@ have() { command -v "$1" >/dev/null 2>&1 || type "$1" >/dev/null 2>&1; }
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --help|-h) usage; exit 0 ;;
-        --output|--duration|--capture|--root)
+        --version) echo "$VERSION"; exit 0 ;;
+        --output|--label|--duration|--interval|--capture|--root)
             [ "$#" -ge 2 ] || die "Missing value for $1"
             case "$1" in
                 --output) OUTPUT=$2 ;; --duration) DURATION=$2 ;;
+                --label) LABEL=$2 ;;
+                --interval) INTERVAL=$2 ;;
                 --capture) PCAP_IFACE=$2 ;;
                 --root)
                     case "$2" in /|'') die 'Offline root must not be / or empty' ;; esac
@@ -55,11 +70,16 @@ while [ "$#" -gt 0 ]; do
             esac
             shift 2 ;;
         --rd05-registers) REGISTERS=1; shift ;;
+        --deep) DEEP=1; shift ;;
         *) die "Unknown option: $1" ;;
     esac
 done
+case "$LABEL" in ''|*[!a-zA-Z0-9_.-]*) die 'Invalid label' ;; esac
+[ "${#LABEL}" -le 32 ] || die 'Label is too long'
 case "$DURATION" in ''|*[!0-9]*) die 'Invalid duration' ;; esac
-[ "${#DURATION}" -le 3 ] && [ "$DURATION" -le 120 ] || die 'Duration must be 0..120'
+[ "${#DURATION}" -le 3 ] && [ "$DURATION" -le 600 ] || die 'Duration must be 60..600 (offline 0)'
+case "$INTERVAL" in ''|*[!0-9]*) die 'Invalid interval' ;; esac
+[ "${#INTERVAL}" -le 2 ] && [ "$INTERVAL" -ge 1 ] && [ "$INTERVAL" -le 60 ] || die 'Interval must be 1..60'
 [ -d "$OUTPUT" ] || die 'Output directory does not exist'
 if [ -n "$ROOT" ]; then
     [ -d "$ROOT/proc" ] && [ -d "$ROOT/sys" ] || die 'Offline root needs proc and sys'
@@ -67,16 +87,17 @@ if [ -n "$ROOT" ]; then
         die 'Offline mode requires duration 0 and forbids register/PCAP options'
 else
     [ "$(id -u)" = 0 ] || die 'Run as root on the router'
+    [ "$DURATION" -ge 60 ] || die 'Live duration must be at least 60 seconds'
 fi
 if [ -n "$PCAP_IFACE" ]; then
     case "$PCAP_IFACE" in *[!a-zA-Z0-9_.:-]*|'-'*) die 'Invalid capture interface' ;; esac
     [ "${#PCAP_IFACE}" -le 32 ] && [ -d "/sys/class/net/$PCAP_IFACE" ] ||
         die 'Capture interface does not exist'
 fi
-for tool in dd du awk tar gzip date; do
+for tool in dd du awk tar gzip date find sort tr wc; do
     have "$tool" || die "Required command unavailable: $tool"
 done
-WORK=$OUTPUT/rd05-oem-collect.$(date +%Y%m%d-%H%M%S).$$
+WORK=$OUTPUT/rd05-oem-collect.$LABEL.$(date +%Y%m%d-%H%M%S).$$
 mkdir "$WORK" || die 'Cannot create private output directory'
 LOCK=$OUTPUT/rd05-oem-collect.lock
 if ! mkdir "$LOCK" 2>/dev/null; then
@@ -84,11 +105,15 @@ if ! mkdir "$LOCK" 2>/dev/null; then
     die "Collector lock exists: $LOCK; check for another run before removing a stale lock"
 fi
 echo "$$" > "$LOCK/pid"
-START=$(date +%s)
+echo "DIRECTORY=$WORK"
+START=$(awk '{print int($1)}' /proc/uptime)
+MAX_SECONDS=$((300 + DURATION))
+BASE_WORK=$WORK
 STATUS=$WORK/status.tsv
-printf 'result\texit\toutput\n' > "$STATUS"
+printf 'result\texit\tphase\toutput\n' > "$STATUS"
 
 cleanup() {
+    stop_capture
     [ -z "$TIMER" ] || { kill "$TIMER" 2>/dev/null; wait "$TIMER" 2>/dev/null; }
     if [ -n "$CHILD" ]; then
         kill -TERM "$CHILD" 2>/dev/null
@@ -109,9 +134,9 @@ trap 'exit 143' TERM HUP
 room() {
     local used now
     [ "$COUNT" -lt "$MAX_FILES" ] || return 1
-    now=$(date +%s)
+    now=$(monotonic)
     [ "$((now - START))" -lt "$MAX_SECONDS" ] || return 1
-    used=$(du -sk "$WORK" 2>/dev/null | awk '{print $1}')
+    used=$(du -sk "$BASE_WORK" 2>/dev/null | awk '{print $1}')
     case "$used" in ''|*[!0-9]*) return 1 ;; esac
     [ "$used" -lt "$MAX_KB" ]
 }
@@ -124,7 +149,7 @@ run() {
     seconds=$2
     shift 2
     if ! room; then
-        printf 'limit\t-\t%s\n' "$dest" >> "$STATUS"
+        printf 'limit\t-\t%s\t%s\n' "$PHASE" "$dest" >> "$STATUS"
         return 1
     fi
     COUNT=$((COUNT + 1))
@@ -153,7 +178,7 @@ run() {
     result=ok
     [ "$rc" -eq 0 ] || result=error
     [ ! -f "$WORK/$dest.timeout" ] || result=timeout
-    printf '%s\t%s\t%s\n' "$result" "$rc" "$dest" >> "$STATUS"
+    printf '%s\t%s\t%s\t%s\n' "$result" "$rc" "$PHASE" "$dest" >> "$STATUS"
     return 0
 }
 
@@ -163,8 +188,8 @@ copy() {
     source=$2
     # Old OEM BusyBox may lack both head -c and mktemp. DD is bounded by
     # 128 reads of at most 4096 bytes; keep its summary/errors separate.
-    run "$dest" 4 sh -c 'exec dd if="$1" bs=4096 count=128 2>"$2"' \
-        sh "$source" "$WORK/$dest.stderr"
+    run "$dest" 4 sh -c 'printf "SOURCE %s\n" "$1" >>"$2"; exec dd if="$1" bs=4096 count=128 2>>"$2"' \
+        sh "$source" "$WORK/read-errors.log"
 }
 
 file() {
@@ -187,7 +212,7 @@ query() {
     if have "$1"; then
         run "commands/$dest.txt" 5 "$@"
     else
-        printf 'unavailable\t-\t%s\n' "$1" >> "$STATUS"
+        printf 'unavailable\t-\t%s\t%s\n' "$PHASE" "$1" >> "$STATUS"
     fi
 }
 
@@ -217,24 +242,239 @@ net_snapshot() {
     done
 }
 
+deep_allowed() {
+    local lower leaf
+    lower=$(printf '%s' "$1" | tr 'A-Z' 'a-z')
+    leaf=${lower##*/}
+    case "$lower" in
+        *mtd*|*flash*|*spirom*|*memdump*|*ramdump*|*coredump*|*nvmem*|*efuse*|*eeprom*|*password*|*passwd*|*secret*|*key*|*pmk*|*psk*)
+            return 1 ;;
+        *watchdog*|*reset*|*reinit*|*test*|*clear*|*trigger*|*issue*|*scan*|*write*|*gpio_ctrl*)
+            return 1 ;;
+    esac
+    case "$leaf" in
+        cmd|command|memory|mem|phyreg*|8367reg*|led|enable*|disable*|open*|close*|set*|remove*|delete*|add*|inject*|start*|stop*|txdesc|txurb|up_event|up_flag|vdev|phypara_file|macdm|err_access|monitor_status|nat25filter|stactrl_info)
+            return 1 ;;
+        mib_all|mib_auth|mib_ap_profile|mib_staconfig|mib_wsc|mib_wds|mib_dkeytbl|mib_gkeytbl|cam_info|sae_peertable)
+            return 1 ;;
+    esac
+    return 0
+}
+
+discover_states() {
+    local path n list entry logical selected
+    [ "$DEEP" -eq 1 ] || return 0
+    n=0
+    for path in "$ROOT"/proc/rtl* "$ROOT"/proc/rtk* "$ROOT"/proc/rtw* "$ROOT"/proc/wlan* \
+        "$ROOT"/proc/wl[0-9]* "$ROOT"/proc/net/rtl* "$ROOT"/proc/net/rtk* \
+        "$ROOT"/proc/fast* "$ROOT"/proc/hw* "$ROOT"/proc/brsc \
+        "$ROOT"/sys/kernel/debug/rtl* "$ROOT"/sys/kernel/debug/rtk* \
+        "$ROOT"/sys/kernel/debug/rtw* "$ROOT"/sys/kernel/debug/ieee80211 \
+        "$ROOT"/sys/module/rtl*/parameters "$ROOT"/sys/module/rtk*/parameters \
+        "$ROOT"/sys/module/rtw*/parameters "$ROOT"/sys/realtek_boards \
+        "$ROOT"/proc/port_status "$ROOT"/proc/link_status "$ROOT"/proc/asicCounter \
+        "$ROOT"/proc/ethPort_mibStats "$ROOT"/proc/rxRing "$ROOT"/proc/txRing \
+        "$ROOT"/proc/netif "$ROOT"/proc/vlan "$ROOT"/proc/pvid "$ROOT"/proc/l2 \
+        "$ROOT"/proc/l3 "$ROOT"/proc/napt "$ROOT"/proc/igmp "$ROOT"/proc/br_igmp*; do
+        [ -e "$path" ] || continue
+        n=$((n + 1))
+        run "inventory/realtek-tree-$n.txt" 10 find "$path" -type f
+    done
+    list=$BASE_WORK/inventory/realtek-candidates.txt
+    : > "$list"
+    for entry in "$BASE_WORK"/inventory/realtek-tree-*.txt; do
+        [ -f "$entry" ] || continue
+        cat "$entry" >> "$list"
+    done
+    sort -u "$list" > "$list.sorted"
+    mv "$list.sorted" "$list"
+    : > "$BASE_WORK/inventory/realtek-eligible.txt"
+    printf 'decision\tpath\n' > "$BASE_WORK/inventory/realtek-decisions.tsv"
+    selected=0
+    while IFS= read -r entry; do
+        logical=${entry#"$ROOT"}
+        # Find output/error text is not a command; accept only these roots.
+        case "$logical" in /proc/*|/sys/*) ;; *) continue ;; esac
+        if ! deep_allowed "$logical"; then
+            printf 'excluded-command-or-sensitive\t%s\n' "$logical" >> "$BASE_WORK/inventory/realtek-decisions.tsv"
+        elif [ ! -f "$entry" ] || [ ! -r "$entry" ]; then
+            printf 'unreadable\t%s\n' "$logical" >> "$BASE_WORK/inventory/realtek-decisions.tsv"
+        elif [ "$selected" -ge 2048 ]; then
+            printf 'node-limit\t%s\n' "$logical" >> "$BASE_WORK/inventory/realtek-decisions.tsv"
+        else
+            printf '%s\n' "$logical" >> "$BASE_WORK/inventory/realtek-eligible.txt"
+            printf 'eligible\t%s\n' "$logical" >> "$BASE_WORK/inventory/realtek-decisions.tsv"
+            selected=$((selected + 1))
+        fi
+    done < "$list"
+}
+
+append_state() {
+    local logical source bytes frame
+    logical=$1
+    source=$WORK/files$logical
+    [ -f "$source" ] || return 0
+    bytes=$(wc -c < "$source")
+    frame=$WORK/state-frame.tmp
+    printf '\nSTATE path=%s bytes=%s uptime=%s\n' "$logical" "$bytes" "$(monotonic)" > "$frame"
+    cat "$source" >> "$frame" || return 1
+    # Concatenated gzip members are decoded together by standard gzip/Python.
+    # One aggregate file avoids thousands of tmpfs inodes per live snapshot.
+    gzip -c "$frame" >> "$WORK/realtek-state.txt.gz" || return 1
+    rm -f "$source" "$frame"
+}
+
+deep_snapshot() {
+    local logical path
+    [ "$DEEP" -eq 1 ] || return 0
+    while IFS= read -r logical; do
+        file "$logical"
+        append_state "$logical" || return 1
+    done < "$BASE_WORK/inventory/realtek-eligible.txt"
+    # Re-sample exported GPIO levels, thermal state and interface counters.
+    # Never export new GPIOs or sweep arbitrary MMIO addresses.
+    for path in "$ROOT"/sys/class/gpio/gpio*/value \
+        "$ROOT"/sys/class/thermal/thermal_zone*/temp \
+        "$ROOT"/sys/class/net/*/statistics/* \
+        "$ROOT"/sys/devices/system/cpu/cpu[0-9]*/cpufreq/scaling_cur_freq; do
+        [ -f "$path" ] || continue
+        file "${path#"$ROOT"}"
+        append_state "${path#"$ROOT"}" || return 1
+    done
+}
+
+monotonic() {
+    # Do not shorten a measurement when OEM NTP adjusts the wall clock.
+    awk '{print int($1)}' /proc/uptime
+}
+
+stop_capture() {
+    if [ -n "$CAP_TIMER" ]; then
+        kill "$CAP_TIMER" 2>/dev/null
+        wait "$CAP_TIMER" 2>/dev/null
+        CAP_TIMER=
+    fi
+    if [ -n "$CAP_PID" ]; then
+        kill -TERM "$CAP_PID" 2>/dev/null
+        sleep 1
+        kill -KILL "$CAP_PID" 2>/dev/null
+        wait "$CAP_PID" 2>/dev/null
+        printf 'finished\t%s\tcapture\tnetwork/capture.pcap\n' "$?" >> "$STATUS"
+        CAP_PID=
+    fi
+    :
+}
+
+start_capture() {
+    [ -n "$PCAP_IFACE" ] || return 0
+    if ! have tcpdump; then
+        printf 'unavailable\t-\tcapture\ttcpdump; counter snapshots still collected\n' >> "$STATUS"
+        return 0
+    fi
+    mkdir -p "$BASE_WORK/network"
+    (
+        ulimit -f 1024 || exit 125
+        exec tcpdump -p -U -ni "$PCAP_IFACE" -s 128 -c 4096 -w - \
+            'arp or icmp or icmp6 or (udp and (port 67 or port 68))'
+    ) > "$BASE_WORK/network/capture.pcap" 2> "$BASE_WORK/network/capture-stderr.txt" &
+    CAP_PID=$!
+    (
+        sleep "$DURATION"
+        kill -TERM "$CAP_PID" 2>/dev/null
+        sleep 1
+        kill -KILL "$CAP_PID" 2>/dev/null
+    ) &
+    CAP_TIMER=$!
+}
+
+live_snapshot() {
+    local label stage begin end path
+    label=$1
+    begin=$(monotonic)
+    stage=$BASE_WORK/live-raw-$label
+    mkdir "$stage" || return 1
+    WORK=$stage
+    PHASE=$label
+    printf 'start_uptime=%s\n' "$begin" > "$stage/timing.txt"
+    net_snapshot "$label"
+    deep_snapshot || return 1
+    for path in /proc/stat /proc/loadavg /proc/meminfo /proc/net/wireless; do file "$path"; done
+    query "$label-dmesg" dmesg
+    end=$(monotonic)
+    printf 'end_uptime=%s\n' "$end" >> "$stage/timing.txt"
+    WORK=$BASE_WORK
+    # A private snapshot archive is verified before deleting only its own
+    # temporary raw directory. Keep failed staging directories for analysis.
+    if tar -czf "$BASE_WORK/live/$label.tar.gz.partial" -C "$stage" . &&
+        tar -tzf "$BASE_WORK/live/$label.tar.gz.partial" >/dev/null; then
+        mv "$BASE_WORK/live/$label.tar.gz.partial" "$BASE_WORK/live/$label.tar.gz"
+        case "$stage" in "$BASE_WORK"/live-raw-[0-9][0-9][0-9][0-9]) rm -rf "$stage" ;; esac
+        printf '%s\t%s\t%s\tpacked\n' "$label" "$begin" "$end" >> "$BASE_WORK/live/timeline.tsv"
+    else
+        printf '%s\t%s\t%s\tpack-failed\n' "$label" "$begin" "$end" >> "$BASE_WORK/live/timeline.tsv"
+    fi
+    PHASE=inventory
+}
+
+observe() {
+    local started now index label remaining pause sample_started rest
+    mkdir -p "$BASE_WORK/live"
+    printf 'sample\tstart_uptime\tend_uptime\tresult\n' > "$BASE_WORK/live/timeline.tsv"
+    started=$(monotonic)
+    index=0
+    if [ "${DEEP:-0}" -eq 1 ] && [ -z "${ROOT:-}" ]; then
+        read SAVED_LOGLEVEL rest < /proc/sys/kernel/printk
+        dmesg -n 1
+    fi
+    start_capture
+    while :; do
+        label=$(printf '%04d' "$index")
+        sample_started=$(monotonic)
+        live_snapshot "$label" || return 1
+        now=$(monotonic)
+        # Include a snapshot starting at/after the requested time span.
+        # Slow reads may lengthen the run, never shorten it to one sleep.
+        [ "$((sample_started - started))" -lt "$DURATION" ] || [ "$index" -lt 1 ] || break
+        remaining=$((DURATION - (now - started)))
+        pause=$INTERVAL
+        [ "$remaining" -ge "$pause" ] || pause=$remaining
+        [ "$pause" -le 0 ] || sleep "$pause"
+        index=$((index + 1))
+    done
+    stop_capture
+    if [ -n "${SAVED_LOGLEVEL:-}" ]; then
+        dmesg -n "$SAVED_LOGLEVEL"
+        SAVED_LOGLEVEL=
+    fi
+    printf 'requested_seconds=%s\nobserved_seconds=%s\ninterval_target=%s\n' \
+        "$DURATION" "$((now - started))" "$INTERVAL" > "$BASE_WORK/live/window.txt"
+}
+
 cat > "$WORK/README.txt" <<EOF
 Realtek OEM collector $VERSION
-Default allowlist inventory; missing/unavailable/failed reads are not zeros.
-Per query deadline 4..5 s (PCAP 10 s), file limit $MAX_FILE_BYTES bytes,
+Run label: $LABEL
+Base allowlist inventory; deep Realtek discovery enabled: $DEEP.
+Missing/unavailable/failed reads are not zeros.
+Per query deadline 4..5 s (discovery 10 s), file limit $MAX_FILE_BYTES bytes,
 collection quota $MAX_FILES queries and approximately $MAX_KB KiB plus one query.
 Virtual files are copied up to 512 KiB; command output is capped at <=1 MiB.
 New queries stop after $MAX_SECONDS seconds; packaging follows afterward.
 Files at the size limit may be truncated. Kernel-hung reads cannot be made safe
 by a shell watchdog. Reads of vendor diagnostics can affect timing or latch counters.
 No MTD contents/hashes, /dev/mem, NVMEM/eFuse, rootfs binaries, UCI/NVRAM dumps,
-process environments, WPA/hostapd configuration or private keys are collected.
+process environments or WPA/hostapd configuration are intentionally collected.
+Deep mode excludes sensitive filenames; unknown vendor outputs are not redacted.
 No GPIO writes/exports, network configuration, firewall changes or services started.
 PCI sysfs devices are enumerated; no PCI config/resource memory is read.
 GPIO data describes registered controllers and exported lines; not every physical pin.
 Optional PCAP contains ARP/ICMP/DHCP prefixes, may include host identities/payload.
+PCAP runs concurrently for the requested window, up to 4096 packets/1 MiB.
+Live snapshots are timestamped and individually compressed in live/*.tar.gz.
+Target pause $INTERVAL seconds; actual read time lengthens the sampling interval.
 Register READ requests enabled: $REGISTERS. PCAP interface: ${PCAP_IFACE:-none}.
 Snapshots are sequential, not atomic. Publication/descriptor reads do not prove DMA data.
-The collector does not clear dmesg or counters. No automatic transfer/deletion.
+The collector does not clear dmesg or counters. No automatic transfer.
+Only temporary raw live directories are deleted after their archive is verified.
 EOF
 query date date -u
 query uname uname -a
@@ -364,19 +604,9 @@ if [ "$REGISTERS" -eq 1 ]; then
     dmesg -n "$SAVED_LOGLEVEL"
     SAVED_LOGLEVEL=
 fi
-if [ -n "$PCAP_IFACE" ]; then
-    if have tcpdump; then
-        # tcpdump may drop privileges: shell owns the new archive file, and
-        # tcpdump writes PCAP to stdout. Keep diagnostics separate from PCAP.
-        run network/capture.pcap 10 sh -c \
-            'exec tcpdump -p -U -ni "$1" -s 128 -c 128 -w - "arp or icmp or icmp6 or (udp and (port 67 or port 68))" 2> "$2"' \
-            sh "$PCAP_IFACE" "$WORK/network/capture-stderr.txt"
-    else
-        printf 'unavailable\t-\ttcpdump; counter snapshots still collected\n' >> "$STATUS"
-    fi
-fi
-echo "Observation window: $DURATION seconds. Generate PC ping traffic now."
-[ "$DURATION" -eq 0 ] || sleep "$DURATION"
+discover_states
+echo "Live observation: at least $DURATION seconds, target pause $INTERVAL seconds. Generate PC ping traffic now."
+observe || die 'Live snapshot failed; partial data retained'
 net_snapshot after
 query dmesg-after dmesg
 echo 'Packing local archive...'
