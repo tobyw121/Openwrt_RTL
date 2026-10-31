@@ -1,5 +1,61 @@
 # Cudy AX1500 / WR1500 R76: SPI-Analyse und Geräteprofil
 
+## Fullflash-Build (zusätzliches Profil)
+
+Neu: **`cudy_ax1500_r76_fullflash`** erzeugt
+`openwrt-realtek-rtl8197f-cudy_ax1500_r76_fullflash-squashfs-spi-full.bin`
+mit exakt 16 MiB sowie SHA256 und `.spi-manifest.json`.
+Im Menü das Profil mit **experimental full SPI image** auswählen.
+Der bisherige RAM-Test bleibt ein separates Profil.
+
+Der Builder `scripts/rtl8197f-cudy-fullflash.py` prüft den Originaldump über
+uImage-CRCs und die kompilierte OEM-Partitionstabelle. Er ersetzt nur
+0x40000–0xf00000. Bootloader, cfg, bdinfo sowie der gesamte Bereich ab
+0xf00000 (OEM-rootfs_data und backup) bleiben bytegleich erhalten.
+`CUDY_R76_SPI_TEMPLATE` kann beim Build auf den eigenen Originaldump zeigen.
+Das Ergebnis enthält dessen private Gerätedaten und darf nicht als generische
+Firmware für andere Geräte verteilt werden.
+
+Für Linux 6.6 gilt ein **neues OpenWrt-Layout**: Kernel bei 0x40000 mit
+4 MiB Budget, Rootfs bei **0x440000** mit 0xac0000 Bytes. Der separate
+Fullflash-DT und die Signaturprobes benutzen dieselben Offsets. Die Rootfs
+ist MTD-Partition 6. Ein neuer R76-uImage/cr6c-Container erhält korrekte
+CRC32- und additive 16-Bit-Prüfsummen sowie RAM-Einstieg 0x82000000 passend
+zum OpenWrt-Loader. Bei zu großem Kernel oder Rootfs bricht der Build ab.
+
+PC-Build:
+
+```sh
+cd ~/Downloads/openwrt/github/Openwrt_RTL
+git switch MW5_Stable
+git pull --ff-only origin MW5_Stable
+make menuconfig
+# Realtek / RTL8197F / Cudy AX1500 / WR1500 R76, experimental full SPI image
+make defconfig
+make target/linux/clean
+make download -j8
+make -j"$(nproc)" V=s
+```
+
+Die nachfolgenden Angaben zum RAM-only-Profil bleiben für dieses gültig.
+Das neue Fullflash-Profil ist weiterhin experimentell: Ethernet/WLAN sind
+nicht freigeschaltet. SPI ist lesend; Einstellungen sind ohne nutzbare
+beschreibbare Overlay-Partition nicht persistent. Der erhaltene OEM-Overlay
+wird absichtlich nicht als OpenWrt-Overlay eingebunden. Sysupgrade bleibt
+gesperrt; dies ist keine Datei für das OEM-Webinterface. Ein bestätigter
+Boot mit dem neuen Bootcontainer fehlt noch. Kein Flash-Befehl wird als
+getestet ausgegeben. Auf dem OEM-Router für die nächste Prüfung einzeln:
+
+```sh
+cat /proc/mtd
+cat /proc/meminfo
+```
+
+Hosttests prüfen Originalbereich-Erhalt, beide Containerprüfsummen,
+gerade/ungerade Payloads und das Abweisen ungültiger/zu großer Eingaben.
+Der Fullflash-DT wurde kompiliert und seine MTD-Reihenfolge kontrolliert.
+Das ist kein vollständiger OpenWrt-Build oder Hardware-Funktionstest.
+
 Quelle: `fullflash-templates/Cudy_AX1500.bin` aus Commit
 `b2d07b498939386caf8e45eae3162ddbfe47e36a`, 16.777.216 Bytes.
 SHA256: `f50f3147274a82fcbf4fef7a0c7500aeb7868b60e4e17975faea588237abd188`.

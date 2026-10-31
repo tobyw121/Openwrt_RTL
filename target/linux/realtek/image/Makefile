@@ -11,6 +11,7 @@ KERNEL_LOADADDR = 0x80100000
 RTL8197F_BUILD_FULLFLASH ?= 1
 RTL8197F_FULLFLASH_TEMPLATE_DIR ?= $(TOPDIR)/fullflash-templates
 RD05_SPI_TEMPLATE ?= $(RTL8197F_FULLFLASH_TEMPLATE_DIR)/xiaomi-r4-rd05-spi.bin
+CUDY_R76_SPI_TEMPLATE ?= $(RTL8197F_FULLFLASH_TEMPLATE_DIR)/Cudy_AX1500.bin
 TENDA_AC23_SPI_TEMPLATE ?= $(RTL8197F_FULLFLASH_TEMPLATE_DIR)/tenda-ac23-spi.bin
 TENDA_MW5_SPI_TEMPLATE ?= $(RTL8197F_FULLFLASH_TEMPLATE_DIR)/tenda-nova-mw5-spi.bin
 IBALL_WRD12GN_SPI_TEMPLATE ?= $(RTL8197F_FULLFLASH_TEMPLATE_DIR)/iball-wrd12gn-spi.bin
@@ -170,6 +171,15 @@ endef
 
 # Full-SPI images preserve the bundled device-specific boot/factory regions.
 # The Python builders validate template size and board markers before writing.
+define Build/rtl8197f-cudy-fullflash
+	python3 $(TOPDIR)/scripts/rtl8197f-cudy-fullflash.py \
+		--template "$(CUDY_R76_SPI_TEMPLATE)" --kernel "$@" \
+		--rootfs "$(IMAGE_ROOTFS)" --output "$@.new" \
+		--manifest "$@.spi-manifest.json"
+	mv $@.new $@
+	sha256sum $@ > $@.sha256
+endef
+
 define Build/rtl8197f-rd05-fullflash
 	$(TOPDIR)/scripts/rtl8197f-rd05-fullflash.py \
 		--template "$(RD05_SPI_TEMPLATE)" \

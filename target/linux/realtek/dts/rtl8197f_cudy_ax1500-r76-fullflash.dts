@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+#include "rtl8197f_cudy_ax1500-r76.dts"
+
+/ {
+	model = "Cudy AX1500 / WR1500 R76 (experimental fullflash)";
+	chosen {
+		bootargs = "console=ttyS0,38400n8 root=/dev/mtdblock6 rootfstype=squashfs clk_ignore_unused";
+	};
+};
+
+&spirom0 {
+	realtek,read-shift-probes = <0x40000 0x27051956 0x440000 0x68737173>;
+	partitions {
+		/delete-node/ partition@2b0000;
+		/delete-node/ partition@f00000;
+		/delete-node/ partition@ff0000;
+		partition@40000 { reg = <0x40000 0x400000>; };
+		partition@440000 {
+			label = "rootfs";
+			reg = <0x440000 0xac0000>;
+			read-only;
+		};
+		partition@f00000 { label = "oem-rootfs_data"; reg = <0xf00000 0xf0000>; read-only; };
+		partition@ff0000 { label = "oem-backup"; reg = <0xff0000 0x10000>; read-only; };
+	};
+};

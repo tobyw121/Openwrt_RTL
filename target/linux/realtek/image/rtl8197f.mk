@@ -55,6 +55,17 @@ define Device/cudy_ax1500_r76
 endef
 TARGET_DEVICES += cudy_ax1500_r76
 
+# Flash boot uses its own DT/command line and a 4 MiB kernel partition.
+define Device/cudy_ax1500_r76_fullflash
+  $(Device/cudy_ax1500_r76)
+  DEVICE_VARIANT := experimental full SPI image
+  DEVICE_DTS := rtl8197f_cudy_ax1500-r76-fullflash
+  RTL8197F_KERNEL_CMDLINE := console=ttyS0,38400n8 root=/dev/mtdblock6 rootfstype=squashfs clk_ignore_unused
+  IMAGES := $(if $(RTL8197F_FULLFLASH_ENABLED),squashfs-spi-full.bin)
+  IMAGE/squashfs-spi-full.bin := append-kernel | rtl8197f-cudy-fullflash
+endef
+TARGET_DEVICES += cudy_ax1500_r76_fullflash
+
 define Device/realtek_rtl8197f_evb
   DEVICE_VENDOR := Realtek
   DEVICE_MODEL := RTL8197F Evaluation Board
