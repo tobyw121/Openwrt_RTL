@@ -1,0 +1,356 @@
+{
+  "source": "rd05-oem-modules-20261031-120929.tar.gz",
+  "count": 70,
+  "modules": [
+    {
+      "name": "aes_enc.ko",
+      "bytes": 11376,
+      "sha256": "a1e4a61aec2df803f3c82ec70dd07e0341b7f70443981bb17405e04a695ce7c3"
+    },
+    {
+      "name": "arp_tables.ko",
+      "bytes": 17040,
+      "sha256": "4a87ab404dfac220424905dd2ad24d0ec1cd403b9f091a6da793477c2f5006bc"
+    },
+    {
+      "name": "arpt_mangle.ko",
+      "bytes": 2616,
+      "sha256": "9fb53890681d496af83535c3660dad6bb22b0a63e196e056b166fa0f13aea546"
+    },
+    {
+      "name": "arptable_filter.ko",
+      "bytes": 3024,
+      "sha256": "1dd662931fd8773c71b251d7a6eee3cb9d2ba0e06294c98311befdb7efa3456c"
+    },
+    {
+      "name": "authenc.ko",
+      "bytes": 7512,
+      "sha256": "c5d793ea3e9a86f1d85e6b64c6523795f25e1ceb934d3f8fbf4bfe587d6f0afb"
+    },
+    {
+      "name": "compat_xtables.ko",
+      "bytes": 1644,
+      "sha256": "400ade0ecac2960a3b3c8b2302fe885a6bf3dcfd66ffcb6d9a9c50b24e802aa7"
+    },
+    {
+      "name": "enid.ko",
+      "bytes": 14324,
+      "sha256": "53304bb8a6ef94990f7c80a63b1e957b0f9195cf1203fc395a94d78293e52b19"
+    },
+    {
+      "name": "gpio-button-hotplug.ko",
+      "bytes": 13084,
+      "sha256": "496ea9af292608a40abe676bf56bec12bc0d096646a8bcc03d03955383f98e23"
+    },
+    {
+      "name": "ip6_gre.ko",
+      "bytes": 25920,
+      "sha256": "ad343e23bca9edce20429980bead5636f9946d1059ecae08ddaa9c19061ae602"
+    },
+    {
+      "name": "ip6_tunnel.ko",
+      "bytes": 27136,
+      "sha256": "ff4b8f17fc3a448329fc4b2154dff510ab231cac087b95d7c1b8d260fc455944"
+    },
+    {
+      "name": "ip6t_MASQUERADE.ko",
+      "bytes": 2348,
+      "sha256": "20563ae8fa0318eb68e2ebd27437f93e84404bfcd68a431fcacf924b78884eaf"
+    },
+    {
+      "name": "ip6t_NPT.ko",
+      "bytes": 3588,
+      "sha256": "0a32eace18187284ceceb6beb416be4fbd4054c643c5a82953deb25b658035cd"
+    },
+    {
+      "name": "ip6t_REJECT.ko",
+      "bytes": 3252,
+      "sha256": "22010ead549138d3e6b901c691d0d403c2bb3a7e2b17ff9b4b12afc5c354d1c8"
+    },
+    {
+      "name": "ip6t_ah.ko",
+      "bytes": 2580,
+      "sha256": "15526413a34072a8e311844993552cae8cccedadd28c35ef051abd80d0bd8808"
+    },
+    {
+      "name": "ip6t_eui64.ko",
+      "bytes": 2540,
+      "sha256": "eacab34fc76b38cdfba913633752f93fd92ad513f5ac399f421a50641bd1f817"
+    },
+    {
+      "name": "ip6t_frag.ko",
+      "bytes": 2676,
+      "sha256": "d3a8ca4ba2ad3b14422e7415b58d8fee6b255d2cdc227bc94c02ba9a14771c9d"
+    },
+    {
+      "name": "ip6t_hbh.ko",
+      "bytes": 3152,
+      "sha256": "cd0af6ac6e93a05e6ee42f3a6ac7dc6fb0641d71d4d8892841f129a49c22a494"
+    },
+    {
+      "name": "ip6t_ipv6header.ko",
+      "bytes": 2792,
+      "sha256": "5f1764c2c361579b1a2d4fb068c281377b70a79fe4c20cf7c1508fe686abe877"
+    },
+    {
+      "name": "ip6t_mh.ko",
+      "bytes": 2376,
+      "sha256": "11f73c49bd3d6df3fdc683895029c0b05327489398a873475bcf0744aa08fcb7"
+    },
+    {
+      "name": "ip6t_rt.ko",
+      "bytes": 3396,
+      "sha256": "8fc6021fc73f932b3a4465b054aebe19d39a0795cfb2af63b6ddcd350f0ea4fe"
+    },
+    {
+      "name": "ip6table_filter.ko",
+      "bytes": 3276,
+      "sha256": "ae4d5f6e32199ca65e0d156aa6b2397bf7ebba2d6d75113afcd2fdd294fe826d"
+    },
+    {
+      "name": "ip6table_mangle.ko",
+      "bytes": 3740,
+      "sha256": "6c42f0b0598a4f7caec66ea1d0b5483fd767324c7bb3bb20f1d529bb109ef1e6"
+    },
+    {
+      "name": "ip6table_nat.ko",
+      "bytes": 3384,
+      "sha256": "44ee68ac7f58e103b8c24f0ce379b27035f40c03a6b1bcb6c28219c8a9161344"
+    },
+    {
+      "name": "ip_account.ko",
+      "bytes": 31840,
+      "sha256": "c2cc78748c5fc1dd1d404af4b0d6917ad492e06b1543009b78530680aae25185"
+    },
+    {
+      "name": "ip_gre.ko",
+      "bytes": 18760,
+      "sha256": "2e75b2b271dded6437bc1e65b3abcb16747e20d67abb95e5a785027516830f76"
+    },
+    {
+      "name": "ip_set.ko",
+      "bytes": 37352,
+      "sha256": "ce11924c5524e96bd1ae9b8e0de18bd7208b42bb7cbe634262ecb0a5ff50b216"
+    },
+    {
+      "name": "ip_set_bitmap_ip.ko",
+      "bytes": 11024,
+      "sha256": "74a40c48a575d740c7aa9ab7ce55047dbdab60dbcd353deebe8a9d87dbf433f3"
+    },
+    {
+      "name": "ip_set_bitmap_ipmac.ko",
+      "bytes": 11044,
+      "sha256": "4107295dd8e736531b1080377b7a265b1366232f5339b5b232a5533429128b6f"
+    },
+    {
+      "name": "ip_set_bitmap_port.ko",
+      "bytes": 10024,
+      "sha256": "ab334639eecce904dc217919f0524706e50d25805e1e23fdb9d6c16cb44d533d"
+    },
+    {
+      "name": "ip_set_hash_ip.ko",
+      "bytes": 28356,
+      "sha256": "2f923dbaafa807ade5e7b346bf4afb78b5b9768b9af9088f0472f058118f672e"
+    },
+    {
+      "name": "ip_set_hash_ipmark.ko",
+      "bytes": 28248,
+      "sha256": "78b488aefeff897ce2348baec58d4262fdc12332f7321b00afa80e1aa3147a6f"
+    },
+    {
+      "name": "ip_set_hash_ipport.ko",
+      "bytes": 29056,
+      "sha256": "377d2c70b2de5eaa7a27ff66164f14949185163c9e16f2c98403752dc251c25d"
+    },
+    {
+      "name": "ip_set_hash_ipportip.ko",
+      "bytes": 30000,
+      "sha256": "d51f6ec69621248c516e748eb5d9891c59290e101c81b64da07ff804dd8fbdc9"
+    },
+    {
+      "name": "ip_set_hash_ipportnet.ko",
+      "bytes": 35496,
+      "sha256": "34f743fb696732329ea6b457db41ca51757fb1846498a64d87c45cd804636640"
+    },
+    {
+      "name": "ip_set_hash_mac.ko",
+      "bytes": 16456,
+      "sha256": "b9319f449f584834ea22f5eb40bb5b6260147b27249c5d28cd487e0e1b63b686"
+    },
+    {
+      "name": "ip_set_hash_net.ko",
+      "bytes": 32384,
+      "sha256": "dab22cc74957a3c2b0b4c904b2b74e508e319e18861ea6500c893e54499aca76"
+    },
+    {
+      "name": "ip_set_hash_netiface.ko",
+      "bytes": 34568,
+      "sha256": "6aef1d18794cafbb7c4e502133954626394151fe7896f907715a2aa53d890e77"
+    },
+    {
+      "name": "ip_set_hash_netnet.ko",
+      "bytes": 35760,
+      "sha256": "23d7c0a75340b54a27c4222ba64d6a8b1b6d2963edd9be07ad5af4108f11436a"
+    },
+    {
+      "name": "ip_set_hash_netport.ko",
+      "bytes": 34176,
+      "sha256": "571fd320fe6b61941b26109698bdb1e30b4a223e1e4bd0033e07661473d27607"
+    },
+    {
+      "name": "ip_set_hash_netportnet.ko",
+      "bytes": 37200,
+      "sha256": "b688df443dad5c093e3b6de398dea8c40b7a71adb6f0a0e866cff301657bd5c6"
+    },
+    {
+      "name": "ip_set_list_set.ko",
+      "bytes": 11716,
+      "sha256": "c8d6d7dfcf117f5167c66b0b9d3888fad77da0897310b15798fe2c9428af3c68"
+    },
+    {
+      "name": "libcrc32c.ko",
+      "bytes": 2548,
+      "sha256": "4b84eb038c6d81396fc88797229d33b2387b96324727a88fcc8484d9112b90c7"
+    },
+    {
+      "name": "mtd_nandecctest.ko",
+      "bytes": 1392,
+      "sha256": "b05ef6b2fa312d9f1640ff73dace21b8e2dab9ba7370fa9a0eb378cc0ab04feb"
+    },
+    {
+      "name": "mtd_oobtest.ko",
+      "bytes": 19680,
+      "sha256": "fadd6689c166efc3c2ef20ed1b87268d78cc30bf3ae2b53e3e7a991996db3b15"
+    },
+    {
+      "name": "mtd_pagetest.ko",
+      "bytes": 15096,
+      "sha256": "7166bd7e97e25c20cbfb41f20785eba014597682435b7cafc63a33b802667176"
+    },
+    {
+      "name": "mtd_readtest.ko",
+      "bytes": 9532,
+      "sha256": "ff6d144336c09eca7c7064fe1ba7efbcb4395cd05192e69cce00ecd4ec643aec"
+    },
+    {
+      "name": "mtd_speedtest.ko",
+      "bytes": 14320,
+      "sha256": "605ebb8ada63b1422cb61470393dcb0939b494781708deabe142a4fa963d853a"
+    },
+    {
+      "name": "mtd_stresstest.ko",
+      "bytes": 9320,
+      "sha256": "809a4e723beb2620e42cb8cfc8e4cc34b261f80d11286241b4720617f8dcae92"
+    },
+    {
+      "name": "mtd_subpagetest.ko",
+      "bytes": 15280,
+      "sha256": "eeed971b5a384e1fdf1182f2e02a32e79c00bdccd74720bf698facf05a870ebc"
+    },
+    {
+      "name": "mtd_torturetest.ko",
+      "bytes": 16244,
+      "sha256": "b8701335a76a3a9fe7277ddd27e79a5301844373b667a5a44d55a73c74104c9d"
+    },
+    {
+      "name": "nf_conntrack_amanda.ko",
+      "bytes": 5772,
+      "sha256": "4923be17017f7b8f3afed2c61578fc718acc70cd297fe77cd58880da0bcba886"
+    },
+    {
+      "name": "nf_conntrack_broadcast.ko",
+      "bytes": 2220,
+      "sha256": "cb4a765efd31dbdb66afb8c33294fda9fb84b48b6cb88372533f078d17b45474"
+    },
+    {
+      "name": "nf_conntrack_irc.ko",
+      "bytes": 7592,
+      "sha256": "d090f5513967423ae1ccaaa6f3e5d0027fba181976854d5b0f003ce12b081670"
+    },
+    {
+      "name": "nf_conntrack_snmp.ko",
+      "bytes": 3024,
+      "sha256": "6028a98f9fc63c15ef31352e2de374f5abf69b9b2a5cdb7cf7a475f0c264016d"
+    },
+    {
+      "name": "nf_nat_amanda.ko",
+      "bytes": 2976,
+      "sha256": "bdc658c4d93ff799c7dc46c5c034199a79f4b079a03f0a559fb452625168f924"
+    },
+    {
+      "name": "nf_nat_irc.ko",
+      "bytes": 3576,
+      "sha256": "50cc68138b42809d87652576415b9618148ed9e978631bae2090c5811f42158a"
+    },
+    {
+      "name": "nf_nat_snmp_basic.ko",
+      "bytes": 11928,
+      "sha256": "35b353cb3f48dff93801664794e6b461d8879717a16ac7bb816643dc1c95221d"
+    },
+    {
+      "name": "passthrough.ko",
+      "bytes": 14476,
+      "sha256": "cc6545f03d8bbef6374f81e0807b3bce1079daa40539b6d3c80888a4f3358d6b"
+    },
+    {
+      "name": "ppp_async.ko",
+      "bytes": 13276,
+      "sha256": "ed0cce2b03f163cf6c2b3cf00b04d4eceb34af479c0c04aea5357b7adae295bc"
+    },
+    {
+      "name": "tunnel6.ko",
+      "bytes": 4996,
+      "sha256": "82dd317fe2b8a3e3175579869d4b599915b9e0e6042e5dd85d67dd51f551fda8"
+    },
+    {
+      "name": "wandt_filter.ko",
+      "bytes": 4496,
+      "sha256": "e4b7243035791ff0a4b6ecb3a1f42be5befc4b840633ebb22d73992f2330d90f"
+    },
+    {
+      "name": "xt_IP4MARK.ko",
+      "bytes": 2008,
+      "sha256": "57f44e7f929c9f2cc0da216ffa0bf74b1e519bfc2bf9d29eeda138eaf35a9223"
+    },
+    {
+      "name": "xt_bpf.ko",
+      "bytes": 2580,
+      "sha256": "f025b710ef172e3c7ee10813e7fef1d6600182a5bd1a1395632b8ae45b079e96"
+    },
+    {
+      "name": "xt_cgroup_MARK.ko",
+      "bytes": 2220,
+      "sha256": "eef523d42271e91e80ebbfb4224689257fadd3ba892a8b649a717c4ce01a43a1"
+    },
+    {
+      "name": "xt_flowMARK.ko",
+      "bytes": 19260,
+      "sha256": "a490f01807a3e50e6760015a9b036425a711f458291a05aaeee0dc968ea27552"
+    },
+    {
+      "name": "xt_multiport.ko",
+      "bytes": 3044,
+      "sha256": "c1e3f3738c1029d67862fd5eb4a00d65475c2e039ed4a64f5160eb7163ed9dec"
+    },
+    {
+      "name": "xt_recent.ko",
+      "bytes": 15056,
+      "sha256": "59f8b9ebbbaaad4dd8166f5930a3913deef51b90cf472d92d0fdf18c16ebeccf"
+    },
+    {
+      "name": "xt_set.ko",
+      "bytes": 12600,
+      "sha256": "526304085b05dcf7675d10ac6f371d4ced1857625ed37ca8669da168ffd42476"
+    },
+    {
+      "name": "xt_time.ko",
+      "bytes": 4212,
+      "sha256": "1d9e8cb6db3599e043c38b6ba334c6c08a356314af36e5044e6d08416a4382c4"
+    },
+    {
+      "name": "xt_u32.ko",
+      "bytes": 2720,
+      "sha256": "f16bde2872280b30b3c8d70a713b9e4c0d92339f22cdcb77aad0c1d162d3c561"
+    }
+  ]
+}

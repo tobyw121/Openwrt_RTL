@@ -99,3 +99,9 @@ sich Descriptor-Felder, Adressformen und Zielport-Remapping gegen einen
 wirklich verwendeten OEM-Zustand vergleichen. Sie belegen jedoch noch
 keine einzelne Ursache oder reparierten LAN-/WAN-Verkehr unter Linux 6.6.
 Deshalb ändert dieser Befundbericht keine Laufzeit-, DSA- oder CRC-Defaults.
+
+## Follow-up captures, 2026-10-31
+
+See [idle/ping, packet and module findings](2026-10-31-follow-up.md) and
+[the 70-module hash inventory](module-inventory.json). No complete Ethernet fix
+is established by these captures. Raw archives remain in the private workspace.
