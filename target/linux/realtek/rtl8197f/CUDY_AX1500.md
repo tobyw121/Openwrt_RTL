@@ -10,12 +10,13 @@ No working WLAN startup is claimed by the UART correction.
 `fullflash-templates/Cudy_AX1500.bin` now supplies a complete 16 MiB R76
 layout, including cfg/bdinfo. Select **Cudy AX1500 / WR1500 R76** for the new
 experimental RAM profile `cudy_ax1500_r76`. It uses 38400 baud, read-only
-signature-checked flash mapping and PCI enumeration. The three original
-UART-only profiles described below are retained unchanged.
+signature-checked flash mapping and PCI enumeration. WR1500 has one selectable profile for both RAM and full-SPI outputs;
+RE1500 and M1500 remain separate devices. Enable SquashFS and ramdisk.
+The older UART-only WR1500 and fullflash-only selections are removed.
 
 Analysis, exact build commands and remaining hardware limitations:
 [Cudy R76 SPI target](../../../../reverse-engineering/cudy-ax1500-r76/README.md).
-This is not yet a flashable/full-network router profile. Ethernet, switch
+Full-SPI output is available, but hardware boot and full-network operation remain unverified. Ethernet, switch
 and WLAN startup remain disabled; no OEM Linux-4.4 module is used on 6.6.
 
 These devices now have separate experimental **UART/RAM bring-up profiles**

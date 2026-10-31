@@ -27,7 +27,6 @@ define Device/cudy_wr1500
   DEVICE_DTS := rtl8197f_cudy_wr1500
   SUPPORTED_DEVICES += cudy,wr1500
 endef
-TARGET_DEVICES += cudy_wr1500
 
 define Device/cudy_re1500
   $(Device/cudy_ax1500_ram)
@@ -45,27 +44,20 @@ define Device/cudy_m1500
 endef
 TARGET_DEVICES += cudy_m1500
 
-# Complete R76 SPI dump: UART + read-only flash + PCI identification in RAM.
+# One selectable R76 profile builds both flash and RAM artifacts. Both DTs
+# are compiled; the normal kernel uses the first, RAM uses the second.
 define Device/cudy_ax1500_r76
   $(Device/cudy_ax1500_ram)
   DEVICE_MODEL := AX1500 / WR1500 R76
-  DEVICE_VARIANT := experimental RAM boot, read-only SPI
-  DEVICE_DTS := rtl8197f_cudy_ax1500-r76
-  RTL8197F_KERNEL_CMDLINE := console=ttyS0,38400n8 rdinit=/sbin/init clk_ignore_unused
-  SUPPORTED_DEVICES += cudy,ax1500-r76
-endef
-TARGET_DEVICES += cudy_ax1500_r76
-
-# Flash boot uses its own DT/command line and a 4 MiB kernel partition.
-define Device/cudy_ax1500_r76_fullflash
-  $(Device/cudy_ax1500_r76)
-  DEVICE_VARIANT := experimental full SPI image
-  DEVICE_DTS := rtl8197f_cudy_ax1500-r76-fullflash
+  DEVICE_VARIANT := experimental
+  DEVICE_DTS := rtl8197f_cudy_ax1500-r76-fullflash rtl8197f_cudy_ax1500-r76
   RTL8197F_KERNEL_CMDLINE := console=ttyS0,38400n8 root=/dev/mtdblock6 rootfstype=squashfs clk_ignore_unused
+  KERNEL_INITRAMFS := kernel-bin | append-cudy-r76-ram-dtb | lzma | rtl8197f-loader-kernel console=ttyS0,38400n8 rdinit=/sbin/init clk_ignore_unused | check-size 31744k
+  SUPPORTED_DEVICES += cudy,ax1500-r76
   IMAGES := $(if $(RTL8197F_FULLFLASH_ENABLED),squashfs-spi-full.bin)
   IMAGE/squashfs-spi-full.bin := append-kernel | rtl8197f-cudy-fullflash
 endef
-TARGET_DEVICES += cudy_ax1500_r76_fullflash
+TARGET_DEVICES += cudy_ax1500_r76
 
 define Device/realtek_rtl8197f_evb
   DEVICE_VENDOR := Realtek

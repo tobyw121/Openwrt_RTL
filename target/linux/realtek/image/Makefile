@@ -161,7 +161,7 @@ define Build/rtl8197f-loader-kernel
 		LOADER_NAME="$(notdir $@)" \
 		LZMA_TEXT_START=$(RTL8197F_LZMA_TEXT_START) \
 		LOADADDR=$(KERNEL_LOADADDR) \
-		KERNEL_CMDLINE="$(RTL8197F_KERNEL_CMDLINE)" \
+		KERNEL_CMDLINE="$(if $(strip $(1)),$(1),$(RTL8197F_KERNEL_CMDLINE))" \
 		LOADER_DATA="$@" \
 		BOARD="$(DEVICE_NAME)" \
 		compile loader.bin
@@ -171,6 +171,10 @@ endef
 
 # Full-SPI images preserve the bundled device-specific boot/factory regions.
 # The Python builders validate template size and board markers before writing.
+define Build/append-cudy-r76-ram-dtb
+	cat $(KDIR)/image-$(word 2,$(DEVICE_DTS)).dtb >> $@
+endef
+
 define Build/rtl8197f-cudy-fullflash
 	python3 $(TOPDIR)/scripts/rtl8197f-cudy-fullflash.py \
 		--template "$(CUDY_R76_SPI_TEMPLATE)" --kernel "$@" \

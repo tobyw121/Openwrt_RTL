@@ -1,12 +1,14 @@
 # Cudy AX1500 / WR1500 R76: SPI-Analyse und Geräteprofil
 
-## Fullflash-Build (zusätzliches Profil)
+## Ein Profil für RAM und Fullflash
 
-Neu: **`cudy_ax1500_r76_fullflash`** erzeugt
-`openwrt-realtek-rtl8197f-cudy_ax1500_r76_fullflash-squashfs-spi-full.bin`
+Neu: **`cudy_ax1500_r76`** erzeugt
+`openwrt-realtek-rtl8197f-cudy_ax1500_r76-squashfs-spi-full.bin`
 mit exakt 16 MiB sowie SHA256 und `.spi-manifest.json`.
-Im Menü das Profil mit **experimental full SPI image** auswählen.
-Der bisherige RAM-Test bleibt ein separates Profil.
+Im Menü das Profil mit **experimental** auswählen.
+Dasselbe Profil baut auch das Initramfs-RAM-Image, wenn ramdisk aktiviert ist.
+WR1500-UART- und Fullflash-Varianten sind keine separaten Menüeinträge mehr.
+RE1500 und M1500 bleiben eigenständige Geräteprofile.
 
 Der Builder `scripts/rtl8197f-cudy-fullflash.py` prüft den Originaldump über
 uImage-CRCs und die kompilierte OEM-Partitionstabelle. Er ersetzt nur
@@ -30,14 +32,16 @@ cd ~/Downloads/openwrt/github/Openwrt_RTL
 git switch MW5_Stable
 git pull --ff-only origin MW5_Stable
 make menuconfig
-# Realtek / RTL8197F / Cudy AX1500 / WR1500 R76, experimental full SPI image
+# Realtek / RTL8197F / Cudy AX1500 / WR1500 R76, experimental
 make defconfig
 make target/linux/clean
 make download -j8
 make -j"$(nproc)" V=s
 ```
 
-Die nachfolgenden Angaben zum RAM-only-Profil bleiben für dieses gültig.
+Das RAM-Image verwendet den OEM-DT mit Rootfs bei 0x2b0000 und rdinit;
+das Flash-Image verwendet den OpenWrt-DT mit Rootfs bei 0x440000.
+Die Auswahl von DT und Kommandozeile erfolgt pro Image im selben Profil.
 Das neue Fullflash-Profil ist weiterhin experimentell: Ethernet/WLAN sind
 nicht freigeschaltet. SPI ist lesend; Einstellungen sind ohne nutzbare
 beschreibbare Overlay-Partition nicht persistent. Der erhaltene OEM-Overlay
@@ -124,9 +128,8 @@ Die zu diesem Dump geprüften Ergebnisse stehen in [evidence.json](evidence.json
 
 Profil: **`cudy_ax1500_r76`**, Menüname **Cudy AX1500 / WR1500 R76**,
 Device Tree `rtl8197f_cudy_ax1500-r76.dts`, Boardkennung `cudy,ax1500-r76`.
-Dies ist ein experimentelles **RAM-/Initramfs-Profil**, kein fertiges
-flashbares Routerimage. Die bestehenden WR1500/RE1500/M1500-Profile bleiben
-erhalten. Die neue Variante ergänzt:
+Dies ist ein experimentelles kombiniertes RAM-/Fullflash-Profil; die
+Hardwarefunktion ist weiterhin unbestätigt. RE1500 und M1500 bleiben als andere Geräte erhalten. Die neue Variante ergänzt:
 
 * UART0 bei **38400 Baud, 8N1**, passend zur OEM-Kernelreferenz.
 * Den bisherigen strapbasierten CPU-Taktdecoder und eine auf **64 MiB**
@@ -163,8 +166,8 @@ make menuconfig
 ```
 
 Auswahl: **Target System → Realtek**, **Subtarget → RTL8197F**, **Target
-Profile → Cudy AX1500 / WR1500 R76**. Unter **Target Images** muss
-**ramdisk** aktiv sein. Die resultierenden Einträge sind:
+Profile → Cudy AX1500 / WR1500 R76**. Unter **Target Images** **SquashFS** und **ramdisk** aktivieren, damit
+beide Varianten entstehen. Die resultierenden Einträge sind:
 
 ```text
 CONFIG_TARGET_realtek=y
@@ -185,8 +188,8 @@ make -j"$(nproc)" V=s
 Bei einem Fehler den Build mit `make -j1 V=s` erneut starten.
 Erwartetes Artefakt unter `bin/targets/realtek/rtl8197f/`:
 `openwrt-realtek-rtl8197f-cudy_ax1500_r76-initramfs-ram-loader.bin`.
-Es wird kein Factory-, Sysupgrade- oder Full-SPI-Image für dieses Profil
-erzeugt. Der RAM-Loader liegt bei 0x82000000 und entpackt nach 0x80100000;
+Zusätzlich wird das oben beschriebene Full-SPI-Image erzeugt.
+Ein OEM-Factory-Upgrade oder Sysupgrade wird weiterhin nicht unterstützt. Der RAM-Loader liegt bei 0x82000000 und entpackt nach 0x80100000;
 die bestehende Überlappungsprüfung bleibt aktiv. Es ist kein `bootm`-uImage
 und kein OEM-Upgradecontainer.
 

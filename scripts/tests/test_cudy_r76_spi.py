@@ -76,24 +76,35 @@ int main(void) {
                             '-o', str(p/'check')], check=True, capture_output=True)
             subprocess.run([str(p/'check')], check=True)
 
-    def test_image_template_has_only_ram_output(self):
+    def test_single_profile_builds_flash_and_ram(self):
         image = (ROOT/'target/linux/realtek/image/rtl8197f.mk').read_text().replace('include ./common.mk', '')
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp)/'Makefile'
             p.write_text(image + '''
+RTL8197F_FULLFLASH_ENABLED := 1
 IMAGES := sysupgrade.bin
 $(eval $(call Device/cudy_ax1500_r76))
 $(info IMAGES=$(IMAGES))
 $(info DTS=$(DEVICE_DTS))
 $(info CMDLINE=$(RTL8197F_KERNEL_CMDLINE))
 $(info SUFFIX=$(KERNEL_INITRAMFS_SUFFIX))
+$(info RAM=$(KERNEL_INITRAMFS))
 all: ; @:
 ''')
             out = subprocess.check_output(['make', '-sf', str(p)], text=True)
-            self.assertIn('IMAGES=\n', out)
-            self.assertIn('DTS=rtl8197f_cudy_ax1500-r76\n', out)
-            self.assertIn('console=ttyS0,38400n8 rdinit=/sbin/init', out)
+            self.assertIn('IMAGES=squashfs-spi-full.bin\n', out)
+            self.assertIn('DTS=rtl8197f_cudy_ax1500-r76-fullflash rtl8197f_cudy_ax1500-r76\n', out)
+            self.assertIn('console=ttyS0,38400n8 root=/dev/mtdblock6', out)
             self.assertIn('SUFFIX=-ram-loader.bin', out)
+            self.assertIn('append-cudy-r76-ram-dtb', out)
+            self.assertIn('rtl8197f-loader-kernel console=ttyS0,38400n8 rdinit=/sbin/init', out)
+
+    def test_only_one_wr1500_menu_profile(self):
+        image = (ROOT/'target/linux/realtek/image/rtl8197f.mk').read_text()
+        profiles = [line.split('+=', 1)[1].strip() for line in image.splitlines()
+                    if line.startswith('TARGET_DEVICES += cudy_')]
+        self.assertEqual([p for p in profiles if p not in ('cudy_re1500', 'cudy_m1500')],
+                         ['cudy_ax1500_r76'])
 
     def test_upgrade_handlers_and_vendor_autostart_are_blocked(self):
         base = ROOT/'target/linux/realtek/base-files'

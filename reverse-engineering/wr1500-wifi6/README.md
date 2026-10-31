@@ -70,7 +70,7 @@ cd ~/Downloads/openwrt/github/Openwrt_RTL
 git switch MW5_Stable
 git pull --ff-only origin MW5_Stable
 make menuconfig
-# Realtek / RTL8197F / Cudy AX1500 R76 experimental full SPI image; SquashFS
+# Realtek / RTL8197F / Cudy AX1500 R76 experimental; SquashFS
 make defconfig
 make target/linux/clean
 make download -j8
