@@ -1,5 +1,9 @@
 # RD05 routed WAN DHCP
 
+For a standalone OEM hardware/runtime inventory without MTD partition reads,
+see [the bounded collector instructions](../../../../scripts/rd05-oem-collect.md).
+This collector runs on the existing OEM image; no firmware build is required.
+
 Observed failure: both WLAN bands associate and local LAN management works;
 `wan` has a 1000/full carrier, but `ifstatus wan` stays pending with repeated
 udhcpc discovers. Even a ping initiated by the router returns Network
