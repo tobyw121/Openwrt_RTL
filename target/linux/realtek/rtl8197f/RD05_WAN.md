@@ -468,3 +468,71 @@ After rebuilding, `rd05-rgmii-calibrate status` should show SW_TXC=4 and
 `/tmp/rd05-rgmii-boot.log` should show the applied profile. The kernel reapply
 log should report ext_txc=0x124 with the observed other EXT fields. Keep
 TX descriptor mode 0 for the next LAN ARP/DHCP/WAN test.
+
+## GP3000 family-D review: RGMII transaction ordering
+
+The GP3000 tree at commit `5090fbcb6ba743dd7b1314811ef557bad0460147`
+contains a second RTL8367D SDK implementation:
+[dal_rtl8367d_port.c](https://github.com/jameywine/GPL-for-GP3000/blob/5090fbcb6ba743dd7b1314811ef557bad0460147/linux-5.10.x/drivers/net/ethernet/realtek/rtl8367/dal/rtl8367d/dal_rtl8367d_port.c).
+Its `dal_rtl8367d_port_rgmiiDelayExt_set()` contract explicitly requires timing
+configuration before `rtksw_port_macForceLinkExt_set()`. The associated register
+header confirms EXT1 coarse TX/RX at 0x1307 and the separate fine TX tap at
+0x13f9[5:3]. These match our existing definitions; no new timing constant is
+inferred from the GP3000 board.
+
+Patch 339 uses one RD05-only transaction for bootstrap and runtime calibration:
+force CPU7 down, configure EXT1 mux/SSC/timing, apply the effective diagnostic
+coarse timing, read back coarse and fine timing, then force the 1-Gbit full-duplex
+link up. Bootstrap no longer rewrites SSC and timing after link enable. A read
+error or mismatch prevents the final link enable; a mismatch logs
+`RD05 EXT1 timing readback mismatch`. Failure to stop CPU7 aborts immediately.
+This deliberate stop during reconfiguration is our robustness change based on
+the SDK ordering requirement, not a claim that GP3000 uses identical board timing.
+
+All new register operations require both `xiaomi,r4-rd05` and the D-family chip
+flag. MW5 does not enter this transaction. CPU-tag format, VLAN/bridge policy,
+CRC validation, firewall rules and acceleration defaults are unchanged.
+
+Validation: native fault injection checks all six transaction boundaries,
+readback mismatches, all supported coarse/fine timing combinations and board/chip
+rejection. The patched switch object compiles for MIPS against Linux 6.6.114.
+Neither check establishes that the RD05 FCS/RX failure is resolved; a full image
+build and physical retest remain necessary.
+
+For a bounded retest, connect the PC to LAN2, keep UART access to the router,
+and enter router commands one line at a time. First record router counters:
+
+```sh
+cat /etc/openwrt_release
+ethtool -S lan2 | grep -E 'ifInOctets|ifOutOctets|cpu_'
+grep -E '^(rx packets|tx packets)' /proc/rd05-rtknet
+```
+
+On the PC, start a capture in terminal 1:
+
+```sh
+sudo ip link set enx14ebb6300bb2 up
+sudo ip addr replace 192.168.1.3/24 dev enx14ebb6300bb2
+sudo tcpdump -ni enx14ebb6300bb2 -e -vvv 'arp or icmp'
+```
+
+In PC terminal 2:
+
+```sh
+sudo ip neigh flush to 192.168.1.1 dev enx14ebb6300bb2
+sudo arping -I enx14ebb6300bb2 -S 192.168.1.3 -c 10 192.168.1.1
+ping -I 192.168.1.3 -c 3 192.168.1.1
+```
+
+Then on the router:
+
+```sh
+ethtool -S lan2 | grep -E 'ifInOctets|ifOutOctets|cpu_'
+grep -E '^(rx packets|tx packets)' /proc/rd05-rtknet
+dmesg | grep -E 'RD05 EXT1|RGMII|readback'
+ifstatus wan
+```
+
+Stop PC tcpdump with Ctrl+C. Compare counter deltas, not historical totals.
+A successful local test needs ARP replies and increasing SoC RX; WAN additionally
+needs a DHCP lease from the Fritzbox. Do not disable CRC checks to obtain a pass.
