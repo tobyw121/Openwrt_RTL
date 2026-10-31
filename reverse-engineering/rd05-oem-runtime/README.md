@@ -1,5 +1,8 @@
 # RD05: hochgeladene OEM-Laufzeitdaten
 
+Die zusätzlich geprüfte TP-Link-GPL ist in
+[ax1500v3-gpl-review.md](ax1500v3-gpl-review.md) eingeordnet.
+
 Die Prüfung des später hochgeladenen SDK-/Rekonstruktionsarchivs steht in
 [reconstructed-archive-review.md](reconstructed-archive-review.md), mit
 Prüfsummen und Vergleichsergebnissen im verlinkten JSON-Bericht.
