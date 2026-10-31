@@ -4,7 +4,7 @@
 / {
 	model = "Cudy AX1500 / WR1500 R76 (experimental fullflash)";
 	chosen {
-		bootargs = "console=ttyS0,38400n8 root=/dev/mtdblock6 rootfstype=squashfs clk_ignore_unused";
+		bootargs = "console=ttyS0,38400n8 rootfstype=squashfs clk_ignore_unused";
 	};
 };
 

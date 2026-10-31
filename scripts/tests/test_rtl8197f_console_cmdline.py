@@ -17,6 +17,15 @@ class ConsoleTests(unittest.TestCase):
         self.assertIn('CONFIG_MIPS_CMDLINE_FROM_DTB=y', config)
         self.assertNotIn('CONFIG_MIPS_CMDLINE_BUILTIN_EXTEND=y', config)
 
+    def test_rootfs_auto_selection_is_enabled(self):
+        generic = (ROOT/'target/linux/generic/config-6.6').read_text().splitlines()
+        target = (ROOT/'target/linux/realtek/rtl8197f/config-6.6').read_text().splitlines()
+        self.assertIn('CONFIG_MTD_ROOTFS_ROOT_DEV=y', generic)
+        self.assertNotIn('# CONFIG_MTD_ROOTFS_ROOT_DEV is not set', target)
+        # With the master exposed, child indices shift; command lines must
+        # leave selection to the existing named-rootfs registration path.
+        self.assertIn('CONFIG_MTD_PARTITIONED_MASTER=y', target)
+
     def test_effective_board_console_and_root_arguments(self):
         dtc = os.environ.get('DTC') or shutil.which('dtc')
         headers = os.environ.get('RTL8197F_KERNEL_INCLUDE')
@@ -40,7 +49,9 @@ class ConsoleTests(unittest.TestCase):
                 if board.startswith('cudy'):
                     self.assertIn('current-speed = <0x9600>;', text)
                 if board.endswith('fullflash'):
-                    self.assertIn('root=/dev/mtdblock6', text)
+                    self.assertNotIn('root=/dev/mtdblock', text)
+                    self.assertIn('label = "rootfs";', text)
+                    self.assertIn('reg = <0x440000 0xac0000>;', text)
 
 
 if __name__ == '__main__':

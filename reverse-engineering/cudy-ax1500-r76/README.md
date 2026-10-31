@@ -1,5 +1,24 @@
 # Cudy AX1500 / WR1500 R76: SPI-Analyse und Geräteprofil
 
+
+## Rootfs-Bootkorrektur nach Geräteprüfung
+
+Der WR1500-Bootlog nach dem 38400-Fix bestätigt `read_shift=0`, lesbare
+Kernelmeldungen und Registrierung der SquashFS-Partition bei 0x440000.
+Der aktivierte partitionierte MTD-Master belegt bereits mtd0: Die sieben
+Partitionen werden deshalb mtd1 bis mtd7, nicht mtd0 bis mtd6. Unsere alte
+Vorgabe `root=/dev/mtdblock6` verwies auf oem-backup und verursachte den
+VFS-Panic `unknown-block(31,6)`, obwohl der Kernel vorher rootfs als mtd7
+erkannt hatte. Das war eine fehlerhafte Zuordnung im Fullflash-Profil.
+
+Diese feste Vorgabe ist aus DT und Loader entfernt. Die vorhandene OpenWrt-
+Option `CONFIG_MTD_ROOTFS_ROOT_DEV=y` wählt die Partition mit Namen `rootfs`.
+Es wird auch keine neue feste Nummer 7 eingebaut. Offsets, Factory-Daten
+und Baudrate ändern sich durch diese Korrektur nicht. Ein neuer Kernel und
+ein neu erzeugtes Fullflash-Image sind erforderlich; die bereits gepanickte
+Firmware kann keine Shellbefehle mehr ausführen. Der Neustart mit dem Fix
+ist noch nicht am Gerät bestätigt.
+
 ## Durchgehende 38400-Baud-Konsole
 
 Der Benutzer-Bootlog mit Revision `0d4d248aae` erreicht die OpenWrt-Shell,
@@ -48,7 +67,7 @@ Firmware für andere Geräte verteilt werden.
 Für Linux 6.6 gilt ein **neues OpenWrt-Layout**: Kernel bei 0x40000 mit
 4 MiB Budget, Rootfs bei **0x440000** mit 0xac0000 Bytes. Der separate
 Fullflash-DT und die Signaturprobes benutzen dieselben Offsets. Die Rootfs
-ist MTD-Partition 6. Ein neuer R76-uImage/cr6c-Container erhält korrekte
+wird anhand ihres Namens `rootfs` ausgewählt, ohne feste MTD-Nummer. Ein neuer R76-uImage/cr6c-Container erhält korrekte
 CRC32- und additive 16-Bit-Prüfsummen sowie RAM-Einstieg 0x82000000 passend
 zum OpenWrt-Loader. Bei zu großem Kernel oder Rootfs bricht der Build ab.
 
