@@ -1,0 +1,19 @@
+From: OpenWrt RTL port
+Subject: [PATCH] G6: resolve the station header relative to drv_types.h
+
+OpenWrt stages net/mac80211/sta_info.h beside its public headers. Include
+our private header locally so it cannot resolve to mac80211 internals.
+Keep kernel/backports Linux header precedence unchanged: the G6 include
+directory also contains a userspace-only linux/wireless.h.
+
+--- a/include/drv_types.h
++++ b/include/drv_types.h
+@@ -148,7 +148,7 @@
+ #include <rtw_mib.h>
+ #include "rtw_cfg.h"
+ #include <osdep_intf.h>
+-#include <sta_info.h>
++#include "sta_info.h"
+ #include <rtw_event.h>
+ #include <rtw_mlme_ext.h>
+ #include "../core/rtw_dfs.h"

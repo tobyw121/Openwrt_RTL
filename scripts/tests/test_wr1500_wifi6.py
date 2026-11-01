@@ -51,6 +51,55 @@ def compile_run(code):
 
 
 class G6Tests(unittest.TestCase):
+    def test_actual_package_build_resolves_private_header_without_shadowing_linux(self):
+        source = '\n'.join(line for line in (PACKAGE/'Makefile').read_text().splitlines()
+                           if not line.startswith('include '))
+        with tempfile.TemporaryDirectory(prefix='wr1500-staging-') as tmp:
+            root = Path(tmp)
+            driver = root/'build/rtl8832br-wr1500-2026.10.22'
+            staging = root/'staging/usr/include'
+            for directory in (driver/'include/linux', staging/'mac80211',
+                              staging/'mac80211-backport/backport', root/'kernel/include/linux'):
+                directory.mkdir(parents=True)
+            # OpenWrt stages net/mac80211/*.h beside the public include tree.
+            (driver/'include/sta_info.h').write_text('#define NUM_STA 32\n#define CONFIG_RTW_MACADDR_ACL 1\n')
+            (driver/'include/linux/wireless.h').write_text('#error Userspace tools header must not shadow Linux\n')
+            (root/'kernel/include/linux/wireless.h').write_text('#define KERNEL_WIRELESS_TYPES 1\n')
+            (staging/'mac80211/sta_info.h').write_text(
+                'enum ieee80211_sta_flags { WLAN_STA_AUTH, WLAN_STA_INSERTED };\n')
+            (driver/'include/openwrt_g6.h').write_text('/* fixture */\n')
+            (staging/'mac80211-backport/backport/backport.h').write_text('/* fixture */\n')
+            probe = root/'probe.c'
+            probe.write_text('''
+#define WLAN_STA_AUTH (1UL << 0)
+#include <drv_types.h>
+#include <linux/wireless.h>
+#if NUM_STA != 32 || CONFIG_RTW_MACADDR_ACL != 1 || KERNEL_WIRELESS_TYPES != 1
+#error Missing Realtek private station definitions
+#endif
+int station_slots[NUM_STA];
+''')
+            kernel = root/'kernel.mk'
+            kernel.write_text(f'modules:\n\t@cc $(NOSTDINC_FLAGS) -I{root}/kernel/include -I$(M)/include -c {probe} -o {root}/probe.o\n')
+            prefix = (f'KERNEL_BUILD_DIR := {root}/build\nSTAGING_DIR := {root}/staging\n'
+                      f'KERNEL_MAKE := $(MAKE) --no-print-directory -sf {kernel}\n')
+            suffix = '\n.PHONY: check\ncheck:\n\t$(Build/Compile)\n'
+            makefile = root/'Makefile'
+            header_patch = (PACKAGE/'patches/101-use-private-station-header.patch').read_text()
+            old_include = next(line[1:] for line in header_patch.splitlines()
+                               if line.startswith('-#include '))
+            new_include = next(line[1:] for line in header_patch.splitlines()
+                               if line.startswith('+#include '))
+            # Reproduce the reported failure with the previous private include.
+            (driver/'include/drv_types.h').write_text(old_include+'\n')
+            makefile.write_text(prefix + source + suffix)
+            old = subprocess.run(['make', '-sf', str(makefile), 'check'], text=True, capture_output=True)
+            self.assertNotEqual(old.returncode, 0)
+            self.assertIn('Missing Realtek private station definitions', old.stderr)
+            (driver/'include/drv_types.h').write_text(new_include+'\n')
+            fixed = subprocess.run(['make', '-sf', str(makefile), 'check'], text=True, capture_output=True)
+            self.assertEqual(fixed.returncode, 0, fixed.stdout + fixed.stderr)
+
     def test_key_removal_reaches_hardware_and_reports_failure(self):
         fragment = function(new_fragment('os_dep/linux/ioctl_cfg80211.c'), 'cfg80211_rtw_del_key')
         code = '''

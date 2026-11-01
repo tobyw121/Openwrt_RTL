@@ -6,6 +6,13 @@ Basispaket zieht den Kernel-Treiber automatisch hinzu; auch die AX1500-
 defconfig und der vorhandene Defaults-Helfer wählen ihn aus. Autoload hat
 Priorität 60. Ein R76-Firmwarebau benötigt dafür keine menuconfig-Auswahl.
 
+Paketrevision 2 behebt zusätzlich die private Header-Auflösung im echten
+OpenWrt-Staging: `Build/InstallDev` von mac80211 stellt auch interne Header
+wie `sta_info.h` bereit. `drv_types.h` bindet deshalb den Realtek-Stationsheader
+relativ zu seinem eigenen Verzeichnis ein. Die Linux-/Backports-Suchreihenfolge
+bleibt erhalten, damit das mitgelieferte, ausschließlich für Userspace-Werkzeuge
+gedachte `include/linux/wireless.h` keine Kernel-Header überschattet.
+
 ## Quelle und Reproduzierbarkeit
 
 Quelle: TP-Link `GPL_ax1500v3.tar.gz`, SHA256
@@ -60,6 +67,11 @@ Host-C-Tests mit UBSan prüfen produktive Funktionen für DMA-Fehler, gültige
 DMA-Adresse null, Rückabwicklung partieller TX-Mappings, Schlüsselentfernung
 und Erhalt der cfg80211-Kanalsperren. Die Paketdaten werden gegen die
 OEM-Dateiprüfsummen geprüft. Vorhandene R76-/RD05-/MW5-Tests laufen zusätzlich.
+Eine zusätzliche Regression verwendet die echte Paket-Builddefinition mit
+nachgebildetem OpenWrt-Staging: Der alte Include scheitert am mac80211-
+Stationsheader, der lokale Include baut; Linux-Header behalten Vorrang vor
+den Userspace-Werkzeugheadern des Herstellers. Der vollständige Modulbau
+wurde außerdem mit dem durch Build/InstallDev erzeugten Headerlayout geprüft.
 Einige ältere Herstellerwarnungen sind als Warnungen belassen; inkompatible
 API-Typen und implizite Funktionsdeklarationen bleiben Buildfehler.
 
