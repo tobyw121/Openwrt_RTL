@@ -107,8 +107,8 @@
 	};
 };
 
-/* Enumerate the radio for identification only. No incompatible 4.4 WLAN
- * module or MW5/RD05 calibration/profile is assigned to this device.
+/* Native WR1500 RTL8832BR G6 module binds the PCI radio. The integrated
+ * 8197G radio remains disabled; no MW5/RD05 calibration is assigned.
  */
 &pcie0 {
 	status = "okay";

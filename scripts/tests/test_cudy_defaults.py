@@ -50,7 +50,7 @@ all: ; @:
                         'dnsmasq', 'odhcpd-ipv6only', 'firewall4', 'dropbear', 'luci',
                         'uhttpd', 'uhttpd-mod-ubus', 'rpcd', 'kmod-cfg80211', 'wifi-scripts', 'iw',
                         'iwinfo', 'rpcd-mod-iwinfo', 'wireless-regdb', 'hostapd-mini',
-                        'tcpdump-mini', 'pciutils'}
+                        'tcpdump-mini', 'pciutils', 'kmod-rtl8832br-wr1500'}
             self.assertEqual(set(names), required)
             self.assertFalse(any('rtl8192cd' in x for x in names))
             # Exercise the real OpenWrt metadata generator, including + selects.

@@ -80,7 +80,10 @@
       "oem_width_mhz": 40,
       "oem_txpower_dbm": 20,
       "factory_layout_resolved": false,
-      "enabled_in_openwrt": false
+      "enabled_in_openwrt": false,
+      "oem_runtime_hal": "8197G",
+      "oem_runtime_rfe": 0,
+      "driver_port_required": true
     },
     "5g": {
       "chip": "RTL8832BR",
@@ -98,7 +101,13 @@
       "oem_width_mhz": 80,
       "oem_txpower_dbm": 12,
       "linux66_driver_complete": false,
-      "enabled_in_openwrt": false
+      "enabled_in_openwrt": true,
+      "kernel_package": "kmod-rtl8832br-wr1500",
+      "linux66_module_build_verified": true,
+      "openwrt_radio_validated": false,
+      "control_plane": "cfg80211/netifd/hostapd",
+      "installed_rf_directory": "/etc/conf/rtl8832bre/RFE50",
+      "firmware_source": "G6 embedded RTL8832BR firmware"
     }
   },
   "policy": {

@@ -6,6 +6,7 @@ from pathlib import Path
 
 REQUIRED = ('CONFIG_PACKAGE_rtl8197f-cudy-r76-base',
             'CONFIG_PACKAGE_rtl8197f-cudy-ax1500-base',
+            'CONFIG_PACKAGE_kmod-rtl8832br-wr1500',
             'CONFIG_TARGET_ROOTFS_SQUASHFS', 'CONFIG_TARGET_ROOTFS_INITRAMFS')
 
 

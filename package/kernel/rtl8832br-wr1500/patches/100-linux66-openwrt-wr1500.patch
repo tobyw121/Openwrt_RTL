@@ -1,0 +1,2563 @@
+From: OpenWrt RTL port
+Subject: [PATCH] G6: port WR1500 RTL8832BR to Linux 6.6 and cfg80211 6.12
+
+WR1500-only PCI binding, checked DMA ownership, nl80211-only control,
+OEM RFE50/AP_5G selection and Linux regulatory restrictions.
+
+--- a/Makefile
++++ b/Makefile
+@@ -796,7 +796,7 @@
+ ####################################################
+ 
+ ifneq (,$(wildcard $(DRV_PATH)/phl/gen_git_info.sh))
+-$(shell $(DRV_PATH)/phl/gen_git_info.sh $(DRV_PATH))
++
+ endif
+ include $(src)/phl/phl.mk
+ 
+--- a/autoconf_rtl8832br_pci_linux.h
++++ b/autoconf_rtl8832br_pci_linux.h
+@@ -27,7 +27,7 @@
+ #define RTW_WKARD_FREE_IFDOWN_RXBUF
+ #define RTW_WKARD_REGD_DEFAULT_SET
+ #define RTW_WKARD_DIS_PROBE_REQ_RPT_TO_HOSTAPD
+-#define RTW_WKARD_PWRLIMIT_DISABLE
++/* OpenWrt: retain regulatory power limits. */
+ 
+ 
+ 
+--- a/common.mk
++++ b/common.mk
+@@ -3,7 +3,6 @@
+ 			os_dep/osdep_service_linux.o \
+ 			os_dep/linux/rtw_cfg.o \
+ 			os_dep/linux/os_intfs.o \
+-			os_dep/linux/ioctl_linux.o \
+ 			os_dep/linux/xmit_linux.o \
+ 			os_dep/linux/mlme_linux.o \
+ 			os_dep/linux/recv_linux.o \
+@@ -78,7 +77,6 @@
+ 		core/rtw_xmit_shortcut.o \
+ 		core/rtw_p2p.o \
+ 		core/rtw_tdls.o \
+-		core/rtw_br_ext.o \
+ 		core/rtw_sreset.o \
+ 		core/rtw_beamforming.o \
+ 		core/rtw_rm.o \
+@@ -153,3 +151,5 @@
+ endif
+ 
+ OBJS += $(_OS_INTFS_FILES) $(_CORE_FILES)
++
++OBJS += core/openwrt_g6_common.o
+--- /dev/null
++++ b/core/openwrt_g6_common.c
+@@ -0,0 +1,498 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/* Realtek common helpers moved out of the optional OEM proc-debug build. */
++#include <drv_types.h>
++#include "_hal_rate.h"
++#include "../phl/phl_headers.h"
++
++static const char *rtw_data_gi_str(u8 gi, u16 tx_rate)
++{
++	if (tx_rate >= RTW_DATA_RATE_HE_NSS1_MCS0) {
++		/* HE data rates */
++		switch (gi) {
++		case 0:
++			return "[4x3.2]";
++		case 1:
++			return "[4x0.8]";
++		case 2:
++			return "[2x1.6]";
++		case 3:
++			return "[2x0.8]";
++		case 4:
++			return "[1x1.6]";
++		case 5:
++			return "[1x0.8]";
++		default:
++			return "[err]";
++		}
++	} else {
++		/* non-HE data rates */
++		if(gi)
++			return "s";
++		else
++			return "";
++	}
++}
++
++int wireless_mode_to_str(u32 mode, char *str)
++{
++	str[0]='\0';
++	if (mode & WLAN_MD_11A)
++		sprintf(str+strlen(str),"%s","A/");
++	if (mode & WLAN_MD_11B)
++		sprintf(str+strlen(str),"%s","B/");
++	if (mode & WLAN_MD_11G)
++		sprintf(str+strlen(str),"%s","G/");
++	#ifdef CONFIG_80211N_HT
++	if (mode & WLAN_MD_11N)
++		sprintf(str+strlen(str),"%s","N/");
++	#endif
++	#ifdef CONFIG_80211AC_VHT
++	if (mode & WLAN_MD_11AC)
++		sprintf(str+strlen(str),"%s","AC/");
++	#endif
++	#ifdef CONFIG_80211AX_HE
++	if (mode & WLAN_MD_11AX)
++		sprintf(str+strlen(str),"%s","AX/");
++	#endif
++	if (strlen(str)>1)
++		str[strlen(str)-1]='\0';
++
++	return strlen(str);
++}
++
++void dump_sec_to_str(struct seq_file *m, unsigned int time_in_sec, char* topic)
++{
++	unsigned int d, n, i;
++	int idx = 0;
++	char tmp[32];
++
++	d = time_in_sec / 86400;
++	n = time_in_sec % 86400;
++	if (d)	idx += snprintf(tmp, sizeof(tmp), "%d day ", d);
++	d = n / 3600;
++	n = n % 3600;
++	if (d)	idx += snprintf(tmp+idx, sizeof(tmp)-idx, "%d hr ", d);
++	d = n / 60;
++	n = n % 60;
++	if (d)	idx += snprintf(tmp+idx, sizeof(tmp)-idx, "%d min ", d);
++	idx += snprintf(tmp+idx, sizeof(tmp)-idx, "%d sec ", n);
++
++	RTW_PRINT_SEL(m, "%s: %s\n", topic, tmp);
++}
++
++const char *rtw_data_rate_str(enum rtw_data_rate rate)
++{
++	if (rate >= RTW_DATA_RATE_CCK1 && rate <= RTW_DATA_RATE_CCK11) {
++		switch (rate) {
++#define CASE_CCK_RATE(cck)	case RTW_DATA_RATE_CCK ## cck: return "CCK_" # cck "M"
++		CASE_CCK_RATE(1);
++		CASE_CCK_RATE(2);
++		CASE_CCK_RATE(5_5);
++		CASE_CCK_RATE(11);
++#undef CASE_CCK_RATE
++		default:
++			return "CCK_UNKNOWN";
++		}
++	} else if (rate >= RTW_DATA_RATE_OFDM6 && rate <= RTW_DATA_RATE_OFDM54) {
++		switch (rate) {
++#define CASE_OFDM_RATE(ofdm)	case RTW_DATA_RATE_OFDM ## ofdm: return "OFDM_" # ofdm "M"
++		CASE_OFDM_RATE(6);
++		CASE_OFDM_RATE(9);
++		CASE_OFDM_RATE(12);
++		CASE_OFDM_RATE(18);
++		CASE_OFDM_RATE(24);
++		CASE_OFDM_RATE(36);
++		CASE_OFDM_RATE(48);
++		CASE_OFDM_RATE(54);
++#undef CASE_OFDM_RATE
++		default:
++			return "OFDM_UNKNOWN";
++		}
++	} else if (rate >= RTW_DATA_RATE_MCS0 && rate <= RTW_DATA_RATE_MCS31) {
++		switch (rate) {
++#define CASE_HT_RATE(mcs)	case RTW_DATA_RATE_MCS ## mcs: return "MCS_" # mcs
++		CASE_HT_RATE(0);
++		CASE_HT_RATE(1);
++		CASE_HT_RATE(2);
++		CASE_HT_RATE(3);
++		CASE_HT_RATE(4);
++		CASE_HT_RATE(5);
++		CASE_HT_RATE(6);
++		CASE_HT_RATE(7);
++		CASE_HT_RATE(8);
++		CASE_HT_RATE(9);
++		CASE_HT_RATE(10);
++		CASE_HT_RATE(11);
++		CASE_HT_RATE(12);
++		CASE_HT_RATE(13);
++		CASE_HT_RATE(14);
++		CASE_HT_RATE(15);
++		CASE_HT_RATE(16);
++		CASE_HT_RATE(17);
++		CASE_HT_RATE(18);
++		CASE_HT_RATE(19);
++		CASE_HT_RATE(20);
++		CASE_HT_RATE(21);
++		CASE_HT_RATE(22);
++		CASE_HT_RATE(23);
++		CASE_HT_RATE(24);
++		CASE_HT_RATE(25);
++		CASE_HT_RATE(26);
++		CASE_HT_RATE(27);
++		CASE_HT_RATE(28);
++		CASE_HT_RATE(29);
++		CASE_HT_RATE(30);
++		CASE_HT_RATE(31);
++#undef CASE_HT_RATE
++		default:
++			return "HT_UNKNOWN";
++		}
++	} else if (rate >= RTW_DATA_RATE_VHT_NSS1_MCS0 && rate <= RTW_DATA_RATE_VHT_NSS4_MCS9) {
++		switch (rate) {
++#define CASE_VHT_RATE(ss, mcs)	case RTW_DATA_RATE_VHT_NSS ## ss ##_MCS ##mcs: return "VHT_SS" #ss "MCS" #mcs
++		CASE_VHT_RATE(1, 0);
++		CASE_VHT_RATE(1, 1);
++		CASE_VHT_RATE(1, 2);
++		CASE_VHT_RATE(1, 3);
++		CASE_VHT_RATE(1, 4);
++		CASE_VHT_RATE(1, 5);
++		CASE_VHT_RATE(1, 6);
++		CASE_VHT_RATE(1, 7);
++		CASE_VHT_RATE(1, 8);
++		CASE_VHT_RATE(1, 9);
++		CASE_VHT_RATE(2, 0);
++		CASE_VHT_RATE(2, 1);
++		CASE_VHT_RATE(2, 2);
++		CASE_VHT_RATE(2, 3);
++		CASE_VHT_RATE(2, 4);
++		CASE_VHT_RATE(2, 5);
++		CASE_VHT_RATE(2, 6);
++		CASE_VHT_RATE(2, 7);
++		CASE_VHT_RATE(2, 8);
++		CASE_VHT_RATE(2, 9);
++		CASE_VHT_RATE(3, 0);
++		CASE_VHT_RATE(3, 1);
++		CASE_VHT_RATE(3, 2);
++		CASE_VHT_RATE(3, 3);
++		CASE_VHT_RATE(3, 4);
++		CASE_VHT_RATE(3, 5);
++		CASE_VHT_RATE(3, 6);
++		CASE_VHT_RATE(3, 7);
++		CASE_VHT_RATE(3, 8);
++		CASE_VHT_RATE(3, 9);
++		CASE_VHT_RATE(4, 0);
++		CASE_VHT_RATE(4, 1);
++		CASE_VHT_RATE(4, 2);
++		CASE_VHT_RATE(4, 3);
++		CASE_VHT_RATE(4, 4);
++		CASE_VHT_RATE(4, 5);
++		CASE_VHT_RATE(4, 6);
++		CASE_VHT_RATE(4, 7);
++		CASE_VHT_RATE(4, 8);
++		CASE_VHT_RATE(4, 9);
++#undef CASE_VHT_RATE
++		default:
++			return "VHT_UNKNOWN";
++		}
++	} else if (rate >= RTW_DATA_RATE_HE_NSS1_MCS0 && rate <= RTW_DATA_RATE_HE_NSS4_MCS11) {
++		switch (rate) {
++#define CASE_HE_RATE(ss, mcs)	case RTW_DATA_RATE_HE_NSS ## ss ##_MCS ##mcs: return "HE_SS" #ss "MCS" #mcs
++		CASE_HE_RATE(1, 0);
++		CASE_HE_RATE(1, 1);
++		CASE_HE_RATE(1, 2);
++		CASE_HE_RATE(1, 3);
++		CASE_HE_RATE(1, 4);
++		CASE_HE_RATE(1, 5);
++		CASE_HE_RATE(1, 6);
++		CASE_HE_RATE(1, 7);
++		CASE_HE_RATE(1, 8);
++		CASE_HE_RATE(1, 9);
++		CASE_HE_RATE(1, 10);
++		CASE_HE_RATE(1, 11);
++		CASE_HE_RATE(2, 0);
++		CASE_HE_RATE(2, 1);
++		CASE_HE_RATE(2, 2);
++		CASE_HE_RATE(2, 3);
++		CASE_HE_RATE(2, 4);
++		CASE_HE_RATE(2, 5);
++		CASE_HE_RATE(2, 6);
++		CASE_HE_RATE(2, 7);
++		CASE_HE_RATE(2, 8);
++		CASE_HE_RATE(2, 9);
++		CASE_HE_RATE(2, 10);
++		CASE_HE_RATE(2, 11);
++		CASE_HE_RATE(3, 0);
++		CASE_HE_RATE(3, 1);
++		CASE_HE_RATE(3, 2);
++		CASE_HE_RATE(3, 3);
++		CASE_HE_RATE(3, 4);
++		CASE_HE_RATE(3, 5);
++		CASE_HE_RATE(3, 6);
++		CASE_HE_RATE(3, 7);
++		CASE_HE_RATE(3, 8);
++		CASE_HE_RATE(3, 9);
++		CASE_HE_RATE(3, 10);
++		CASE_HE_RATE(3, 11);
++		CASE_HE_RATE(4, 0);
++		CASE_HE_RATE(4, 1);
++		CASE_HE_RATE(4, 2);
++		CASE_HE_RATE(4, 3);
++		CASE_HE_RATE(4, 4);
++		CASE_HE_RATE(4, 5);
++		CASE_HE_RATE(4, 6);
++		CASE_HE_RATE(4, 7);
++		CASE_HE_RATE(4, 8);
++		CASE_HE_RATE(4, 9);
++		CASE_HE_RATE(4, 10);
++		CASE_HE_RATE(4, 11);
++#undef CASE_HE_RATE
++		default:
++			return "HE_UNKNOWN";
++		}
++	}
++
++	return "ALL_UNKNOWN";
++}
++
++void display_sta_dump(_adapter *adapter, struct sta_info *psta)
++{
++	u32 rx_retry_rate = 0;
++	u16 sgi = 0, fix_rate = 0;
++	u8 buf[200] = {0}, n = 0;
++	u8 macid = 0;
++
++	if ( !(adapter->sta_dump_to) || !adapter->sta_dump_bitmap || !psta)
++		return;
++
++	if (!psta || !psta->phl_sta)
++		return;
++
++	psta->sta_stats.my_tx_tp_kbits = psta->sta_stats.tx_tp_kbits;
++	psta->sta_stats.my_tx_tp_kbits = psta->sta_stats.tx_tp_kbits;
++
++	if (adapter->up_time % adapter->sta_dump_to)
++		return;
++
++	n += _sprintf(buf + n, "[%d/%d]", psta->phl_sta->aid, psta->phl_sta->macid);
++
++	if (adapter->sta_dump_bitmap & RTW_STA_DUMP_RSSI) {
++		/* ToDo: need to API to init hal_sta->ra_info->rssi_stat.rssi  */
++		n += _sprintf(buf + n, "(Rssi %d)", psta->phl_sta->hal_sta->rssi_stat.rssi >> 1);
++	}
++
++	if (adapter->sta_dump_bitmap & RTW_STA_DUMP_RETRY) {
++		/*  ToDo: tx retry not ready yet */
++		if (psta->sta_stats.rx_data_pkts_cur == 0)
++			rx_retry_rate = 0;
++		else
++			rx_retry_rate = (psta->sta_stats.rx_data_retry_pkts_cur*100)/psta->sta_stats.rx_data_pkts_cur;
++		if(rx_retry_rate >= 100)
++			rx_retry_rate = 100;
++
++		n += _sprintf(buf + n, "(rty %d%%, %d%%)", psta->sta_stats.tx_retry_ratio, rx_retry_rate);
++	}
++
++	if (adapter->sta_dump_bitmap & RTW_STA_DUMP_RATE) {
++		n += _sprintf(buf + n, "(");
++
++		if (adapter->fix_rate != NO_FIX_RATE) {/* fix rate */
++			fix_rate = GET_FIX_RATE(adapter->fix_rate);
++			sgi = GET_FIX_RATE_SGI(adapter->fix_rate);
++			n += _sprintf(buf + n, "force_%s", rtw_data_rate_str(fix_rate));
++			if (sgi)
++				n += _sprintf(buf + n, "%s", rtw_data_gi_str(sgi, fix_rate));
++		} else if (adapter->txForce_enable &&
++			adapter->txForce_rate != INV_TXFORCE_VAL) {
++			n += _sprintf(buf + n, "force_%s", rtw_data_rate_str(adapter->txForce_rate));
++			if (adapter->txForce_gi != INV_TXFORCE_VAL)
++				n += _sprintf(buf + n, "%s", rtw_data_gi_str(adapter->txForce_gi, adapter->txForce_rate));
++		} else if (psta->fixRate != 0 && psta->fixRate != NO_FIX_RATE) {
++			fix_rate = GET_FIX_RATE(psta->fixRate);
++			sgi = GET_FIX_RATE_SGI(psta->fixRate);
++			n += _sprintf(buf + n, "force_%s", rtw_data_rate_str(fix_rate));
++			if (sgi)
++				n += _sprintf(buf + n, "%s", rtw_data_gi_str(sgi, fix_rate));
++		} else {
++			n += _sprintf(buf + n, "%s%s", rtw_data_rate_str(psta->cur_tx_data_rate),
++						   rtw_data_gi_str(psta->cur_tx_gi_ltf, psta->cur_tx_data_rate));
++		}
++		n += _sprintf(buf + n, ", %s%s)", rtw_data_rate_str(psta->cur_rx_data_rate),
++						  rtw_data_gi_str(psta->cur_rx_gi_ltf, psta->cur_rx_data_rate));
++	}
++
++	if (adapter->sta_dump_bitmap & RTW_STA_DUMP_RSSI_PATH) {
++		n += snprintf(buf + n, 17, "(%d %d %d %d)", (psta->phl_sta->hal_sta->rssi_stat.rssi_ma_path[0] >> 5),
++							(psta->phl_sta->hal_sta->rssi_stat.rssi_ma_path[1] >> 5),
++							(psta->phl_sta->hal_sta->rssi_stat.rssi_ma_path[2] >> 5),
++							(psta->phl_sta->hal_sta->rssi_stat.rssi_ma_path[3] >> 5));
++	}
++
++	if (adapter->sta_dump_bitmap & RTW_STA_DUMP_FA) {
++		n += _sprintf(buf + n, "(FA %u)", adapter->dvobj->hw_stat.cur_fa_cnt);
++	}
++
++	if (adapter->sta_dump_bitmap & RTW_STA_DUMP_CCA) {
++		n += _sprintf(buf + n, "(CCA %d)", adapter->dvobj->hw_stat.cur_cca_cnt);
++	}
++
++	if (adapter->sta_dump_bitmap & RTW_STA_DUMP_TP)
++		n += _sprintf(buf + n, "(TP %d, %d)", (psta->sta_stats.tx_tp_kbits >> 10), (psta->sta_stats.rx_tp_kbits >> 10));
++
++#ifdef CONFIG_LMT_TXREQ
++	if (adapter->lmt_txreq_dump)
++		n += _sprintf(buf + n, "(txreq L%d, Q%d, D%d)", psta->lmt_pending_txreq,
++			ATOMIC_READ(&psta->num_pending_txreq), psta->lmt_txreq_drop);
++#endif
++
++	_dbgdump("%s\n", buf);
++}
++
++void display_sta_ofdma_info_dump(_adapter *adapter, struct sta_info *psta)
++{
++	u32 rx_retry_rate = 0;
++	u32 tx_retry_rate = 0;
++	u16 sgi = 0, fix_rate = 0;
++
++	if ( !(adapter->sta_dump_to) || !adapter->sta_dump_bitmap)
++		return;
++
++	if (!psta || !psta->phl_sta)
++		return;
++
++	if (adapter->up_time % adapter->sta_dump_to)
++		return;
++
++	_dbgdump("[%d]", psta->phl_sta->aid);
++	if (adapter->sta_ru_dump_bitmap & RTW_STA_DUMP_RU_RSSI) {
++		_dbgdump("(Rssi %d)", psta->phl_sta->ru_stats.rssi_m);
++	}
++
++	if (adapter->sta_ru_dump_bitmap & RTW_STA_DUMP_RU_TP) {
++		_dbgdump("(TP %d, %d)", (psta->sta_stats.tx_tp_kbits >> 10), (psta->sta_stats.rx_tp_kbits >> 10));
++	}
++
++	if (adapter->sta_ru_dump_bitmap & RTW_STA_DUMP_RU_PHY_RATE) {
++		_dbgdump("(");
++
++		_dbgdump("%s", rtw_data_rate_str(psta->phl_sta->ru_stats.ru_tx_phy_rate));
++
++		_dbgdump(", %s)", rtw_data_rate_str(psta->phl_sta->stats.HE_TB_stat.HE_TB_avg_rx_rate));
++	}
++
++	_dbgdump("[tx]");
++
++	if (adapter->sta_ru_dump_bitmap & RTW_STA_DUMP_RU_TX_RU_RATIO) {
++		_dbgdump("(ru ratio %d)", psta->phl_sta->ru_stats.su_ru_ratio);
++	}
++
++	if (adapter->sta_ru_dump_bitmap & RTW_STA_DUMP_RU_TX_RU_FAIL_RATIO) {
++		_dbgdump("(su fail %d)", psta->phl_sta->ru_stats.su_fail_ratio);
++		_dbgdump("(ru fail %d)", psta->phl_sta->ru_stats.ru_fail_ratio);
++	}
++
++	if (adapter->sta_ru_dump_bitmap & RTW_STA_DUMP_RU_TX_AGG_CNT) {
++		_dbgdump("(amsdu %d)", psta->txsc_amsdu_num);
++		_dbgdump("(agg %d)", psta->phl_sta->ru_stats.ru_tx_agg_cnt);
++	}
++
++	_dbgdump("[rx]");
++
++	if (adapter->sta_ru_dump_bitmap & RTW_STA_DUMP_RU_RX_AGG_CNT)
++		_dbgdump("(agg %d %d)", psta->phl_sta->stats.HE_TB_stat.avg_ampdu_agg_1, psta->phl_sta->stats.HE_TB_stat.avg_ampdu_agg_2);
++
++	if (adapter->sta_ru_dump_bitmap & RTW_STA_DUMP_RU_RX_TF_CNT)
++		_dbgdump("(tf cnt %d)", psta->phl_sta->ru_stats.ru_rx_tf_cnt);
++
++	if (adapter->sta_ru_dump_bitmap & RTW_STA_DUMP_RU_RX_TF_BSR_LEN)
++			_dbgdump("(bsr len %d)", psta->phl_sta->ru_stats.ru_rx_bsr_len);
++
++	if (adapter->sta_ru_dump_bitmap & RTW_STA_DUMP_RU_RX_CCA_RATIO)
++		_dbgdump("(cca %d)", psta->phl_sta->ru_stats.ru_rx_cca_miss);
++
++	if (adapter->sta_ru_dump_bitmap & RTW_STA_DUMP_RU_RX_FAIL_RATIO)
++		_dbgdump("(all error %d)", psta->phl_sta->ru_stats.ru_rx_error);
++
++	if (adapter->sta_ru_dump_bitmap & RTW_STA_DUMP_RU_RX_CRC32_RATIO)
++		_dbgdump("(crc32 %d)", psta->phl_sta->stats.HE_TB_stat.crc32_ratio);
++
++	if (adapter->sta_ru_dump_bitmap & RTW_STA_DUMP_RU_RX_UPH_PW)
++		_dbgdump("(headroom %d)", psta->phl_sta->ru_stats.ru_rx_uph_headroom);
++
++	if (adapter->sta_ru_dump_bitmap & RTW_STA_DUMP_RU_RX_UPH_MIN_Flag)
++		_dbgdump("(min_flag %d)", psta->phl_sta->ru_stats.ru_rx_min_flag_ratio);
++
++	if (adapter->sta_ru_dump_bitmap & RTW_STA_DUMP_RU_RX_EVM)
++		_dbgdump("(evm %d)", psta->phl_sta->ru_stats.ru_rx_evm);
++	_dbgdump("\n");
++}
++
++void reset_accumulated_tp(_adapter *adapter)
++{
++	adapter->tp_total_tx = 0;
++	adapter->tp_total_rx = 0;
++	adapter->tp_total_trx = 0;
++
++	return;
++}
++
++void accumulate_whole_tp(_adapter *adapter, struct sta_info *psta)
++{
++	adapter->tp_total_tx += psta->sta_stats.tx_tp_kbits;
++	adapter->tp_total_rx += psta->sta_stats.rx_tp_kbits;
++	adapter->tp_total_trx = adapter->tp_total_tx + adapter->tp_total_rx;
++
++	return;
++}
++
++
++int rtw_del_sta(struct net_device *dev, struct ieee_param *param)
++{
++	int ret = 0;
++	struct sta_info *psta = NULL;
++	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
++	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
++	struct sta_priv *pstapriv = &padapter->stapriv;
++
++	RTW_INFO("rtw_del_sta=" MAC_FMT "\n", MAC_ARG(param->sta_addr));
++
++	if (check_fwstate(pmlmepriv, (WIFI_ASOC_STATE | WIFI_AP_STATE)) != _TRUE)
++		return -EINVAL;
++
++	if (param->sta_addr[0] == 0xff && param->sta_addr[1] == 0xff &&
++	    param->sta_addr[2] == 0xff && param->sta_addr[3] == 0xff &&
++	    param->sta_addr[4] == 0xff && param->sta_addr[5] == 0xff)
++		return -EINVAL;
++
++	psta = rtw_get_stainfo(pstapriv, param->sta_addr);
++	if (psta) {
++		u8 updated = _FALSE;
++
++		/* RTW_INFO("free psta=%p, aid=%d\n", psta, psta->phl_sta->aid); */
++
++		_rtw_spinlock_bh(&pstapriv->asoc_list_lock);
++		if (rtw_is_list_empty(&psta->asoc_list) == _FALSE) {
++			rtw_list_delete(&psta->asoc_list);
++			pstapriv->asoc_list_cnt--;
++			#ifdef CONFIG_RTW_TOKEN_BASED_XMIT
++			if (psta->tbtx_enable)
++				pstapriv->tbtx_asoc_list_cnt--;
++			#endif
++			updated = ap_free_sta(padapter, psta, _TRUE, WLAN_REASON_DEAUTH_LEAVING, _TRUE, _FALSE);
++
++		}
++		_rtw_spinunlock_bh(&pstapriv->asoc_list_lock);
++
++		associated_clients_update(padapter, updated, STA_INFO_UPDATE_ALL);
++
++		psta = NULL;
++
++	} else {
++		RTW_INFO("rtw_del_sta(), sta has already been removed or never been added\n");
++
++		/* ret = -1; */
++	}
++
++
++	return ret;
++
++}
+--- a/core/rtw_mib.c
++++ b/core/rtw_mib.c
+@@ -311,7 +311,6 @@
+ #endif
+ 	{"kick_icverr",		INT_T, 	0,													_MIB_OFFSET(kick_icverr),					_SIZE(registrypriv.wifi_mib.kick_icverr),			64,		NULL},
+ 	{"atf",				BYTE_T,		0,		_MIB_OFFSET(atf),	_SIZE(registrypriv.wifi_mib.atf),	0,	core_mib_atf},
+-	{"dhcp_bcst_disable",	INT_T,		_OFFSET(ethBrExtInfo.dhcp_bcst_disable),			0, 											_SIZE(ethBrExtInfo.dhcp_bcst_disable), 			0,		NULL},
+ 	{"fast_leave_thr",				BYTE_T,		0,		_MIB_OFFSET(fast_leave_thr),	_SIZE(registrypriv.wifi_mib.fast_leave_thr),	10,	core_mib_fast_leave},
+ 	{"inactive_timeout",	INT_T,		0,		_MIB_OFFSET(inactive_timeout),	_SIZE(registrypriv.wifi_mib.inactive_timeout),	120,	core_mib_inactive_timeout},
+ 	{"trx_path",		BYTE_T, 	0,													_MIB_OFFSET(trx_path),					_SIZE(registrypriv.wifi_mib.trx_path),			0,		core_mib_trx_path},
+--- a/core/rtw_mlme_ext.c
++++ b/core/rtw_mlme_ext.c
+@@ -12437,7 +12437,7 @@
+ //		skb->len =  L2UF_SIZE;
+ 		skb->protocol =  htons(ETH_P_802_2);
+ 		skb->pkt_type = PACKET_BROADCAST;
+-		skb->from_dev = skb->dev;
++
+  		skb_reset_mac_header(skb);
+ 
+ 		_rtw_memcpy(ehdr->h_dest, brocast_mac, ETH_ALEN);
+--- a/core/rtw_recv.c
++++ b/core/rtw_recv.c
+@@ -2951,6 +2951,7 @@
+ 				}
+ 			}
+ 			#endif
++#ifdef CONFIG_BR_EXT
+ 			if (!pattrib->amsdu) {
+ 				if (EQ_MAC_ADDR(adapter->br_mac, pattrib->src)) {
+ 					retval = _FAIL;
+@@ -2964,6 +2965,8 @@
+ #endif
+ 				}
+ 			}
++#endif
++
+ 		} else
+ 			DBG_COUNTER(adapter->rx_logs.core_rx_pre_data_handled);
+ 		break;
+@@ -3607,7 +3610,8 @@
+ 		if (subpkt_cnt == 0)
+ 			CP_MAC_ADDR(a1_addr, ptr);
+ 		else {
+-			if (!EQ_MAC_ADDR(ptr, a1_addr)) {
++			if (!EQ_MAC_ADDR(ptr, a1_addr)) 
++{
+ 				is_mixed = 1;
+ 				if (DBG_PRINT_RCV_ONCE)
+ 					RTW_PRINT("subframe[%d] a1:%pM mismatch to [1]a1_addr:%pM \n", subpkt_cnt, ptr, a1_addr);
+@@ -3900,9 +3904,11 @@
+ 		}else
+ 		#endif
+ 		{
++#ifdef CONFIG_BR_EXT
+ 			if (EQ_MAC_ADDR(padapter->br_mac, sa)){
+ 				RTW_PRINT("RX: SA is br0 mac in a3 amsdu subframe\n");
+ 			}
++#endif
+ 		}
+ 
+ 		sub_pkt = rtw_os_alloc_msdu_pkt(prframe, da, sa
+--- a/core/rtw_trx_pci.c
++++ b/core/rtw_trx_pci.c
+@@ -229,6 +229,11 @@
+ #endif
+ }
+ 
++static void openwrt_pci_xmit_tasklet(unsigned long data)
++{
++	pci_xmit_tasklet((_adapter *)data);
++}
++
+ s32 pci_init_xmit_priv(_adapter *adapter)
+ {
+ 	s32 ret = _SUCCESS;
+@@ -238,7 +243,7 @@
+ 	_rtw_spinlock_init(&dvobj_to_pci(dvobj)->irq_th_lock);
+ 
+ 	rtw_tasklet_init(&pxmitpriv->xmit_tasklet,
+-		     (void(*)(unsigned long))pci_xmit_tasklet,
++		     openwrt_pci_xmit_tasklet,
+ 		     (unsigned long)adapter);
+ 
+ 	return ret;
+@@ -542,7 +547,7 @@
+ 			pci_unmap_single(pdvobjpriv->ppcidev,
+ 					 *((dma_addr_t *)skb->cb),
+ 					 r_priv->rxbuffersize,
+-					 PCI_DMA_FROMDEVICE);
++					 DMA_FROM_DEVICE);
+ 
+ 			rtl8822b_query_rx_desc(precvframe, skb->data);
+ 			pattrib = &precvframe->u.hdr.attrib;
+@@ -578,7 +583,7 @@
+ 					pci_map_single(pdvobjpriv->ppcidev,
+ 						       skb_tail_pointer(skb),
+ 						       r_priv->rxbuffersize,
+-						       PCI_DMA_FROMDEVICE);
++						       DMA_FROM_DEVICE);
+ 				goto done;
+ 			}
+ 
+@@ -601,7 +606,7 @@
+ 				pci_map_single(pdvobjpriv->ppcidev,
+ 					       skb_tail_pointer(skb),
+ 					       r_priv->rxbuffersize,
+-					       PCI_DMA_FROMDEVICE);
++					       DMA_FROM_DEVICE);
+ 		}
+ done:
+ 
+@@ -657,17 +662,26 @@
+ 	#endif
+ 
+ }
++static void openwrt_pci_recv_tasklet(unsigned long data)
++{
++	pci_recv_tasklet((void *)data);
++}
++static void openwrt_pci_bcn_tasklet(unsigned long data)
++{
++	pci_prepare_bcn_tasklet((void *)data);
++}
++
+ s32 pci_init_recv_priv(_adapter *adapter)
+ {
+ 	struct recv_priv	*precvpriv = &adapter->recvpriv;
+ 	s32	ret = _SUCCESS;
+ 
+ 	rtw_tasklet_init(&precvpriv->recv_tasklet,
+-		     (void(*)(unsigned long))pci_recv_tasklet,
++		     openwrt_pci_recv_tasklet,
+ 		     (unsigned long)adapter);
+ 
+ 	rtw_tasklet_init(&precvpriv->irq_prepare_beacon_tasklet,
+-		     (void(*)(unsigned long))pci_prepare_bcn_tasklet,
++		     openwrt_pci_bcn_tasklet,
+ 		     (unsigned long)adapter);
+ 
+ 	return ret;
+--- a/core/rtw_wlan_util.c
++++ b/core/rtw_wlan_util.c
+@@ -5104,8 +5104,10 @@
+ 	{
+ 		/* set sta amsdu num to 2 */
+ 		psta->fix_amsdu = 2;
++		#ifdef CONFIG_TXSC_AMSDU
+ 		psta->txsc_amsdu_max = 2;
+ 		RTW_INFO("%s %d Set psta->txsc_amsdu_num = %d, txsc_amsdu_max=%d\r\n", __FUNCTION__, __LINE__, psta->txsc_amsdu_num, psta->txsc_amsdu_max);
++		#endif
+ 	}
+ 	return;
+ }
+--- a/core/rtw_xmit.c
++++ b/core/rtw_xmit.c
+@@ -7796,12 +7796,15 @@
+ 			phy_addr |= (phy_addr_h << 32);
+ 		}
+ #endif
+-		pci_unmap_bus_addr(pdev, &phy_addr, pkt_list->length, PCI_DMA_TODEVICE);
++		if (pkt_list->dma_mapped) {
++			pci_unmap_bus_addr(pdev, &phy_addr, pkt_list->length, DMA_TO_DEVICE);
++			pkt_list->dma_mapped = 0;
++		}
+ 		pkt_list++;
+ 	}
+ }
+ 
+-void fill_txreq_phyaddr(_adapter *padapter, struct xmit_frame *pxframe)
++int fill_txreq_phyaddr(_adapter *padapter, struct xmit_frame *pxframe)
+ {
+ 	PPCI_DATA pci_data = dvobj_to_pci(padapter->dvobj);
+ 	struct pci_dev *pdev = pci_data->ppcidev;
+@@ -7810,12 +7813,20 @@
+ 	u32 idx, idx1 = 0;
+ 
+ 	PHLTX_ENTER;
++	for (idx = 0; idx < XF_TXREQ_CNT; idx++) {
++		struct rtw_pkt_buf_list *list = (struct rtw_pkt_buf_list *)XF_TXREQ[idx].pkt_list;
++		for (idx1 = 0; idx1 < XF_TXREQ[idx].pkt_cnt; idx1++)
++			list[idx1].dma_mapped = 0;
++	}
++
+ 
+ 	for(idx=0; idx<XF_TXREQ_CNT; idx++){
+ 		struct rtw_pkt_buf_list *pkt_list =(struct rtw_pkt_buf_list *)txreq->pkt_list;
+ 		for(idx1=0; idx1<txreq->pkt_cnt; idx1++){
+ 			dma_addr_t phy_addr = 0;
+-			pci_get_bus_addr(pdev, pkt_list->vir_addr, &phy_addr, pkt_list->length, PCI_DMA_TODEVICE);
++			if (pci_get_bus_addr(pdev, pkt_list->vir_addr, &phy_addr, pkt_list->length, DMA_TO_DEVICE))
++			goto unmap;
++			pkt_list->dma_mapped = 1;
+ #ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+ 			pkt_list->phy_addr_h =  phy_addr >> 32;
+ #else
+@@ -7826,6 +7837,11 @@
+ 		}
+ 		txreq++;
+ 	}
++	return _SUCCESS;
++unmap:
++	for (idx1 = 0; idx1 <= idx; idx1++)
++		core_recycle_txreq_phyaddr(padapter, &XF_TXREQ[idx1]);
++	return _FAIL;
+ }
+ #endif
+ 
+@@ -8016,8 +8032,10 @@
+ 	PHLTX_LOG;
+ 
+ //rtw_phl_tx todo, BR EXT
++	#ifdef CONFIG_BR_EXT
+ 	if(core_br_client_tx(padapter, pxframe, pskb) == FAIL)
+ 		return FAIL;
++#endif
+ 
+ 	return SUCCESS;
+ }
+@@ -9109,16 +9127,17 @@
+ 	return _SUCCESS;
+ }
+ 
+-void core_wlan_fill_txreq_post(_adapter *padapter, struct xmit_frame *pxframe)
++int core_wlan_fill_txreq_post(_adapter *padapter, struct xmit_frame *pxframe)
+ {
+ 	fill_txreq_mdata(padapter, pxframe);
+ 	fill_txreq_others(padapter, pxframe);
+ 
+ #ifdef CONFIG_PCI_HCI
+ 	/*must be called after all pkt contents modified (cache sync)*/
+-	fill_txreq_phyaddr(padapter, pxframe);
+-#endif
+-
++	return fill_txreq_phyaddr(padapter, pxframe);
++#endif
++
++	return _SUCCESS;
+ }
+ 
+ void core_wlan_fill_head(_adapter *padapter, struct xmit_frame *pxframe)
+@@ -9476,7 +9495,8 @@
+ 	core_wlan_fill_tail(padapter, pxframe);
+ 	core_wlan_sw_encrypt(padapter, pxframe);
+ 
+-	core_wlan_fill_txreq_post(padapter, pxframe);
++	if (core_wlan_fill_txreq_post(padapter, pxframe) == _FAIL)
++		return FAIL;
+ 
+ 	return SUCCESS;
+ }
+@@ -10185,7 +10205,7 @@
+ 	return;
+ }
+ #endif
+-enum rtw_phl_status rtw_core_tx_recycle(void *drv_priv, struct rtw_xmit_req *txreq)
++u32 rtw_core_tx_recycle(void *drv_priv, struct rtw_xmit_req *txreq)
+ {
+ 	_adapter *padapter = NULL;
+ 	struct xmit_frame *pxframe = NULL;
+--- a/core/rtw_xmit_shortcut.c
++++ b/core/rtw_xmit_shortcut.c
+@@ -1585,7 +1585,7 @@
+ {
+ 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+ 
+-	pxmitpriv->txsc_enable = 1; /* default TXSC on */
++	pxmitpriv->txsc_enable = 0; /* OpenWrt bring-up: ordinary TX path */
+ 
+ 	padapter->swdbg = 0;
+ 
+@@ -1850,7 +1850,7 @@
+ #ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+ 			phy_addr |= ((u64)pkt_list->phy_addr_h << 32);
+ #endif
+-			pci_unmap_bus_addr(pdev, &phy_addr, pkt_list->length, PCI_DMA_TODEVICE);
++			pci_unmap_bus_addr(pdev, &phy_addr, pkt_list->length, DMA_TO_DEVICE);
+ 			pkt_list++;
+ 		}
+ 	}
+@@ -1862,7 +1862,7 @@
+ 	struct pci_dev *pdev = pci_data->ppcidev;
+ 	dma_addr_t phy_addr = 0;
+ 
+-	pci_get_bus_addr(pdev, pkt_list->vir_addr, &phy_addr, pkt_list->length, PCI_DMA_TODEVICE);
++	pci_get_bus_addr(pdev, pkt_list->vir_addr, &phy_addr, pkt_list->length, DMA_TO_DEVICE);
+ #ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+ 	pkt_list->phy_addr_h =  phy_addr >> 32;
+ #else
+@@ -2486,7 +2486,7 @@
+ 			a3 = (u16 *)(ptxsc_wlhdr[i] + 4 + ETH_ALEN*2);
+ 			a4 = (u16 *)(ptxsc_wlhdr[i] + 4 + ETH_ALEN*3 + 2);
+ 			if (MLME_IS_AP(padapter))
+-				mybssid = GET_MY_HWADDR(padapter);
++				mybssid = padapter->mac_addr;
+ 			else
+ 				mybssid = get_bssid(pmlmepriv);
+ 			_rtw_memcpy(a3, mybssid, ETH_ALEN);
+--- a/include/drv_types.h
++++ b/include/drv_types.h
+@@ -1362,7 +1362,7 @@
+ };
+ 
+ struct atm_stainfo {
+-	u8	hwaddr[MACADDRLEN];
++	u8	hwaddr[ETH_ALEN];
+ 	u32	atm_statime;
+ };
+ 
+@@ -2233,6 +2233,7 @@
+ 
+ 	u8 pre_pos;
+ 	u8 vw_enable;
++
+ 	u8 tc_enable;
+ 	u32 amsdu_merge_cnt;
+ 	/*
+@@ -2365,6 +2366,7 @@
+ #ifdef RTW_PHL_DBG_CMD
+ 	u32 swdbg;
+ 	u8 cca_rts_mode;
++
+ 
+ 	struct core_logs core_logs;
+ 	struct phl_logs phl_logs;
+--- /dev/null
++++ b/include/openwrt_g6.h
+@@ -0,0 +1,13 @@
++/* OpenWrt 24.10 G6 build context; cfg80211 is supplied by backports. */
++#ifndef OPENWRT_G6_H
++#define OPENWRT_G6_H
++#ifndef CPTCFG_KERNEL_NAME
++#define CPTCFG_KERNEL_NAME "Linux"
++#endif
++#ifndef CPTCFG_KERNEL_VERSION
++#define CPTCFG_KERNEL_VERSION "6.12.96"
++#endif
++#ifndef CPTCFG_VERSION
++#define CPTCFG_VERSION "6.12.96"
++#endif
++#endif
+--- a/include/osdep_service_linux.h
++++ b/include/osdep_service_linux.h
+@@ -499,7 +499,11 @@
+ 
+ static inline void rtw_thread_exit(_completion *comp)
+ {
++	#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0)
++	kthread_complete_and_exit(comp, 0);
++#else
+ 	complete_and_exit(comp, 0);
++#endif
+ }
+ 
+ static inline _thread_hdl_ rtw_thread_start(int (*threadfn)(void *data),
+@@ -1030,7 +1034,7 @@
+ #if defined(CONFIG_RTL_ETH_RECYCLED_SKB)
+ extern int rtk_fc_fastfwd_netif_rx(struct sk_buff *skb);
+ 	skb->dev = ndev;
+-	skb->from_dev = ndev;
++	/* Mainline RX uses skb->dev; vendor from_dev is not part of Linux. */
+ 	rtk_fc_fastfwd_netif_rx(skb);
+ #else
+ extern int fwdEngine_wifi_rx(struct sk_buff *skb);
+@@ -1045,7 +1049,7 @@
+ 	skb->dev = ndev;
+ 	skb->data-=14;
+ 	skb->len+=14;
+-	skb->from_dev = ndev;
++	/* Mainline RX uses skb->dev; vendor from_dev is not part of Linux. */
+ 
+ 	if(is_highpri_pkt(skb->data))
+ 		ret = RE8670_RX_CONTINUE;
+@@ -1114,7 +1118,7 @@
+ 	return ret;
+ #else
+ 	skb->dev = ndev;
+-	skb->from_dev = ndev;
++	/* Mainline RX uses skb->dev; vendor from_dev is not part of Linux. */
+ 	return netif_rx(skb);
+ #endif
+ }
+--- a/include/rtw_mlme.h
++++ b/include/rtw_mlme.h
+@@ -1106,9 +1106,7 @@
+ void rtw_sta_mstatus_disc_rpt(_adapter *adapter, u8 mac_id);
+ void rtw_sta_mstatus_report(_adapter *adapter);
+ extern void rtw_wmm_event_callback(_adapter *padapter, u8 *pbuf);
+-#ifdef CONFIG_IEEE80211W
+ void rtw_sta_timeout_event_callback(_adapter *adapter, u8 *pbuf);
+-#endif /* CONFIG_IEEE80211W */
+ #ifdef CONFIG_RTW_80211R
+ void rtw_ft_info_init(struct ft_roam_info *pft);
+ u8 rtw_ft_chk_roaming_candidate(_adapter *padapter, 
+--- a/os_dep/linux/ioctl_cfg80211.c
++++ b/os_dep/linux/ioctl_cfg80211.c
+@@ -475,7 +475,7 @@
+ 
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 19, 0))
+ 	if (started) {
+-		cfg80211_ch_switch_started_notify(adapter->pnetdev, &chdef, 0);
++		cfg80211_ch_switch_started_notify(adapter->pnetdev, &chdef, 0, 0, false);
+ 		goto exit;
+ 	}
+ #endif
+@@ -483,7 +483,7 @@
+ 	if (!rtw_cfg80211_allow_ch_switch_notify(adapter))
+ 		goto exit;
+ 
+-	cfg80211_ch_switch_notify(adapter->pnetdev, &chdef);
++	cfg80211_ch_switch_notify(adapter->pnetdev, &chdef, 0);
+ 
+ #else
+ 	int freq = rtw_ch2freq(ch);
+@@ -1179,7 +1179,7 @@
+ 		#endif
+ 
+ 		#if defined(CPTCFG_VERSION) || LINUX_VERSION_CODE >= KERNEL_VERSION(4, 12, 0)
+-		roam_info.bssid = cur_network->network.MacAddress;
++		roam_info.links[0].bssid = cur_network->network.MacAddress;
+ 		roam_info.req_ie = pmlmepriv->assoc_req + sizeof(struct rtw_ieee80211_hdr_3addr) + 2;
+ 		roam_info.req_ie_len = pmlmepriv->assoc_req_len - sizeof(struct rtw_ieee80211_hdr_3addr) - 2;
+ 		roam_info.resp_ie = pmlmepriv->assoc_rsp + sizeof(struct rtw_ieee80211_hdr_3addr) + 6;
+@@ -1975,7 +1975,7 @@
+ 	return ret;
+ }
+ 
+-static int cfg80211_rtw_add_key(struct wiphy *wiphy, struct net_device *ndev
++static int cfg80211_rtw_add_key(struct wiphy *wiphy, struct net_device *ndev, int link_id
+ 	, u8 key_index
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37)) || defined(COMPAT_KERNEL_RELEASE)
+ 	, bool pairwise
+@@ -2141,7 +2141,7 @@
+ 
+ }
+ 
+-static int cfg80211_rtw_get_key(struct wiphy *wiphy, struct net_device *ndev
++static int cfg80211_rtw_get_key(struct wiphy *wiphy, struct net_device *ndev, int link_id
+ 	, u8 keyid
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37)) || defined(COMPAT_KERNEL_RELEASE)
+ 	, bool pairwise
+@@ -2343,40 +2343,47 @@
+ }
+ 
+ static int cfg80211_rtw_del_key(struct wiphy *wiphy, struct net_device *ndev,
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37)) || defined(COMPAT_KERNEL_RELEASE)
+-				u8 key_index, bool pairwise, const u8 *mac_addr)
+-#else	/* (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37)) */
+-				u8 key_index, const u8 *mac_addr)
+-#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37)) */
+-{
+-	_adapter *padapter = (_adapter *)rtw_netdev_priv(ndev);
+-	struct security_priv *psecuritypriv = &padapter->securitypriv;
+-
+-	RTW_INFO(FUNC_NDEV_FMT" key_index=%d, addr=%pM\n", FUNC_NDEV_ARG(ndev), key_index, mac_addr);
+-
+-	if ((key_index < WEP_KEYS) &&
+-	    ((psecuritypriv->dot11PrivacyAlgrthm == _WEP40_) ||
+-	     (psecuritypriv->dot11PrivacyAlgrthm == _WEP104_))) {
+-		if (key_index == psecuritypriv->dot11PrivacyKeyIndex) {
+-			psecuritypriv->bWepDefaultKeyIdxSet = 0;
+-			RTW_INFO("%s: delete default key!\n", __func__);
+-		}
+-
+-		if (psecuritypriv->key_mask & BIT(key_index)) {
+-			psecuritypriv->key_mask &= ~BIT(key_index);
+-			RTW_INFO("%s: clear bit %d of key_mask!\n",
+-				 __func__, key_index);
+-		}
+-
+-		RTW_INFO("%s: key_mask = %d\n",
+-			 __func__, psecuritypriv->key_mask);
+-	}
+-
++	int link_id, u8 key_index, bool pairwise, const u8 *mac_addr)
++{
++	_adapter *adapter = rtw_netdev_priv(ndev);
++	struct security_priv *sec = &adapter->securitypriv;
++	struct sta_info *sta;
++	u8 type = pairwise ? RTW_SEC_KEY_UNICAST : RTW_SEC_KEY_MULTICAST;
++
++	if (link_id > 0 || key_index >= WEP_KEYS)
++		return -EOPNOTSUPP;
++	if (pairwise && !mac_addr)
++		return -EINVAL;
++	if (pairwise)
++		sta = rtw_get_stainfo(&adapter->stapriv, mac_addr);
++	else if (MLME_IS_AP(adapter))
++		sta = rtw_get_bcmc_stainfo(adapter);
++	else
++		sta = rtw_get_stainfo(&adapter->stapriv, get_bssid(&adapter->mlmepriv));
++	if (!sta)
++		return 0; /* station teardown already removed the CAM entry */
++
++	if (pairwise) {
++		sta->ieee8021x_blocked = _TRUE;
++		sta->bpairwise_key_installed = _FALSE;
++	}
++	if ((sta->key_installed[type] & BIT(key_index)) &&
++	    rtw_hw_del_key(adapter, sta, key_index, type, PHL_CMD_DIRECTLY, 0))
++		return -EIO;
++
++	if (pairwise)
++		memzero_explicit(&sta->dot118021x_UncstKey, sizeof(sta->dot118021x_UncstKey));
++	else {
++		memzero_explicit(&sec->dot118021XGrpKey[key_index], sizeof(sec->dot118021XGrpKey[key_index]));
++		if (key_index == sec->dot118021XGrpKeyid)
++			sec->binstallGrpkey = _FALSE;
++	}
++	sec->key_mask &= ~BIT(key_index);
+ 	return 0;
+ }
+ 
+ static int cfg80211_rtw_set_default_key(struct wiphy *wiphy,
+-	struct net_device *ndev, u8 key_index
++	struct net_device *ndev, int link_id, u8 key_index
+ 	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)) || defined(COMPAT_KERNEL_RELEASE)
+ 	, bool unicast, bool multicast
+ 	#endif
+@@ -2426,7 +2433,7 @@
+ 
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+ int cfg80211_rtw_set_default_mgmt_key(struct wiphy *wiphy,
+-	struct net_device *ndev, u8 key_index)
++	struct net_device *ndev, int link_id, u8 key_index)
+ {
+ #define SET_DEF_KEY_PARAM_FMT " key_index=%d"
+ #define SET_DEF_KEY_PARAM_ARG , key_index
+@@ -4341,55 +4348,8 @@
+ 
+ static int rtw_set_wep(struct _ADAPTER *a, struct cfg80211_connect_params *sme)
+ {
+-	struct security_priv *sec = &a->securitypriv;
+-	struct key_params *keys = sme->crypto.wep_keys;
+-	u32 cipher = 0;
+-	int i = 0;
+-
+-	if (!sme->key || !keys)
+-		return 0;
+-
+-	/* should have been checked from nl80211_connect */
+-#ifdef WFO_VIRT_RECEIVER
+-	rtw_warn_on((sme->key_idx != sme->crypto.wep_tx_key) ||
+-		    (sme->key_len != keys[sme->key_idx].key_len) ||
+-		    !_rtw_memcmp(sme->key, keys[sme->key_idx].key, sme->key_len));
+-#else
+-	rtw_warn_on((sme->key_idx != sme->crypto.wep_tx_key) ||
+-		    (sme->key_len != keys[sme->key_idx].key_len) ||
+-		    (sme->key != keys[sme->key_idx].key));
+-#endif
+-
+-	cipher = keys[sme->key_idx].cipher;
+-	if (cipher == WLAN_CIPHER_SUITE_WEP40) {
+-		sec->dot11PrivacyAlgrthm = _WEP40_;
+-		sec->dot118021XGrpPrivacy = _WEP40_;
+-	} else if (cipher == WLAN_CIPHER_SUITE_WEP104) {
+-		sec->dot11PrivacyAlgrthm = _WEP104_;
+-		sec->dot118021XGrpPrivacy = _WEP104_;
+-	}
+-	if (sec->dot11AuthAlgrthm == dot11AuthAlgrthm_Auto)
+-		sec->ndisauthtype = Ndis802_11AuthModeAutoSwitch;
+-	else if (sec->dot11AuthAlgrthm == dot11AuthAlgrthm_Shared)
+-		sec->ndisauthtype = Ndis802_11AuthModeShared;
+-	sec->ndisencryptstatus = Ndis802_11Encryption1Enabled;
+-
+-	sec->dot11PrivacyKeyIndex = sme->key_idx;
+-	_rtw_memset(sec->dot11DefKey, 0, sizeof(sec->dot11DefKey));
+-	_rtw_memset(sec->dot11DefKeylen, 0, sizeof(sec->dot11DefKeylen));
+-	sec->key_mask = 0;
+-
+-	for (i = 0; i < CFG80211_MAX_WEP_KEYS; i++) {
+-		if (!keys[i].cipher)
+-			continue;
+-
+-		_rtw_memcpy(sec->dot11DefKey[i].skey,
+-			    keys[i].key, keys[i].key_len);
+-		sec->dot11DefKeylen[i] = keys[i].key_len;
+-		sec->key_mask |= BIT(i);
+-	}
+-
+-	return 0;
++	/* OpenWrt profile supports open/WPA2/WPA3, not obsolete WEP connect. */
++	return sme->key ? -EOPNOTSUPP : 0;
+ }
+ 
+ static int rtw_set_wpa_ie(struct _ADAPTER *a,
+@@ -4419,7 +4379,7 @@
+ 		sme->privacy, sme->key, sme->key_len, sme->key_idx, sme->auth_type);
+ 
+ 	if (rtw_check_connect_sae_compat(sme)) {
+-		sme->auth_type = MLME_AUTHTYPE_SAE;
++		sme->auth_type = NL80211_AUTHTYPE_SAE;
+ 		psecuritypriv->auth_type = MLME_AUTHTYPE_SAE;
+ 		psecuritypriv->auth_alg = WLAN_AUTH_SAE;
+ 		RTW_INFO("%s set sme->auth_type for SAE compat\n", __FUNCTION__);
+@@ -4568,56 +4528,18 @@
+ }
+ 
+ static int cfg80211_rtw_set_txpower(struct wiphy *wiphy,
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
+-	struct wireless_dev *wdev,
+-#endif
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)) || defined(COMPAT_KERNEL_RELEASE)
+-	enum nl80211_tx_power_setting type, int mbm)
+-#else
+-	enum tx_power_setting type, int dbm)
+-#endif
+-{
+-#if 0
+-	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
+-	int ret;
+-
+-	switch (type) {
+-	case NL80211_TX_POWER_AUTOMATIC:
+-		return 0;
+-	case NL80211_TX_POWER_FIXED:
+-		if (mbm < 0 || (mbm % 100))
+-			return -EOPNOTSUPP;
+-
+-		if (!test_bit(IWM_STATUS_READY, &iwm->status))
+-			return 0;
+-
+-		ret = iwm_umac_set_config_fix(iwm, UMAC_PARAM_TBL_CFG_FIX,
+-					      CFG_TX_PWR_LIMIT_USR,
+-					      MBM_TO_DBM(mbm) * 2);
+-		if (ret < 0)
+-			return ret;
+-
+-		return iwm_tx_power_trigger(iwm);
+-	default:
+-		IWM_ERR(iwm, "Unsupported power type: %d\n", type);
+-		return -EOPNOTSUPP;
+-	}
+-#endif
+-	RTW_INFO("%s\n", __func__);
+-	return 0;
++	struct wireless_dev *wdev, enum nl80211_tx_power_setting type, int mbm)
++{
++	/* Automatic vendor per-rate/domain limits remain active. No pretend
++	 * success for a fixed/limited power request that has not reached HAL.
++	 */
++	return type == NL80211_TX_POWER_AUTOMATIC ? 0 : -EOPNOTSUPP;
+ }
+ 
+ static int cfg80211_rtw_get_txpower(struct wiphy *wiphy,
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
+-	struct wireless_dev *wdev,
+-#endif
+-	int *dbm)
+-{
+-	RTW_INFO("%s\n", __func__);
+-
+-	*dbm = (12);
+-
+-	return 0;
++	struct wireless_dev *wdev, int *dbm)
++{
++	return -EOPNOTSUPP; /* OEM returned a fabricated constant 12 dBm. */
+ }
+ 
+ inline bool rtw_cfg80211_pwr_mgmt(_adapter *adapter)
+@@ -5833,8 +5755,9 @@
+ }
+ 
+ static int cfg80211_rtw_change_beacon(struct wiphy *wiphy, struct net_device *ndev,
+-		struct cfg80211_beacon_data *info)
+-{
++		struct cfg80211_ap_update *update)
++{
++	struct cfg80211_beacon_data *info = &update->beacon;
+ 	int ret = 0;
+ 	_adapter *adapter = (_adapter *)rtw_netdev_priv(ndev);
+ 
+@@ -5854,7 +5777,7 @@
+ 	return ret;
+ }
+ 
+-static int cfg80211_rtw_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
++static int cfg80211_rtw_stop_ap(struct wiphy *wiphy, struct net_device *ndev, unsigned int link_id)
+ {
+ 	_adapter *adapter = (_adapter *)rtw_netdev_priv(ndev);
+ 
+@@ -6820,7 +6743,7 @@
+ 	switch (chandef->width) {
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 		*ht = 0;
+-		/* fall through */
++		fallthrough;
+ 	case NL80211_CHAN_WIDTH_20:
+ 		*bw = CHANNEL_WIDTH_20;
+ 		*offset = CHAN_OFFSET_NO_EXT;
+@@ -6869,7 +6792,7 @@
+ }
+ #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)) */
+ 
+-static int cfg80211_rtw_set_monitor_channel(struct wiphy *wiphy
++static int cfg80211_rtw_set_monitor_channel(struct wiphy *wiphy, struct net_device *ndev
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
+ 	, struct cfg80211_chan_def *chandef
+ #else
+@@ -6916,7 +6839,7 @@
+ 
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
+ static int cfg80211_rtw_get_channel(struct wiphy *wiphy,
+-	struct wireless_dev *wdev,
++	struct wireless_dev *wdev, unsigned int link_id,
+ 	struct cfg80211_chan_def *chandef)
+ {
+ 	_adapter *padapter = wiphy_to_adapter(wiphy);
+@@ -11637,7 +11560,7 @@
+ 	rtw_cfg80211_indicate_scan_done(adapter, _TRUE);
+ 
+ 	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 11, 0)) || defined(COMPAT_KERNEL_RELEASE)
+-	if (wdev->current_bss) {
++	if (wdev->connected) {
+ 		RTW_INFO(FUNC_ADPT_FMT" clear current_bss by cfg80211_disconnected\n", FUNC_ADPT_ARG(adapter));
+ 		rtw_cfg80211_indicate_disconnect(adapter, 0, 1);
+ 	}
+--- a/os_dep/linux/mlme_linux.c
++++ b/os_dep/linux/mlme_linux.c
+@@ -66,7 +66,7 @@
+ 		rtw_cfg80211_indicate_connect(adapter);
+ #endif /* CONFIG_IOCTL_CFG80211 */
+ 
+-	rtw_indicate_wx_assoc_event(adapter);
++
+ 
+ #ifdef CONFIG_RTW_MESH
+ #if CONFIG_RTW_MESH_CTO_MGATE_CARRIER
+@@ -91,7 +91,7 @@
+ #ifdef CONFIG_IOCTL_CFG80211
+ 	rtw_cfg80211_indicate_scan_done(padapter, aborted);
+ #endif
+-	indicate_wx_scan_complete_event(padapter);
++
+ }
+ 
+ static RT_PMKID_LIST   backupPMKIDList[NUM_PMKID_CACHE];
+@@ -174,7 +174,7 @@
+ 	rtw_cfg80211_indicate_disconnect(adapter,  reason, locally_generated);
+ #endif /* CONFIG_IOCTL_CFG80211 */
+ 
+-	rtw_indicate_wx_disassoc_event(adapter);
++
+ 
+ #ifdef RTK_DMP_PLATFORM
+ 	_set_workitem(&adapter->mlmepriv.Linkdown_workitem);
+--- a/os_dep/linux/os_intfs.c
++++ b/os_dep/linux/os_intfs.c
+@@ -88,7 +88,7 @@
+ 	}
+ 
+ 	_rtw_memcpy(adapter_mac_addr(padapter), sa->sa_data, ETH_ALEN); /* set mac addr to adapter */
+-	_rtw_memcpy(pnetdev->dev_addr, sa->sa_data, ETH_ALEN); /* set mac addr to net_device */
++	eth_hw_addr_set(pnetdev, sa->sa_data); /* set mac addr to net_device */
+ 
+ 	rtw_ps_deny(padapter, PS_DENY_IOCTL);
+ 	LeaveAllPowerSaveModeDirect(padapter); /* leave PS mode for guaranteeing to access hw register successfully */
+@@ -216,8 +216,7 @@
+ {
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29))
+ 	return ndev->netdev_ops
+-		&& ndev->netdev_ops->ndo_do_ioctl
+-		&& ndev->netdev_ops->ndo_do_ioctl == rtw_ioctl;
++		&& ndev->netdev_ops->ndo_start_xmit == rtw_xmit_entry;
+ #else
+ 	return ndev->do_ioctl
+ 		&& ndev->do_ioctl == rtw_ioctl;
+@@ -343,7 +342,7 @@
+ #endif
+ 	.ndo_set_mac_address = rtw_net_set_mac_address,
+ 	.ndo_get_stats = rtw_net_get_stats,
+-	.ndo_do_ioctl = rtw_ioctl,
++
+ };
+ #endif
+ 
+@@ -429,7 +428,7 @@
+ 	pnetdev->watchdog_timeo = HZ * 3; /* 3 second timeout */
+ 
+ #ifdef CONFIG_WIRELESS_EXT
+-	pnetdev->wireless_handlers = (struct iw_handler_def *)&rtw_handlers_def;
++
+ #endif
+ 
+ #ifdef WIRELESS_SPY
+@@ -648,7 +647,7 @@
+ 	/* alloc netdev name */
+ 	rtw_init_netdev_name(ndev, name);
+ 
+-	_rtw_memcpy(ndev->dev_addr, adapter_mac_addr(adapter), ETH_ALEN);
++	eth_hw_addr_set(ndev, adapter_mac_addr(adapter));
+ 
+ 	/* Tell the network stack we exist */
+ 
+@@ -1066,7 +1065,9 @@
+ #endif
+ 
+ 	/* default set duplicate rts on */
++	#ifdef RTW_PHL_DBG_CMD
+ 	padapter->cca_rts_mode = 3;
++	#endif
+ 
+ 	return ret;
+ }
+@@ -1813,7 +1814,7 @@
+ 	.ndo_start_xmit = rtw_xmit_entry,
+ 	.ndo_set_mac_address = rtw_net_set_mac_address,
+ 	.ndo_get_stats = rtw_net_get_stats,
+-	.ndo_do_ioctl = rtw_ioctl,
++
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
+ 	.ndo_select_queue	= rtw_select_queue,
+ #endif
+--- a/os_dep/linux/pci_intf.c
++++ b/os_dep/linux/pci_intf.c
+@@ -15,6 +15,7 @@
+ #define _HCI_INTF_C_
+ 
+ #include <drv_types.h>
++#include <linux/of.h>
+ 
+ #include <linux/pci_regs.h>
+ #include <rtw_trx_pci.h>
+@@ -51,27 +52,7 @@
+ };
+ 
+ struct pci_device_id rtw_pci_id_tbl[] = {
+-#ifdef DIRTY_FOR_WORK
+-	{PCI_DEVICE(PCI_VENDER_ID_REALTEK, 0xB814), .driver_data = RTL8852A},
+-#endif
+-#ifdef CONFIG_RTL8852A
+-	{PCI_DEVICE(PCI_VENDER_ID_REALTEK, 0xA852), .driver_data = RTL8852A},/*FPGA*/
+-	{PCI_DEVICE(PCI_VENDER_ID_REALTEK, 0x8852), .driver_data = RTL8852A},
+-	{PCI_DEVICE(PCI_VENDER_ID_REALTEK, 0x885B), .driver_data = RTL8852A},
+-	{PCI_DEVICE(PCI_VENDER_ID_REALTEK, 0x885C), .driver_data = RTL8852A},
+-#endif
+-#ifdef CONFIG_RTL8852B
+-	{PCI_DEVICE(PCI_VENDER_ID_REALTEK, 0xB852), .driver_data = RTL8852B},/*FPGA*/
+-#endif
+-#ifdef CONFIG_RTL8852C
+-	{PCI_DEVICE(PCI_VENDER_ID_REALTEK, 0xC852), .driver_data = RTL8852C},/*FPGA*/
+-#endif
+-#ifdef CONFIG_RTL8832BR
+ 	{PCI_DEVICE(PCI_VENDER_ID_REALTEK, 0xb832), .driver_data = RTL8832BR},
+-#endif
+-#ifdef CONFIG_RTL8192XB
+-	{PCI_DEVICE(PCI_VENDER_ID_REALTEK, 0x0192), .driver_data = RTL8192XB},
+-#endif
+ 	{}
+ };
+ 
+@@ -573,16 +554,16 @@
+ 	pci_set_drvdata(pdev, dvobj);
+ 
+ 
+-	err = pci_enable_device(pdev);
++	err = pci_enable_device_mem(pdev);
+ 	if (err != 0) {
+ 		RTW_ERR("%s : Cannot enable new PCI device\n", pci_name(pdev));
+ 		goto free_dvobj;
+ 	}
+ 
+ #ifdef CONFIG_64BIT_DMA
+-	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64))) {
++	if (!dma_set_mask(&pdev->dev, DMA_BIT_MASK(64))) {
+ 		RTW_INFO("RTL819xCE: Using 64bit DMA\n");
+-		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64));
++		err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
+ 		if (err != 0) {
+ 			RTW_ERR("Unable to obtain 64bit DMA for consistent allocations\n");
+ 			goto disable_picdev;
+@@ -591,8 +572,11 @@
+ 	} else
+ #endif
+ 	{
+-		if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(32))) {
+-			err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
++		err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
++		if (err)
++			goto disable_picdev;
++		if (!err) {
++			err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
+ 			if (err != 0) {
+ 				RTW_ERR("Unable to obtain 32bit DMA for consistent allocations\n");
+ 				goto disable_picdev;
+@@ -602,7 +586,7 @@
+ 
+ 	pci_set_master(pdev);
+ 
+-	err = pci_request_regions(pdev, DRV_NAME);
++	err = pci_request_selected_regions(pdev, pci_select_bars(pdev, IORESOURCE_MEM), DRV_NAME);
+ 	if (err != 0) {
+ 		RTW_ERR("Can't obtain PCI resources\n");
+ 		goto disable_picdev;
+@@ -717,7 +701,7 @@
+ 
+ release_regions:
+ 	if (status != _SUCCESS)
+-		pci_release_regions(pdev);
++		pci_release_selected_regions(pdev, pci_select_bars(pdev, IORESOURCE_MEM));
+ disable_picdev:
+ 	if (status != _SUCCESS)
+ 		pci_disable_device(pdev);
+@@ -766,7 +750,7 @@
+ 		devobj_deinit(dvobj);
+ 	}
+ 
+-	pci_release_regions(pdev);
++	pci_release_selected_regions(pdev, pci_select_bars(pdev, IORESOURCE_MEM));
+ 	pci_disable_device(pdev);
+ 
+ }
+@@ -849,7 +833,7 @@
+ 		goto exit;
+ 	}
+ 
+-	err = pci_enable_device(pdev);
++	err = pci_enable_device_mem(pdev);
+ 	if (err != 0) {
+ 		RTW_INFO("%s Failed on pci_enable_device (%d)\n", __func__, err);
+ 		goto exit;
+@@ -909,6 +893,17 @@
+ extern void service_sta_q_hdl2(struct dvobj_priv *dvobj);
+ //#endif
+ 
++static void openwrt_service_sta_tasklet(unsigned long data)
++{
++	service_sta_q_hdl2((struct dvobj_priv *)data);
++}
++#ifdef CONFIG_ONE_TXQ
++static void openwrt_txq_tasklet(unsigned long data)
++{
++	rtw_txq_hdl((struct dvobj_priv *)data);
++}
++#endif
++
+ void rtw_init_txq(struct dvobj_priv *dvobj)
+ {
+ 	_rtw_init_queue(&dvobj->ps_trigger_sta_queue);
+@@ -929,13 +924,13 @@
+ 	dvobj->txq_serv_group_exp = 1;
+ 
+ 	rtw_tasklet_init(&dvobj->txq_tasklet,
+-		(void(*)(unsigned long)) rtw_txq_hdl,
++		openwrt_txq_tasklet,
+ 		(unsigned long)dvobj);
+ #endif
+ 
+ //#if !defined(CONFIG_ONE_TXQ)
+ 	rtw_tasklet_init(&dvobj->ps_trigger_tasklet,
+-		(void(*)(unsigned long)) service_sta_q_hdl2,
++		openwrt_service_sta_tasklet,
+ 		(unsigned long)dvobj);
+ //#endif
+ }
+@@ -1036,6 +1031,10 @@
+ 
+ static int rtw_dev_probe(struct pci_dev *pdev, const struct pci_device_id *pdid)
+ {
++	if (!of_machine_is_compatible("cudy,ax1500-r76") ||
++	    pdev->vendor != 0x10ec || pdev->device != 0xb832)
++		return -ENODEV;
++
+ 	_adapter *padapter = NULL;
+ 	struct dvobj_priv *dvobj;
+ 
+--- a/os_dep/linux/rtw_cfgvendor.c
++++ b/os_dep/linux/rtw_cfgvendor.c
+@@ -1775,7 +1775,11 @@
+ 		return err;
+ 	}
+ 
++	#ifdef CONFIG_PROC_DEBUG
+ 	channel_utilization = rtw_get_tp_chanutil(padapter);
++#else
++	return -EOPNOTSUPP;
++#endif
+ 
+ 	if (channel_utilization > 100)
+ 	{
+@@ -1805,7 +1809,11 @@
+ 		goto err;
+ 	}
+ 
++	#ifdef CONFIG_PROC_DEBUG
+ 	chutil = rtw_get_tp_chanutil(padapter);
++#else
++	return -EOPNOTSUPP;
++#endif
+ 
+ 	/* Alloc the SKB for vendor_event */
+ 	skb = cfg80211_vendor_cmd_alloc_reply_skb(wiphy, sizeof(chutil));
+@@ -2521,10 +2529,10 @@
+ 
+ 	RTW_INFO("Register RTW cfg80211 vendor cmd(0x%x) interface\n", NL80211_CMD_VENDOR);
+ 
+-	wiphy->vendor_commands	= rtw_vendor_cmds;
+-	wiphy->n_vendor_commands = ARRAY_SIZE(rtw_vendor_cmds);
+-	wiphy->vendor_events	= rtw_vendor_events;
+-	wiphy->n_vendor_events	= ARRAY_SIZE(rtw_vendor_events);
++	wiphy->vendor_commands = NULL;
++	wiphy->n_vendor_commands = 0;
++	wiphy->vendor_events = NULL;
++	wiphy->n_vendor_events = 0;
+ 
+ 	return 0;
+ }
+--- a/os_dep/linux/wifi_regd.c
++++ b/os_dep/linux/wifi_regd.c
+@@ -18,63 +18,36 @@
+ #ifdef CONFIG_IOCTL_CFG80211
+ void rtw_regd_apply_flags(struct wiphy *wiphy)
+ {
+-	struct dvobj_priv *dvobj = wiphy_to_dvobj(wiphy);
+-	struct rf_ctl_t *rfctl = dvobj_to_rfctl(dvobj);
+-	RT_CHANNEL_INFO *channel_set = rfctl->channel_set;
+-	u8 max_chan_nums = rfctl->max_chan_nums;
++	struct rf_ctl_t *rfctl = dvobj_to_rfctl(wiphy_to_dvobj(wiphy));
++	unsigned int band, i, j;
+ 
+-	struct ieee80211_supported_band *sband;
+-	struct ieee80211_channel *ch;
+-	unsigned int i, j;
+-	u16 channel;
+-	u32 freq;
+-
+-	/* all channels disable */
+-	for (i = 0; i < NUM_NL80211_BANDS; i++) {
+-		sband = wiphy->bands[i];
++	/* Intersect vendor channel restrictions with cfg80211/regdb. Never
++	 * clear NO_IR/RADAR/DISABLED or replace the kernel's power limits.
++	 */
++	for (band = 0; band < NUM_NL80211_BANDS; band++) {
++		struct ieee80211_supported_band *sband = wiphy->bands[band];
+ 		if (!sband)
+ 			continue;
+-		for (j = 0; j < sband->n_channels; j++) {
+-			ch = &sband->channels[j];
+-			ch->flags = IEEE80211_CHAN_DISABLED;
+-		}
+-	}
+-
+-	/* channels apply by channel plans. */
+-	for (i = 0; i < max_chan_nums; i++) {
+-		channel = channel_set[i].ChannelNum;
+-		#if CONFIG_IEEE80211_BAND_6GHZ
+-		if (channel_set[i].band == BAND_ON_6G)
+-			continue; /* TODO: wiphy with 6G band */
+-		else
+-		#endif
+-			freq = rtw_ch2freq(channel);
+-		ch = ieee80211_get_channel(wiphy, freq);
+-		if (!ch)
+-			continue;
+-
+-		/* enable */
+-		ch->flags = 0;
+-
+-		if (channel_set[i].flags & RTW_CHF_DFS) {
+-			/*
+-			* before integrating with nl80211 flow
+-			* bypass IEEE80211_CHAN_RADAR when configured with radar detection
+-			* to prevent from hostapd blocking DFS channels
+-			*/
+-			if (rtw_rfctl_dfs_domain_unknown(rfctl))
+-				ch->flags |= IEEE80211_CHAN_RADAR;
+-		}
+-
+-		if (channel_set[i].flags & RTW_CHF_NO_IR) {
+-			#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
+-			ch->flags |= IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_PASSIVE_SCAN;
+-			#else
+-			ch->flags |= IEEE80211_CHAN_NO_IR;
+-			#endif
++		for (i = 0; i < sband->n_channels; i++) {
++			struct ieee80211_channel *ch = &sband->channels[i];
++			bool found = false;
++			for (j = 0; j < rfctl->max_chan_nums; j++) {
++				RT_CHANNEL_INFO *vendor = &rfctl->channel_set[j];
++				if (vendor->ChannelNum != ch->hw_value)
++					continue;
++				found = true;
++				if (vendor->flags & RTW_CHF_DFS)
++					ch->flags |= IEEE80211_CHAN_RADAR;
++				if (vendor->flags & RTW_CHF_NO_IR)
++					ch->flags |= IEEE80211_CHAN_NO_IR;
++				break;
++			}
++			if (!found)
++				ch->flags |= IEEE80211_CHAN_DISABLED;
+ 		}
+ 	}
+ }
++
+ 
+ static void rtw_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request)
+ {
+@@ -88,7 +61,7 @@
+ 	case NL80211_REGDOM_SET_BY_USER:
+ 		RTW_INFO("%s: %s alpha2:%c%c\n", __func__, "NL80211_REGDOM_SET_BY_USER"
+ 			, request->alpha2[0], request->alpha2[1]);
+-		regulatory_hint(wiphy,request->alpha2);
++
+ 		rtw_set_country(wiphy_to_adapter(wiphy), request->alpha2);
+ 		break;
+ 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
+@@ -125,30 +98,15 @@
+ 	wiphy->flags &= ~WIPHY_FLAG_STRICT_REGULATORY;
+ 	wiphy->flags &= ~WIPHY_FLAG_DISABLE_BEACON_HINTS;
+ #else
+-	wiphy->regulatory_flags = REGULATORY_WIPHY_SELF_MANAGED;
++	wiphy->regulatory_flags &= ~REGULATORY_WIPHY_SELF_MANAGED;
+ #endif
+ 
+ 	rtw_regd_apply_flags(wiphy);
+ 
+ 	ret = wiphy_register(wiphy);
+ 
+-#ifdef CONFIG_CFG80211_CRDA_SUPPORT
+-	#if defined(PLATFORM_ECOS)
+-	/* do it in wfo_virt driver */
+-	#else
+-	realtek_regdom = &rtl_regdom_all;
+-
+-	if (rtnl_is_locked())
+-		regulatory_set_wiphy_regd_sync_rtnl(wiphy, (struct ieee80211_regdomain *)realtek_regdom);
+-	else {
+-		rtnl_lock();
+-		regulatory_set_wiphy_regd_sync_rtnl(wiphy, (struct ieee80211_regdomain *)realtek_regdom);
+-		rtnl_unlock();
+-	}
+-	#endif
+-#else
+-	regulatory_hint(wiphy,"00");
+-#endif
++	if (!ret)
++		regulatory_hint(wiphy, "00");
+ 
+ 	return ret;
+ }
+--- a/os_dep/linux/xmit_linux.c
++++ b/os_dep/linux/xmit_linux.c
+@@ -3409,20 +3409,8 @@
+ #endif
+ 
+ 	psta = get_txpkt_sta_info(padapter, pkt);
+-	if (!psta) {
+-		if (MLME_IS_AP(padapter) && is_dhcp_pkt(pkt->data)) {
+-			for (i = 0; i < 6; i++) {
+-				pkt->data[i] = 0xFF;
+-			}
+-
+-			psta = get_txpkt_sta_info(padapter, pkt);
+-			if (!psta) {
+-				goto drop_packet;
+-			}
+-		} else {
+-			goto drop_packet;
+-		}
+-	}
++	if (!psta)
++		goto drop_packet;
+ 
+ 	/* in some environment, root_ap -> vxd, skb_cb_flags is not zero, so reset it */
+ 	pkt->cb[_SKB_CB_FLAGS] = 0x0;
+@@ -3468,7 +3456,7 @@
+ 	pkt->cb[_SKB_CB_QNUM] = pri2txqidx[priority];
+ 	*(u16 *)(pkt->cb + _SKB_CB_ETH_PROTOCOL) = __constant_htons(protocol);
+ 
+-	if(is_icmpv6_pkt(pkt->data))
++	if (pkt->protocol == htons(ETH_P_IPV6))
+ 	{
+ 		pkt->cb[_SKB_CB_FLAGS] = _PKT_TYPE_URGENT;
+ 	}
+@@ -3496,33 +3484,13 @@
+ 
+ 	PHLTX_LOG;
+ 
+-#ifdef CONFIG_ADPTVTY_CONTROL
+-	if (padapter->registrypriv.wifi_mib.adptvty_en)
+-	{
+-		if(is_tcp_ip(pkt->data))
+-			DBG_COUNTER(padapter->tx_logs.os_tx_tcp);
+-		else if(is_udp_ip(pkt->data))
+-			DBG_COUNTER(padapter->tx_logs.os_tx_udp);
+-		else
+-			;
+-	}
+-#endif /* CONFIG_ADPTVTY_CONTROL */
++
+ 	DBG_COUNTER(padapter->tx_logs.os_tx_normal);
+ 
+ #if defined(CONFIG_VW_REFINE) || defined(CONFIG_ONE_TXQ)
+ 	dvobj = padapter->dvobj;
+ #endif
+ 
+-	//if (dvobj->phl_com->dev_cap.fw_tx_mode == 1) {
+-	if (dvobj->phl_com->dev_cap.fw_tx_mode == 1 && !padapter->registrypriv.wifi_mib.ofdma_enable) {
+-		if (is_udp_ip(pkt->data) && adapter_to_dvobj(padapter)->force_tx_cmd_num){
+-			rtw_phl_set_fw_txcmd_num (adapter_to_dvobj(padapter)->phl, 0 );
+-			adapter_to_dvobj(padapter)->force_tx_cmd_num = 0;
+-		} else if (is_tcp_ip(pkt->data) && !adapter_to_dvobj(padapter)->force_tx_cmd_num){
+-			rtw_phl_set_fw_txcmd_num (adapter_to_dvobj(padapter)->phl, 1 );
+-			adapter_to_dvobj(padapter)->force_tx_cmd_num = 1;
+-		}
+-	}
+ 
+ #ifdef CONFIG_VW_REFINE
+ 	if (dvobj->tx_mode == 1) {
+--- a/os_dep/osdep_service_linux.c
++++ b/os_dep/osdep_service_linux.c
+@@ -498,7 +498,10 @@
+ 	struct path path;
+ 	int error = 0;
+ 
+-	return kern_path(pathname, LOOKUP_FOLLOW, &path);
++	error = kern_path(pathname, LOOKUP_FOLLOW, &path);
++	if (!error)
++		path_put(&path);
++	return error;
+ }
+ 
+ /*
+@@ -507,6 +510,32 @@
+ * @param path the path of the file to test
+ * @return Linux specific error code
+ */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
++static int isFileReadable(const char *path, u32 *sz)
++{
++	struct file *fp;
++	char byte;
++	int ret;
++	loff_t size;
++
++	fp = filp_open(path, O_RDONLY, 0);
++	if (IS_ERR(fp))
++		return PTR_ERR(fp);
++	ret = readFile(fp, &byte, 1);
++	if (ret >= 0) {
++		ret = 0;
++		if (sz) {
++			size = i_size_read(file_inode(fp));
++			if (size < 0 || size > U32_MAX)
++				ret = -EFBIG;
++			else
++				*sz = size;
++		}
++	}
++	filp_close(fp, NULL);
++	return ret;
++}
++#else
+ static int isFileReadable(const char *path, u32 *sz)
+ {
+ 	struct file *fp;
+@@ -541,6 +570,7 @@
+ 	}
+ 	return ret;
+ }
++#endif
+ 
+ /*
+ * Open the file with @param path and retrive the file content into memory starting from @param buf for @param sz at most
+@@ -549,6 +579,24 @@
+ * @param sz how many bytes to read at most
+ * @return the byte we've read, or Linux specific error code
+ */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
++static int retriveFromFile(const char *path, u8 *buf, u32 sz)
++{
++	struct file *fp;
++	int ret;
++
++	if (!path || !buf)
++		return -EINVAL;
++	if (sz > INT_MAX)
++		return -EFBIG;
++	ret = openFile(&fp, path, O_RDONLY, 0);
++	if (ret)
++		return ret;
++	ret = readFile(fp, buf, sz);
++	closeFile(fp);
++	return ret;
++}
++#else
+ static int retriveFromFile(const char *path, u8 *buf, u32 sz)
+ {
+ 	int ret = -1;
+@@ -580,6 +628,7 @@
+ 	}
+ 	return ret;
+ }
++#endif
+ 
+ /*
+ * Open the file with @param path and wirte @param sz byte of data starting from @param buf into the file
+@@ -588,6 +637,24 @@
+ * @param sz how many bytes to write at most
+ * @return the byte we've written, or Linux specific error code
+ */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
++static int storeToFile(const char *path, u8 *buf, u32 sz)
++{
++	struct file *fp;
++	int ret;
++
++	if (!path || !buf)
++		return -EINVAL;
++	if (sz > INT_MAX)
++		return -EFBIG;
++	ret = openFile(&fp, path, O_CREAT | O_WRONLY, 0600);
++	if (ret)
++		return ret;
++	ret = writeFile(fp, buf, sz);
++	closeFile(fp);
++	return ret;
++}
++#else
+ static int storeToFile(const char *path, u8 *buf, u32 sz)
+ {
+ 	int ret = 0;
+@@ -619,6 +686,7 @@
+ 	}
+ 	return ret;
+ }
++#endif
+ 
+ 
+ /*
+@@ -799,7 +867,11 @@
+ 
+ 	rtw_init_netdev_name(pnetdev, ifname);
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0)
++	eth_hw_addr_set(pnetdev, adapter_mac_addr(padapter));
++#else
+ 	_rtw_memcpy(pnetdev->dev_addr, adapter_mac_addr(padapter), ETH_ALEN);
++#endif
+ 
+ 	if (rtnl_lock_needed)
+ 		ret = register_netdev(pnetdev);
+@@ -839,7 +911,11 @@
+ inline u32 rtw_random32(void)
+ {
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
++	return get_random_u32();
++#else
+ 	return prandom_u32();
++#endif
+ #elif (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18))
+ 	u32 random_int;
+ 	get_random_bytes(&random_int , 4);
+@@ -897,9 +973,14 @@
+ 	if (   (handler->type == RTW_OS_HANDLER_TASKLET)
+ 	    && (handler->cpu_id < WORK_CPU_UNBOUND)
+ 	    && (handler->task_data.csd.func == NULL)) {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
++		INIT_CSD(&handler->task_data.csd, _schedule_tasklet_handler,
++			 &handler->task);
++#else
+ 		handler->task_data.csd.func = _schedule_tasklet_handler;
+ 		handler->task_data.csd.info = &handler->task;
+ 		smp_store_release(&handler->task_data.csd.flags, 0);
++#endif
+ 	}
+ }
+ 
+--- a/phl/hal_g6/mac/chip_cfg.h
++++ b/phl/hal_g6/mac/chip_cfg.h
+@@ -13,6 +13,10 @@
+  * more details.
+  *
+  ******************************************************************************/
++
++#ifndef MAC_AX_8852BT_SUPPORT
++#define MAC_AX_8852BT_SUPPORT 0
++#endif
+ 
+ #ifndef _MAC_AX_CHIP_CFG_H_
+ #define _MAC_AX_CHIP_CFG_H_
+--- a/phl/hal_g6/mac/mac_ax/gpio.c
++++ b/phl/hal_g6/mac/mac_ax/gpio.c
+@@ -816,14 +816,14 @@
+ 
+ u32 mac_get_wl_dis_val(struct mac_ax_adapter *adapter, u8 *val)
+ {
+-	u8 gpio;
++	u8 gpio = 0xff;
+ 	u32 ret;
+ 	struct mac_ax_ops *ops = adapter_to_mac_ops(adapter);
+ 
+ 	ret = mac_get_wl_dis_gpio(adapter, &gpio);
+-	if (ret != MACSUCCESS) {
++	if (ret != MACSUCCESS || gpio == 0xff) {
+ 		PLTFM_MSG_ERR("%s: Get WL_DIS GPIO fail\n", __func__);
+-		return ret;
++		return ret != MACSUCCESS ? ret : MACNOITEM;
+ 	}
+ 
+ 	ret = ops->set_sw_gpio_mode(adapter, RTW_AX_SW_IO_MODE_INPUT, gpio);
+--- a/phl/hci/phl_trx_def_pcie.h
++++ b/phl/hci/phl_trx_def_pcie.h
+@@ -109,7 +109,7 @@
+ 	_os_vm_cache_inv(d, rx_buf->vir_addr, sz);
+ 	#else /* CONFIG_RTW_VM_CACHE_HANDLING */
+ 	_os_cache_inv(d, &rx_buf->phy_addr_l, &rx_buf->phy_addr_h, sz,
+-		      PCI_DMA_FROMDEVICE);
++		      DMA_FROM_DEVICE);
+ 	#endif /*CONFIG_RTW_VM_CACHE_HANDLING */
+ }
+ 
+--- a/phl/hci/phl_trx_pcie.c
++++ b/phl/hci/phl_trx_pcie.c
+@@ -596,7 +596,7 @@
+ 			       	&wd_page_ring->wd_work[i].phy_addr_h,
+ 			       	wd_page_ring->wd_work[i].buf_len,
+ 				wd_page_ring->wd_work[i].cache,
+-				PCI_DMA_FROMDEVICE,
++				DMA_FROM_DEVICE,
+ 				wd_page_ring->wd_work[i].os_rsvd[0]);
+ 			wd_page_ring->wd_work[i].vir_addr = NULL;
+ 			wd_page_ring->wd_work[i].cache = 0;
+@@ -657,7 +657,7 @@
+ 					&wd_work[i].phy_addr_h,
+ 					buf_len,
+ 					wd_work[i].cache,
+-					PCI_DMA_TODEVICE,
++					DMA_TO_DEVICE,
+ 					&wd_work[i].os_rsvd[0]);
+  		if (NULL == wd_work[i].vir_addr) {
+ 			psts = RTW_PHL_STATUS_RESOURCE;
+@@ -1202,11 +1202,14 @@
+ 
+ 	if (rx_buf->reuse) {
+ 		rx_buf->reuse = false;
+-		_os_pkt_buf_map_rx(drv_priv,
++		if (!_os_pkt_buf_map_rx(drv_priv,
+ 				&rx_buf->phy_addr_l,
+ 				&rx_buf->phy_addr_h,
+ 				rx_buf->buf_len,
+-				rx_buf->os_priv);
++				rx_buf->os_priv)) {
++			rx_buf->reuse = true;
++			return RTW_PHL_STATUS_FAILURE;
++		}
+ 		return RTW_PHL_STATUS_SUCCESS;
+ 	}
+ 
+@@ -1364,12 +1367,12 @@
+ 	if (rx_buf->cache) {
+ 		#ifdef CONFIG_RTW_VM_CACHE_HANDLING
+ 		_os_vm_cache_wback(drvpriv, rx_buf->vir_addr, clr_len,
+-		                   PCI_DMA_BIDIRECTIONAL);
++		                   DMA_BIDIRECTIONAL);
+ 		#else /* CONFIG_RTW_VM_CACHE_HANDLING */
+ 		_os_cache_wback(drvpriv,
+ 				&rx_buf->phy_addr_l,
+ 				&rx_buf->phy_addr_h,
+-				clr_len, PCI_DMA_BIDIRECTIONAL);
++				clr_len, DMA_BIDIRECTIONAL);
+ 		#endif /* CONFIG_RTW_VM_CACHE_HANDLING */
+ 	}
+ 	#else /* HAL_TO_NONCACHE_ADDR */
+@@ -1524,7 +1527,7 @@
+ /* 	struct pci_dev *pdev = dvobj->ppcidev; */
+ 
+ /* 	FUNCIN(); */
+-/* 	ops->free_cache_mem(pdev,vir_addr, bus_addr, size, PCI_DMA_TODEVICE); */
++/* 	ops->free_cache_mem(pdev,vir_addr, bus_addr, size, DMA_TO_DEVICE); */
+ 
+ /* 	/\* NONCACHE hana_todo */
+ /* 	 * ops->alloc_noncache_mem(pdev, vir_addr, bus_addr, size); */
+@@ -1634,7 +1637,7 @@
+ /* 	void *vir_addr = NULL; */
+ 
+ /* 	FUNCIN(); */
+-/* 	vir_addr = ops->alloc_cache_mem(pdev, bus_addr, size, PCI_DMA_TODEVICE); */
++/* 	vir_addr = ops->alloc_cache_mem(pdev, bus_addr, size, DMA_TO_DEVICE); */
+ 
+ /* 	/\* NONCACHE hana_todo */
+ /* 	 * vir_addr = ops->alloc_noncache_mem(pdev, bus_addr, size); */
+@@ -1847,7 +1850,7 @@
+ /* 	struct pci_dev *pdev = dvobj->ppcidev; */
+ 
+ /* 	FUNCIN(); */
+-/* 	ops->free_cache_mem(pdev,vir_addr, bus_addr, size, PCI_DMA_TODEVICE); */
++/* 	ops->free_cache_mem(pdev,vir_addr, bus_addr, size, DMA_TO_DEVICE); */
+ 
+ /* 	/\* NONCACHE hana_todo */
+ /* 	 * ops->alloc_noncache_mem(pdev, vir_addr, bus_addr, size); */
+@@ -1868,7 +1871,7 @@
+ 						&wd_page[0].phy_addr_h,
+ 						(MAX_WD_PAGE_NUM * WD_PAGE_SIZE),
+ 						wd_page[0].cache,
+-						PCI_DMA_FROMDEVICE,
++						DMA_FROM_DEVICE,
+ 						wd_page[0].os_rsvd[0]);
+ 		}
+ 
+@@ -1934,7 +1937,7 @@
+ /* 	void *vir_addr = NULL; */
+ 
+ /* 	FUNCIN(); */
+-/* 	vir_addr = ops->alloc_cache_mem(pdev, bus_addr, size, PCI_DMA_TODEVICE); */
++/* 	vir_addr = ops->alloc_cache_mem(pdev, bus_addr, size, DMA_TO_DEVICE); */
+ 
+ /* 	/\* NONCACHE hana_todo */
+ /* 	 * vir_addr = ops->alloc_noncache_mem(pdev, bus_addr, size); */
+@@ -1962,7 +1965,7 @@
+ 							&wd_page[0].phy_addr_h,
+ 							(MAX_WD_PAGE_NUM * WD_PAGE_SIZE),
+ 							cache,
+-							PCI_DMA_TODEVICE,
++							DMA_TO_DEVICE,
+ 							&wd_page[0].os_rsvd[0]);
+ 
+ 		if (NULL == wd_page[0].vir_addr) {
+@@ -2082,7 +2085,7 @@
+ 				&h2c_pkt->phy_addr_h,
+ 				h2c_pkt->buf_len,
+ 				h2c_pkt->cache,
+-				PCI_DMA_FROMDEVICE,
++				DMA_FROM_DEVICE,
+ 				h2c_pkt->os_rsvd[0]);
+ }
+ 
+@@ -2098,7 +2101,7 @@
+ 				&h2c_pkt->phy_addr_h,
+ 				buf_len,
+ 				h2c_pkt->cache,
+-				PCI_DMA_TODEVICE,
++				DMA_TO_DEVICE,
+ 				&h2c_pkt->os_rsvd[0]);
+ 
+ 	if (h2c_pkt->vir_head)
+@@ -2126,7 +2129,7 @@
+ 						&rxbd[i].phy_addr_h,
+ 						rxbd[i].buf_len,
+ 						rxbd[i].cache,
+-						PCI_DMA_FROMDEVICE,
++						DMA_FROM_DEVICE,
+ 						rxbd[i].os_rsvd[0]);
+ 			rxbd[i].vir_addr = NULL;
+ 			rxbd[i].cache = 0;
+@@ -2169,7 +2172,7 @@
+ 						&rxbd[i].phy_addr_h,
+ 						buf_len,
+ 						rxbd[i].cache,
+-						PCI_DMA_TODEVICE,
++						DMA_TO_DEVICE,
+ 						&rxbd[i].os_rsvd[0]);
+ 			if (NULL == rxbd[i].vir_addr) {
+ 				pstatus = RTW_PHL_STATUS_RESOURCE;
+@@ -2210,7 +2213,7 @@
+ 						&txbd[i].phy_addr_h,
+ 						txbd[i].buf_len,
+ 						txbd[i].cache,
+-						PCI_DMA_FROMDEVICE,
++						DMA_FROM_DEVICE,
+ 						txbd[i].os_rsvd[0]);
+ 			txbd[i].vir_addr = NULL;
+ 			txbd[i].cache = 0;
+@@ -2254,7 +2257,7 @@
+ 						&txbd[i].phy_addr_h,
+ 						buf_len,
+ 						txbd[i].cache,
+-						PCI_DMA_TODEVICE,
++						DMA_TO_DEVICE,
+ 						&txbd[i].os_rsvd[0]);
+ 			if (NULL == txbd[i].vir_addr) {
+ 				pstatus = RTW_PHL_STATUS_RESOURCE;
+@@ -3252,7 +3255,7 @@
+ 				_os_cache_wback(phl_to_drvpriv(phl_info),
+ 					&wd_page->phy_addr_l,
+ 					&wd_page->phy_addr_h,
+-					wd_page->buf_len, PCI_DMA_TODEVICE);
++					wd_page->buf_len, DMA_TO_DEVICE);
+ 			}
+ 
+ #ifdef CONFIG_PHL_TXSC
+--- a/phl/phl_trx_def.h
++++ b/phl/phl_trx_def.h
+@@ -349,6 +349,7 @@
+  * @type: tbd
+  */
+ struct rtw_pkt_buf_list {
++	u8 dma_mapped; /* Linux streaming DMA ownership, including address zero */
+ 	u8 *vir_addr;
+ 	u32 phy_addr_l;
+ 	u32 phy_addr_h;
+--- a/phl/phl_types.h
++++ b/phl/phl_types.h
+@@ -59,8 +59,8 @@
+ 
+ 	#define BUG_ON
+ 
+-	#define PCI_DMA_TODEVICE 0
+-	#define PCI_DMA_FROMDEVICE 1
++	#define DMA_TO_DEVICE 0
++	#define DMA_FROM_DEVICE 1
+ #endif /*#ifndef PHL_PLATFORM_LINUX*/
+ 
+ 
+@@ -108,7 +108,12 @@
+ 	#define _os_assert(_expr) 0/*rtw_bug_on(_expr)*/
+ 	#define _os_warn_on(_cond) rtw_warn_on(_cond)
+ 
+-	#define _os_tasklet _tasklet
++	struct openwrt_g6_tasklet {
++		struct tasklet_struct tasklet;
++		void (*callback)(void *);
++		void *context;
++	};
++	#define _os_tasklet struct openwrt_g6_tasklet
+ 	#define _os_thread struct thread_hdl
+ 	#define _os_workitem _workitem
+ 	#define _os_spinlockfg unsigned long
+--- a/phl/pltfm_ops_linux.h
++++ b/phl/pltfm_ops_linux.h
+@@ -157,9 +157,9 @@
+ 
+ static inline void _os_vm_cache_wback(void *d, void *v, u32 buf_sz, u8 direction)
+ {
+-	if (direction == PCI_DMA_BIDIRECTIONAL)
++	if (direction == DMA_BIDIRECTIONAL)
+ 		dma_cache_wback_inv((size_t)v, buf_sz);
+-	else if (direction == PCI_DMA_TODEVICE)
++	else if (direction == DMA_TO_DEVICE)
+ 		dma_cache_wback((size_t)v, buf_sz);
+ }
+ #endif /* CONFIG_RTW_VM_CACHE_HANDLING */
+@@ -291,9 +291,11 @@
+ #endif
+ 	skb->len = 0;
+ 	skb_reset_tail_pointer(skb);
+-	dma_addr = pci_map_single(pdev, skb->data,
++	dma_addr = dma_map_single(&pdev->dev, skb->data,
+ 	                             skb_buf_sz, //buf_sz,
+-	                             PCI_DMA_FROMDEVICE);
++	                             DMA_FROM_DEVICE);
++	if (dma_mapping_error(&pdev->dev, dma_addr))
++		return NULL;
+ 	*bus_addr_l = (u32)dma_addr;
+ 	#ifdef PHL_DMA_ADDR_64
+ 	*bus_addr_h = (u32)(dma_addr >> 32);
+@@ -302,7 +304,7 @@
+ 	#endif
+ #endif /*CONFIG_PCI_HCI*/
+ 
+-	return NULL;
++	return skb->data;
+ }
+ 
+ #ifdef CONFIG_PCI_HCI
+@@ -320,7 +322,7 @@
+ 	dma_addr |= ((dma_addr_t)bus_addr_h) << 32;
+ 	#endif
+ 
+-	pci_unmap_single(pdev, dma_addr, skb_buf_sz, PCI_DMA_FROMDEVICE);
++	dma_unmap_single(&pdev->dev, dma_addr, skb_buf_sz, DMA_FROM_DEVICE);
+ 
+ #ifdef RTW_CORE_RECORD
+ 	phl_add_record(d, REC_RX_UNMAP, bus_addr_l, buf_sz);
+@@ -388,7 +390,11 @@
+ #endif /* CONFIG_RTW_RX_BUF_SHARING */
+ 
+ #ifdef CONFIG_PCI_HCI
+-	dma_addr = pci_map_single(pdev, skb->data, skb_buf_sz, PCI_DMA_FROMDEVICE);
++	dma_addr = dma_map_single(&pdev->dev, skb->data, skb_buf_sz, DMA_FROM_DEVICE);
++	if (dma_mapping_error(&pdev->dev, dma_addr)) {
++		rtw_skb_free(skb);
++		return NULL;
++	}
+ 	*bus_addr_l = (u32)dma_addr;
+ 	#ifdef PHL_DMA_ADDR_64
+ 	*bus_addr_h = (dma_addr >> 32);
+@@ -467,8 +473,8 @@
+ 	rxb_info->rx_buf_sz = rxbuf_size - PHL_RX_HEADROOM;
+ 	rxb_info->type = 1;
+ 	#ifdef CONFIG_PCI_HCI
+-	dma_addr = pci_map_single(pdev, skb_1->data, rxb_info->rx_buf_sz,
+-	                               PCI_DMA_FROMDEVICE);
++	dma_addr = dma_map_single(&pdev->dev, skb_1->data, rxb_info->rx_buf_sz,
++	                               DMA_FROM_DEVICE);
+ 	*bus_addr_l_1 = (u32)dma_addr;
+ 	#ifdef PHL_DMA_ADDR_64
+ 	*bus_addr_h_1 = (u32)(dma_addr >> 32);
+@@ -484,8 +490,8 @@
+ 	rxb_info->rx_buf_sz = rxbuf_size - PHL_RX_HEADROOM;
+ 	rxb_info->type = 2;
+ 	#ifdef CONFIG_PCI_HCI
+-	dma_addr = pci_map_single(pdev, skb_2->data, rxb_info->rx_buf_sz,
+-	                          PCI_DMA_FROMDEVICE);
++	dma_addr = dma_map_single(&pdev->dev, skb_2->data, rxb_info->rx_buf_sz,
++	                          DMA_FROM_DEVICE);
+ 	*bus_addr_l_2 = (u32)dma_addr;
+ 	#ifdef PHL_DMA_ADDR_64
+ 	*bus_addr_h_2 = (u32)(dma_addr >> 32);
+@@ -521,7 +527,7 @@
+ 	#ifdef PHL_DMA_ADDR_64
+ 	bus_addr |= ((dma_addr_t)bus_addr_h) << 32;
+ 	#endif
+-	pci_unmap_single(pdev, bus_addr, skb_buf_sz, PCI_DMA_FROMDEVICE);
++	dma_unmap_single(&pdev->dev, bus_addr, skb_buf_sz, DMA_FROM_DEVICE);
+ #endif
+ 	rtw_skb_free(skb);
+ }
+@@ -879,26 +885,27 @@
+ }
+ */
+ 
++static inline void openwrt_g6_tasklet_run(struct tasklet_struct *t)
++{
++	struct openwrt_g6_tasklet *task = container_of(t, struct openwrt_g6_tasklet, tasklet);
++	task->callback(task->context);
++}
+ static inline u8 _os_tasklet_init(void *drv_priv, _os_tasklet *task,
+-	void (*call_back_func)(void* context), void *context)
+-{
+-	rtw_tasklet_init(task,
+-			 (void(*)(unsigned long))call_back_func,
+-			 (unsigned long)task);
++	void (*callback)(void *), void *context)
++{
++	task->callback = callback;
++	task->context = context;
++	tasklet_setup(&task->tasklet, openwrt_g6_tasklet_run);
+ 	return 0;
+ }
+ static inline u8 _os_tasklet_deinit(void *drv_priv, _os_tasklet *task)
+ {
+-	rtw_tasklet_kill(task);
++	tasklet_kill(&task->tasklet);
+ 	return 0;
+ }
+ static inline u8 _os_tasklet_schedule(void *drv_priv, _os_tasklet *task)
+ {
+-	#if 1
+-	rtw_tasklet_hi_schedule(task);
+-	#else
+-	rtw_tasklet_schedule(task);
+-	#endif
++	tasklet_hi_schedule(&task->tasklet);
+ 	return 0;
+ }
+ 
+--- a/phl/test/trx_test.c
++++ b/phl/test/trx_test.c
+@@ -363,7 +363,7 @@
+ 						&tpkt->pkt.phy_addr_h,
+ 						MAX_TEST_PAYLOAD_SIZE,
+ 						false,
+-						PCI_DMA_TODEVICE,
++						DMA_TO_DEVICE,
+ 						tpkt->os_rsvd[0]);
+ 			#else
+ 			_os_mem_free(drv_priv, tpkt->pkt.vir_addr,
+@@ -421,7 +421,7 @@
+ 						  &tpkt[i].pkt.phy_addr_h,
+ 						  tx_pkt_size,
+ 						  false,
+-						  PCI_DMA_TODEVICE,
++						  DMA_TO_DEVICE,
+ 						  &tpkt[i].os_rsvd[0]);
+ 			#else /*USB/SDIO*/
+ 			tpkt[i].pkt.vir_addr = _os_mem_alloc(drv_priv, tx_pkt_size);
+--- a/platform/mips_97f/rtw_pltfm_postconf.h
++++ b/platform/mips_97f/rtw_pltfm_postconf.h
+@@ -472,4 +472,10 @@
+ #define __DMEM_SECTION__		__attribute__ ((section("txdata-rtkwlan")))
+ #endif
+ 
++/* OpenWrt baseline: Linux bridge/netfilter and ordinary DMA buffers only. */
++#undef CONFIG_RTW_RX_BUF_SHARING
++#undef CONFIG_RTW_WATCHDOG_KICK
++#undef CONFIG_RTW_FC_FASTFWD
++#undef CONFIG_BR_EXT
++#undef CONFIG_RTW_A4_STA
+ #endif /* PLATFORM_MIPS_97F_RTW_PLTFM_POSTCONF_H_ */
+--- a/platform/mips_97f/rtw_pltfm_preconf.h
++++ b/platform/mips_97f/rtw_pltfm_preconf.h
+@@ -129,4 +129,15 @@
+ /* Debug flags */
+ /* #define DBG_XMIT_BUF_EXT */
+ 
++/* OpenWrt baseline: Linux bridge/netfilter and ordinary DMA buffers only. */
++#undef CONFIG_RTW_RX_BUF_SHARING
++#undef CONFIG_RTW_WATCHDOG_KICK
++#undef CONFIG_RTW_FC_FASTFWD
++#undef CONFIG_CORE_TXSC
++#undef CONFIG_PHL_TXSC
++#undef CONFIG_TXSC_AMSDU
++#undef CONFIG_TXSC_ONE_LOCK
++#undef CONFIG_AMSDU_HW_TIMER
++#undef CONFIG_BR_EXT
++#undef CONFIG_RTW_A4_STA
+ #endif /* PLATFORM_MIPS_97F_RTW_PLTFM_PRECONF_H_ */
+--- a/platform/mips_97f.mk
++++ b/platform/mips_97f.mk
+@@ -46,9 +46,9 @@
+ 
+ OBJS += $(_PLATFORM_FILES)
+ 
+-$(shell mkdir -p $(DIR_ROMFS)/etc/conf)
+-$(shell cp -rf $(src)/platform/mips_98d/rtl8852ae $(DIR_ROMFS)/etc/conf)
+-$(shell cp -rf $(src)/platform/mips_98d/rtl8852ce $(DIR_ROMFS)/etc/conf)
+-$(shell cp -rf $(src)/platform/mips_98d/rtl8192xbe $(DIR_ROMFS)/etc/conf)
+-$(shell cp -rf $(src)/platform/mips_98d/rtl8832bre $(DIR_ROMFS)/etc/conf)
++
++
++
++
++
+ endif
+--- a/platform/platform_mips_97f_pci.c
++++ b/platform/platform_mips_97f_pci.c
+@@ -15,87 +15,56 @@
+ #include "drv_types.h"
+ 
+ #if 1
+-void pci_cache_wback(struct pci_dev *hwdev,
+-			dma_addr_t *bus_addr, size_t size, int direction)
+-{
+-	if (NULL != hwdev && NULL != bus_addr)
+-	  	pci_dma_sync_single_for_device(hwdev, *bus_addr, size,
+-					direction);
+-	else
+-		RTW_ERR("pcie hwdev handle or bus addr is NULL!\n");
+-}
+-void pci_cache_inv(struct pci_dev *hwdev,
+-			dma_addr_t *bus_addr, size_t size, int direction)
+-{
+-	if (NULL != hwdev && NULL != bus_addr)
+-		pci_dma_sync_single_for_cpu(hwdev, *bus_addr, size, direction);
+-	else
+-		RTW_ERR("pcie hwdev handle or bus addr is NULL!\n");
+-}
+-void pci_get_bus_addr(struct pci_dev *hwdev,
+-			void *vir_addr, dma_addr_t *bus_addr,
+-			size_t size, int direction)
+-{
+-	if (NULL != hwdev) {
+-		*bus_addr = pci_map_single(hwdev, vir_addr, size, direction);
+-	} else {
+-		RTW_ERR("pcie hwdev handle is NULL!\n");
+-	*bus_addr = (dma_addr_t)virt_to_phys(vir_addr);
+-		/*RTW_ERR("Get bus_addr: %x by virt_to_phys()\n", bus_addr);*/
+-	}
+-}
+-void pci_unmap_bus_addr(struct pci_dev *hwdev,
+-			dma_addr_t *bus_addr, size_t size, int direction)
+-{
+-	if (NULL != hwdev && NULL != bus_addr)
+-		pci_unmap_single(hwdev, *bus_addr, size, direction);
+-	else
+-		RTW_ERR("pcie hwdev handle or bus addr is NULL!\n");
+-}
+-void *pci_alloc_cache_mem(struct pci_dev *pdev,
+-			dma_addr_t *bus_addr, size_t size, int direction)
+-{
+-	void *vir_addr = NULL;
+-
+-	vir_addr = rtw_zmalloc(size);
+-
+-	if (!vir_addr)
+-		bus_addr = NULL;
+-	else
+-		pci_get_bus_addr(pdev, vir_addr, bus_addr, size, direction);
+-
+-	return vir_addr;
+-}
+-void *pci_alloc_noncache_mem(struct pci_dev *pdev,
+-			dma_addr_t *bus_addr, size_t size)
+-{
+-	void *vir_addr = NULL;
+-
+-	if (NULL != pdev)
+-	vir_addr = pci_alloc_consistent(pdev, size, bus_addr);
+-
+-	if (!vir_addr)
+-		bus_addr = NULL;
+-	else
+-		bus_addr = (dma_addr_t *)((((SIZE_PTR)bus_addr + 3) / 4) * 4);
+-
+-	return vir_addr;
+-}
+-void pci_free_cache_mem(struct pci_dev *pdev,
+-		void *vir_addr, dma_addr_t *bus_addr,
+-		size_t size, int direction)
+-{
+-	pci_unmap_bus_addr(pdev, bus_addr, size, direction);
+-	rtw_mfree(vir_addr, size);
+-
+-	vir_addr = NULL;
+-}
+-void pci_free_noncache_mem(struct pci_dev *pdev,
+-		void *vir_addr, dma_addr_t *bus_addr, size_t size)
+-{
+-	if (NULL != pdev)
+-	pci_free_consistent(pdev, size, vir_addr, *bus_addr);
+-	vir_addr = NULL;
++void pci_cache_wback(struct pci_dev *pdev, dma_addr_t *addr, size_t size, int dir)
++{
++	if (pdev && addr)
++		dma_sync_single_for_device(&pdev->dev, *addr, size, dir);
++}
++void pci_cache_inv(struct pci_dev *pdev, dma_addr_t *addr, size_t size, int dir)
++{
++	if (pdev && addr)
++		dma_sync_single_for_cpu(&pdev->dev, *addr, size, dir);
++}
++int pci_get_bus_addr(struct pci_dev *pdev, void *buf, dma_addr_t *addr,
++		     size_t size, int dir)
++{
++	if (!pdev || !buf || !addr || !size)
++		return -EINVAL;
++	*addr = dma_map_single(&pdev->dev, buf, size, dir);
++	if (dma_mapping_error(&pdev->dev, *addr))
++		return -EIO;
++	return 0;
++}
++void pci_unmap_bus_addr(struct pci_dev *pdev, dma_addr_t *addr, size_t size, int dir)
++{
++	if (pdev && addr)
++		dma_unmap_single(&pdev->dev, *addr, size, dir);
++}
++void *pci_alloc_cache_mem(struct pci_dev *pdev, dma_addr_t *addr, size_t size, int dir)
++{
++	void *buf = rtw_zmalloc(size);
++	if (!buf)
++		return NULL;
++	if (pci_get_bus_addr(pdev, buf, addr, size, dir)) {
++		rtw_mfree(buf, size);
++		return NULL;
++	}
++	return buf;
++}
++void *pci_alloc_noncache_mem(struct pci_dev *pdev, dma_addr_t *addr, size_t size)
++{
++	return pdev ? dma_alloc_coherent(&pdev->dev, size, addr, GFP_KERNEL) : NULL;
++}
++void pci_free_cache_mem(struct pci_dev *pdev, void *buf, dma_addr_t *addr,
++			size_t size, int dir)
++{
++	pci_unmap_bus_addr(pdev, addr, size, dir);
++	rtw_mfree(buf, size);
++}
++void pci_free_noncache_mem(struct pci_dev *pdev, void *buf, dma_addr_t *addr, size_t size)
++{
++	if (pdev && buf && addr)
++		dma_free_coherent(&pdev->dev, size, buf, *addr);
+ }
+ 
+ #if defined(CONFIG_SHARE_XSTAL) || defined(CPTCFG_SHARE_XSTAL)
+@@ -155,12 +124,12 @@
+ void pci_cache_wback(struct pci_dev *hwdev,
+ 			dma_addr_t *bus_addr, size_t size, int direction)
+ {
+-  	pci_dma_sync_single_for_device(hwdev, *bus_addr, size, direction);
++  	dma_sync_single_for_device(&hwdev->dev, *bus_addr, size, direction);
+ }
+ void pci_cache_inv(struct pci_dev *hwdev,
+ 			dma_addr_t *bus_addr, size_t size, int direction)
+ {
+-	pci_dma_sync_single_for_cpu(hwdev, *bus_addr, size, direction);
++	dma_sync_single_for_cpu(&hwdev->dev, *bus_addr, size, direction);
+ }
+ void pci_get_bus_addr(struct pci_dev *hwdev,
+ 			void *vir_addr, dma_addr_t *bus_addr,
+@@ -173,7 +142,7 @@
+ void pci_unmap_bus_addr(struct pci_dev *hwdev,
+ 			dma_addr_t *bus_addr, size_t size, int direction)
+ {
+-	/* pci_unmap_single(hwdev, *bus_addr, size, direction); */
++	/* dma_unmap_single(&hwdev->dev, *bus_addr, size, direction); */
+ }
+ void *pci_alloc_cache_mem(struct pci_dev *pdev,
+ 			dma_addr_t *bus_addr, size_t size, int direction)
+@@ -197,7 +166,7 @@
+ {
+ 	void *vir_addr = NULL;
+ 
+-	vir_addr = pci_alloc_consistent(pdev, size, bus_addr);
++	vir_addr = dma_alloc_coherent(&pdev->dev, size, bus_addr, GFP_KERNEL);
+ 
+ 	if (!vir_addr)
+ 		bus_addr = NULL;
+@@ -217,7 +186,7 @@
+ void pci_free_noncache_mem(struct pci_dev *pdev, void *vir_addr,
+ 			dma_addr_t *bus_addr, size_t size)
+ {
+-	pci_free_consistent(pdev, size, vir_addr, *bus_addr);
++	dma_free_coherent(&pdev->dev, size, vir_addr, *bus_addr);
+ 	vir_addr = NULL;
+ }
+ #endif
+--- a/platform/platform_ops.h
++++ b/platform/platform_ops.h
+@@ -28,7 +28,7 @@
+ 	dma_addr_t *bus_addr, size_t size, int direction);
+ void pci_cache_inv(struct pci_dev *hwdev,
+ 	dma_addr_t *bus_addr, size_t size, int direction);
+-void pci_get_bus_addr(struct pci_dev *hwdev,
++int pci_get_bus_addr(struct pci_dev *hwdev,
+ 	void *vir_addr, dma_addr_t *bus_addr, size_t size, int direction);
+ void pci_unmap_bus_addr(struct pci_dev *hwdev,
+ 	dma_addr_t *bus_addr, size_t size, int direction);

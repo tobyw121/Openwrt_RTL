@@ -29,6 +29,9 @@ cat /etc/board.json 2>/dev/null || true
 printf '\nkernel diagnostics\n'
 dmesg | tail -100
 if [ "$board" = cudy,ax1500-r76 ]; then
+	printf '\nWR1500 WLAN driver and interfaces\n'
+	cat /sys/module/rtk_wifi6/version 2>/dev/null || true
+	iw dev 2>/dev/null || true
 	printf '\nR76 Ethernet datapath\n'
 	cat /proc/cudy-r76-rtknet 2>/dev/null || true
 	printf '\nR76 switch and port counters\n'

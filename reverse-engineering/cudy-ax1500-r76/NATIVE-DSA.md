@@ -3,7 +3,9 @@
 Das R76-Geräteprofil aktiviert jetzt Ethernet, GPIO-SMI und den externen
 RTL8367D als Linux-DSA-Switch. Das ist der erste Hardwareteststand dieser
 Anbindung, noch kein am Gerät bestätigter LAN-/WAN-Funktionserfolg.
-Der separate RTL8832BR-WLAN-Port und das beschreibbare Overlay bleiben offen.
+Für den separaten RTL8832BR gibt es inzwischen ein automatisch ausgewähltes,
+[natives 5-GHz-Kernelpaket](../wr1500-wifi6/LINUX66-DRIVER.md). Dessen RF-Betrieb,
+der integrierte 2,4-GHz-Port und das beschreibbare Overlay bleiben unbestätigt.
 
 ## Umsetzung der OEM-Laufzeitbelege
 

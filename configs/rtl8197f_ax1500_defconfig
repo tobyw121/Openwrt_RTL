@@ -7,6 +7,7 @@ CONFIG_TARGET_ROOTFS_SQUASHFS=y
 CONFIG_TARGET_ROOTFS_INITRAMFS=y
 CONFIG_DRIVER_11AC_SUPPORT=y
 # Pulls in LuCI, firewall4, SSH, network/wireless userspace and diagnostics.
-# This does not select an unfinished radio driver or the legacy switch backend.
+# The RTL8832BR 5GHz driver is built and loaded automatically; no legacy swconfig.
 CONFIG_PACKAGE_rtl8197f-cudy-r76-base=y
 CONFIG_PACKAGE_rtl8197f-cudy-ax1500-base=y
+CONFIG_PACKAGE_kmod-rtl8832br-wr1500=y

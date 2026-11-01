@@ -1,0 +1,275 @@
+{
+  "archive": "wr1500-oem-rfe50.tar.gz",
+  "archive_sha256": "2232647774fdb1dc1400297d86f61f02d32bb0b2852ed55e9307b0c71f9a0383",
+  "comparison_root": "G6/platform/mips_98d/rtl8832bre/RFE50",
+  "file_count": 38,
+  "identical_count": 36,
+  "files": [
+    {
+      "path": "AP_2G/PHY_REG.txt",
+      "size": 33,
+      "oem_sha256": "cb5bd2042d8d447d624681b1e181546ea53a0d1d9ea5dd7fb788aadf6a48c7cb",
+      "gpl_sha256": "cb5bd2042d8d447d624681b1e181546ea53a0d1d9ea5dd7fb788aadf6a48c7cb",
+      "identical": true
+    },
+    {
+      "path": "AP_2G/RadioA.txt",
+      "size": 37,
+      "oem_sha256": "33423d37d4ab389e013a8d53426bab8a2b5effb1d97cfb46151367d058354d7f",
+      "gpl_sha256": "33423d37d4ab389e013a8d53426bab8a2b5effb1d97cfb46151367d058354d7f",
+      "identical": true
+    },
+    {
+      "path": "AP_2G/RadioB.txt",
+      "size": 37,
+      "oem_sha256": "33423d37d4ab389e013a8d53426bab8a2b5effb1d97cfb46151367d058354d7f",
+      "gpl_sha256": "33423d37d4ab389e013a8d53426bab8a2b5effb1d97cfb46151367d058354d7f",
+      "identical": true
+    },
+    {
+      "path": "AP_2G/TXPWR_ByRate.txt",
+      "size": 2320,
+      "oem_sha256": "6af9815c433fe60ebdeffe897168b709e17b68d5ba20ab0f6a1fd3f64e50d6fa",
+      "gpl_sha256": "6af9815c433fe60ebdeffe897168b709e17b68d5ba20ab0f6a1fd3f64e50d6fa",
+      "identical": true
+    },
+    {
+      "path": "AP_2G/TXPWR_LMT.txt",
+      "size": 24953,
+      "oem_sha256": "46b2a75d96b9c22a83cbe3aeac118c184fb25c2cd549fb7fb96ab04fe9da7ac8",
+      "gpl_sha256": "46b2a75d96b9c22a83cbe3aeac118c184fb25c2cd549fb7fb96ab04fe9da7ac8",
+      "identical": true
+    },
+    {
+      "path": "AP_2G/TXPWR_LMT_RU.txt",
+      "size": 16215,
+      "oem_sha256": "77206460f3d2d3958e2f9a14ff77dcd9be4e798c86f8ff3cf2147bd9b295395e",
+      "gpl_sha256": "77206460f3d2d3958e2f9a14ff77dcd9be4e798c86f8ff3cf2147bd9b295395e",
+      "identical": true
+    },
+    {
+      "path": "AP_2G/TXPWR_TrackTSSI.txt",
+      "size": 2478,
+      "oem_sha256": "680292ba58c5037d9cbec39d7619f42d0c6ea046e18785fb389a499cc76a9a54",
+      "gpl_sha256": "680292ba58c5037d9cbec39d7619f42d0c6ea046e18785fb389a499cc76a9a54",
+      "identical": true
+    },
+    {
+      "path": "AP_5G/PHY_REG.txt",
+      "size": 33,
+      "oem_sha256": "820332547fe26b27b92492e99f8a42f62ff31938ddf47f33b6f1b7c9cbc65456",
+      "gpl_sha256": "820332547fe26b27b92492e99f8a42f62ff31938ddf47f33b6f1b7c9cbc65456",
+      "identical": true
+    },
+    {
+      "path": "AP_5G/PHY_REG_GAIN.txt",
+      "size": 34,
+      "oem_sha256": "f50c63561e394216c447d49bc32cd52fd2889cf7991d9ad1c38a84bb6bb001f2",
+      "gpl_sha256": "f50c63561e394216c447d49bc32cd52fd2889cf7991d9ad1c38a84bb6bb001f2",
+      "identical": true
+    },
+    {
+      "path": "AP_5G/RadioA.txt",
+      "size": 37,
+      "oem_sha256": "54c4c30ce765826b1447d2fb955c80f5f68abfc74836afcfd22cf3fed700f3ea",
+      "gpl_sha256": "54c4c30ce765826b1447d2fb955c80f5f68abfc74836afcfd22cf3fed700f3ea",
+      "identical": true
+    },
+    {
+      "path": "AP_5G/RadioB.txt",
+      "size": 37,
+      "oem_sha256": "54c4c30ce765826b1447d2fb955c80f5f68abfc74836afcfd22cf3fed700f3ea",
+      "gpl_sha256": "54c4c30ce765826b1447d2fb955c80f5f68abfc74836afcfd22cf3fed700f3ea",
+      "identical": true
+    },
+    {
+      "path": "AP_5G/TXPWR_ByRate.txt",
+      "size": 2327,
+      "oem_sha256": "636f5593c10879f4c68a6fd57d2e6de76d7d82bd6d2de1a4db4e572e40d53df6",
+      "gpl_sha256": "bc6a265bde5637446b37caf92aa0669c4b104643c00b9fef4cb53f120a0b957e",
+      "identical": false
+    },
+    {
+      "path": "AP_5G/TXPWR_LMT.txt",
+      "size": 24953,
+      "oem_sha256": "28dc64f9d9453ac14652129a680e0b6ed8b94e11d0929150a5481424017e1830",
+      "gpl_sha256": "28dc64f9d9453ac14652129a680e0b6ed8b94e11d0929150a5481424017e1830",
+      "identical": true
+    },
+    {
+      "path": "AP_5G/TXPWR_LMT_RU.txt",
+      "size": 16215,
+      "oem_sha256": "17716c458e18adecb2e85509eb5ad28e8ffbbcda7773031ee14464af426a47e2",
+      "gpl_sha256": "17716c458e18adecb2e85509eb5ad28e8ffbbcda7773031ee14464af426a47e2",
+      "identical": true
+    },
+    {
+      "path": "AP_5G/TXPWR_TrackTSSI.txt",
+      "size": 2396,
+      "oem_sha256": "b3238a9d0139c85c8a227aafa70c0eb52dcff4d191fe5e9abca8964b99ff9dd8",
+      "gpl_sha256": "b3238a9d0139c85c8a227aafa70c0eb52dcff4d191fe5e9abca8964b99ff9dd8",
+      "identical": true
+    },
+    {
+      "path": "PHY_REG.txt",
+      "size": 25327,
+      "oem_sha256": "7ac5d832e9542dd84e96b4cac88ea969598aa6219da85afdd73ae55fb0f89e0e",
+      "gpl_sha256": "7ac5d832e9542dd84e96b4cac88ea969598aa6219da85afdd73ae55fb0f89e0e",
+      "identical": true
+    },
+    {
+      "path": "PHY_REG_GAIN.txt",
+      "size": 3550,
+      "oem_sha256": "29a94695f044938778de739182d5ec7c1f3d5cb86b9682c79ae1e0d227b993cf",
+      "gpl_sha256": "29a94695f044938778de739182d5ec7c1f3d5cb86b9682c79ae1e0d227b993cf",
+      "identical": true
+    },
+    {
+      "path": "PON_2G/PHY_REG.txt",
+      "size": 36,
+      "oem_sha256": "b0d5842fb2792e0163b105ac6d04037b15e5dbcba37c3a47d06befd9aa20cd8e",
+      "gpl_sha256": "b0d5842fb2792e0163b105ac6d04037b15e5dbcba37c3a47d06befd9aa20cd8e",
+      "identical": true
+    },
+    {
+      "path": "PON_2G/RadioA.txt",
+      "size": 38,
+      "oem_sha256": "639a9e9846487e3c432e351a37ba6a6f42c22b79267db6ce91847e5e0dbd365c",
+      "gpl_sha256": "639a9e9846487e3c432e351a37ba6a6f42c22b79267db6ce91847e5e0dbd365c",
+      "identical": true
+    },
+    {
+      "path": "PON_2G/RadioB.txt",
+      "size": 38,
+      "oem_sha256": "639a9e9846487e3c432e351a37ba6a6f42c22b79267db6ce91847e5e0dbd365c",
+      "gpl_sha256": "639a9e9846487e3c432e351a37ba6a6f42c22b79267db6ce91847e5e0dbd365c",
+      "identical": true
+    },
+    {
+      "path": "PON_2G/TXPWR_ByRate.txt",
+      "size": 2321,
+      "oem_sha256": "79063ef3b178cdd8af913ccc345e1e39f5e3b3cb41c9e92b8fbdd2ec15a7c16a",
+      "gpl_sha256": "79063ef3b178cdd8af913ccc345e1e39f5e3b3cb41c9e92b8fbdd2ec15a7c16a",
+      "identical": true
+    },
+    {
+      "path": "PON_2G/TXPWR_LMT.txt",
+      "size": 24955,
+      "oem_sha256": "64e7a0fc5abea9b72fc1b7adcfdca5b7603581c920f9dfa62d6fd859fe142ff8",
+      "gpl_sha256": "64e7a0fc5abea9b72fc1b7adcfdca5b7603581c920f9dfa62d6fd859fe142ff8",
+      "identical": true
+    },
+    {
+      "path": "PON_2G/TXPWR_LMT_RU.txt",
+      "size": 16217,
+      "oem_sha256": "d0621dfcc915d3e1bfc88a972cd746980fec7f875221f332e2f8db3a3ebb1525",
+      "gpl_sha256": "d0621dfcc915d3e1bfc88a972cd746980fec7f875221f332e2f8db3a3ebb1525",
+      "identical": true
+    },
+    {
+      "path": "PON_2G/TXPWR_TrackTSSI.txt",
+      "size": 2479,
+      "oem_sha256": "d019b7f86d35f5ea9dc97f8bad26d22b76a945feb7b7cdbc76276f131833f850",
+      "gpl_sha256": "d019b7f86d35f5ea9dc97f8bad26d22b76a945feb7b7cdbc76276f131833f850",
+      "identical": true
+    },
+    {
+      "path": "PON_5G/PHY_REG.txt",
+      "size": 36,
+      "oem_sha256": "1332a2104b1db840403857e8e8f747acb7a6f5f53bade10a84e7be957ede6feb",
+      "gpl_sha256": "1332a2104b1db840403857e8e8f747acb7a6f5f53bade10a84e7be957ede6feb",
+      "identical": true
+    },
+    {
+      "path": "PON_5G/PHY_REG_GAIN.txt",
+      "size": 35,
+      "oem_sha256": "7e744e9123333263cdb606772cc45b96a17d3eaf05a04f9a908782efbeda1310",
+      "gpl_sha256": "7e744e9123333263cdb606772cc45b96a17d3eaf05a04f9a908782efbeda1310",
+      "identical": true
+    },
+    {
+      "path": "PON_5G/RadioA.txt",
+      "size": 38,
+      "oem_sha256": "4ee9df0ced8688c137d5ce06ff3be833e19dbfa2f28d02160163f10a9047e0b4",
+      "gpl_sha256": "4ee9df0ced8688c137d5ce06ff3be833e19dbfa2f28d02160163f10a9047e0b4",
+      "identical": true
+    },
+    {
+      "path": "PON_5G/RadioB.txt",
+      "size": 38,
+      "oem_sha256": "4ee9df0ced8688c137d5ce06ff3be833e19dbfa2f28d02160163f10a9047e0b4",
+      "gpl_sha256": "4ee9df0ced8688c137d5ce06ff3be833e19dbfa2f28d02160163f10a9047e0b4",
+      "identical": true
+    },
+    {
+      "path": "PON_5G/TXPWR_ByRate.txt",
+      "size": 2321,
+      "oem_sha256": "39cc15505899875c211dd84361bd31bb33c83a2ebece5b5e6cec932ee94b4824",
+      "gpl_sha256": "39cc15505899875c211dd84361bd31bb33c83a2ebece5b5e6cec932ee94b4824",
+      "identical": true
+    },
+    {
+      "path": "PON_5G/TXPWR_LMT.txt",
+      "size": 24955,
+      "oem_sha256": "b9d599fc9ca966335f6b7e902a4c4aefaa0ce23bb387f5125adebc9afe7bfc29",
+      "gpl_sha256": "b9d599fc9ca966335f6b7e902a4c4aefaa0ce23bb387f5125adebc9afe7bfc29",
+      "identical": true
+    },
+    {
+      "path": "PON_5G/TXPWR_LMT_RU.txt",
+      "size": 16217,
+      "oem_sha256": "fe3cb722b2fdcc6b35e33d2548aea655f1dfbd414bdc1da4e1567a2cdc94b605",
+      "gpl_sha256": "fe3cb722b2fdcc6b35e33d2548aea655f1dfbd414bdc1da4e1567a2cdc94b605",
+      "identical": true
+    },
+    {
+      "path": "PON_5G/TXPWR_TrackTSSI.txt",
+      "size": 2397,
+      "oem_sha256": "e0d3a47dcd95108752914d10680f67f67ca1aad674d58800e99459b6239bc627",
+      "gpl_sha256": "e0d3a47dcd95108752914d10680f67f67ca1aad674d58800e99459b6239bc627",
+      "identical": true
+    },
+    {
+      "path": "RadioA.txt",
+      "size": 20233,
+      "oem_sha256": "3677ddb8a85a2eb714b7d697f704b4c26f4f8183a54e8c5ecc5a8d10d5757415",
+      "gpl_sha256": "3677ddb8a85a2eb714b7d697f704b4c26f4f8183a54e8c5ecc5a8d10d5757415",
+      "identical": true
+    },
+    {
+      "path": "RadioB.txt",
+      "size": 20061,
+      "oem_sha256": "76f90cf32576d2df3aa5546cc1ed6083d7f234540df74cf39d0900ddfa6b7217",
+      "gpl_sha256": "76f90cf32576d2df3aa5546cc1ed6083d7f234540df74cf39d0900ddfa6b7217",
+      "identical": true
+    },
+    {
+      "path": "TXPWR_ByRate.txt",
+      "size": 2327,
+      "oem_sha256": "636f5593c10879f4c68a6fd57d2e6de76d7d82bd6d2de1a4db4e572e40d53df6",
+      "gpl_sha256": "48a7d1061f5d7471f212842e75df74450448ea8922b0e4c5c488384d4b4f963f",
+      "identical": false
+    },
+    {
+      "path": "TXPWR_LMT.txt",
+      "size": 24931,
+      "oem_sha256": "0335f1aef6c6b0d726f1070498ea592ecaa5b8f8b12edb95c0536275ea32cac6",
+      "gpl_sha256": "0335f1aef6c6b0d726f1070498ea592ecaa5b8f8b12edb95c0536275ea32cac6",
+      "identical": true
+    },
+    {
+      "path": "TXPWR_LMT_RU.txt",
+      "size": 16193,
+      "oem_sha256": "31134285c23d931de7389d5827f0d8d996add280440c40a2ac1949c783642ea9",
+      "gpl_sha256": "31134285c23d931de7389d5827f0d8d996add280440c40a2ac1949c783642ea9",
+      "identical": true
+    },
+    {
+      "path": "TXPWR_TrackTSSI.txt",
+      "size": 2403,
+      "oem_sha256": "8e5c10bfc228da5364796961ae599d3fa8cbe3aa61b21e25e3106dc4b1ea7e68",
+      "gpl_sha256": "8e5c10bfc228da5364796961ae599d3fa8cbe3aa61b21e25e3106dc4b1ea7e68",
+      "identical": true
+    }
+  ]
+}

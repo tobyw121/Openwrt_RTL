@@ -1,5 +1,23 @@
 # WR1500: Patchübernahme und Wi-Fi-6-Portierungsstand
 
+## Aktuell: natives 5-GHz-Kernelpaket, 01.11.2026
+
+`kmod-rtl8832br-wr1500` ist jetzt im R76-Profil und seiner defconfig automatisch
+ausgewählt. Der vollständige G6-Treiber baut als `rtk_wifi6.ko` gegen MIPS LE,
+Linux 6.6.114 und die cfg80211-Backports 6.12.96, einschließlich Modpost.
+Der Bau aus unveränderter GPL plus Paketpatch wurde ebenfalls geprüft.
+Die OEM-RFE50/AP_5G-Daten werden mitinstalliert; das Modul wird automatisch
+geladen, bindet aber ausschließlich auf Cudy R76 und PCI 10ec:b832.
+
+Hardwarebetrieb dieses Ports ist noch nicht bestätigt. Der integrierte
+2,4-GHz-8197G wird von diesem Paket nicht unterstützt. Build- und Testbefehle,
+Grenzen sowie Änderungen: [LINUX66-DRIVER.md](LINUX66-DRIVER.md).
+Die folgenden älteren Abschnitte beschreiben die Entwicklung vor diesem Paket.
+
+Der [OEM-RFE50-Dateivergleich vom 01.11.2026](OEM-RFE50.md) bestätigt
+36 von 38 Dateien bytegenau zur G6-GPL. Zwei ByRate-Tabellen enthalten
+OEM-Abweichungen; der Vergleich aktiviert noch keinen WLAN-Treiber.
+
 ## Ergänzung: G6-OS-Port und Rekonstruktionsarchiv, 31.10.2026
 
 Der neue [OS-Service-Patch](linux66-os-service-api.patch) wird nach

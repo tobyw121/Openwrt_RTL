@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rtl8197f-cudy-ax1500-base
-PKG_RELEASE:=6
+PKG_RELEASE:=7
 PKG_LICENSE:=GPL-2.0-or-later
 
 include $(INCLUDE_DIR)/package.mk
@@ -18,13 +18,14 @@ define Package/rtl8197f-cudy-r76-base
   SECTION:=utils
   CATEGORY:=Utilities
   TITLE:=Cudy AX1500 WR1500 complete base package selection
-  DEPENDS:=@TARGET_realtek_rtl8197f +rtl8197f-cudy-ax1500-base +ip-full +ip-bridge +ethtool +dnsmasq +odhcpd-ipv6only +firewall4 +dropbear +luci +uhttpd +uhttpd-mod-ubus +rpcd +kmod-cfg80211 +wifi-scripts +iw +iwinfo +rpcd-mod-iwinfo +wireless-regdb +hostapd-mini +tcpdump-mini +pciutils
+  DEPENDS:=@TARGET_realtek_rtl8197f +rtl8197f-cudy-ax1500-base +ip-full +ip-bridge +ethtool +dnsmasq +odhcpd-ipv6only +firewall4 +dropbear +luci +uhttpd +uhttpd-mod-ubus +rpcd +kmod-cfg80211 +kmod-rtl8832br-wr1500 +wifi-scripts +iw +iwinfo +rpcd-mod-iwinfo +wireless-regdb +hostapd-mini +tcpdump-mini +pciutils
   DEFAULT:=y if TARGET_realtek_rtl8197f_DEVICE_cudy_ax1500_r76 || TARGET_DEVICE_realtek_rtl8197f_DEVICE_cudy_ax1500_r76
 endef
 
 define Package/rtl8197f-cudy-r76-base/description
  Selects networking, SSH, firewall, LuCI, wireless userspace and diagnostics
- for WR1500/R76. Does not supply an unfinished WLAN driver or enable hardware.
+ for WR1500/R76, including the experimental RTL8832BR 5GHz driver and RFE50
+ parameters. The integrated 2.4GHz 8197G radio is not driven by this package.
 endef
 
 define Package/rtl8197f-cudy-ax1500-base/description
