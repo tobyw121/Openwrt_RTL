@@ -111,6 +111,9 @@
  * 8197G radio remains disabled; no MW5/RD05 calibration is assigned.
  */
 &pcie0 {
+	/* PCI INTx source21 routes through ICTL to CPU5, as on related boards. */
+	interrupt-parent = <&intc>;
+	interrupts = <21 4>;
 	/* Fixed RTL8197F outbound windows: OEM BAR2 is 0x19000004.
 	 * PCI bus addresses must equal CPU physical addresses; inheriting
 	 * the zero-based generic ranges assigns BAR2 to bus address zero

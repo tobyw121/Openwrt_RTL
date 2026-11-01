@@ -3,8 +3,9 @@
 Das neue `package/kernel/rtl8832br-wr1500` baut `rtk_wifi6.ko` aus der G6-GPL
 und installiert die bestätigten RFE50-Basis- und AP_5G-Parameter. Das R76-
 Basispaket zieht den Kernel-Treiber automatisch hinzu; auch die AX1500-
-defconfig und der vorhandene Defaults-Helfer wählen ihn aus. Autoload hat
-Priorität 60. Ein R76-Firmwarebau benötigt dafür keine menuconfig-Auswahl.
+defconfig und der vorhandene Defaults-Helfer wählen ihn aus. Autoload mit
+Priorität 60 wurde mit Paketrevision 4 vorübergehend abgeschaltet (siehe unten).
+Ein R76-Firmwarebau benötigt dafür keine menuconfig-Auswahl.
 
 Paketrevision 2 behebt zusätzlich die private Header-Auflösung im echten
 OpenWrt-Staging: `Build/InstallDev` von mac80211 stellt auch interne Header
@@ -40,6 +41,31 @@ BAR-Konfigurationsdump. Ob diese Korrektur den gesamten Hardwarestart behebt,
 ist daher am neuen Image zu prüfen. Das ist noch kein Nachweis für gestartete
 Firmware, funktionierenden AP oder Datenverkehr. Keine Änderungen an GPIO,
 RFE, Sendeleistung, Switch-Timing oder den RD05-/MW5-Treibern.
+
+## Integration der Diagnose-/RFE50-Patches (Revision 4)
+
+R76 verwendet jetzt ICTL21/CPU5 für PCI INTx, wie die verwandten SoC-Boards.
+Die tatsächliche IRQ-Funktion auf WR1500 bleibt zu prüfen. Patch 103 verweigert
+Probe vor Adapteraufbau bei fehlendem/ungültigem INTx-Pin oder IRQ 0/255 und
+meldet bei späterem `request_irq`-Fehler zusätzlich dessen konkreten Fehlercode.
+Die Vorprüfung garantiert keine erfolgreiche Handlerregistrierung.
+
+Autoload ist vorübergehend entfernt: der Bootlog nach BAR-Korrektur scheiterte
+an IRQ-Allokation und anschließend im Timer-Softirq. Die Fehlerbereinigung
+ist durch diese Integration **nicht vollständig repariert**. Keine blinden
+zusätzlichen Timer-Abbrüche: der Herstellerpfad enthält auch nur bedingt
+initialisierte Timer. Manuell höchstens einen Probeversuch über UART ausführen.
+`wr1500-wifi6-diag --archive` sammelt IRQ-/PCI-/Radiozustände ohne UCI-Schlüssel.
+
+Validierung: MIPS-Modulbau/Modpost erfolgreich; alle vier Patches ohne Fuzz
+auf Original-GPL geprüft. 57 Regressionstests bestanden, einer übersprungen.
+Kein neuer Hardwaretest und kein vollständiger Firmwarebau in dieser Umgebung.
+
+Build/Prepare prüft die 16 mitgelieferten RF-Dateien gegen die bestätigten
+SHA256-Werte im Paket; kein Forschungsmanifest/Python-Helfer ist erforderlich.
+Das bestätigt die Dateien im Paket, nicht deren tatsächliches Laden im Gerät.
+Der leere RF-Pfad und der eFuse-/MAC-Fehler sind weiterhin offen. AP_2G/PON-
+Referenzen werden nicht zur 2,4-GHz-Kalibrierung umgedeutet.
 
 ## Quelle und Reproduzierbarkeit
 
@@ -161,6 +187,18 @@ Bei funktionierendem Probe erwartet: PCI-Treiber `rtk_wifi6` und ein
 SSID, WPA2-CCMP-Passwort und das tatsächliche Aufstellland anschließend in
 LuCI konfigurieren. OpenWrts sichere Erstkonfiguration wird beibehalten;
 es wird kein offenes Funknetz oder gemeinsames Standardpasswort angelegt.
+
+Vor dem manuellen Probe:
+
+```sh
+wr1500-wifi6-diag --archive
+cat /sys/bus/pci/devices/0000:00:00.0/irq
+```
+
+Nur bei zugewiesener IRQ ungleich 0/255 einmal `modprobe rtk_wifi6` ausführen.
+Auch dann kann der noch offene Fehlerpfad einen Neustart verursachen.
+Anschließend `wr1500-wifi6-diag --archive` und die obigen Statusbefehle erneut
+aufrufen; nicht wiederholt laden/entladen.
 
 ## PC: nach Einrichtung des 5-GHz-Funknetzes
 

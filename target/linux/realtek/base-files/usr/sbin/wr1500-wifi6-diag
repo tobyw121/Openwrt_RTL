@@ -1,0 +1,35 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+# Read-only R76 5 GHz bring-up diagnostics. Do not include UCI wireless secrets.
+set -u
+BOARD="$(cat /tmp/sysinfo/board_name 2>/dev/null || true)"
+if [ "$BOARD" != 'cudy,ax1500-r76' ]; then
+    echo "This diagnostic is restricted to cudy,ax1500-r76 (board=$BOARD)" >&2
+    exit 1
+fi
+DEST="/tmp/wr1500-wifi6-diag"
+mkdir -p "$DEST"
+DATE="$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || echo unknown)"
+{ echo "date_utc=$DATE"; echo "board=$BOARD"; uname -a; } > "$DEST/host.txt"
+{ echo '=== PCI endpoint ==='; ls -ld /sys/bus/pci/devices/* 2>&1; echo '=== IRQ ==='; cat /proc/interrupts; } > "$DEST/irq.txt"
+{ echo '=== PCI device ===';
+  for dev in /sys/bus/pci/devices/*; do
+    [ -d "$dev" ] || continue
+    echo "device=$dev"
+    for f in vendor device irq enable resource; do
+      [ -r "$dev/$f" ] && { echo "$f:"; cat "$dev/$f"; }
+    done
+    readlink "$dev/driver" 2>/dev/null || true
+  done
+} > "$DEST/pci.txt"
+{ echo '=== radio interfaces ==='; iw dev 2>&1 || true; echo '=== loaded modules ===';
+  grep -E 'rtk_wifi6|cfg80211|compat' /proc/modules || true;
+} > "$DEST/radio.txt"
+dmesg 2>&1 | grep -Ei 'rtl8197f-pcie|rtl8832|rtk_wifi6|pci_alloc_irq|INTx|BAR2|timer|paging request|PHL|RFE|efuse' | tail -180 > "$DEST/dmesg.txt"
+if [ "${1:-}" = '--archive' ]; then
+    tar -czf /tmp/wr1500-wifi6-diag.tar.gz -C /tmp wr1500-wifi6-diag
+    echo '/tmp/wr1500-wifi6-diag.tar.gz'
+else
+    cat "$DEST/host.txt"
+    echo 'Saved diagnostics in /tmp/wr1500-wifi6-diag/'
+fi

@@ -1,0 +1,44 @@
+Subject: [PATCH] WR1500: validate INTx before adapter setup and log request errors
+
+--- a/os_dep/linux/pci_intf.c
++++ b/os_dep/linux/pci_intf.c
+@@ -520,7 +520,7 @@
+ 	err = request_irq(pdev->irq, &rtw_pci_interrupt, SA_SHIRQ, DRV_NAME, dvobj);
+ #endif
+ 	if (err)
+-		RTW_INFO("Error allocating IRQ %d", pdev->irq);
++		dev_err(&pdev->dev, "request_irq(%u) failed: %d\n", pdev->irq, err);
+ 	else {
+ 		pci_data->irq_alloc = 1;
+ 		pci_data->irq = pdev->irq;
+@@ -1076,6 +1076,30 @@
+ 	    pdev->vendor != 0x10ec || pdev->device != 0xb832)
+ 		return -ENODEV;
+ 
++	/* The R76 device tree now routes via ICTL input21/CPU5, rather
++	 * than directly to cpuintc IRQ5. A missing PCI INTx IRQ must
++	 * reject probe BEFORE creating the adapter's timers/workqueues.
++	 * The legacy G6 error unwind is not yet verified on Linux 6.6.
++	 */
++	{
++		u8 pin = 0;
++		int pcierr = pci_read_config_byte(pdev, PCI_INTERRUPT_PIN, &pin);
++
++		if (pcierr) {
++			dev_err(&pdev->dev, "WR1500 cannot read PCI INTx pin: %d\n", pcierr);
++			return -EIO;
++		}
++		dev_info(&pdev->dev, "WR1500 PCI INTx: pin=%u linux_irq=%u\n",
++			 pin, pdev->irq);
++		if (!pdev->irq || pdev->irq == 255 || pin < 1 || pin > 4) {
++			dev_err(&pdev->dev,
++				"WR1500 invalid PCI INTx routing: pin=%u irq=%u; refusing adapter initialization\n",
++				pin, pdev->irq);
++			return -ENXIO;
++		}
++	}
++
++
+ 	_adapter *padapter = NULL;
+ 	struct dvobj_priv *dvobj;
+ 
