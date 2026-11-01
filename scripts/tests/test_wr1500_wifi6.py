@@ -51,6 +51,53 @@ def compile_run(code):
 
 
 class G6Tests(unittest.TestCase):
+    def test_pci_guard_rejects_zero_bus_bar_before_mmio(self):
+        patch = (PACKAGE/'patches/102-check-wr1500-mmio-window.patch').read_text()
+        added = '\n'.join(line[1:] for line in patch.splitlines()
+                          if line.startswith('+') and not line.startswith('+++'))
+        guard = function(added, 'wr1500_pci_check_mmio')
+        compile_run(r"""
+#include <assert.h>
+#include <errno.h>
+#include <stdint.h>
+typedef uint32_t u32;
+typedef uint16_t u16;
+#define PCI_BASE_ADDRESS_0 0x10
+#define PCI_COMMAND 4
+#define PCI_COMMAND_MEMORY 2
+#define PCI_BASE_ADDRESS_SPACE_IO 1
+#define PCI_BASE_ADDRESS_MEM_MASK (~0xfU)
+#define IORESOURCE_MEM 0x200
+struct pci_dev { int dev; };
+static u32 bar = 0x19000004;
+static u16 command = 6;
+static unsigned long start = 0x19000000, len = 0x100000, flags = IORESOURCE_MEM;
+static int config_error;
+static int pci_read_config_dword(struct pci_dev *p, int offset, u32 *v)
+{ assert(offset == 0x18); *v = bar; return config_error; }
+static int pci_read_config_word(struct pci_dev *p, int offset, u16 *v)
+{ assert(offset == 4); *v = command; return config_error; }
+#define pci_resource_flags(p, n) flags
+#define pci_resource_start(p, n) start
+#define pci_resource_len(p, n) len
+#define dev_err(...) ((void)0)
+#define dev_info(...) ((void)0)
+""" + guard + r"""
+int main(void) {
+    struct pci_dev p = {0};
+    assert(wr1500_pci_check_mmio(&p) == 0);
+    /* CPU resource can be correct despite a zero PCI bus address. */
+    bar = 4; assert(wr1500_pci_check_mmio(&p) == -ENXIO);
+    bar = 0x19000004; start = 0; assert(wr1500_pci_check_mmio(&p) == -ENXIO);
+    start = 0x19000000; len = 0x10000; assert(wr1500_pci_check_mmio(&p) == -ENXIO);
+    len = 0x100000; flags = 0; assert(wr1500_pci_check_mmio(&p) == -ENXIO);
+    flags = IORESOURCE_MEM; command = 4; assert(wr1500_pci_check_mmio(&p) == -ENXIO);
+    command = 6; bar = 0x19000001; assert(wr1500_pci_check_mmio(&p) == -ENXIO);
+    bar = 0x19000004; config_error = 1; assert(wr1500_pci_check_mmio(&p) == -EIO);
+    return 0;
+}
+""")
+
     def test_actual_package_build_resolves_private_header_without_shadowing_linux(self):
         source = '\n'.join(line for line in (PACKAGE/'Makefile').read_text().splitlines()
                            if not line.startswith('include '))

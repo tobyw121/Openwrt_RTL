@@ -78,6 +78,10 @@ ucidef_set_interfaces_lan_wan() { printf 'LAN=%s\nWAN=%s\n' "$1" "$2"; }
                     memory = tree.split('memory@0 {', 1)[1].split('};', 1)[0]
                     self.assertIn('reg = <0x00 '+size+'>;', memory)
                     if model.startswith('ax1500-r76'):
+                        pcie = tree.split('pcie@b00000 {', 1)[1].split('};', 1)[0]
+                        # pci_host_probe derives the BAR bus address from this
+                        # range. CPU resource 0x19000000 alone is insufficient.
+                        self.assertIn('ranges = <0x1000000 0x00 0x18c00000 0xc00000 0x00 0x200000 0x2000000 0x00 0x19000000 0x1000000 0x00 0x1000000>;', pcie)
                         eth = tree.split('ethernet@10000 {', 1)[1].split('};', 1)[0]
                         self.assertIn('realtek,rx-ring-size = <0x384>;', eth)
                         self.assertIn('realtek,tx-ring-size = <0x300>;', eth)

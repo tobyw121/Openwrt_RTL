@@ -13,6 +13,34 @@ relativ zu seinem eigenen Verzeichnis ein. Die Linux-/Backports-Suchreihenfolge
 bleibt erhalten, damit das mitgelieferte, ausschließlich für Userspace-Werkzeuge
 gedachte `include/linux/wireless.h` keine Kernel-Header überschattet.
 
+## Bootabsturz beim ersten MAC-Zugriff (Paketrevision 3)
+
+Der gelieferte Bootlog zeigt `Data bus error` in `os_pci_read8`, Adresse
+`0xb90000fc`, noch in `mac_ax_ops_init` vor Firmwaredownload. R76 hatte im
+Device Tree die generischen PCI-Busfenster ab null geerbt. Linux kann damit
+BAR2 auf Busadresse null setzen, obwohl die CPU-Ressource bei `0x19000000`
+liegt. Der RTL8197F-Host programmiert keine solche Adressübersetzung.
+
+Das R76-DTS setzt jetzt PCI-Bus- und CPU-Adressen identisch auf die bestätigten
+OEM-Aperturen (`0x18c00000` I/O, `0x19000000` MMIO). RAM- und Fullflash-DTB
+verwenden dieselbe Korrektur. Die anderen Board-DTS bleiben unverändert.
+Patch 102 prüft vor jedem initialen MAC-Zugriff BAR2-Ressource, Mindestgröße,
+BAR-Konfigurationswert und Memory-Enable. Bei Widerspruch bricht Probe ab,
+statt durch einen Testzugriff einen weiteren Kernel-Panic auszulösen.
+
+Validierung: alle drei Paketpatches lassen sich ohne Fuzz auf die originale
+GPL anwenden. Das resultierende PCI-Quellfile entspricht dem erfolgreich
+gegen MIPS/Linux 6.6.114 und die OpenWrt-Staging-Backports gebauten Modul;
+Modpost ist erfolgreich. Die 50 ausgewählten Regressionstests bestehen
+(ein nicht verfügbarer Test wurde übersprungen), einschließlich kompiliertem
+BAR-Fehlerpfad und den RAM-/Fullflash-DTB-Fenstern.
+
+Die falsche DT-Übersetzung ist statisch belegt; der Crashlog enthält keinen
+BAR-Konfigurationsdump. Ob diese Korrektur den gesamten Hardwarestart behebt,
+ist daher am neuen Image zu prüfen. Das ist noch kein Nachweis für gestartete
+Firmware, funktionierenden AP oder Datenverkehr. Keine Änderungen an GPIO,
+RFE, Sendeleistung, Switch-Timing oder den RD05-/MW5-Treibern.
+
 ## Quelle und Reproduzierbarkeit
 
 Quelle: TP-Link `GPL_ax1500v3.tar.gz`, SHA256
@@ -90,6 +118,7 @@ git pull --ff-only origin MW5_Stable
 cp configs/rtl8197f_ax1500_defconfig .config
 make defconfig
 make target/linux/clean
+make package/kernel/rtl8832br-wr1500/clean
 make download -j8
 make -j"$(nproc)" V=s
 ```

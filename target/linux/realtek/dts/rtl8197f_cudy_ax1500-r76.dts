@@ -111,6 +111,13 @@
  * 8197G radio remains disabled; no MW5/RD05 calibration is assigned.
  */
 &pcie0 {
+	/* Fixed RTL8197F outbound windows: OEM BAR2 is 0x19000004.
+	 * PCI bus addresses must equal CPU physical addresses; inheriting
+	 * the zero-based generic ranges assigns BAR2 to bus address zero
+	 * and causes a data-bus exception at the first RTL8832BR MAC read.
+	 */
+	ranges = <0x01000000 0 0x18c00000 0x00c00000 0 0x00200000>,
+		 <0x02000000 0 0x19000000 0x01000000 0 0x01000000>;
 	status = "okay";
 };
 

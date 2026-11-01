@@ -3,7 +3,7 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=rtl8832br-wr1500
 PKG_VERSION:=2026.10.22
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 PKG_LICENSE:=GPL-2.0-only
 PKG_SOURCE:=GPL_ax1500v3.tar.gz
 PKG_SOURCE_URL:=https://static.tp-link.com/upload/gpl-code/2026/202610/20261022/

@@ -1,0 +1,59 @@
+Subject: [PATCH] Refuse unsafe WR1500 PCI BAR2 before MAC MMIO access
+
+--- a/os_dep/linux/pci_intf.c
++++ b/os_dep/linux/pci_intf.c
+@@ -530,6 +530,42 @@
+ 	return err ? _FAIL : _SUCCESS;
+ }
+ 
++/* RTL8197F has a fixed outbound aperture, not a programmable PCI ATU.
++ * The WR1500 OEM maps BAR2 at bus/CPU address 0x19000000. A DT range
++ * translating PCI address zero to that CPU address assigns an unusable BAR;
++ * the first MAC read then raises an unrecoverable MIPS data-bus exception.
++ * Check configuration space only; never probe MMIO to detect that mistake.
++ */
++static int wr1500_pci_check_mmio(struct pci_dev *pdev)
++{
++	u32 bar;
++	u16 command;
++	int ret;
++
++	ret = pci_read_config_dword(pdev, PCI_BASE_ADDRESS_0 + 2 * 4, &bar);
++	if (ret)
++		return -EIO;
++	ret = pci_read_config_word(pdev, PCI_COMMAND, &command);
++	if (ret)
++		return -EIO;
++
++	if (!(pci_resource_flags(pdev, 2) & IORESOURCE_MEM) ||
++	    pci_resource_start(pdev, 2) != 0x19000000 ||
++	    pci_resource_len(pdev, 2) < 0x100000 ||
++	    (bar & PCI_BASE_ADDRESS_SPACE_IO) ||
++	    (bar & PCI_BASE_ADDRESS_MEM_MASK) != 0x19000000 ||
++	    !(command & PCI_COMMAND_MEMORY)) {
++		dev_err(&pdev->dev,
++			"unsafe WR1500 BAR2: cfg=%#010x command=%#06x; require MMIO at bus/CPU 0x19000000, refusing MAC access\n",
++			bar, command);
++		return -ENXIO;
++	}
++
++	dev_info(&pdev->dev, "WR1500 BAR2 verified: cfg=%#010x command=%#06x\n",
++		 bar, command);
++	return 0;
++}
++
+ static struct dvobj_priv *pci_dvobj_init(struct pci_dev *pdev,
+ 					const struct pci_device_id *pdid)
+ {
+@@ -559,6 +595,11 @@
+ 		RTW_ERR("%s : Cannot enable new PCI device\n", pci_name(pdev));
+ 		goto free_dvobj;
+ 	}
++
++	/* This package binds only the WR1500 R76 / 10ec:b832. */
++	err = wr1500_pci_check_mmio(pdev);
++	if (err)
++		goto disable_picdev;
+ 
+ #ifdef CONFIG_64BIT_DMA
+ 	if (!dma_set_mask(&pdev->dev, DMA_BIT_MASK(64))) {
