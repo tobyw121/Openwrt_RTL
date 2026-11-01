@@ -122,7 +122,7 @@ default_do_upgrade() { echo UNEXPECTED_FLASH; }
         out = subprocess.run(['sh', '-c', guard + '\ncat() { echo cudy,ax1500-r76; }\nrtl8197f_is_cudy_ram'])
         self.assertEqual(out.returncode, 0)
 
-    def test_compiled_dts_preserves_map_and_hardware_isolation(self):
+    def test_compiled_dts_preserves_map_and_enables_ethernet_only(self):
         dtc = os.environ.get('DTC') or shutil.which('dtc')
         headers = os.environ.get('RTL8197F_KERNEL_INCLUDE')
         if not dtc or not headers:
@@ -143,10 +143,12 @@ default_do_upgrade() { echo UNEXPECTED_FLASH; }
             self.assertEqual(decoded.count('read-only;'), 7)
             self.assertNotIn('label = "rootfs";', decoded)
             self.assertNotIn('label = "firmware";', decoded)
-            # Disabled inherited blocks do not become active through the overlay.
-            for node in ('ethernet@10000', 'gpio-controller@3500', 'wifi@640000'):
+            # Native R76 Ethernet and SMI GPIO are now enabled; WLAN stays off.
+            for node in ('ethernet@10000', 'gpio-controller@3500'):
                 block = decoded.split(node+' {', 1)[1].split('};', 1)[0]
-                self.assertIn('status = "disabled";', block)
+                self.assertIn('status = "okay";', block)
+            block = decoded.split('wifi@640000 {', 1)[1].split('};', 1)[0]
+            self.assertIn('status = "disabled";', block)
 
 
 if __name__ == '__main__':

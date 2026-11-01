@@ -138,7 +138,10 @@ struct rtl8197f_rtknet_priv {
     void *swcore, *system, *dev;
     bool mw5_p0_transparent, p0_cpu_tag_passthrough;
 };
-""" + ''.join(definitions) + c_function(DRIVER, 'static void rtl8197f_rtk_init_p0_rgmii(') + r"""
+""" + ''.join(definitions) + '\n'.join(c_function(DRIVER, name) for name in (
+    'static bool rtl8197f_rtk_is_r76(',
+    'static void rtl8197f_rtk_r76_init_p0(',
+    'static void rtl8197f_rtk_init_p0_rgmii(')) + r"""
 int main(void) {
     u32 regs[0x10000 / 4], system[0x4000 / 4];
     struct rtl8197f_rtknet_priv p = {.swcore=regs, .system=system};
@@ -189,6 +192,21 @@ int main(void) {
     rd05_p0_rx_delay = 3;
     rtl8197f_rtk_init_p0_rgmii(&p,"manual-override");
     assert((readl(p.swcore + RTL_RTK_SWCORE_P0GMIICR) & RTL_RTK_P0GMIICR_RX_DELAY_MASK) == 3);
+    /* R76 ignores RD05 calibration and retains measured electrical timing.
+     * The OEM router/tag-parser bits are deliberately cleared for rtl8_4. */
+    board = "cudy,ax1500-r76";
+    memset(regs,0,sizeof(regs)); memset(system,0,sizeof(system));
+    writel(1, p.swcore + RTL_RTK_SWCORE_MACCR1);
+    rd05_p0_tx_delay = 0; rd05_p0_rx_delay = 7;
+    p.p0_cpu_tag_passthrough = true;
+    for (int i=0;i<2;i++) {
+        rtl8197f_rtk_init_p0_rgmii(&p,"r76-measured");
+        assert(readl(p.swcore + RTL_RTK_SWCORE_P0GMIICR) == 0x00037d50);
+        assert(readl(p.swcore + RTL_RTK_SWCORE_PCRP(0)) == 0x16972039);
+        assert(readl(p.swcore + RTL_RTK_SWCORE_MACCR) == 0x804a1485);
+        assert(readl(p.swcore + RTL_RTK_SWCORE_MACCR1) == 0);
+        assert(readl(p.system + RTL_RTK_SYSTEM_PAD_CTRL_1) == 0xdbffff7f);
+    }
     return 0;
 }
 """

@@ -1,0 +1,196 @@
+From: OpenWrt RTL8197F bringup <noreply@example.invalid>
+Subject: [PATCH] net: dsa: realtek: add measured Cudy R76 host-link setup
+
+R76 OEM runtime confirms MAC7/EXT1, TX1/RX0, fine tap4 and enabled SSC.
+Keep Linux rtl8_4 tagging and isolate every user port to the CPU until
+Linux bridge configuration. Do not apply RD05 private VID9/tuning policy.
+
+---
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -719,8 +719,19 @@
+ 		.extints = {
+ 			{ 7, 1, PHY_INTF(RGMII) },
+ 		},
+ 	},
++	{
++		.name = "RTL8367D / RTL8367RB-VC",
++		.chip_id = 0x6642,
++		.chip_ver = 0x0010,
++		.chip_ver_mask = 0xffff,
++		.num_ports = 8,
++		.rtl8367d = true,
++		.extints = {
++			{ 7, 1, PHY_INTF(RGMII) },
++		},
++	},
+ 	/* rtl83xx switch API v1.3.9 probes 0x0801/0x6511 as
+ 	 * RTL8363SC-VB when revision bits 7:4 are 0x8, otherwise RTL8364B.
+ 	 * Both packages expose the bonded copper PHYs at physical ports 1 and
+ 	 * 3 and the first CPU extension interface at physical port 6.
+@@ -1158,10 +1169,23 @@
+ 			    enable ? RTL8367D_EXT1_SSC_CTRL_ENABLE :
+ 				     RTL8367D_EXT1_SSC_CTRL_DISABLE);
+ }
+ 
++static bool rtl8367d_r76_board(struct realtek_priv *priv)
++{
++	struct rtl8365mb *mb = priv->chip_data;
++
++	return of_machine_is_compatible("cudy,ax1500-r76") &&
++	       mb->chip_info && mb->chip_info->rtl8367d;
++}
++
+ static int rtl8367d_ext1_config_rgmii(struct realtek_priv *priv)
+ {
++	bool r76 = rtl8367d_r76_board(priv);
++	u32 tx = r76 ? 1 : min_t(u32, READ_ONCE(rtl8367d_rd05_ext1_tx_delay), 1);
++	u32 rx = r76 ? 0 : min_t(u32, READ_ONCE(rtl8367d_rd05_ext1_rx_delay), 7);
++	u32 tap = r76 ? 4 : min_t(u32, READ_ONCE(rtl8367d_rd05_ext1_txc_tap), 7);
++	bool ssc = r76 || READ_ONCE(rtl8367d_rd05_ext1_ssc);
+ 	int ret;
+ 
+ 	/* Equivalent of _dal_rtl8367d_setAsicPortExtMode(ext_id=2, RGMII).
+ 	 * The missing BYPASS_LINE_RATE bit clear is significant: v35 inherited
+@@ -1198,9 +1222,9 @@
+ 	 */
+ 	ret = regmap_update_bits(priv->map, RTL8367D_EXT_TXC_DLY_REG,
+ 				 RTL8367D_EXT1_RGMII_TX_DLY_MASK,
+ 				 FIELD_PREP(RTL8367D_EXT1_RGMII_TX_DLY_MASK,
+-					    min_t(u32, READ_ONCE(rtl8367d_rd05_ext1_txc_tap), 7)));
++					    tap));
+ 	if (ret)
+ 		return ret;
+ 
+ 	ret = regmap_update_bits(priv->map,
+@@ -1227,19 +1251,19 @@
+ 				 FIELD_PREP(RTL8365MB_EXT_RGMXF_TXDELAY_MASK, 0) |
+ 				 FIELD_PREP(RTL8365MB_EXT_RGMXF_RXDELAY_MASK, 2));
+ 	if (ret)
+ 		return ret;
+-	ret = rtl8367d_ext1_set_ssc(priv, READ_ONCE(rtl8367d_rd05_ext1_ssc));
++	ret = rtl8367d_ext1_set_ssc(priv, ssc);
+ 	if (ret)
+ 		return ret;
+ 
+ 	return regmap_update_bits(priv->map, RTL8365MB_EXT_RGMXF_REG(1),
+ 				  RTL8365MB_EXT_RGMXF_TXDELAY_MASK |
+ 				  RTL8365MB_EXT_RGMXF_RXDELAY_MASK,
+ 				  FIELD_PREP(RTL8365MB_EXT_RGMXF_TXDELAY_MASK,
+-					     min_t(u32, READ_ONCE(rtl8367d_rd05_ext1_tx_delay), 1)) |
++					     tx) |
+ 				  FIELD_PREP(RTL8365MB_EXT_RGMXF_RXDELAY_MASK,
+-					     min_t(u32, READ_ONCE(rtl8367d_rd05_ext1_rx_delay), 7)));
++					     rx));
+ }
+ 
+ static int rtl8365mb_ext_config_rgmii(struct realtek_priv *priv, int port,
+ 				      phy_interface_t interface)
+@@ -4289,8 +4313,92 @@
+ 					!(val & RTL8365MB_CHIP_RESET_HW_MASK),
+ 					20000, 1e6);
+ }
+ 
++/* R76 has four UTP jacks: LAN1=P3, LAN2=P0, LAN3=P1, WAN=P2.
++ * Only CPU7 can join separate user ports before Linux bridge configuration.
++ * The common internal VID1 is a conduit domain, not a LAN/WAN bridge.
++ */
++static int rtl8367d_r76_setup_cpu_path(struct realtek_priv *priv)
++{
++	const u32 users = BIT(0) | BIT(1) | BIT(2) | BIT(3);
++	const u32 cpu = BIT(7), members = users | cpu;
++	u32 value;
++	int port, ret;
++
++	if (!rtl8367d_r76_board(priv))
++		return 0;
++
++	ret = regmap_write(priv->map, RTL8367D_TABLE_WRITE_DATA0_REG,
++			   members | (members << 8));
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8367D_TABLE_WRITE_DATA1_REG, 0);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8367D_TABLE_ACCESS_ADDR_REG, 1);
++	if (ret)
++		return ret;
++	ret = regmap_update_bits(priv->map, RTL8367D_TABLE_ACCESS_CTRL_REG,
++				 RTL8367D_TABLE_ACCESS_MASK,
++				 RTL8367D_TABLE_ACCESS_CVLAN_WRITE);
++	if (ret)
++		return ret;
++	ret = regmap_update_bits(priv->map, RTL8367D_VLAN_CTRL_REG, BIT(0), 0);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8367D_VLAN_INGRESS_REG, 0);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8367D_VLAN_ACCEPT_CTRL0_REG, 0);
++	if (ret)
++		return ret;
++
++	/* Do not let a learned destination override the isolation matrix. */
++	ret = regmap_write(priv->map, RTL8365MB_LOOKUP_HIT_ISO_ACT_REG, 0);
++	if (ret)
++		return ret;
++	for (port = 0; port < 8; port++) {
++		u32 mask = port == 7 ? users : (users & BIT(port)) ? cpu : 0;
++
++		ret = rtl8365mb_port_set_isolation(priv, port, mask);
++		if (ret)
++			return ret;
++		ret = regmap_read(priv->map, RTL8365MB_PORT_ISOLATION_REG(port), &value);
++		if (ret)
++			return ret;
++		if ((value & RTL8365MB_PORT_ISOLATION_MASK) != mask)
++			return -EIO;
++		if (members & BIT(port)) {
++			ret = regmap_update_bits(priv->map, RTL8367D_VLAN_PVID_CTRL_REG(port),
++						 RTL8367D_VLAN_PVID_CTRL_MASK, 1);
++			if (ret)
++				return ret;
++		}
++	}
++	ret = regmap_write(priv->map, RTL8365MB_SOURCE_PORT_PERMIT_REG, members);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8365MB_UNDA_FLOODING_PMSK_REG, members);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8365MB_UNMCAST_FLOODING_PMSK_REG, members);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8365MB_BCAST_FLOODING_PMSK_REG, members);
++	if (ret)
++		return ret;
++	ret = regmap_read(priv->map, RTL8365MB_CPU_PORT_MASK_REG, &value);
++	if (ret)
++		return ret;
++	if ((value & RTL8365MB_CPU_PORT_MASK_MASK) != cpu)
++		return -EIO;
++	dev_info(priv->dev,
++		 "R76 DSA: CPU7/EXT1 rtl8_4, isolated users=0x%x VID1; RGMII TX1/RX0 tap4 SSC on\n",
++		 users);
++	return 0;
++}
++
+ static int rtl8365mb_setup(struct dsa_switch *ds)
+ {
+ 	struct realtek_priv *priv = ds->priv;
+ 	struct rtl8365mb_cpu *cpu;
+@@ -4388,8 +4496,14 @@
+ 
+ 	ret = rtl8367d_rd05_force_dsa_cpu_path(priv);
+ 	if (ret) {
+ 		dev_err(priv->dev, "failed to configure RTL8367D RD05 DSA CPU path: %d\n", ret);
++		goto out_teardown_irq;
++	}
++
++	ret = rtl8367d_r76_setup_cpu_path(priv);
++	if (ret) {
++		dev_err(priv->dev, "R76 isolated CPU path failed: %d\n", ret);
+ 		goto out_teardown_irq;
+ 	}
+ 
+ 	if (rtl8367d_rd05_board(mb)) {

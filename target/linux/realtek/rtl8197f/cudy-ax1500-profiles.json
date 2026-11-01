@@ -133,7 +133,7 @@
     "cudy,ax1500-r76": {
       "gpl_profile": "R76",
       "related_board": "cudy,wr1500",
-      "integration_status": "experimental-fullflash-128m-readonly-spi-pci",
+      "integration_status": "experimental-native-dsa-bringup",
       "hardware_revision": "1.0",
       "physical_ram_bytes": 134217728,
       "diagnostic_ram_window_bytes": 134217728,
@@ -150,8 +150,8 @@
       },
       "report": "reverse-engineering/cudy-ax1500-r76/README.md",
       "remaining_validation": [
-        "128 MiB Linux runtime and memory stability after DT expansion",
-        "switch ASIC revision, SMI wiring, physical CPU link and DSA tagging",
+        "native DSA bring-up: GPIO-SMI chip ID/revision, both DMA directions and CPU-tag transport",
+        "LAN/WAN DHCP, isolation and Linux firewall routing on new R76 driver",
         "RTL8192FE factory layout and integrated WLAN driver board path",
         "complete RTL8832BR Linux 6.6 port and per-device RF calibration",
         "writable overlay and reboot reliability"
@@ -171,7 +171,7 @@
         "source": "Cudy_WR1500_AX1500_Hardwareanalyse_2026-10-31.pdf",
         "accepted_by_owner": true,
         "date": "2026-10-31",
-        "linux_128m_tested": false
+        "linux_128m_tested": true
       }
     }
   }

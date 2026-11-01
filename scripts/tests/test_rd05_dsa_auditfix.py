@@ -131,7 +131,7 @@ def apply_patch_to_fragment() -> str:
 class SourceTests(unittest.TestCase):
     def test_driver_version_and_real_ownership_paths(self):
         text = DRIVER.read_text()
-        self.assertIn('"1.8.47-rd05-dsa-auditfix"', text)
+        self.assertIn('"1.8.48-cudy-r76-dsa"', text)
         result = compile_run(tx_harness(tx_fragment(text)))
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 

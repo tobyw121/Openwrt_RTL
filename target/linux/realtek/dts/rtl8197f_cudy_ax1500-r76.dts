@@ -2,6 +2,7 @@
 // R76 raw SPI evidence: fullflash-templates/Cudy_AX1500.bin.
 
 #include "rtl8197f_cudy_ax1500.dtsi"
+#include <dt-bindings/gpio/gpio.h>
 
 / {
 	compatible = "cudy,ax1500-r76", "cudy,wr1500", "realtek,rtl8197f-vg", "realtek,rtl8197f-soc";
@@ -18,6 +19,59 @@
 		bootargs = "console=ttyS0,38400n8 rdinit=/sbin/init clk_ignore_unused";
 		stdout-path = "serial0:38400n8";
 	};
+
+	r76_switch: switch {
+		compatible = "realtek,rtl8367d", "realtek,rtl8365mb";
+		pinctrl-names = "default";
+		pinctrl-0 = <&r76_smi_pins>;
+		mdc-gpios = <&gpio0 56 GPIO_ACTIVE_HIGH>;
+		mdio-gpios = <&gpio0 55 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpio0 58 GPIO_ACTIVE_LOW>;
+		realtek,disable-leds;
+		status = "okay";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			port@0 { reg = <0>; label = "lan2"; phy-handle = <&r76_phy0>; };
+			port@1 { reg = <1>; label = "lan3"; phy-handle = <&r76_phy1>; };
+			port@2 { reg = <2>; label = "wan"; phy-handle = <&r76_phy2>; };
+			port@3 { reg = <3>; label = "lan1"; phy-handle = <&r76_phy3>; };
+			port@7 {
+				reg = <7>;
+				label = "cpu";
+				ethernet = <&ethernet0>;
+				phy-mode = "rgmii";
+				tx-internal-delay-ps = <2000>;
+				rx-internal-delay-ps = <0>;
+				fixed-link { speed = <1000>; full-duplex; pause; };
+			};
+		};
+		mdio {
+			compatible = "realtek,smi-mdio";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			r76_phy0: ethernet-phy@0 { reg = <0>; };
+			r76_phy1: ethernet-phy@1 { reg = <1>; };
+			r76_phy2: ethernet-phy@2 { reg = <2>; };
+			r76_phy3: ethernet-phy@3 { reg = <3>; };
+		};
+	};
+};
+
+&pinmux {
+	r76_smi_pins: r76-smi-pins {
+		/* OEM PIN_MUX_SEL13=0x33320000: retain unrelated pin fields. */
+		pinctrl-single,bits = <0x34 0x03300000 0x0ff00000>;
+	};
+};
+
+&gpio0 {
+	/delete-property/ interrupt-controller;
+	/delete-property/ #interrupt-cells;
+	/delete-property/ interrupt-parent;
+	/delete-property/ interrupts;
+	status = "okay";
 };
 
 &uart0 {
@@ -60,12 +114,21 @@
 	status = "okay";
 };
 
-/* OEM ring 0 geometry from the WR1500 hardware report. Additional OEM
- * rings remain unused. This does not select a CPU port, descriptor bit
- * format or SMI wiring: Ethernet stays disabled until those are known.
+/* Measured P0-to-MAC7/EXT1 cascade. Linux uses opaque rtl8_4 tags,
+ * not the OEM SoC router/4-byte tag parser. No legacy swconfig node.
  */
 &ethernet0 {
 	realtek,rx-ring-size = <900>;
 	realtek,tx-ring-size = <768>;
 	realtek,descriptor-dwords = <8>;
+	realtek,tx-port-mask = <1>;
+	realtek,tx-dp-ext = <0>;
+	realtek,tx-extspa = <0>;
+	realtek,sdk-crc-lengths;
+	realtek,sdk-cpuicr1-init;
+	realtek,sdk-swcore-init;
+	realtek,sdk-trxrdy;
+	realtek,rx-poll-fallback;
+	realtek,rx-poll-ms = <50>;
+	status = "okay";
 };

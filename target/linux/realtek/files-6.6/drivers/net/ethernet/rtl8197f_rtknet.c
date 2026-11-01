@@ -62,7 +62,7 @@
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.47-rd05-dsa-auditfix"
+#define DRV_VERSION			"1.8.48-cudy-r76-dsa"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -1364,14 +1364,22 @@ rtl8197f_rtk_desc_clear_padding(struct rtl8197f_rtknet_priv *priv,
 	}
 }
 
+static bool rtl8197f_rtk_is_r76(void)
+{
+	return of_machine_is_compatible("cudy,ax1500-r76");
+}
+
 static bool rtl8197f_rtk_p0_external_switch_board(void)
 {
 	return of_machine_is_compatible("xiaomi,r4-rd05") ||
-	       of_machine_is_compatible("tenda,nova-mw5");
+	       of_machine_is_compatible("tenda,nova-mw5") ||
+	       rtl8197f_rtk_is_r76();
 }
 
 static const char *rtl8197f_rtk_p0_board_name(void)
 {
+	if (rtl8197f_rtk_is_r76())
+		return "cudy-r76";
 	return of_machine_is_compatible("tenda,nova-mw5") ? "mw5" : "rd05";
 }
 
@@ -2455,6 +2463,42 @@ static void rtl8197f_rtk_init_iball_p0_rtl8211f(struct rtl8197f_rtknet_priv *pri
 		 RTL_RTK_IBALL_RTL8211F_PHY);
 }
 
+/* R76 OEM runtime: PCR0=16972039, P0GMII=06037d50, MACCR=804a1485,
+ * PAD= dbffff7f. Keep electrical TX1/RX0/RGTXC0, but use opaque Linux
+ * rtl8_4 tags rather than the OEM SoC router/4-byte parser/generator.
+ */
+static void rtl8197f_rtk_r76_init_p0(struct rtl8197f_rtknet_priv *priv,
+				   const char *reason)
+{
+	u32 gmii;
+
+	if (!rtl8197f_rtk_is_r76() || !priv->swcore)
+		return;
+
+	writel(0x16972039, priv->swcore + RTL_RTK_SWCORE_PCRP(0));
+	writel(0x804a1485, priv->swcore + RTL_RTK_SWCORE_MACCR);
+	writel(readl(priv->swcore + RTL_RTK_SWCORE_PITCR) |
+	       RTL_RTK_PITCR_P0_EXT_INTERFACE, priv->swcore + RTL_RTK_SWCORE_PITCR);
+	writel(readl(priv->swcore + RTL_RTK_SWCORE_MACCR1) &
+	       ~(RTL_RTK_MACCR1_P0_ROUTER_MODE | RTL_RTK_MACCR1_RMD_TAG_MASK),
+	       priv->swcore + RTL_RTK_SWCORE_MACCR1);
+	if (priv->system)
+		writel(0xdbffff7f, priv->system + RTL_RTK_SYSTEM_PAD_CTRL_1);
+
+	gmii = 0x06037d50 & ~(RTL_RTK_P0GMIICR_CPU_TAG_RX |
+			      RTL_RTK_P0GMIICR_CPU_TAG_TX |
+			      RTL_RTK_P0GMIICR_CONF_DONE);
+	writel(gmii, priv->swcore + RTL_RTK_SWCORE_P0GMIICR);
+	udelay(10);
+	writel(gmii | RTL_RTK_P0GMIICR_CONF_DONE,
+	       priv->swcore + RTL_RTK_SWCORE_P0GMIICR);
+	readl(priv->swcore + RTL_RTK_SWCORE_P0GMIICR);
+	dev_info(priv->dev,
+		 "R76 P0 %s: TX1/RX0/RGTXC0 gmii=0x%08x MACCR1=0x%08x rtl8_4 transparent\n",
+		 reason, readl(priv->swcore + RTL_RTK_SWCORE_P0GMIICR),
+		 readl(priv->swcore + RTL_RTK_SWCORE_MACCR1));
+}
+
 static void rtl8197f_rtk_init_p0_rgmii(struct rtl8197f_rtknet_priv *priv,
 					       const char *reason)
 {
@@ -2468,6 +2512,10 @@ static void rtl8197f_rtk_init_p0_rgmii(struct rtl8197f_rtknet_priv *priv,
 	u32 tx_delay;
 	u32 rx_delay;
 
+	if (rtl8197f_rtk_is_r76()) {
+		rtl8197f_rtk_r76_init_p0(priv, reason);
+		return;
+	}
 	if (!priv->swcore)
 		return;
 
@@ -3443,6 +3491,7 @@ static void rtl8197f_rtk_rd05_seed_pipeline(struct rtl8197f_rtknet_priv *priv)
 	const u8 *lan_mac = priv->ndev->dev_addr;
 	const char *board = rtl8197f_rtk_p0_board_name();
 	u32 netif[5];
+	u16 host_vid = rtl8197f_rtk_is_r76() ? 1 : RTL_RTK_RD05_LAN_VID;
 
 	if (!rtl8197f_rtk_p0_external_switch_board())
 		return;
@@ -3461,7 +3510,7 @@ static void rtl8197f_rtk_rd05_seed_pipeline(struct rtl8197f_rtknet_priv *priv)
 
 	dev_info(priv->dev,
 		 "%s rtl865x pipe v43.6: seed P0/RGMII host-link ingress PVID->netif->ACL->CPU lan_vid=%u host_port=%u host_mbr=0x%x mac=%pM\n",
-		 board, RTL_RTK_RD05_LAN_VID, RTL_RTK_RD05_HOST_PORT,
+		 board, host_vid, RTL_RTK_RD05_HOST_PORT,
 		 (u32)RTL_RTK_RD05_HOST_MBR, lan_mac);
 
 	/* DSA exposes RTL8367D UTP ports above the CPU master.  The SoC-internal
@@ -3469,7 +3518,7 @@ static void rtl8197f_rtk_rd05_seed_pipeline(struct rtl8197f_rtknet_priv *priv)
 	 * extension ports copied from the OEM private driver.
 	 */
 	rtl8197f_rtk_rd05_set_pvid(priv, RTL_RTK_RD05_HOST_PORT,
-				 RTL_RTK_RD05_LAN_VID);
+				 host_vid);
 
 	/* OEM netif decision is VLAN based; port->netif is kept at index 0. */
 	rtl8197f_rtk_rd05_reg_update(priv, RTL_RTK_SWCORE_SWTCR0,
@@ -3531,8 +3580,8 @@ static void rtl8197f_rtk_rd05_seed_pipeline(struct rtl8197f_rtknet_priv *priv)
 		 (unsigned long long)priv->rd05_trap_ok);
 
 	/* OEM netif0: ingress ACL 0..4, egress ACL 253..253. */
-	netif[0] = rtl8197f_rtk_rd05_netif_w0(lan_mac, RTL_RTK_RD05_LAN_VID);
-	netif[1] = rtl8197f_rtk_rd05_netif_w1(lan_mac, true, false, 0);
+	netif[0] = rtl8197f_rtk_rd05_netif_w0(lan_mac, host_vid);
+	netif[1] = rtl8197f_rtk_rd05_netif_w1(lan_mac, !rtl8197f_rtk_is_r76(), false, 0);
 	netif[2] = rtl8197f_rtk_rd05_netif_w2(0, 4, 253, 253, 1);
 	netif[3] = rtl8197f_rtk_rd05_netif_w3(1500, 1500, 1);
 	netif[4] = 0;
@@ -3609,6 +3658,8 @@ static void rtl8197f_rtk_rd05_seed_l2cpu(struct rtl8197f_rtknet_priv *priv)
 	const char *board = rtl8197f_rtk_p0_board_name();
 	u8 mw5_wan_mac[ETH_ALEN];
 	bool seed_mw5_wan = false;
+	u16 host_vid = rtl8197f_rtk_is_r76() ? 1 : 9;
+	u16 second_vid = rtl8197f_rtk_is_r76() ? 2 : 8;
 	u32 vlan9 = rtl8197f_rtk_rd05_vlan_w0(RTL_RTK_RD05_HOST_MBR, 0);
 	u32 vlan8 = rtl8197f_rtk_rd05_vlan_w0(RTL_RTK_RD05_HOST_MBR, 0);
 
@@ -3635,9 +3686,11 @@ static void rtl8197f_rtk_rd05_seed_l2cpu(struct rtl8197f_rtknet_priv *priv)
 	 * rtl865x extension-port namespace, separates RTL8367D user ports.
 	 */
 	rtl8197f_rtk_rd05_force_table2(priv, RTL_RTK_ASICTBL_TYPE_VLAN,
-					  9, vlan9, 0, "vlan-vid9-fid0");
+					  host_vid, vlan9, 0,
+					  rtl8197f_rtk_is_r76() ? "r76-vid1-fid0" : "vlan-vid9-fid0");
 	rtl8197f_rtk_rd05_force_table2(priv, RTL_RTK_ASICTBL_TYPE_VLAN,
-					  8, vlan8, 0, "vlan-vid8-fid1");
+					  second_vid, vlan8, 0,
+					  rtl8197f_rtk_is_r76() ? "r76-vid2-fid1" : "vlan-vid8-fid1");
 
 	/* OEM L2 seed: broadcast + CPU/NH/STA markers in FID0 and FID1. */
 	rtl8197f_rtk_rd05_force_l2(priv, bcast, 0, RTL_RTK_RD05_HOST_MBR,
@@ -3830,8 +3883,7 @@ static void rtl8197f_rtk_rd05_poststart_rearm(struct rtl8197f_rtknet_priv *priv,
 {
 	u32 expected, actual, rx_base;
 
-	if (!of_machine_is_compatible("xiaomi,r4-rd05") &&
-	    !of_machine_is_compatible("tenda,nova-mw5"))
+	if (!rtl8197f_rtk_p0_external_switch_board())
 		return;
 
 	/*
@@ -4559,6 +4611,8 @@ static void rtl8197f_rtk_hw_start(struct rtl8197f_rtknet_priv *priv)
 	rtl8197f_rtk_apply_sdk_start_sidebands(priv);
 	if (priv->is_iball)
 		rtl8197f_rtk_init_iball_p0_rtl8211f(priv, "hw-start-iball");
+	else if (rtl8197f_rtk_is_r76())
+		rtl8197f_rtk_init_p0_rgmii(priv, "hw-start-r76");
 	else if (of_machine_is_compatible("tenda,nova-mw5"))
 		rtl8197f_rtk_init_p0_rgmii(priv, "hw-start-mw5");
 	else
@@ -7146,7 +7200,8 @@ static int rtl8197f_rtk_open(struct net_device *ndev)
 		mod_timer(&priv->rx_poll_timer,
 			  jiffies + msecs_to_jiffies(priv->rx_poll_ms));
 	if (priv->legacy_rd05_pipeline &&
-	    !of_machine_is_compatible("tenda,nova-mw5"))
+	    !of_machine_is_compatible("tenda,nova-mw5") &&
+	    !rtl8197f_rtk_is_r76())
 		schedule_delayed_work(&priv->rd05_reseed_work, msecs_to_jiffies(3000));
 
 	return 0;
@@ -9085,6 +9140,19 @@ static int rtl8197f_rtk_rd05_reseed_cmd(struct rtl8197f_rtknet_priv *priv,
 	if (!rtl8197f_rtk_p0_external_switch_board())
 		return -EOPNOTSUPP;
 
+	/* R76 MAC synchronization updates only ingress tables. Never rewind
+	 * live DMA rings or replay the private RD05 sideband sequence here.
+	 */
+	if (rtl8197f_rtk_is_r76()) {
+		if (cmd != RTL_RTK_RD05_PRIV_RESEED)
+			return -EOPNOTSUPP;
+		if (!rtl8197f_rtk_rd05_wait_swcore_ready(priv))
+			return -ETIMEDOUT;
+		rtl8197f_rtk_rd05_seed_l2cpu(priv);
+		rtl8197f_rtk_rd05_seed_pipeline(priv);
+		return 0;
+	}
+
 	if (cmd == RTL_RTK_RD05_PRIV_VENDOR_SIDE &&
 	    of_machine_is_compatible("tenda,nova-mw5"))
 		return -EOPNOTSUPP;
@@ -9637,6 +9705,8 @@ static ssize_t rtl8197f_rtk_rd05_proc_write(struct file *file,
 		return -ENODEV;
 	if (!capable(CAP_NET_ADMIN))
 		return -EPERM;
+	if (rtl8197f_rtk_is_r76())
+		return -EOPNOTSUPP;
 
 	if (len >= sizeof(buf))
 		return -EINVAL;
@@ -9845,6 +9915,8 @@ static int rtl8197f_rtk_do_ioctl(struct net_device *ndev, struct ifreq *ifr,
 
 	if (!capable(CAP_NET_ADMIN))
 		return -EPERM;
+	if (rtl8197f_rtk_is_r76())
+		return -EOPNOTSUPP;
 
 	return rtl8197f_rtk_rd05_reseed_cmd(priv, "private-ioctl", cmd);
 }
@@ -10253,6 +10325,31 @@ static int rtl8197f_rtk_probe(struct platform_device *pdev)
 		priv->accel_hw_l34_safe = false; /* Realtek DSA tag offset is not RTL865x-L34-proven */
 	}
 
+	if (rtl8197f_rtk_is_r76()) {
+		priv->rx_poll_fallback = true;
+		priv->sdk_crc_lengths = true;
+		priv->sdk_trxrdy = true;
+		priv->sdk_cpuicr1_init = true;
+		priv->sdk_swcore_init = true;
+		priv->rd05_sdk_newdesc_rx = true;
+		priv->p0_cpu_tag_passthrough = true;
+		priv->legacy_rd05_pipeline = true;
+		priv->tx_port_mask = BIT(0);
+		priv->tx_dp_ext = 0;
+		priv->tx_extspa = 0;
+		priv->tx_hwlookup = false;
+		priv->tx_bridge = false;
+		priv->hw_napt = false;
+		priv->hw_csum = false;
+		priv->hw_rx_csum = false;
+		priv->hw_sg = false;
+		priv->hw_tso = false;
+		priv->hw_qos = false;
+		priv->accel_sw = false;
+		priv->accel_hw = false;
+		priv->accel_hw_l34_safe = false;
+	}
+
 	if (priv->is_iball) {
 		/* Bring-up defaults stay fail-closed. Each dataplane accelerator is an
 		 * explicit module opt-in. HW-NAPT additionally requires a flowtable
@@ -10473,8 +10570,9 @@ static int rtl8197f_rtk_probe(struct platform_device *pdev)
 		 ndev->gro_flush_timeout, ndev->napi_defer_hard_irqs);
 
 	if (rtl8197f_rtk_p0_external_switch_board() || priv->is_iball) {
-		priv->rd05_proc = proc_create_data(priv->is_iball ? "rtl8197f-rtknet" : "rd05-rtknet",
-						   0600, NULL,
+		priv->rd05_proc = proc_create_data(rtl8197f_rtk_is_r76() ? "cudy-r76-rtknet" :
+			priv->is_iball ? "rtl8197f-rtknet" : "rd05-rtknet",
+						   rtl8197f_rtk_is_r76() ? 0400 : 0600, NULL,
 						   &rtl8197f_rtk_rd05_proc_ops, ndev);
 		if (!priv->rd05_proc)
 			dev_warn(&pdev->dev, "%s procfs trigger /proc/rd05-rtknet not available\n",

@@ -32,9 +32,10 @@ install:
             self.assertEqual(profile['ram_bytes'], 128*1024*1024)
             self.assertEqual([(p['label'], p['port']) for p in profile['switch']['ports']],
                              [('lan1', 3), ('lan2', 0), ('lan3', 1), ('wan', 2)])
-            # Unknown CPU wiring must never be represented as a working switch.
-            self.assertIsNone(profile['switch']['physical_cpu_port'])
-            self.assertFalse(profile['switch']['enabled_in_openwrt'])
+            # OEM wiring is measured; OpenWrt traffic still needs a hardware test.
+            self.assertEqual(profile['switch']['physical_cpu_port'], 7)
+            self.assertTrue(profile['switch']['enabled_in_openwrt'])
+            self.assertFalse(profile['switch']['openwrt_traffic_validated'])
             self.assertFalse(profile['wifi']['5g']['linux66_driver_complete'])
 
         board_script = (ROOT/'target/linux/realtek/base-files/etc/board.d/02_network').read_text()
@@ -81,7 +82,18 @@ ucidef_set_interfaces_lan_wan() { printf 'LAN=%s\nWAN=%s\n' "$1" "$2"; }
                         self.assertIn('realtek,rx-ring-size = <0x384>;', eth)
                         self.assertIn('realtek,tx-ring-size = <0x300>;', eth)
                         self.assertIn('realtek,descriptor-dwords = <0x08>;', eth)
-                        self.assertIn('status = "disabled";', eth)
+                        self.assertIn('status = "okay";', eth)
+                        switch = tree.split('\n\tswitch {', 1)[1]
+                        for port, label in ((0, 'lan2'), (1, 'lan3'), (2, 'wan'), (3, 'lan1')):
+                            block = switch.split(f'port@{port} {{', 1)[1].split('};', 1)[0]
+                            self.assertIn(f'label = "{label}";', block)
+                        cpu = switch.split('port@7 {', 1)[1].split('fixed-link', 1)[0]
+                        self.assertIn('tx-internal-delay-ps = <0x7d0>;', cpu)
+                        self.assertIn('rx-internal-delay-ps = <0x00>;', cpu)
+                        self.assertNotIn('cpu-tag-4bytes-proto9', tree)
+                        self.assertRegex(switch, r'mdc-gpios = <0x[0-9a-f]+ 0x38 0x00>;')
+                        self.assertRegex(switch, r'mdio-gpios = <0x[0-9a-f]+ 0x37 0x00>;')
+                        self.assertRegex(switch, r'reset-gpios = <0x[0-9a-f]+ 0x3a 0x01>;')
 
 
 if __name__ == '__main__':

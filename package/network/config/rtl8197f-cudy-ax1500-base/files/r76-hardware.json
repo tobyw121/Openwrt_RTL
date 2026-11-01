@@ -12,41 +12,93 @@
     "chip": "RTL8367D",
     "oem_api": "1.4",
     "ports": [
-      {"jack": "LAN1", "port": 3, "label": "lan1", "oem_pvid": 1},
-      {"jack": "LAN2", "port": 0, "label": "lan2", "oem_pvid": 1},
-      {"jack": "LAN3", "port": 1, "label": "lan3", "oem_pvid": 1},
-      {"jack": "WAN", "port": 2, "label": "wan", "oem_pvid": 2}
+      {
+        "jack": "LAN1",
+        "port": 3,
+        "label": "lan1",
+        "oem_pvid": 1
+      },
+      {
+        "jack": "LAN2",
+        "port": 0,
+        "label": "lan2",
+        "oem_pvid": 1
+      },
+      {
+        "jack": "LAN3",
+        "port": 1,
+        "label": "lan3",
+        "oem_pvid": 1
+      },
+      {
+        "jack": "WAN",
+        "port": 2,
+        "label": "wan",
+        "oem_pvid": 2
+      }
     ],
     "unassigned_port": 4,
-    "smi_gpio": null,
-    "reset_gpio": null,
-    "physical_cpu_port": null,
-    "dsa_tagger": null,
-    "enabled_in_openwrt": false
+    "smi_gpio": {
+      "mdc": 56,
+      "mdio": 55
+    },
+    "reset_gpio": 58,
+    "physical_cpu_port": 7,
+    "dsa_tagger": "rtl8_4",
+    "enabled_in_openwrt": true,
+    "openwrt_traffic_validated": false,
+    "oem_cpu_tag_bytes": 4,
+    "linux_cpu_tag_bytes": 8,
+    "ext_interface": 1
   },
   "ethernet": {
     "rx_ring0_descriptors": 900,
     "tx_ring0_descriptors": 768,
     "descriptor_stride_bytes": 32,
     "additional_rings_enabled": false,
-    "oem_soc_rgmii_reference": {"tx_delay": 0, "rx_delay": 5, "vg_rx_delay": 6},
-    "rgmii_runtime_configuration_resolved": false
+    "oem_soc_rgmii_reference": {
+      "tx_delay": 1,
+      "rx_delay": 0,
+      "rgtxc": 0
+    },
+    "rgmii_runtime_configuration_resolved": true,
+    "switch_rgmii": {
+      "tx_delay": 1,
+      "rx_delay": 0,
+      "txc_tap": 4,
+      "ssc": true
+    },
+    "diagnostic_proc": "/proc/cudy-r76-rtknet"
   },
   "wifi": {
     "2g": {
-      "chip": "RTL8192FE", "oem_driver": "rtl8192cd",
-      "oem_driver_version": "3.8.0", "oem_interface": "wlan1",
-      "oem_channel": 6, "oem_width_mhz": 40, "oem_txpower_dbm": 20,
-      "factory_layout_resolved": false, "enabled_in_openwrt": false
+      "chip": "RTL8192FE",
+      "oem_driver": "rtl8192cd",
+      "oem_driver_version": "3.8.0",
+      "oem_interface": "wlan1",
+      "oem_channel": 6,
+      "oem_width_mhz": 40,
+      "oem_txpower_dbm": 20,
+      "factory_layout_resolved": false,
+      "enabled_in_openwrt": false
     },
     "5g": {
-      "chip": "RTL8832BR", "oem_driver": "rtk_wifi6",
-      "oem_driver_version": "2.0.0.1", "oem_interface": "wlan0",
-      "bus": "pci", "pci_id": "10ec:b832", "pci_address": "0000:00:00.0",
-      "streams": 2, "rfe": 50, "oem_firmware_version": "V0.27.88.0",
+      "chip": "RTL8832BR",
+      "oem_driver": "rtk_wifi6",
+      "oem_driver_version": "2.0.0.1",
+      "oem_interface": "wlan0",
+      "bus": "pci",
+      "pci_id": "10ec:b832",
+      "pci_address": "0000:00:00.0",
+      "streams": 2,
+      "rfe": 50,
+      "oem_firmware_version": "V0.27.88.0",
       "oem_rf_directory": "/etc/conf/rtl8832bre/RFE50",
-      "oem_channel": 36, "oem_width_mhz": 80, "oem_txpower_dbm": 12,
-      "linux66_driver_complete": false, "enabled_in_openwrt": false
+      "oem_channel": 36,
+      "oem_width_mhz": 80,
+      "oem_txpower_dbm": 12,
+      "linux66_driver_complete": false,
+      "enabled_in_openwrt": false
     }
   },
   "policy": {
@@ -55,5 +107,35 @@
     "routed_traffic_uses_openwrt_firewall": true,
     "oem_fast_nat_enabled": false,
     "oem_hw_nat_enabled": false
+  },
+  "runtime_evidence": {
+    "firmware": "OEM 2.3.0, Linux 4.4.176",
+    "date": "2026-11-01",
+    "lan1_switch_port": 3,
+    "link_mbps": 1000,
+    "oem_ping_received": 10,
+    "oem_ping_transmitted": 10,
+    "soc": {
+      "0xbb804104": "0x16972039",
+      "0xbb80414c": "0x06037d50",
+      "0xbb804000": "0x804a1485",
+      "0xbb804058": "0x00000001",
+      "0xb8000850": "0xdbffff7f"
+    },
+    "switch": {
+      "0x1307": "0x0008",
+      "0x13f9": "0x0124",
+      "0x1219": "0x0080",
+      "0x121a": "0x02b9",
+      "0x1d52": "0x2473",
+      "0x1d53": "0x0001",
+      "0x1d54": "0x05fa",
+      "0x1d55": "0x000f",
+      "0x1d70": "0x2000",
+      "0x1d78": "0x001f",
+      "0x12c7": "0x0076",
+      "0x12cf": "0xffff",
+      "0x13f7": "0x0000"
+    }
   }
 }

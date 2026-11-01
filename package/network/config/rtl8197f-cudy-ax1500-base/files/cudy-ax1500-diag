@@ -9,7 +9,7 @@ case "$board" in
 	*) echo 'Only Cudy AX1500 bring-up profiles are supported' >&2; exit 1 ;;
 esac
 status=experimental-uart-ram-only
-[ "$board" = cudy,ax1500-r76 ] && status=experimental-fullflash-128m-readonly-spi-pci
+[ "$board" = cudy,ax1500-r76 ] && status=experimental-native-dsa-bringup
 printf 'board=%s gpl_profile=%s status=%s\n' "$board" "$profile" "$status"
 if [ "$board" = cudy,ax1500-r76 ]; then
 	echo 'R76 DT enables 128 MiB DDR2 from OEM evidence; MemTotal excludes kernel reservations.'
@@ -29,6 +29,13 @@ cat /etc/board.json 2>/dev/null || true
 printf '\nkernel diagnostics\n'
 dmesg | tail -100
 if [ "$board" = cudy,ax1500-r76 ]; then
+	printf '\nR76 Ethernet datapath\n'
+	cat /proc/cudy-r76-rtknet 2>/dev/null || true
+	printf '\nR76 switch and port counters\n'
+	for port in lan1 lan2 lan3 wan; do
+		[ -d "/sys/class/net/$port" ] || continue
+		ethtool "$port" 2>/dev/null || true
+	done
 	printf '\nPCI inventory (sysfs only)\n'
 	for dev in /sys/bus/pci/devices/*; do
 		[ -d "$dev" ] || continue

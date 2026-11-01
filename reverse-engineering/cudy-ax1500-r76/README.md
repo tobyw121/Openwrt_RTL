@@ -1,6 +1,9 @@
 # Cudy AX1500 / WR1500 R76: SPI-Analyse und Geräteprofil
 
-Aktueller zusammengeführter Stand einschließlich Geräteboot und Benutzer-PDF:
+Aktueller Treiberstand mit den OEM-Messungen vom 01.11.2026:
+[Native R76-Ethernet-/DSA-Anbindung und Build-/Testbefehle](NATIVE-DSA.md).
+
+Zusammengeführter historischer Stand einschließlich Geräteboot und Benutzer-PDF:
 [Hardware, WLAN, Switch und offene Anbindungen – 31.10.2026](STATUS-2026-10-31.md).
 Die folgenden Abschnitte enthalten auch historische Prüfstände.
 
@@ -31,7 +34,8 @@ benötigt die vorhandene Vorlage `fullflash-templates/Cudy_AX1500.bin`;
 Der Konfigurationshelfer `rtl8197f-cudy-defaults.py` ist für diese neue
 Defconfig nicht zusätzlich erforderlich.
 
-Die Defconfig aktiviert keine noch fehlende WR1500-Switch-/WLAN-Anbindung.
+Die Defconfig aktiviert jetzt den nativen WR1500-Ethernet-/DSA-Teststand.
+Die WLAN-Anbindung ist weiterhin offen.
 Nach einem Imagewechsel auf dem Router über UART (38400 Baud) einzeln:
 
 ```sh
@@ -48,9 +52,9 @@ cudy-ax1500-diag
 
 Nach Übernahme der PDF als Hardwaregrundlage: R76 nutzt jetzt 128 MiB RAM,
 getrennte LAN-/WAN-Defaults und ein installiertes Hardwareprofil mit der
-Buchsenbelegung. Das Ethernet-DT hinterlegt die OEM-Ringgeometrie, bleibt
-wegen der offenen CPU-/SMI-Anbindung jedoch deaktiviert. Das ist noch
-keine Freigabe eines funktionierenden LAN-/WLAN-Treibers.
+Buchsenbelegung. Nach den ergänzenden OEM-Laufzeitmessungen aktiviert das
+Ethernet-DT jetzt GPIO-SMI, CPU-Port7/EXT1 und die OEM-Ringgeometrie. Die
+neue Linux-DSA-Anbindung benötigt noch den ersten Hardwaretest.
 
 ## Basispakete automatisch auswählen
 
