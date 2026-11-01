@@ -69,6 +69,16 @@ properties:
       Number of transmit descriptors. Tenda Nova MW5 OEM/V212 uses 768
       descriptors on CPU TX ring 0.
 
+  realtek,cpu-dma-burst-bytes:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    enum: [32, 64, 128]
+    default: 128
+    description: |
+      RTL865x CPU DMA bus-burst setting. Optional, diagnostic and used only
+      for cudy,ax1500-r76. Other boards retain the previously hard-coded
+      128-byte burst. A smaller burst is an unverified experiment for an
+      observed 128/129-byte CPU-tagged frame boundary, not a change to MTU.
+
   realtek,rx-buffer-size:
     $ref: /schemas/types.yaml#/definitions/uint32
     minimum: 1536

@@ -4583,6 +4583,38 @@ static void rtl8197f_rtk_hw_stop(struct rtl8197f_rtknet_priv *priv)
 static void rtl8197f_rtk_hw_start(struct rtl8197f_rtknet_priv *priv)
 {
 	u32 val;
+	u32 burst_bytes = 128;
+	u32 burst_bits = RTL_RTK_CPUICR_BUSBURST_128;
+
+	/* WR1500 R76 only: controlled A/B diagnosis of corrupted Ethernet
+	 * headers when the complete CPU-tagged wire frame exceeds 128 bytes.
+	 * Keep the existing 128-byte default on RD05/MW5/other boards.
+	 * This adjusts DMA bus bursts, NOT the maximum Ethernet frame length.
+	 */
+	if (rtl8197f_rtk_is_r76()) {
+		if (!of_property_read_u32(priv->dev->of_node,
+					  "realtek,cpu-dma-burst-bytes", &burst_bytes)) {
+			switch (burst_bytes) {
+			case 32:
+				burst_bits = RTL_RTK_CPUICR_BUSBURST_32;
+				break;
+			case 64:
+				burst_bits = RTL_RTK_CPUICR_BUSBURST_64;
+				break;
+			case 128:
+				break;
+			default:
+				dev_warn(priv->dev,
+					 "R76 DMA burst %u unsupported; using 128 bytes\n",
+					 burst_bytes);
+				burst_bytes = 128;
+				break;
+			}
+		}
+		dev_info(priv->dev,
+			 "R76 diagnostic CPU-DMA burst=%u bytes (A/B test, NOT a validated fix)\n",
+			 burst_bytes);
+	}
 
 	rtl8197f_rtk_hw_stop(priv);
 	rtl8197f_rtk_deassert_trxrdy(priv);
@@ -4651,7 +4683,7 @@ static void rtl8197f_rtk_hw_start(struct rtl8197f_rtknet_priv *priv)
 	rtl8197f_rtk_write(priv, RTL_RTK_CPUIISR, 0xffffffff);
 	rtl8197f_rtk_enable_irq(priv);
 
-	val = RTL_RTK_CPUICR_BUSBURST_128 | RTL_RTK_CPUICR_MBUF_2048 |
+	val = burst_bits | RTL_RTK_CPUICR_MBUF_2048 |
 	      RTL_RTK_CPUICR_TXCMD | RTL_RTK_CPUICR_RXCMD;
 	if (!priv->sdk_crc_lengths)
 		val |= RTL_RTK_CPUICR_EXCLUDE_CRC;

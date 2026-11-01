@@ -13,6 +13,7 @@
 #include <linux/io.h>
 #include <linux/notifier.h>
 #include <linux/of.h>
+#include <linux/of_address.h>
 #include <linux/pm.h>
 #include <linux/printk.h>
 #include <linux/reboot.h>
@@ -184,43 +185,40 @@ static int __init rtl8197f_oem_switch_preinit(void)
 {
 	bool rd05 = of_machine_is_compatible("xiaomi,r4-rd05");
 	bool mw5 = of_machine_is_compatible("tenda,nova-mw5");
+	struct device_node *np;
 	void __iomem *gpio;
 	int ret;
 
-	if (!rd05 && !mw5)
+	/* Match the SoC register interface, never a board allowlist. */
+	np = of_find_compatible_node(NULL, NULL, "realtek,rtl8197f-syscon");
+	if (!np)
 		return 0;
+	rtl8197f_sys_base = of_iomap(np, 0);
+	of_node_put(np);
+	if (!rtl8197f_sys_base)
+		return -ENOMEM;
 
-	rtl8197f_sys_base = ioremap(RTL8197F_SYS_BASE, RTL8197F_SYS_SIZE);
-	if (!rtl8197f_sys_base) {
-		pr_warn("rtl8197f-switch-preinit: failed to map system registers\n");
-		return 0;
-	}
-
-	/* Stop the bootloader watchdog before the MW5 2 x 1 s reset delays. */
-	rtl8197f_stop_watchdog();
-
-	gpio = ioremap(RTL8197F_GPIO_BASE, RTL8197F_GPIO_SIZE);
-	if (!gpio) {
-		pr_warn("rtl8197f-switch-preinit: failed to map GPIO registers\n");
-		return 0;
-	}
-
-	if (rd05)
-		rtl8197f_rd05_switch_gpio_init(gpio);
-	else
-		rtl8197f_mw5_switch_gpio_init(gpio);
-
-	iounmap(gpio);
-
-	/* Repeat the safe kick-then-stop sequence after switch reset/pinmux. */
-	rtl8197f_stop_watchdog();
+	/* Register restart independently of external-switch GPIO setup. */
 	ret = register_restart_handler(&rtl8197f_restart_nb);
 	if (ret)
 		pr_warn("rtl8197f-restart: handler registration failed: %d\n", ret);
 	else
-		pr_info("rtl8197f-restart: watchdog/software reset handler registered\n");
-
+		pr_info("rtl8197f-restart: SoC watchdog/software reset handler registered\n");
 	pm_power_off = rtl8197f_poweroff;
+
+	/* Board-specific switch preparation must never run on other boards. */
+	if (!rd05 && !mw5)
+		return 0;
+	rtl8197f_stop_watchdog();
+	gpio = ioremap(RTL8197F_GPIO_BASE, RTL8197F_GPIO_SIZE);
+	if (!gpio)
+		return -ENOMEM;
+	if (rd05)
+		rtl8197f_rd05_switch_gpio_init(gpio);
+	else
+		rtl8197f_mw5_switch_gpio_init(gpio);
+	iounmap(gpio);
+	rtl8197f_stop_watchdog();
 	return 0;
 }
 postcore_initcall(rtl8197f_oem_switch_preinit);
