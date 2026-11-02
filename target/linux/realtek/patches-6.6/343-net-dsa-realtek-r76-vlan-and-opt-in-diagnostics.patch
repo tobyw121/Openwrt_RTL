@@ -1,0 +1,286 @@
+Subject: [PATCH] realtek: integrate R76 OEM VLAN split and opt-in PHY diagnostics
+
+Consolidates supplied343-351 after existing342. Keep WAN ingress checks
+enabled by default; diagnostic register reads require explicit opt-in.
+
+--- a/drivers/net/dsa/realtek/rtl8365mb.c
++++ b/drivers/net/dsa/realtek/rtl8365mb.c
+@@ -939,6 +939,13 @@
+ 	return 0;
+ }
+ 
++static bool r76_phy_diagnostics;
++module_param_named(r76_phy_diagnostics, r76_phy_diagnostics, bool, 0644);
++MODULE_PARM_DESC(r76_phy_diagnostics, "R76 only: extra PHY2 OCP diagnostics");
++static bool r76_wan_ingress_bypass;
++module_param_named(r76_wan_ingress_bypass, r76_wan_ingress_bypass, bool, 0444);
++MODULE_PARM_DESC(r76_wan_ingress_bypass, "R76 test only: bypass WAN VLAN ingress check at setup");
++
+ static int rtl8365mb_phy_ocp_read(struct realtek_priv *priv, int phy,
+ 				  u32 ocp_addr, u16 *data)
+ {
+@@ -954,6 +961,28 @@
+ 	ret = rtl8365mb_phy_ocp_prepare(priv, phy, ocp_addr);
+ 	if (ret)
+ 		goto out;
++
++	/* R76 A/B351: verify PHY2 address BEFORE the indirect command.
++	 * Do not access unrelated registers between command and BUSY polling.
++	 * Unlike patch 350's post-read snapshot, this value directly tests
++	 * whether programming the address register actually took effect.
++	 */
++	if (READ_ONCE(r76_phy_diagnostics) && phy == 2 &&
++	    (ocp_addr == RTL8365MB_PHY_OCP_ADDR_PHYREG_BASE ||
++	     ocp_addr == RTL8365MB_PHY_OCP_ADDR_PHYREG_BASE + 2) &&
++	    of_machine_is_compatible("cudy,ax1500-r76")) {
++		u32 addr_pre = 0;
++		u32 expected = (ocp_addr == RTL8365MB_PHY_OCP_ADDR_PHYREG_BASE) ?
++				0x2040 : 0x2041;
++		int addr_err;
++
++		addr_err = regmap_read(priv->map_nolock,
++				RTL8365MB_INDIRECT_ACCESS_ADDRESS_REG, &addr_pre);
++		dev_info_ratelimited(priv->dev,
++			"R76 OCP A/B351: phy=2 ocp=%04x addr_pre=%04x expected=%04x err=%d\n",
++			ocp_addr, addr_pre, expected, addr_err);
++	}
++
+ 
+ 	/* Execute read operation */
+ 	val = FIELD_PREP(RTL8365MB_INDIRECT_ACCESS_CTRL_CMD_MASK,
+@@ -977,6 +1006,38 @@
+ 
+ 	*data = val & 0xFFFF;
+ 
++	/* R76 A/B350: capture the complete *same-operation* SMI/OCP state
++	 * while map_lock is still held. PHY2 only; NO control writes,
++	 * retries, carrier override, or changes to the DSA data path.
++	 * This distinguishes invalid address/command acceptance from a
++	 * returned zero in READ_DATA. The extra SMI reads are diagnostic.
++	 */
++	if (READ_ONCE(r76_phy_diagnostics) && phy == 2 &&
++	    (ocp_addr == RTL8365MB_PHY_OCP_ADDR_PHYREG_BASE ||
++	     ocp_addr == RTL8365MB_PHY_OCP_ADDR_PHYREG_BASE + 2) &&
++	    of_machine_is_compatible("cudy,ax1500-r76")) {
++		u32 prefix = 0, addr = 0, cmd = 0, busy = 0, rdata = 0;
++		u32 port = 0;
++		int ep, ea, ec, eb, er, eh;
++
++		ep = regmap_read(priv->map_nolock,
++				 RTL8365MB_GPHY_OCP_MSB_0_REG, &prefix);
++		ea = regmap_read(priv->map_nolock,
++				 RTL8365MB_INDIRECT_ACCESS_ADDRESS_REG, &addr);
++		ec = regmap_read(priv->map_nolock,
++				 RTL8365MB_INDIRECT_ACCESS_CTRL_REG, &cmd);
++		eb = regmap_read(priv->map_nolock,
++				 RTL8365MB_INDIRECT_ACCESS_STATUS_REG, &busy);
++		er = regmap_read(priv->map_nolock,
++				 RTL8365MB_INDIRECT_ACCESS_READ_DATA_REG, &rdata);
++		eh = regmap_read(priv->map_nolock, 0x12d2, &port);
++		dev_info_ratelimited(priv->dev,
++			"R76 OCP A/B350: phy=2 ocp=%04x result=%04x prefix=%04x addr=%04x ctrl=%04x busy=%04x data=%04x p2=%04x errs=%d/%d/%d/%d/%d/%d\n",
++			ocp_addr, *data, prefix, addr, cmd, busy, rdata,
++			port, ep, ea, ec, eb, er, eh);
++	}
++
++
+ out:
+ 	mutex_unlock(&priv->map_lock);
+ 
+@@ -1049,6 +1110,22 @@
+ 
+ 	dev_dbg(priv->dev, "read PHY%d register 0x%02x @ %04x, val <- %04x\n",
+ 		phy, regnum, ocp_addr, val);
++
++
++	/* R76 A/B 349: compare live copper PHY2 BMCR/BMSR values with the
++	 * independent RTL8367D P2 hardware status. Read-only, R76-only.
++	 * No carrier override or modification to the SMI/DSA datapath.
++	 */
++	if (READ_ONCE(r76_phy_diagnostics) && phy == 2 && (regnum == 0 || regnum == 1) &&
++	    of_machine_is_compatible("cudy,ax1500-r76")) {
++		unsigned int hw_status = 0;
++		int hw_err;
++
++		hw_err = regmap_read(priv->map, 0x12d2, &hw_status);
++		dev_info_ratelimited(priv->dev,
++			"R76 PHY2 A/B349: reg=%u ocp=0x%04x mdio=0x%04x hw_p2=0x%04x hw_err=%d\n",
++			regnum, ocp_addr, val, hw_status, hw_err);
++	}
+ 
+ 	return val;
+ }
+@@ -4315,12 +4392,83 @@
+ }
+ 
+ /* R76 has four UTP jacks: LAN1=P3, LAN2=P0, LAN3=P1, WAN=P2.
+- * Only CPU7 can join separate user ports before Linux bridge configuration.
+- * The common internal VID1 is a conduit domain, not a LAN/WAN bridge.
++ * Keep WAN port 2 (OEM VID2) physically separate from LAN ports
++ * 0, 1, 3 (OEM VID1). CPU port 7 belongs to both switch domains and receives
++ * the Realtek DSA CPU tag. No WAN jack is a member of LAN VID1.
+  */
++/* Table access commands are edge-triggered. Unlike regmap_update_bits(),
++ * an unconditional regmap_write() will issue the command for each VID even
++ * when the command field did not change since the preceding operation.
++ * RTL8367D table op: CVLAN_WRITE=0xb, CVLAN_READ=0x3, BUSY=0x0502[13].
++ */
++static int rtl8367d_r76_table_cmd(struct realtek_priv *priv, u16 vid, u16 cmd)
++{
++	unsigned int value, ctrl;
++	int ret;
++
++	ret = regmap_read_poll_timeout(priv->map, 0x0502, value,
++					!(value & BIT(13)), 50, 10000);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8367D_TABLE_ACCESS_ADDR_REG, vid);
++	if (ret)
++		return ret;
++	ret = regmap_read(priv->map, RTL8367D_TABLE_ACCESS_CTRL_REG, &ctrl);
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8367D_TABLE_ACCESS_CTRL_REG,
++			   (ctrl & ~RTL8367D_TABLE_ACCESS_MASK) | cmd);
++	if (ret)
++		return ret;
++	return regmap_read_poll_timeout(priv->map, 0x0502, value,
++					!(value & BIT(13)), 50, 10000);
++}
++
++static int rtl8367d_r76_write_vlan(struct realtek_priv *priv, u16 vid, u32 members)
++{
++	int ret;
++
++	/* RTL8367D: low byte member mask, high byte untag mask. */
++	ret = regmap_write(priv->map, RTL8367D_TABLE_WRITE_DATA0_REG,
++			   members | (members << 8));
++	if (ret)
++		return ret;
++	ret = regmap_write(priv->map, RTL8367D_TABLE_WRITE_DATA1_REG, 0);
++	if (ret)
++		return ret;
++	return rtl8367d_r76_table_cmd(priv, vid,
++				      RTL8367D_TABLE_ACCESS_CVLAN_WRITE);
++}
++
++/* Readback is diagnostic only: it does not modify CVLAN table entries. */
++static void rtl8367d_r76_dump_vlan(struct realtek_priv *priv, u16 vid)
++{
++	unsigned int word0, word1;
++	int ret;
++
++	ret = rtl8367d_r76_table_cmd(priv, vid, 0x0003);
++	if (ret)
++		goto fail;
++	ret = regmap_read(priv->map, 0x0520, &word0);
++	if (ret)
++		goto fail;
++	ret = regmap_read(priv->map, 0x0521, &word1);
++	if (ret)
++		goto fail;
++	dev_info(priv->dev,
++		 "R76 CVLAN readback: VID%u raw=%04x/%04x members=0x%02x untag=0x%02x fid=%u\n",
++		 vid, word0, word1, word0 & 0xff, (word0 >> 8) & 0xff,
++		 word1 & 3);
++	return;
++fail:
++	dev_warn(priv->dev, "R76 CVLAN readback: VID%u failed: %d\n", vid, ret);
++}
++
+ static int rtl8367d_r76_setup_cpu_path(struct realtek_priv *priv)
+ {
+-	const u32 users = BIT(0) | BIT(1) | BIT(2) | BIT(3);
++	const u32 lan = BIT(0) | BIT(1) | BIT(3);
++	const u32 wan = BIT(2);
++	const u32 users = lan | wan;
+ 	const u32 cpu = BIT(7), members = users | cpu;
+ 	u32 value;
+ 	int port, ret;
+@@ -4328,25 +4476,39 @@
+ 	if (!rtl8367d_r76_board(priv))
+ 		return 0;
+ 
+-	ret = regmap_write(priv->map, RTL8367D_TABLE_WRITE_DATA0_REG,
+-			   members | (members << 8));
+-	if (ret)
+-		return ret;
+-	ret = regmap_write(priv->map, RTL8367D_TABLE_WRITE_DATA1_REG, 0);
+-	if (ret)
+-		return ret;
+-	ret = regmap_write(priv->map, RTL8367D_TABLE_ACCESS_ADDR_REG, 1);
+-	if (ret)
+-		return ret;
+-	ret = regmap_update_bits(priv->map, RTL8367D_TABLE_ACCESS_CTRL_REG,
+-				 RTL8367D_TABLE_ACCESS_MASK,
+-				 RTL8367D_TABLE_ACCESS_CVLAN_WRITE);
+-	if (ret)
+-		return ret;
+-	ret = regmap_update_bits(priv->map, RTL8367D_VLAN_CTRL_REG, BIT(0), 0);
+-	if (ret)
+-		return ret;
+-	ret = regmap_write(priv->map, RTL8367D_VLAN_INGRESS_REG, 0);
++	/* OEM WR1500 uses VID1 for LAN and VID2 for WAN.
++	 * SoC P0/RGMII host-link ingress is also classified as VID1.
++	 * Keep these separate with shared DSA CPU7, never all-user VID1.
++	 */
++	ret = rtl8367d_r76_write_vlan(priv, 1, lan | cpu);
++	if (ret)
++		return ret;
++	ret = rtl8367d_r76_write_vlan(priv, 2, wan | cpu);
++	if (ret)
++		return ret;
++	/* Retire experimental VID8/VID9 so no stale alternate domain
++	 * remains reachable if boot firmware initially populated them.
++	 */
++	ret = rtl8367d_r76_write_vlan(priv, 8, 0);
++	if (ret)
++		return ret;
++	ret = rtl8367d_r76_write_vlan(priv, 9, 0);
++	if (ret)
++		return ret;
++	/* R76 WAN RX A/B: ingress-filtering on P2 currently counts incoming
++	 * broadcasts as dot1dTpPortInDiscards before they reach CPU7. Disable
++	 * this additional check on P2 and CPU7 only. Keep filtering on LAN
++	 * P0/P1/P3, the separate VID1/VID2 entries and port isolation intact.
++	 * Do not deploy on untrusted WAN before confirming L2 isolation.
++	 */
++	ret = regmap_write(priv->map, RTL8367D_VLAN_INGRESS_REG,
++		READ_ONCE(r76_wan_ingress_bypass) ? lan : users);
++	if (ret)
++		return ret;
++	dev_info(priv->dev,
++		 "R76 WAN ingress: filter=0x%x (CPU7 exempt)\n",
++		 READ_ONCE(r76_wan_ingress_bypass) ? lan : users);
++	ret = regmap_update_bits(priv->map, RTL8367D_VLAN_CTRL_REG, BIT(0), BIT(0));
+ 	if (ret)
+ 		return ret;
+ 	ret = regmap_write(priv->map, RTL8367D_VLAN_ACCEPT_CTRL0_REG, 0);
+@@ -4369,8 +4531,11 @@
+ 		if ((value & RTL8365MB_PORT_ISOLATION_MASK) != mask)
+ 			return -EIO;
+ 		if (members & BIT(port)) {
++			/* WAN P2=VID2; LAN and CPU7=VID1. */
++			u16 vid = (port == 2) ? 2 : 1;
++
+ 			ret = regmap_update_bits(priv->map, RTL8367D_VLAN_PVID_CTRL_REG(port),
+-						 RTL8367D_VLAN_PVID_CTRL_MASK, 1);
++						 RTL8367D_VLAN_PVID_CTRL_MASK, vid);
+ 			if (ret)
+ 				return ret;
+ 		}
+@@ -4392,8 +4557,13 @@
+ 		return ret;
+ 	if ((value & RTL8365MB_CPU_PORT_MASK_MASK) != cpu)
+ 		return -EIO;
++	/* Verify the ACTUAL switch CVLAN table after all R76 writes. */
++	rtl8367d_r76_dump_vlan(priv, 1);
++	rtl8367d_r76_dump_vlan(priv, 2);
++	rtl8367d_r76_dump_vlan(priv, 8);
++	rtl8367d_r76_dump_vlan(priv, 9);
+ 	dev_info(priv->dev,
+-		 "R76 DSA: CPU7/EXT1 rtl8_4, isolated users=0x%x VID1; RGMII TX1/RX0 tap4 SSC on\n",
++		 "R76 DSA OEM-PVID A/B: CPU7/EXT1 rtl8_4, LAN P0/P1/P3 VID1, WAN P2 VID2, isolated users=0x%x\n",
+ 		 users);
+ 	return 0;
+ }
