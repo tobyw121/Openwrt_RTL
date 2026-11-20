@@ -15,7 +15,7 @@ class R76VLAN(unittest.TestCase):
   names=sorted(set(re.findall(r'\bRTL[A-Z0-9_]+',funcs))-{'RTL8367D_VLAN_PVID_CTRL_REG','RTL8365MB_PORT_ISOLATION_REG'})
   defines='\n'.join('#define '+n+' '+str(i+1) for i,n in enumerate(names))
   # Masks are bitfields, not register addresses.
-  defines+='\n#undef RTL8367D_VLAN_PVID_CTRL_MASK\n#define RTL8367D_VLAN_PVID_CTRL_MASK 0xfff\n#undef RTL8367D_TABLE_ACCESS_MASK\n#define RTL8367D_TABLE_ACCESS_MASK 0xf\n#undef RTL8365MB_PORT_ISOLATION_MASK\n#define RTL8365MB_PORT_ISOLATION_MASK 0xff\n#undef RTL8365MB_CPU_PORT_MASK_MASK\n#define RTL8365MB_CPU_PORT_MASK_MASK 0xff\n'
+  defines+='\n#undef RTL8367D_TABLE_ACCESS_CVLAN_WRITE\n#define RTL8367D_TABLE_ACCESS_CVLAN_WRITE 11\n#undef RTL8367D_VLAN_PVID_CTRL_MASK\n#define RTL8367D_VLAN_PVID_CTRL_MASK 0xfff\n#undef RTL8367D_TABLE_ACCESS_MASK\n#define RTL8367D_TABLE_ACCESS_MASK 0xf\n#undef RTL8365MB_PORT_ISOLATION_MASK\n#define RTL8365MB_PORT_ISOLATION_MASK 0xff\n#undef RTL8365MB_CPU_PORT_MASK_MASK\n#define RTL8365MB_CPU_PORT_MASK_MASK 0xff\n'
   compile_run(r'''
 #include <stdint.h>
 #include <assert.h>
@@ -26,11 +26,18 @@ typedef uint32_t u32; typedef uint16_t u16;
 #define READ_ONCE(x) (x)
 #define dev_info(...) ((void)0)
 #define dev_warn(...) ((void)0)
+#define dev_err(...) ((void)0)
 #define regmap_read_poll_timeout(m,a,v,c,d,t) ((v)=0,(void)(c),0)
 struct realtek_priv { int *map; int *dev; };
 static bool r76_wan_ingress_bypass;
-static int regs[65536], calls, fail_at, commands, command_reg;
-static int regmap_write(int *m,int a,int v) { if(++calls==fail_at)return -EIO;regs[a]=v;if(a==command_reg)commands++;return 0; }
+static int regs[65536], calls, fail_at, commands, command_reg, address_reg, data0_reg, data1_reg, write_command;
+static unsigned int table[4096][2];
+static int regmap_write(int *m,int a,int v) { if(++calls==fail_at)return -EIO;regs[a]=v;if(a==command_reg) {
+ commands++;
+ unsigned int vid=regs[address_reg];
+ if((v&15)==write_command){table[vid][0]=regs[data0_reg];table[vid][1]=regs[data1_reg];}
+ if((v&15)==3){regs[0x520]=table[vid][0];regs[0x521]=table[vid][1];}
+}return 0; }
 static int regmap_read(int *m,int a,unsigned int *v) { if(++calls==fail_at)return -EIO;*v=regs[a];return 0; }
 static int regmap_update_bits(int *m,int a,int mask,int v) { return regmap_write(m,a,(regs[a]&~mask)|(v&mask)); }
 static bool rtl8367d_r76_board(struct realtek_priv *p) {return true;}
@@ -41,9 +48,12 @@ static int rtl8365mb_port_set_isolation(struct realtek_priv *p,int port,int mask
 int main(void) {
  struct realtek_priv p={0};
  command_reg=RTL8367D_TABLE_ACCESS_CTRL_REG;
+ address_reg=RTL8367D_TABLE_ACCESS_ADDR_REG;
+ data0_reg=RTL8367D_TABLE_WRITE_DATA0_REG;data1_reg=RTL8367D_TABLE_WRITE_DATA1_REG;
+ write_command=RTL8367D_TABLE_ACCESS_CVLAN_WRITE;
  assert(rtl8367d_r76_write_vlan(&p,1,139)==0);
  assert(rtl8367d_r76_write_vlan(&p,2,132)==0);
- assert(commands==2);
+ assert(commands==4);
  regs[RTL8365MB_CPU_PORT_MASK_REG]=128;
  assert(rtl8367d_r76_setup_cpu_path(&p)==0);
  assert(regs[RTL8367D_VLAN_INGRESS_REG]==15);

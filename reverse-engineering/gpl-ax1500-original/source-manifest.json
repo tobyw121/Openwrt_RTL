@@ -1,0 +1,24 @@
+{
+  "source_url": "https://drive.usercontent.google.com/download?id=1sqW7x8sLHnSitW9ZXxgsrVN3lprFLp45&export=download",
+  "archive_sha256": "2413dbd852e6f039d402f8ffda62e20b9f7b88a38dde0e7d86a527078ed66b93",
+  "archive_bytes": 146030155,
+  "archive_root": "GPL_for_AX1500_rtl8197/openwrt/21.02",
+  "files": [
+    {
+      "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_vlan.c",
+      "sha256": "ad803a3c9455bf8f2047013a916947b94a1e52f74d71be65e4c95260bb26298d"
+    },
+    {
+      "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/rtl8367d_reg.h",
+      "sha256": "2d1cbb61dfb8f771a536fabb24dac67cf874f0491ebb2e7d4dcd50fd16bdbfd2"
+    },
+    {
+      "path": "target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/rtl8367d_asicdrv.c",
+      "sha256": "e5942f04b83285a94b59dd5889deebd5846514e1f533d66a9a328e6b682baaca"
+    },
+    {
+      "path": "package/kernel/mac80211/patches/rtl/002-v5.13-rtlwifi-implement-set_tim-by-update-beacon-content.patch",
+      "sha256": "6d3c25b1f4135da9f9e079fd02128e89a79933d607998485a7ae19b7f7dd7d47"
+    }
+  ]
+}

@@ -110,7 +110,7 @@ enabled by default; diagnostic register reads require explicit opt-in.
  
  	return val;
  }
-@@ -4315,12 +4392,83 @@
+@@ -4315,12 +4392,112 @@
  }
  
  /* R76 has four UTP jacks: LAN1=P3, LAN2=P0, LAN3=P1, WAN=P2.
@@ -150,9 +150,16 @@ enabled by default; diagnostic register reads require explicit opt-in.
 +
 +static int rtl8367d_r76_write_vlan(struct realtek_priv *priv, u16 vid, u32 members)
 +{
++	unsigned int value, word0, word1;
 +	int ret;
 +
-+	/* RTL8367D: low byte member mask, high byte untag mask. */
++	if (vid > 4095 || (members & ~0xffU))
++		return -EINVAL;
++	/* Wait before staging data, not just before issuing the command. */
++	ret = regmap_read_poll_timeout(priv->map, 0x0502, value,
++					!(value & BIT(13)), 50, 10000);
++	if (ret)
++		return ret;
 +	ret = regmap_write(priv->map, RTL8367D_TABLE_WRITE_DATA0_REG,
 +			   members | (members << 8));
 +	if (ret)
@@ -160,8 +167,30 @@ enabled by default; diagnostic register reads require explicit opt-in.
 +	ret = regmap_write(priv->map, RTL8367D_TABLE_WRITE_DATA1_REG, 0);
 +	if (ret)
 +		return ret;
-+	return rtl8367d_r76_table_cmd(priv, vid,
-+				      RTL8367D_TABLE_ACCESS_CVLAN_WRITE);
++	ret = rtl8367d_r76_table_cmd(priv, vid,
++				   RTL8367D_TABLE_ACCESS_CVLAN_WRITE);
++	if (ret)
++		return ret;
++	/* GPL dal_rtl8367d_vlan.c: read the same VID through CVLAN_READ;
++	 * word0 holds membership/untag, word1 FID and IVL/SVL controls.
++	 * A successful SMI write alone does not prove the entry took effect.
++	 */
++	ret = rtl8367d_r76_table_cmd(priv, vid, 0x0003);
++	if (ret)
++		return ret;
++	ret = regmap_read(priv->map, 0x0520, &word0);
++	if (ret)
++		return ret;
++	ret = regmap_read(priv->map, 0x0521, &word1);
++	if (ret)
++		return ret;
++	if ((word0 & 0xffff) != (members | (members << 8)) ||
++	    (word1 & 0xf)) {
++		dev_err(priv->dev, "R76 VID%u verification failed: %04x/%04x expected mask=%02x\n",
++			vid, word0, word1, members);
++		return -EIO;
++	}
++	return 0;
 +}
 +
 +/* Readback is diagnostic only: it does not modify CVLAN table entries. */
