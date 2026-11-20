@@ -1102,6 +1102,8 @@ struct rtl8197f_rtknet_priv {
 	u64 tx_ring_full;
 	u64 tx_busy_desc;
 	u64 tx_timeouts;
+	u64 routed_rx_bad_desc, routed_rx_bad_tag, routed_rx_bad_port, routed_rx_bad_l3;
+	u64 routed_rx_vlan, routed_rx_pppoe, routed_tx_retries;
 	u64 hw_rx_restarts;
 	u64 rx_poll_timer_runs;
 	/* v44.56: RX poll is a watchdog only when the normal IRQ path stalls. */
@@ -1367,6 +1369,78 @@ rtl8197f_rtk_desc_clear_padding(struct rtl8197f_rtknet_priv *priv,
 static bool rtl8197f_rtk_is_r76(void)
 {
 	return of_machine_is_compatible("cudy,ax1500-r76");
+}
+
+/* Explicitly exclude MW5, including its optional acceleration parser. */
+static bool rtl8197f_rtk_routed_guard(struct rtl8197f_rtknet_priv *priv)
+{
+	return !priv->is_mw5 &&
+		(of_machine_is_compatible("xiaomi,r4-rd05") || rtl8197f_rtk_is_r76());
+}
+
+/* Parse a bounded header snapshot. Unknown protocols/stacked encapsulations
+ * remain Linux's responsibility; never infer ingress from destination MAC.
+ * Return1 for bad DSA,2 for bad port,3 for truncated/invalid IPv4/L4.
+ */
+static int rtl8197f_rtk_routed_header(const u8 *h, unsigned int n,
+		unsigned int frame_len, unsigned int ports, unsigned int *kind)
+{
+	unsigned int off = 20, proto, vlan = 0, iplen, ihl, l4, tcp;
+
+	*kind = 0;
+	if (n < 22 || get_unaligned_be16(h + 12) != ETH_P_REALTEK ||
+	    (get_unaligned_be16(h + 14) & 0xff00) != 0x0400)
+		return 1;
+	if ((get_unaligned_be16(h + 18) & 0xf) >= ports)
+		return 2;
+	proto = get_unaligned_be16(h + off); off += 2;
+	while ((proto == ETH_P_8021Q || proto == ETH_P_8021AD) && vlan++ < 2) {
+		*kind = 1;
+		if (n < off + 4) return 3;
+		proto = get_unaligned_be16(h + off + 2); off += 4;
+	}
+	if (proto == ETH_P_PPP_DISC || proto == ETH_P_PPP_SES) {
+		*kind = 2;
+		return 0;
+	}
+	if (proto != ETH_P_IP) return 0;
+	if (n < off + 20 || (h[off] >> 4) != 4) return 3;
+	ihl = (h[off] & 15) * 4;
+	iplen = get_unaligned_be16(h + off + 2);
+	if (ihl < 20 || iplen < ihl || frame_len < off + iplen || n < off + ihl)
+		return 3;
+	/* Fragment reassembly and transport validation belong to Linux. */
+	if (get_unaligned_be16(h + off + 6) & 0x3fff) return 0;
+	l4 = off + ihl;
+	if (h[off + 9] == IPPROTO_TCP) {
+		if (iplen - ihl < 20 || n < l4 + 20) return 3;
+		tcp = (h[l4 + 12] >> 4) * 4;
+		if (tcp < 20 || tcp > iplen - ihl) return 3;
+	} else if (h[off + 9] == IPPROTO_UDP) {
+		if (iplen - ihl < 8 || n < l4 + 8) return 3;
+		tcp = get_unaligned_be16(h + l4 + 4);
+		if (tcp < 8 || tcp > iplen - ihl) return 3;
+	}
+	return 0;
+}
+
+static bool rtl8197f_rtk_routed_rx_guard(struct rtl8197f_rtknet_priv *priv,
+		struct sk_buff *skb)
+{
+	u8 header[160];
+	unsigned int kind, n = min_t(unsigned int, skb->len, sizeof(header));
+	int ret;
+
+	if (!rtl8197f_rtk_routed_guard(priv)) return false;
+	if (skb_copy_bits(skb, 0, header, n)) ret = 1;
+	else ret = rtl8197f_rtk_routed_header(header, n, skb->len,
+			 rtl8197f_rtk_is_r76() ? 4 : 5, &kind);
+	if (ret == 1) priv->routed_rx_bad_tag++;
+	else if (ret == 2) priv->routed_rx_bad_port++;
+	else if (ret == 3) priv->routed_rx_bad_l3++;
+	else if (kind == 1) priv->routed_rx_vlan++;
+	else if (kind == 2) priv->routed_rx_pppoe++;
+	return ret != 0;
 }
 
 static bool rtl8197f_rtk_p0_external_switch_board(void)
@@ -5239,6 +5313,8 @@ static int rtl8197f_rtk_rd05_legacy_rx_poll(struct rtl8197f_rtknet_priv *priv,
 		if (!len || len > priv->rx_buf_size) {
 			priv->rd05_legacy_rx_bad++;
 			priv->rx_bad_desc++;
+			if (rtl8197f_rtk_routed_guard(priv))
+				priv->routed_rx_bad_desc++;
 			ndev->stats.rx_errors++;
 			ndev->stats.rx_dropped++;
 			goto recycle_same;
@@ -5248,6 +5324,8 @@ static int rtl8197f_rtk_rd05_legacy_rx_poll(struct rtl8197f_rtknet_priv *priv,
 			if (len <= ETH_FCS_LEN) {
 				priv->rd05_legacy_rx_bad++;
 				priv->rx_bad_desc++;
+				if (rtl8197f_rtk_routed_guard(priv))
+					priv->routed_rx_bad_desc++;
 				ndev->stats.rx_errors++;
 				ndev->stats.rx_dropped++;
 				goto recycle_same;
@@ -5918,10 +5996,14 @@ static int rtl8197f_rtk_rx_poll(struct rtl8197f_rtknet_priv *priv, int budget)
 		 */
 		if (priv->is_mw5)
 			dma_rmb();
+		if (rtl8197f_rtk_routed_guard(priv))
+			dma_rmb();
 		if (unlikely(le32_to_cpu(READ_ONCE(desc->addr)) !=
 		    rtl8197f_rtk_buffer_dma_addr(priv, priv->rx_dma[idx]))) {
 			priv->mw5_rx_addr_mismatch++;
 			priv->rx_bad_desc++;
+			if (rtl8197f_rtk_routed_guard(priv))
+				priv->routed_rx_bad_desc++;
 			ndev->stats.rx_errors++;
 			ndev->stats.rx_dropped++;
 			rtl8197f_mw5_rx_bad(priv, idx, desc, "dma-address-mismatch");
@@ -5964,6 +6046,8 @@ static int rtl8197f_rtk_rx_poll(struct rtl8197f_rtknet_priv *priv, int budget)
 			rtl8197f_mw5_rx_bad(priv, idx, desc,
 					    "shape-or-length");
 			priv->rx_bad_desc++;
+			if (rtl8197f_rtk_routed_guard(priv))
+				priv->routed_rx_bad_desc++;
 			ndev->stats.rx_errors++;
 			ndev->stats.rx_dropped++;
 			goto recycle;
@@ -5973,6 +6057,8 @@ static int rtl8197f_rtk_rx_poll(struct rtl8197f_rtknet_priv *priv, int budget)
 		if (priv->sdk_crc_lengths) {
 			if (len <= ETH_FCS_LEN) {
 				priv->rx_bad_desc++;
+				if (rtl8197f_rtk_routed_guard(priv))
+					priv->routed_rx_bad_desc++;
 				ndev->stats.rx_errors++;
 				ndev->stats.rx_dropped++;
 				goto recycle;
@@ -6077,6 +6163,12 @@ static int rtl8197f_rtk_rx_poll(struct rtl8197f_rtknet_priv *priv, int budget)
 		 * before eth_type_trans(). Safe MW5-ACCEL-SW runs earlier by design, therefore
 		 * establish the master ingress device explicitly for its guards. */
 		old_skb->dev = ndev;
+		if (rtl8197f_rtk_routed_guard(priv) &&
+		    rtl8197f_rtk_routed_rx_guard(priv, old_skb)) {
+			dev_kfree_skb_any(old_skb);
+			ndev->stats.rx_dropped++;
+			goto recycle;
+		}
 		rtl8197f_rtk_rx_checksum(priv, desc, old_skb);
 		rtl8197f_rtk_rd05_rxtrace(priv, idx, desc, old_skb, len, opts1, opts2);
 		if (rtl8197f_rtk_mw5_prepare_dsa_rx(priv, desc, old_skb)) {
@@ -7325,6 +7417,30 @@ static void rtl8197f_rtk_tx_timeout(struct net_device *ndev,
 			    (unsigned long long)priv->mw5_tx_completion_mismatch,
 			    priv->mw5_tx_own_defer_streak,
 			    (unsigned long long)priv->mw5_tx_own_defer_max);
+		return;
+	}
+
+	if (rtl8197f_rtk_routed_guard(priv)) {
+		unsigned long flags;
+		unsigned int avail;
+
+		netif_stop_queue(ndev);
+		rtl8197f_rtk_tx_clean(priv);
+		spin_lock_irqsave(&priv->tx_lock, flags);
+		if (priv->tx_head != priv->tx_tail) {
+			dma_wmb();
+			rtl8197f_rtk_tx_doorbell(priv);
+			rtl8197f_rtk_assert_trxrdy(priv);
+		}
+		avail = rtl8197f_rtk_tx_avail(priv);
+		priv->routed_tx_retries++;
+		spin_unlock_irqrestore(&priv->tx_lock, flags);
+		if (napi_schedule_prep(&priv->napi)) {
+			rtl8197f_rtk_disable_irq(priv);
+			__napi_schedule(&priv->napi);
+		}
+		if (avail > MAX_SKB_FRAGS + 1) netif_wake_queue(ndev);
+		netdev_warn(ndev, "Routed TX timeout: TX-only retry; RX rings and DSA preserved\n");
 		return;
 	}
 
@@ -9604,6 +9720,11 @@ static int rtl8197f_rtk_rd05_proc_show(struct seq_file *m, void *v)
 	seq_printf(m, "tx packets=%lu bytes=%lu errors=%lu dropped=%lu\n",
 		   ndev->stats.tx_packets, ndev->stats.tx_bytes,
 		   ndev->stats.tx_errors, ndev->stats.tx_dropped);
+	if (rtl8197f_rtk_routed_guard(priv))
+		seq_printf(m, "routed_guard bad_desc=%llu bad_tag=%llu bad_port=%llu bad_l3=%llu vlan=%llu pppoe=%llu tx_retries=%llu\n",
+			priv->routed_rx_bad_desc, priv->routed_rx_bad_tag, priv->routed_rx_bad_port,
+			priv->routed_rx_bad_l3, priv->routed_rx_vlan,
+			priv->routed_rx_pppoe, priv->routed_tx_retries);
 	seq_printf(m, "tx_internal kicks=%llu deferred=%llu clean_empty=%llu ring_full=%llu busy_desc=%llu timeouts=%llu\n",
 		   (unsigned long long)priv->tx_kicks,
 		   (unsigned long long)priv->tx_kick_deferred,
