@@ -97,6 +97,14 @@ static void rtl8197f_assert_reset(void)
 	       rtl8197f_sys_base + RTL8197F_SYS_CLK_MAG);
 
 	mdelay(2500);
+	/* If the software reset did not take effect, use the original BSP
+	 * plat_machine_restart watchdog-only sequence (WDTCNR = 0).
+	 * Do not walk network devices or acquire sleeping locks here.
+	 */
+	pr_emerg("rtl8197f-restart: software reset returned; arming BSP watchdog fallback\n");
+	writel(0, rtl8197f_sys_base + RTL8197F_WDTCNR);
+	readl(rtl8197f_sys_base + RTL8197F_WDTCNR);
+	mdelay(2500);
 }
 
 static int rtl8197f_restart_handler(struct notifier_block *nb,

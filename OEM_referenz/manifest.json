@@ -1,0 +1,791 @@
+{
+  "archives": {
+    "google_ax1500": {
+      "sha256": "2413dbd852e6f039d402f8ffda62e20b9f7b88a38dde0e7d86a527078ed66b93",
+      "url": "https://drive.usercontent.google.com/download?id=1sqW7x8sLHnSitW9ZXxgsrVN3lprFLp45&export=download"
+    },
+    "tplink_ax1500v3": {
+      "sha256": "6d133598b134b6878ce802a53b3061d9f2efb3636ad0d31ec4cb3bcbdf438f2a",
+      "url": "https://static.tp-link.com/upload/gpl-code/2026/202610/20261022/GPL_ax1500v3.tar.gz"
+    }
+  },
+  "files": [
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/LICENSES/BSD-2-Clause",
+      "path": "google_ax1500/openwrt/21.02/LICENSES/BSD-2-Clause",
+      "bytes": 1641,
+      "sha256": "6313108c23efffa36948f8b2cff1560a5935373b527b0e1a837cc77e6ed1bacd"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/LICENSES/BSD-3-Clause",
+      "path": "google_ax1500/openwrt/21.02/LICENSES/BSD-3-Clause",
+      "bytes": 1845,
+      "sha256": "7a83b1aeb460458db9a4bd521d7f237c45b1650f6e60ea5ffc71e49472454de3"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/LICENSES/GPL-1.0",
+      "path": "google_ax1500/openwrt/21.02/LICENSES/GPL-1.0",
+      "bytes": 13073,
+      "sha256": "925331a2b1b246602a1b5f9a605e046fd4ca90cc8626df177e1945ef11ffe40d"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/LICENSES/GPL-2.0",
+      "path": "google_ax1500/openwrt/21.02/LICENSES/GPL-2.0",
+      "bytes": 18644,
+      "sha256": "4a4d5c03ac503d809243f9d8de5517601e345990a85b6a59666c3f1caca02474"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/LICENSES/ISC",
+      "path": "google_ax1500/openwrt/21.02/LICENSES/ISC",
+      "bytes": 1046,
+      "sha256": "cbdf535b99a9f4cb208c5495c6dd9a1f84104d83c03f8f0d98ee7a0c43805388"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/LICENSES/Linux-syscall-note",
+      "path": "google_ax1500/openwrt/21.02/LICENSES/Linux-syscall-note",
+      "bytes": 1276,
+      "sha256": "25e0e5b40c8d5170b16ddc4a6cdad140f72f0f13aff1b6b949f850cff62f5678"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/LICENSES/MIT",
+      "path": "google_ax1500/openwrt/21.02/LICENSES/MIT",
+      "bytes": 1372,
+      "sha256": "323c587d0ccf10e376f8bf9a7f31fb4ca6078105194b42e0b1e0ee2bc9bde71f"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/package/base-files/files/sbin/wifi",
+      "path": "google_ax1500/openwrt/21.02/package/base-files/files/sbin/wifi",
+      "bytes": 7559,
+      "sha256": "54bc8ad25bf9f4ce1688322a034d78b53badcf7d1240737c515399483a651e5d"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/package/kernel/mac80211/patches/rtl/002-v5.13-rtlwifi-implement-set_tim-by-update-beacon-content.patch",
+      "path": "google_ax1500/openwrt/21.02/package/kernel/mac80211/patches/rtl/002-v5.13-rtlwifi-implement-set_tim-by-update-beacon-content.patch",
+      "bytes": 4085,
+      "sha256": "6d3c25b1f4135da9f9e079fd02128e89a79933d607998485a7ae19b7f7dd7d47"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/Makefile",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/Makefile",
+      "bytes": 723,
+      "sha256": "9001fd0ff725ef3c64e859373dd46ad49847081b369d60d064169a9502955978"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/bspchip.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/bspchip.h",
+      "bytes": 20046,
+      "sha256": "d1a0ab9b55c7775ecc8cda512ebf2d9a566562f70ddf6f4c954d92f789f0c7de"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/bspcpu.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/bspcpu.h",
+      "bytes": 658,
+      "sha256": "2faf1bbbc06eab23d343ba66a61c811f745d53cc55807ea373527029b27f7728"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/bspinit.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/bspinit.h",
+      "bytes": 434,
+      "sha256": "1cf25010b835bd5d3b0e672711ed6e3960b7333fadfc242331625fbe9082147f"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/button_hotplug.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/button_hotplug.c",
+      "bytes": 2876,
+      "sha256": "8b938c758f4006d5d95a62da633efe83969a0f45c006f96608cd7658c5bb6985"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/clk.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/clk.c",
+      "bytes": 1717,
+      "sha256": "7f852336b9c1119fc450841093261da50bdf973fa5f917e6f842f517a7cd5f5c"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/cpu-feature-overrides.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/cpu-feature-overrides.h",
+      "bytes": 1545,
+      "sha256": "e093b419d605d963b9573fc3a32d1603c09aa231fb3b060ba14dc6d64d5f8a3e"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/dev_usb.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/dev_usb.c",
+      "bytes": 30215,
+      "sha256": "7ea729de60bbae2f5d513d1c7b64b99b0e848ec89454752d9ad1ced39b892982"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/dev_usb.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/dev_usb.h",
+      "bytes": 1560,
+      "sha256": "3e42fb4c1ee401807fb1b2955531df1ec5a430d5aa272e748ecef2043322aa57"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/gpio.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/gpio.c",
+      "bytes": 26852,
+      "sha256": "b1a6515d39ea96283ce63d5e002b8e9e51e8433f158d78871c6b729989221ccd"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/i2c.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/i2c.c",
+      "bytes": 8830,
+      "sha256": "9b6da29e5239f3c194117947711bc74f3f29f9e0fe96861c6a322fb47b088e29"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/i2s.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/i2s.c",
+      "bytes": 880,
+      "sha256": "bcad363acf7ace3b8410b2c25d4c306b85103f01ec76013f3c5c02d36d65c11a"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/i2s.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/i2s.h",
+      "bytes": 481,
+      "sha256": "a0df99565221e92395c5035fa0ea999ebe83342c6ba1d4d88fc502533d95194a"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/irq-gpio.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/irq-gpio.c",
+      "bytes": 6148,
+      "sha256": "7502982b25ea822a2d6297bf41f038e9b9464f4953311457831beb07a6877790"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/irq-ictl.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/irq-ictl.c",
+      "bytes": 2302,
+      "sha256": "fbffd4b775f0a7b3fd8739c44fc1bafba623350c4922635d259ce1daf9f29bb1"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/irq.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/irq.c",
+      "bytes": 3331,
+      "sha256": "40a12d319556312f5c99a051fa9647eec24477cbcdb77c844677ba52c345c06a"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/irq.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/irq.h",
+      "bytes": 133,
+      "sha256": "a623159766ee244cd8cd11af06fd86248bddb9e153ab275ec68ce608b0fc618f"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/mtd.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/mtd.c",
+      "bytes": 10207,
+      "sha256": "6ce81acb7a45ce1d7d1a741f20f2af4fc52193995887fb14aff281131cbdfbdf"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/pci-fixup.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/pci-fixup.c",
+      "bytes": 1094,
+      "sha256": "a3f95c9bc3d0e39b53838e478b8445f4a9a39e7c5d6033afc04167ba34f73e24"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/pci-ops.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/pci-ops.c",
+      "bytes": 2987,
+      "sha256": "1356dcc19dd2bf8019ad6e04f57437f09408b0116361667d19563728bb10a7a5"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/pci.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/pci.c",
+      "bytes": 6209,
+      "sha256": "09c00003d5fb16a28803d6d8e5e79bdbf4357caaba6e11a5549dfdda4e7f7e02"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/platform.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/platform.c",
+      "bytes": 4373,
+      "sha256": "80909034f0f70d040557058791a499710355530a0a4ccbe5abf757a2fa6fb1cb"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/prom.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/prom.c",
+      "bytes": 6928,
+      "sha256": "aeaffc9c26b9c68beccf5e7a72830db22e5c50ac4ab8780c3343f13a968d79da"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/serial.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/serial.c",
+      "bytes": 5084,
+      "sha256": "afe94e9c8f6d25171bfd5156c8117f851fe07299395d94e6ae25d6c7257c6601"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/setup.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/setup.c",
+      "bytes": 2415,
+      "sha256": "b6bdbe3778104cb9735d8a1b32d1cad781d4781831d6089fa3a8e5e1e9f52d2c"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/spi.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/spi.c",
+      "bytes": 2341,
+      "sha256": "28f694e4830a8ef2c3b93046631ad60a8d589f0c2f813bf55bb17be3d0f8b0e6"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/timer.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/timer.c",
+      "bytes": 11342,
+      "sha256": "b5ab6dbeaa8f1827aae821bbd15989372f6626b6918125d9d9b7630785991d37"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/war.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/bsp/war.h",
+      "bytes": 880,
+      "sha256": "555c3a1896b508bd1bccaad194a976631670c2171f5f1567c57ccef988407dde"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/rtl8197f_config/config.linux-4.4.RTL8197F_VG_8832BR_8367R_KERN44_GW",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/rtl8197f_config/config.linux-4.4.RTL8197F_VG_8832BR_8367R_KERN44_GW",
+      "bytes": 57437,
+      "sha256": "7646340cc51166cea8b2d923596d5cb0d651d84c04c6fc16dcd2e856d976b5da"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/rtl8197f_config/config.linux-4.4.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_DUALSTACK_GW",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/rtl8197f_config/config.linux-4.4.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_DUALSTACK_GW",
+      "bytes": 59053,
+      "sha256": "1929705423e12beb6d3f9f4216c1a8b3b9e7be64cef49dbb6d059f0b7d9b9b46"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/rtl8197f_config/config.linux-4.4.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/rtl8197f_config/config.linux-4.4.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW",
+      "bytes": 57500,
+      "sha256": "bb8f53f8654853f09411c1e34fdbd2849cee4c055028ef26522e9b7630a46375"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/rtl8197f_config/config.linux-4.4.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW_EASYMESH",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/rtl8197f_config/config.linux-4.4.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW_EASYMESH",
+      "bytes": 57458,
+      "sha256": "7bab71d3d42d11d6838684a4d88e00376dbece159a16f7a50780c6e51191db66"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/rtl8197f_config/config.linux-4.4.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW_EASYMESH_R2_WFA",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/arch/mips/rtl8197f_config/config.linux-4.4.SPINAND_RTL8197F_VG_8832BR_8367R_KERN44_GW_EASYMESH_R2_WFA",
+      "bytes": 57241,
+      "sha256": "bbb21a62a851e49934d265be6c9b59a09eaaec37435cf1d30edf479f7dc6349e"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_acl.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_acl.c",
+      "bytes": 84461,
+      "sha256": "b11129c047aa3523c43ed1b0a000d0a289518b7cbbedf622a5c4e6375a9f49f9"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_acl.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_acl.h",
+      "bytes": 16470,
+      "sha256": "468094ad9444403b0ffb67c20a5fbd98384eeb87fb4dd61f7154a2aae4b32bca"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_cpu.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_cpu.c",
+      "bytes": 16457,
+      "sha256": "6c2209bcc001d8c0ce535d4ad5634724b3b41227b76f141d280309f745dd0eae"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_cpu.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_cpu.h",
+      "bytes": 8994,
+      "sha256": "9d97b9e0acab4b9dc9e3945b27fe21fb3774940da1cd5cb8854c5d82b7a3488b"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_dot1x.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_dot1x.c",
+      "bytes": 13106,
+      "sha256": "2ac6c1c36b3425e146d00e36de2113c87878757433cd952afc42d69c40edaa18"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_dot1x.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_dot1x.h",
+      "bytes": 8366,
+      "sha256": "43495c4e595ba559ce7faff4f61d8f73223bc5d9c65736eb42f5048186aa4e64"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_eee.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_eee.c",
+      "bytes": 3490,
+      "sha256": "704f769be8fbdfc7a7c6eb16ab124fa6ae7282dd2b57650749c9eb776d4b8125"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_eee.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_eee.h",
+      "bytes": 1985,
+      "sha256": "d50775c5143e0873cb4066724807ebc9c01d4a259db02b7a64ce5b25032e249b"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_igmp.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_igmp.c",
+      "bytes": 10175,
+      "sha256": "ab20682406b909b6b4bf1d2443819e8bcb9d84c9910c4b5e4566eb46a9f92af9"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_igmp.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_igmp.h",
+      "bytes": 3090,
+      "sha256": "c8889e01278f71a2909b6ed665aafb445d7d089692187fe27209392601a13c96"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_interrupt.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_interrupt.c",
+      "bytes": 16040,
+      "sha256": "ff7ce31a4d29dcfe2d783bda67a6157c00732446cf00fb29e57ee5d3048cf892"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_interrupt.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_interrupt.h",
+      "bytes": 7299,
+      "sha256": "a4efd713f14941d6f4873db7373b2d639920d832a5875168adf722f58e9cde55"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_l2.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_l2.c",
+      "bytes": 89544,
+      "sha256": "968cc0c55d924a283a623746e4e0550494abd830663d8fcf30806549dde22536"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_l2.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_l2.h",
+      "bytes": 34588,
+      "sha256": "0e236906b368536f7c3e8a4cab110b62f23f92f5245f491bd14e2852bd47bd13"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_leaky.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_leaky.c",
+      "bytes": 17837,
+      "sha256": "a0522c82d27ee244d32d4fa433be056faa0d0293db694f849ec4a3b0321f5a13"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_leaky.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_leaky.h",
+      "bytes": 9633,
+      "sha256": "5e39cc8f2abd467aaaad7560005a99822ada6b8a88ceadae7294a6f2cd09f81d"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_led.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_led.c",
+      "bytes": 22663,
+      "sha256": "f18e654ae04a92b3ca2b45e1ae92dda737d9f0999894a2ce8f34039958da83ae"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_led.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_led.h",
+      "bytes": 12063,
+      "sha256": "b75305eaad04ec40ce9ec1218105d83dd6d3432515aaa1ea8c28602ec1ed045e"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_mapper.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_mapper.c",
+      "bytes": 29861,
+      "sha256": "ee62e7c4605ee5b6dffdde6b68e697182b976d7de8a3b7f3ae3bc8dd08462a1f"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_mapper.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_mapper.h",
+      "bytes": 757,
+      "sha256": "5650fc2b8ef541a0f657bec153f86838b733ecd703537fdd1bc0e4bc220e3957"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_mirror.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_mirror.c",
+      "bytes": 17146,
+      "sha256": "d74065cd0e4308741bc8c051a8409e90d48cc48653784706b8914cff5ecde149"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_mirror.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_mirror.h",
+      "bytes": 8730,
+      "sha256": "d7316d8030f6bb7fd50d075a6dededf903942d65fb327385004b4862d98ce4ed"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_port.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_port.c",
+      "bytes": 139423,
+      "sha256": "f38f14da47656dbee95e0b63b22052305f68b245bc1df4bfa3d8c391602800d1"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_port.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_port.h",
+      "bytes": 32902,
+      "sha256": "53daac01f61605f2c96f04ee7707c396ad12124fc698de7b07286592d07cb320"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_qos.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_qos.c",
+      "bytes": 49487,
+      "sha256": "79b219a93ffcf41e741d559498d51f295933bb6f0abf8f4b585fb8f2ae3f0a50"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_qos.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_qos.h",
+      "bytes": 23705,
+      "sha256": "bc1bc8c0eb7ac124e3bac0734696b3250097ed470c5ca51d37bc1b83f60da89f"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_rate.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_rate.c",
+      "bytes": 22894,
+      "sha256": "f4ed972c84b02394e2142053002b8379d4feaf8e4f271cdf32e3ee1a04c412bb"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_rate.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_rate.h",
+      "bytes": 10625,
+      "sha256": "9048701ea7013c7044d50aa7462051dcb568cb2ed162c281b6f7965eaf155c24"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_rldp.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_rldp.c",
+      "bytes": 12857,
+      "sha256": "a4f29710efbeadcb541b10960221f7dcccc383b53169d9246c1e4b9083fd1333"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_rldp.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_rldp.h",
+      "bytes": 4455,
+      "sha256": "aabeb87940f725548044c28a2ccf945617d31faa58b06a730944b4357ff8d1d3"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_stat.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_stat.c",
+      "bytes": 31158,
+      "sha256": "e9f9666a99443eb38955575230ae19276da92e5ca0969bf01b3f058e15c0ef75"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_stat.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_stat.h",
+      "bytes": 10552,
+      "sha256": "e81d6e606bd3d4d4e02799054a6b6f2c73630865aa408aa81d81b761f63bd907"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_storm.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_storm.c",
+      "bytes": 27519,
+      "sha256": "f6af5fc1e734ced2f6b8bbf03691e29ef7c8275f8f9958a6439439b631e94af4"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_storm.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_storm.h",
+      "bytes": 10816,
+      "sha256": "1b067c82ccfbd86c58fcd91b7f2c5b2df0086b6ad9fe778426b3edb58d1ad0c2"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_svlan.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_svlan.c",
+      "bytes": 40296,
+      "sha256": "a465384049c45f449da4505458039b11f3635f7ff5b17c77cc3ce3232ed41c90"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_svlan.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_svlan.h",
+      "bytes": 18230,
+      "sha256": "6b885f242365f2c59e164d9b98315f4fa4fdf41d982ea6f0ee89cd12fe67e92f"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_switch.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_switch.c",
+      "bytes": 5092,
+      "sha256": "3c9e0430495ca3c1c650a7299fee0097f1b2bfb70531746f1e20203f7285b3b7"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_switch.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_switch.h",
+      "bytes": 3479,
+      "sha256": "982486d702801e11aa998099710f6007cba6692fd02461991f835cadb99786a9"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_trap.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_trap.c",
+      "bytes": 41103,
+      "sha256": "82a0c19ab58c3e93c8e5430d05d57607f680cd1b1a43dd5871f85a1fff135c21"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_trap.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_trap.h",
+      "bytes": 22019,
+      "sha256": "dbf84ae8c68ac4a7314e6269da169d95bbd79a02af6d1e8b76ff9050b53360a8"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_trunk.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_trunk.c",
+      "bytes": 17389,
+      "sha256": "f22a5b17ed2630d716361804639ddfa71d2ff47774c50d327e5f6e31aa7d0fc9"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_trunk.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_trunk.h",
+      "bytes": 9738,
+      "sha256": "6578674ad7ccb63839e6b8bca4497ffb9da10c9e5de55e5729b12f9958ce1f07"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_vlan.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_vlan.c",
+      "bytes": 41922,
+      "sha256": "ad803a3c9455bf8f2047013a916947b94a1e52f74d71be65e4c95260bb26298d"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_vlan.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/dal_rtl8367d_vlan.h",
+      "bytes": 20047,
+      "sha256": "5d09f6ec088c2a7d0cdab2876f640cd09840909846ba51033b85bd6d6a5f1b9f"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/rtl8367d_asicdrv.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/rtl8367d_asicdrv.c",
+      "bytes": 15380,
+      "sha256": "e5942f04b83285a94b59dd5889deebd5846514e1f533d66a9a328e6b682baaca"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/rtl8367d_asicdrv.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/rtl8367d_asicdrv.h",
+      "bytes": 2751,
+      "sha256": "a6868b562171489037edb270924f4fb8c8a7ede33570049b02b803e6fa795978"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/rtl8367d_reg.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/rtl8367d_reg.h",
+      "bytes": 563635,
+      "sha256": "2d1cbb61dfb8f771a536fabb24dac67cf874f0491ebb2e7d4dcd50fd16bdbfd2"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/rtl8367d_smi.c",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/rtl8367d_smi.c",
+      "bytes": 12455,
+      "sha256": "b1ed32d0f506c3d1ac7bf586771d61ef7482a45aa9456b3bef8fca9fc2c3723c"
+    },
+    {
+      "source": "google_ax1500",
+      "original_path": "openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/rtl8367d_smi.h",
+      "path": "google_ax1500/openwrt/21.02/target/linux/realtek/files-4.4/drivers/net/rtl819x/rtl83xx_v1dot4/dal/rtl8367d/rtl8367d_smi.h",
+      "bytes": 272,
+      "sha256": "d2ed471fd2a280edbb6fc47393d601febda8b58f21f53ad64ac6736f321437fb"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/Makefile",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/Makefile",
+      "bytes": 23252,
+      "sha256": "c929937e48e69f2d12f1bdab33249b02801193ac05f0da8215c9e304d152d8ce"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/core/rtw_mib.c",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/core/rtw_mib.c",
+      "bytes": 114575,
+      "sha256": "dd7f911e8dca0dc6cc5df49125d406d0024a93193b5ffff77218313d2a8b0a97"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/include/osdep_service.h",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/include/osdep_service.h",
+      "bytes": 24814,
+      "sha256": "9f988b04ca54f36dca0dc9579cb71b4b38333131801e60a66faf9efd25ca009d"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/include/osdep_service_linux.h",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/include/osdep_service_linux.h",
+      "bytes": 33030,
+      "sha256": "1a4f5d4d82d2184e85a23918d0fd1de7349b7efd8321e38f09447ea1cf82e4a0"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/include/rtw_cfg.h",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/include/rtw_cfg.h",
+      "bytes": 1025,
+      "sha256": "f05d14c119e0afaea77002d9c265f69512f1f44f03280f93d1bf0ffe95efea00"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/include/rtw_nvm.h",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/include/rtw_nvm.h",
+      "bytes": 2121,
+      "sha256": "1990f0d55afecfbdd41a9edd8c8ef936f7db462587bc3d73440d217441dd69e9"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/os_dep/linux/os_intfs.c",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/os_dep/linux/os_intfs.c",
+      "bytes": 121573,
+      "sha256": "cc6129c8ce3756ded03837a2fb29e29c5dac9a90e8f4fc8f502f81d57593163f"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/os_dep/linux/pci_intf.c",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/os_dep/linux/pci_intf.c",
+      "bytes": 34799,
+      "sha256": "2a1f3e12fd32fdc3f0a950b33fda431536c6a3e6c31cc0555a62ae188ec49d7b"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/os_dep/linux/pci_ops_linux.c",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/os_dep/linux/pci_ops_linux.c",
+      "bytes": 7359,
+      "sha256": "a57d31a171690e39c84d0bbf533569e35ea39dd6b583368287ae50048dd780b9"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/os_dep/linux/rtw_cfg.c",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/os_dep/linux/rtw_cfg.c",
+      "bytes": 61381,
+      "sha256": "f9ac3d11dc1925f10094ef311a2282110da91cd3a32b7828c2d4cce4ae827512"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/phl/hal_g6/flash/hal_flash.c",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/phl/hal_g6/flash/hal_flash.c",
+      "bytes": 28372,
+      "sha256": "d8b53eb1a4f112abd7bd1833d0ae8fd25659b91132c86e69229863269fda5917"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/phl/hal_g6/flash/hal_flash.h",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/phl/hal_g6/flash/hal_flash.h",
+      "bytes": 2986,
+      "sha256": "ded5395bf84902f44c01fdad0b27d1a083a334186e4f2d60cda40fe8d3335e06"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/phl/hal_g6/flash/hal_flash_export.h",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/phl/hal_g6/flash/hal_flash_export.h",
+      "bytes": 3033,
+      "sha256": "d719e640b71c1faaec0a227a325e07dd73c93121486cb7188c8458225f5e1819"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/phl/hal_g6/hal_ld_file.c",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/phl/hal_g6/hal_ld_file.c",
+      "bytes": 74526,
+      "sha256": "545ad1365fbd83ae522579ba9b1e50aa4c5fec9423c738cae397c73918d1ebe8"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/phl/phl_types.h",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/phl/phl_types.h",
+      "bytes": 5754,
+      "sha256": "117409e07b5ae534949ccf3c67fe1ddb73290db2f3f2c09076a4c7ed36a0a4b7"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/platform/mips_97f/rtw_pltfm_postconf.h",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/platform/mips_97f/rtw_pltfm_postconf.h",
+      "bytes": 12612,
+      "sha256": "13083750893c16ac7735e5364e9ab9b17822639e11aa44ac74afe43c40745f04"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/platform/mips_97f/rtw_pltfm_preconf.h",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/platform/mips_97f/rtw_pltfm_preconf.h",
+      "bytes": 3799,
+      "sha256": "b2364b77ede312a3fa1c02cc34ff84cb3dfeeb89e0620c731f57cda46c04c16e"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/platform/mips_97f.mk",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/platform/mips_97f.mk",
+      "bytes": 1728,
+      "sha256": "df7d604cae63974fe53499ad68c5b69fa64fc9f36ac8ebf37feeeafa7436357e"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/platform/platform_mips_97f_pci.c",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/platform/platform_mips_97f_pci.c",
+      "bytes": 6732,
+      "sha256": "ae7c9e2545cacc0bfeb6b346b82c0103874fd9576caf43aff62057cd4721bfba"
+    },
+    {
+      "source": "tplink_ax1500v3",
+      "original_path": "rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/platform/rtk_ap/rtw_api_flash.c",
+      "path": "tplink_ax1500v3/rtl8198/linux-4.4.x/drivers/net/wireless/realtek/g6_wifi_driver/platform/rtk_ap/rtw_api_flash.c",
+      "bytes": 18089,
+      "sha256": "556ae462ec4302038c44fc327bb25e64d56c9b26f54f97f36a01831b3a4c9fb5"
+    }
+  ]
+}
