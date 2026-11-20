@@ -1,0 +1,18 @@
+Subject: [PATCH] WR1500: supply the installed RF parameter root to G6
+
+The GPL HAL builds root/ic/RFE/subtype/file paths from this value.
+Do not enable OEM NVM writes to obtain a filesystem parameter root.
+
+--- a/platform/mips_97f/rtw_pltfm_preconf.h
++++ b/platform/mips_97f/rtw_pltfm_preconf.h
+@@ -121,6 +121,10 @@
+ 
+ #ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
+ #define RTW_CUSTOM_PARA_DIR /*get RFE para sub dir from menuconfig*/
++/* OpenWrt installs the measured RTL8832BR RFE50 files below this root. */
++#ifndef REALTEK_CONFIG_PATH
++#define REALTEK_CONFIG_PATH "/etc/conf/"
++#endif
+ #endif /*CONFIG_LOAD_PHY_PARA_FROM_FILE*/
+ 
+ /*Dynamic Adaptivity Control*/

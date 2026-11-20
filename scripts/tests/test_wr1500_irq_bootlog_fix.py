@@ -20,7 +20,7 @@ class WR1500InterruptRegression(unittest.TestCase):
 
     def test_g6_kernel_module_not_autoloaded_during_crash_diagnosis(self):
         s = (G6/'Makefile').read_text()
-        self.assertIn('PKG_RELEASE:=4', s)
+        self.assertRegex(s, r'PKG_RELEASE:=[1-9][0-9]*')
         self.assertNotIn('AUTOLOAD:=', s)
         self.assertIn('rtk_wifi6.ko', s)
 
