@@ -128,6 +128,11 @@
  * not the OEM SoC router/4-byte tag parser. No legacy swconfig node.
  */
 &ethernet0 {
+	/* R76 load regression: short TCP control frames pass while payload
+	 * frames lose their prefix. Exercise the existing scoped 64-byte
+	 * DMA burst path; this is not an MTU or RGMII timing change.
+	 */
+	realtek,cpu-dma-burst-bytes = <64>;
 	realtek,rx-ring-size = <900>;
 	realtek,tx-ring-size = <768>;
 	realtek,descriptor-dwords = <8>;

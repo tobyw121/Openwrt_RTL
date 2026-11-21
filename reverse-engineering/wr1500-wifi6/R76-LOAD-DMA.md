@@ -53,3 +53,6 @@ ssh -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 root@
 After failure or sustained traffic use UART to read proc again, including
 routed_guard/routed_last_bad and TX/RX counters. These are read-only operations
 and do not depend on the nl80211/RTNL requests that hung in the WLAN case.
+
+Follow-up: R76-TCP-BURST64.md documents a later hardware candidate overriding
+only R76 CPU-DMA burst to64; coherent buffers alone did not cure load failures.
