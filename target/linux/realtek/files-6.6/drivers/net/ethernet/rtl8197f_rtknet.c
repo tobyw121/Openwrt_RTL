@@ -1103,6 +1103,8 @@ struct rtl8197f_rtknet_priv {
 	u64 tx_busy_desc;
 	u64 tx_timeouts;
 	u64 routed_rx_bad_desc, routed_rx_bad_tag, routed_rx_bad_port, routed_rx_bad_l3;
+	u8 routed_rx_bad_header[24];
+	u32 routed_rx_bad_frame_len;
 	u64 routed_rx_vlan, routed_rx_pppoe, routed_tx_retries;
 	u64 hw_rx_restarts;
 	u64 rx_poll_timer_runs;
@@ -1435,6 +1437,13 @@ static bool rtl8197f_rtk_routed_rx_guard(struct rtl8197f_rtknet_priv *priv,
 	if (skb_copy_bits(skb, 0, header, n)) ret = 1;
 	else ret = rtl8197f_rtk_routed_header(header, n, skb->len,
 			 rtl8197f_rtk_is_r76() ? 4 : 5, &kind);
+	if (ret) {
+		memset(priv->routed_rx_bad_header, 0, sizeof(priv->routed_rx_bad_header));
+		if (skb_copy_bits(skb, 0, priv->routed_rx_bad_header,
+			min_t(unsigned int, skb->len, sizeof(priv->routed_rx_bad_header))))
+			memset(priv->routed_rx_bad_header, 0, sizeof(priv->routed_rx_bad_header));
+		priv->routed_rx_bad_frame_len = skb->len;
+	}
 	if (ret == 1) priv->routed_rx_bad_tag++;
 	else if (ret == 2) priv->routed_rx_bad_port++;
 	else if (ret == 3) priv->routed_rx_bad_l3++;
@@ -9725,6 +9734,9 @@ static int rtl8197f_rtk_rd05_proc_show(struct seq_file *m, void *v)
 			priv->routed_rx_bad_desc, priv->routed_rx_bad_tag, priv->routed_rx_bad_port,
 			priv->routed_rx_bad_l3, priv->routed_rx_vlan,
 			priv->routed_rx_pppoe, priv->routed_tx_retries);
+	if (rtl8197f_rtk_routed_guard(priv))
+		seq_printf(m, "routed_last_bad frame_len=%u header=%24phN\n",
+			priv->routed_rx_bad_frame_len, priv->routed_rx_bad_header);
 	seq_printf(m, "tx_internal kicks=%llu deferred=%llu clean_empty=%llu ring_full=%llu busy_desc=%llu timeouts=%llu\n",
 		   (unsigned long long)priv->tx_kicks,
 		   (unsigned long long)priv->tx_kick_deferred,
@@ -10479,6 +10491,14 @@ static int rtl8197f_rtk_probe(struct platform_device *pdev)
 	}
 
 	if (rtl8197f_rtk_is_r76()) {
+		/* R76 load captures show malformed RX tags without descriptor or
+		 * ring errors in streaming mode. Use persistent coherent ownership
+		 * on both directions: no skb-head cacheline sharing with DMA.
+		 * Allocate/free via the existing coherent pool lifecycle only.
+		 */
+		priv->rx_coherent_enabled = true;
+		priv->tx_coherent_enabled = true;
+		priv->rx_page_pool_enabled = false;
 		priv->rx_poll_fallback = true;
 		priv->sdk_crc_lengths = true;
 		priv->sdk_trxrdy = true;
