@@ -14,16 +14,13 @@ VERIFY = ROOT / 'scripts/verify-wr1500-rfe50.py'
 def build_fixture(root):
     """Exercise the real Build/Prepare first recipe independently of vendor GPL tar."""
     makefile = (PKG/'Makefile').read_text()
-    key = 'WR1500_RFE50_SHA256_FILES :='
-    start = makefile.index(key)
-    end = makefile.index('\n\n', start)
-    values = makefile[start:end]
     beginning = makefile.index('define Build/Prepare\n')
     check = makefile.index('\t$(RM) -r $(PKG_BUILD_DIR)', beginning)
     guard = makefile[beginning:check] + 'endef\n'
-    (root/'Makefile').write_text(values + '\n' + guard + '\ncheck:\n\t$(Build/Prepare)\n')
+    (root/'Makefile').write_text(guard + '\ndefine check_rule\ncheck:\n\t$(Build/Prepare)\nendef\n$(eval $(eval $(call check_rule)))\n')
     rf = root/'files/RFE50'
     shutil.copytree(PKG/'files/RFE50', rf)
+    shutil.copy2(PKG/'files/RFE50.sha256', root/'files/RFE50.sha256')
     return rf
 
 
@@ -48,14 +45,21 @@ class NoExternalManifestRegression(unittest.TestCase):
         (self.rf/'AP_5G/RadioB.txt').unlink()
         ret = self.run_preflight()
         self.assertNotEqual(ret.returncode, 0)
-        self.assertIn('missing/empty active calibration: AP_5G/RadioB.txt', ret.stderr)
+        self.assertIn('AP_5G/RadioB.txt', ret.stderr)
         self.assertNotIn('FileNotFoundError', ret.stderr)
 
     def test_corrupt_active_file_fails_readably(self):
         (self.rf/'RadioA.txt').write_bytes(b'corrupt data')
         ret = self.run_preflight()
         self.assertNotEqual(ret.returncode, 0)
-        self.assertIn('wrong SHA256 for active calibration: RadioA.txt', ret.stderr)
+        self.assertIn('missing or modified active calibration files', ret.stderr)
+
+    def test_empty_file_and_truncated_checksum_list_fail(self):
+        (self.rf/'RadioA.txt').write_bytes(b'')
+        self.assertNotEqual(self.run_preflight().returncode, 0)
+        manifest = self.root/'files/RFE50.sha256'
+        manifest.write_text(''.join(manifest.read_text().splitlines(True)[:-1]))
+        self.assertNotEqual(self.run_preflight().returncode, 0)
 
     def test_package_prepare_has_no_external_manifest_dependency(self):
         source = (PKG/'Makefile').read_text()

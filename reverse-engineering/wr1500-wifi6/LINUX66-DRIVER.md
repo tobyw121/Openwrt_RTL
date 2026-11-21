@@ -62,7 +62,7 @@ auf Original-GPL geprüft. 57 Regressionstests bestanden, einer übersprungen.
 Kein neuer Hardwaretest und kein vollständiger Firmwarebau in dieser Umgebung.
 
 Build/Prepare prüft die 16 mitgelieferten RF-Dateien gegen die bestätigten
-SHA256-Werte im Paket; kein Forschungsmanifest/Python-Helfer ist erforderlich.
+SHA256-Werte in `files/RFE50.sha256` des Pakets; kein Forschungsmanifest/Python-Helfer ist erforderlich.
 Das bestätigt die Dateien im Paket, nicht deren tatsächliches Laden im Gerät.
 Der leere RF-Pfad und der eFuse-/MAC-Fehler sind weiterhin offen. AP_2G/PON-
 Referenzen werden nicht zur 2,4-GHz-Kalibrierung umgedeutet.
@@ -217,3 +217,15 @@ iw dev phy0-ap0 station dump
 
 Vollständigen Bootlog und diese Ausgaben senden. WLAN-Schlüssel nicht
 mitsenden; insbesondere kein ungefiltertes `wifi status` oder `uci show wireless`.
+
+## Paketrevision6: OpenWrt-eval beim Build/Prepare
+
+Der Inline-Shell-Loop verlor bei mehrfacher Make-Auswertung seine Dollar-
+Escapes und erzeugte `count=)`. Er ist durch eine paketlokale
+`files/RFE50.sha256` und direkte awk-/sha256sum-Aufrufe ersetzt. Es gibt
+keine Shell-Variablen oder Substitutionen mehr, die ein weiteres eval
+verschlucken könnte. Die alte Variante reproduziert den gemeldeten Fehler
+im verschachtelten eval-Test; die neue Variante prüft unverändert alle16
+RF-Dateien und verwirft fehlende, leere oder manipulierte Dateien.
+Keine Änderungen am MW5 oder am Funk-/IRQ-Verhalten. Kein vollständiger
+Firmwarebau in dieser Umgebung; die korrigierte Vorbereitung ist getestet.
