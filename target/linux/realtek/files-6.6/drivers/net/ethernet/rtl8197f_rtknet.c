@@ -10508,6 +10508,11 @@ static int rtl8197f_rtk_probe(struct platform_device *pdev)
 	}
 
 	if (rtl8197f_rtk_is_r76()) {
+		/* DMA_CR0.HsbAddrMark masks address[31:28]: VG OEM packet
+		 * pointers use KSEG0, independently of KSEG1 ring addresses.
+		 * Original Linux DMA handles remain untouched for alloc/free.
+		 */
+		priv->rd05_oem_buffer_alias = true;
 		/* R76 load captures show malformed RX tags without descriptor or
 		 * ring errors in streaming mode. Use persistent coherent ownership
 		 * on both directions: no skb-head cacheline sharing with DMA.
