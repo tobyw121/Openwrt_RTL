@@ -1105,6 +1105,8 @@ struct rtl8197f_rtknet_priv {
 	u64 routed_rx_bad_desc, routed_rx_bad_tag, routed_rx_bad_port, routed_rx_bad_l3;
 	u8 routed_rx_bad_header[24];
 	u32 routed_rx_bad_frame_len;
+	u32 routed_bad_idx, routed_bad_cdp, routed_bad_expected;
+	u32 routed_bad_dw[8];
 	u64 routed_rx_vlan, routed_rx_pppoe, routed_tx_retries;
 	u64 hw_rx_restarts;
 	u64 rx_poll_timer_runs;
@@ -6174,6 +6176,14 @@ static int rtl8197f_rtk_rx_poll(struct rtl8197f_rtknet_priv *priv, int budget)
 		old_skb->dev = ndev;
 		if (rtl8197f_rtk_routed_guard(priv) &&
 		    rtl8197f_rtk_routed_rx_guard(priv, old_skb)) {
+			unsigned int dw;
+
+			priv->routed_bad_idx = idx;
+			priv->routed_bad_cdp = rtl8197f_rtk_read(priv, RTL_RTK_CPURPDCR0);
+			priv->routed_bad_expected = rtl8197f_rtk_buffer_dma_addr(priv, priv->rx_dma[idx]);
+			for (dw = 0; dw < ARRAY_SIZE(priv->routed_bad_dw); dw++)
+				priv->routed_bad_dw[dw] = dw < priv->desc_dwords ?
+					le32_to_cpu(READ_ONCE(((__le32 *)desc)[dw])) : 0;
 			dev_kfree_skb_any(old_skb);
 			ndev->stats.rx_dropped++;
 			goto recycle;
@@ -9737,6 +9747,13 @@ static int rtl8197f_rtk_rd05_proc_show(struct seq_file *m, void *v)
 	if (rtl8197f_rtk_routed_guard(priv))
 		seq_printf(m, "routed_last_bad frame_len=%u header=%24phN\n",
 			priv->routed_rx_bad_frame_len, priv->routed_rx_bad_header);
+	if (rtl8197f_rtk_routed_guard(priv))
+		seq_printf(m, "routed_bad_dma idx=%u cdp=%08x expected=%08x dw=%08x/%08x/%08x/%08x/%08x/%08x/%08x/%08x\n",
+			priv->routed_bad_idx, priv->routed_bad_cdp, priv->routed_bad_expected,
+			priv->routed_bad_dw[0], priv->routed_bad_dw[1],
+			priv->routed_bad_dw[2], priv->routed_bad_dw[3],
+			priv->routed_bad_dw[4], priv->routed_bad_dw[5],
+			priv->routed_bad_dw[6], priv->routed_bad_dw[7]);
 	seq_printf(m, "tx_internal kicks=%llu deferred=%llu clean_empty=%llu ring_full=%llu busy_desc=%llu timeouts=%llu\n",
 		   (unsigned long long)priv->tx_kicks,
 		   (unsigned long long)priv->tx_kick_deferred,
