@@ -1,0 +1,61 @@
+From: OpenWrt RTL maintainers
+Subject: [PATCH] wifi: supply RF paths without OEM NVM and reject zero BSSID
+
+The 1.8.50 runtime reports an empty RF path and a registered null MAC.
+PHL can include its types before the platform root definition; set a board-
+specific fallback there as well. The NVM-less path macro does nothing, so
+provide the installed RFE50 directory explicitly. Validate the adapter MAC at
+registration; a local fallback is diagnostic and not a substitute for efuse.
+
+--- a/phl/phl_types.h
++++ b/phl/phl_types.h
+@@ -121,7 +121,11 @@
+ 	#define	_os_path_sep "/"
+ 
+ 	#ifndef REALTEK_CONFIG_PATH
++	#if defined(CONFIG_RTL8832BR) && defined(CONFIG_WLAN0_RFE_TYPE_50)
++	#define REALTEK_CONFIG_PATH	"/etc/conf/"
++	#else
+ 	#define REALTEK_CONFIG_PATH	""
++	#endif
+ 	#endif
+ 	#define HAL_FILE_CONFIG_PATH	REALTEK_CONFIG_PATH
+ 	#ifndef CONFIG_FIRMWARE_PATH
+--- a/os_dep/linux/rtw_cfg.c
++++ b/os_dep/linux/rtw_cfg.c
+@@ -1181,7 +1181,14 @@
+ 	struct rtw_phl_com_t *phl_com = GET_HAL_DATA(dvobj);
+ 	char para_path[256] = {0};
+ 
++#if defined(CONFIG_RTL8832BR) && defined(CONFIG_WLAN0_RFE_TYPE_50) && !defined(CONFIG_RTW_DRV_HAS_NVM)
++	/* OpenWrt has no OEM flash/NVM service; its header macro is a no-op.
++	 * This package is board-restricted and installs this measured RF set.
++	 */
++	snprintf(para_path, sizeof(para_path), "%srtl8832bre/RFE50/", rtw_phy_file_path);
++#else
+ 	rtw_nvm_fill_full_para_path(dvobj, para_path, sizeof(para_path) - 1);
++#endif
+ 
+ 	RTW_PRINT(FUNC_DEVID_FMT" Parameter path: \"%s\"\n",
+ 	          FUNC_DEVID_ARG(dvobj), para_path);
+--- a/os_dep/linux/os_intfs.c
++++ b/os_dep/linux/os_intfs.c
+@@ -676,6 +676,18 @@
+ 	/* alloc netdev name */
+ 	rtw_init_netdev_name(ndev, name);
+ 
++#if defined(CONFIG_RTL8832BR) && defined(CONFIG_WLAN0_RFE_TYPE_50)
++	/* Failed early efuse reads must never publish an all-zero BSSID.
++	 * Preserve any valid factory/user address. Temporary fallback only;
++	 * generating a MAC does not replace RF/efuse initialization.
++	 */
++	if (!is_valid_ether_addr(adapter_mac_addr(adapter))) {
++		eth_random_addr(adapter_mac_addr(adapter));
++		dev_warn(dvobj_to_dev(dvobj),
++			 "WR1500: invalid adapter MAC, temporary local address %pM\n",
++			 adapter_mac_addr(adapter));
++	}
++#endif
+ 	eth_hw_addr_set(ndev, adapter_mac_addr(adapter));
+ 
+ 	/* Tell the network stack we exist */
