@@ -62,7 +62,7 @@
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.48-cudy-r76-dsa"
+#define DRV_VERSION			"1.8.49-r76-oem-tx-lifetime"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -3921,9 +3921,9 @@ static void rtl8197f_rtk_program_tx_ring_geometry(struct rtl8197f_rtknet_priv *p
 			   RTL_RTK_DMA_CR4_TX_RING0_TAIL_AWARE);
 
 	if (priv->sdk_swcore_init) {
-		if (mw5) {
+		if (mw5 || rtl8197f_rtk_is_r76()) {
 			txringcr = rtl8197f_rtk_read(priv, RTL_RTK_TXRINGCR);
-			/* The MW5 uses the OEM single-TX-ring path: DMA_CR1 only
+			/* MW5 and R76 allocate only TX ring 0: DMA_CR1 only
 			 * describes ring 0 and only CPUTPDCR0 is programmed.  Do not
 			 * leave ring 1 enabled without a base/length pair.
 			 */
@@ -3946,7 +3946,7 @@ static void rtl8197f_rtk_program_tx_ring_geometry(struct rtl8197f_rtknet_priv *p
 	actual_dma_cr1 = rtl8197f_rtk_read(priv, RTL_RTK_DMA_CR1);
 	txringcr = rtl8197f_rtk_read(priv, RTL_RTK_TXRINGCR);
 	if (actual_base != tx_base || actual_dma_cr1 != expected_dma_cr1 ||
-	    (mw5 && ((txringcr & (RTL_RTK_TXRINGCR_TX_RING0_EN |
+	    ((mw5 || rtl8197f_rtk_is_r76()) && ((txringcr & (RTL_RTK_TXRINGCR_TX_RING0_EN |
 				  RTL_RTK_TXRINGCR_TX_RING1_EN |
 				  RTL_RTK_TXRINGCR_TX_RING2_EN |
 				  RTL_RTK_TXRINGCR_TX_RING3_EN)) !=
@@ -4830,6 +4830,7 @@ static unsigned int rtl8197f_rtk_tx_clean(struct rtl8197f_rtknet_priv *priv)
 {
 	struct net_device *ndev = priv->ndev;
 	bool mw5 = priv->is_mw5;
+	bool r76 = !mw5 && rtl8197f_rtk_is_r76();
 	unsigned int done = 0, completed_pkts = 0, completed_bytes = 0;
 	unsigned long flags;
 	u32 hw_idx = 0;
@@ -4850,14 +4851,16 @@ static unsigned int rtl8197f_rtk_tx_clean(struct rtl8197f_rtknet_priv *priv)
 	 * unmapped/freed an OWNed descriptor.  OEM symbols also expose a dedicated
 	 * New_check_tx_done_desc_swCore_own() completion check.
 	 *
-	 * Therefore MW5 reclamation is fail-closed: tx_head is the Linux/OEM
+	 * R76 OEM captures also show CDP-based completion with 32-byte slots.
+	 * Apply the same lifetime checks to R76 without changing MW5 behavior.
+	 * Therefore MW5/R76 reclamation is fail-closed: tx_head is the Linux/OEM
 	 * txCurrIdx equivalent, tx_tail is the software txDoneIdx equivalent, and
 	 * CPUTPDCR0 is the hardware CDP. A descriptor before CDP is only eligible
 	 * for inspection; dma_unmap()/skb free happens after hardware also clears
 	 * OWN. CDP/OWN disagreement leaves txDoneIdx unchanged, so start_xmit()
 	 * cannot reuse the slot. No reclaim_lag or time-based guess is permitted.
 	 */
-	if (mw5) {
+	if (mw5 || r76) {
 		u32 pending, completed;
 
 		cdp_valid = rtl8197f_rtk_tx_cdp_index(priv, &hw_idx);
@@ -4935,7 +4938,7 @@ static unsigned int rtl8197f_rtk_tx_clean(struct rtl8197f_rtknet_priv *priv)
 				priv->mw5_tx_own_defer_streak = 0;
 			}
 		} else {
-			/* Non-MW5 boards retain the legacy OWN-only cleanup path. */
+			/* Other boards retain their existing OWN-only cleanup path. */
 			if (opts1 & RTL_RTK_DESC_OWN)
 				break;
 		}
@@ -4967,7 +4970,7 @@ static unsigned int rtl8197f_rtk_tx_clean(struct rtl8197f_rtknet_priv *priv)
 		 * hardware-updated slot untouched until start_xmit() reuses it.  This
 		 * also avoids writes into a cache line shared with the next descriptor.
 		 */
-		if (!mw5) {
+		if (!mw5 && !r76) {
 			desc->addr = 0;
 			desc->opts2 = 0;
 			desc->opts3 = 0;
@@ -9676,6 +9679,13 @@ static int rtl8197f_rtk_rd05_proc_show(struct seq_file *m, void *v)
 		   (unsigned long long)priv->mw5_tx_completion_mismatch,
 		   priv->mw5_tx_own_defer_streak,
 		   (unsigned long long)priv->mw5_tx_own_defer_max);
+	if (!priv->is_mw5 && rtl8197f_rtk_is_r76())
+		seq_printf(m, "r76_tx_cdp guard=1 ring0_only=1 invalid=%llu invalid_defer=%llu own_defer=%llu completed=%llu\n",
+			   (unsigned long long)priv->mw5_tx_cdp_invalid,
+			   (unsigned long long)priv->mw5_tx_cdp_invalid_defer,
+			   (unsigned long long)priv->mw5_tx_own_defer,
+			   (unsigned long long)priv->mw5_tx_own_completed);
+
 	if (priv->is_mw5 && priv->tx_desc && priv->tx_ring_size) {
 		u32 cdp = rtl8197f_rtk_read(priv, RTL_RTK_CPUTPDCR0);
 		u32 hw_idx = 0;
