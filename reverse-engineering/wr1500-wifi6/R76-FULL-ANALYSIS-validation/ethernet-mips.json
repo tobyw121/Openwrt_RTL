@@ -1,0 +1,71 @@
+{
+  "status": "PASS",
+  "kernel_sha256": "7d7e41a50d6659b5c84c524205bcca25306e2e98a5949c61032810ff84fd003e",
+  "unicorn_version": "2.0.1",
+  "cpu_model": "MIPS32 24Kc",
+  "method": "Host C compared with original MIPS machine code in Unicorn; synthetic RAM and stubbed kernel services",
+  "counts": {
+    "tx_descriptor_original_mips": 1024,
+    "tx_ring_full_original_mips": 1024,
+    "rx_preprocess_original_mips": 512,
+    "rx_not_empty_original_mips": 768,
+    "tx_completion_original_mips": 256,
+    "cdp_guard_cases": 7
+  },
+  "total_cases": 3591,
+  "tx_example": {
+    "input": {
+      "dma_address": 2155937792,
+      "payload_length": 0,
+      "vlan_id": 16892,
+      "port_mask": 65535,
+      "nic_flags": 64,
+      "ethernet_type": 34525,
+      "vlan_tag_mask": 235,
+      "vlan_priority": 14,
+      "passthrough_enabled": 0,
+      "skb_passthrough_flag": 0,
+      "priority_override_enabled": 0,
+      "skb_vlan_priority": 5
+    },
+    "descriptor_words": [
+      "0x100d",
+      "0x80810000",
+      "0x20002b",
+      "0x18001fc",
+      "0x7f000000",
+      "0x0",
+      "0x0",
+      "0x0"
+    ],
+    "events": [
+      [
+        "cache_writeback",
+        2156920832,
+        32
+      ],
+      [
+        "sync",
+        2152900872
+      ],
+      [
+        "own_published",
+        2693791744,
+        4109
+      ],
+      [
+        "cpuicr_write",
+        3087073280,
+        176160768
+      ]
+    ]
+  },
+  "not_verified": [
+    "Actual DMA/cache coherence",
+    "PHY/switch behavior",
+    "Kernel driver integration",
+    "Concurrent interrupt races",
+    "Wireless datapath",
+    "Real packet delivery"
+  ]
+}

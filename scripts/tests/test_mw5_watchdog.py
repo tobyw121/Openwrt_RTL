@@ -43,6 +43,7 @@ class EthernetWatchdogTests(unittest.TestCase):
 #include <stddef.h>
 #include <string.h>
 #include <limits.h>
+static bool rtl8197f_rtk_is_r76(void) { return false; }
 typedef uint32_t u32;
 typedef uint64_t u64;
 #define READ_ONCE(x) (x)

@@ -1,0 +1,83 @@
+{
+  "source_url": "https://drive.google.com/file/d/1_Et71Xe9PTZ5mRxyCkkKtsLUwFHv5eGF/view",
+  "archive_sha256": "8004ef029ced5afe41ba79e750dd0fa35c265b35be2b6f7ef764cc0b10a84bc3",
+  "kernel_sha256": "7d7e41a50d6659b5c84c524205bcca25306e2e98a5949c61032810ff84fd003e",
+  "classification": "user-supplied reconstruction and OEM instruction evidence; not original C unless individually stated",
+  "files": [
+    {
+      "path": "NOTICE.md",
+      "sha256": "7fb7fa60a49aa81510c20b8e5ad714e8af96be6d3a6c6c842a0cee34a785d25f",
+      "bytes": 1418
+    },
+    {
+      "path": "ethernet/ETHERNET_ANALYSE.md",
+      "sha256": "66913ed98bb587a9fbb2616feddb646a7a865e35c1b4ce52d43d78277456c479",
+      "bytes": 18872
+    },
+    {
+      "path": "ethernet/r76_desc_reference.c",
+      "sha256": "e15eb0844948440ad5b80c574b98a928634cdb06ae02e1b1b53be1726132583a",
+      "bytes": 5637
+    },
+    {
+      "path": "ethernet/r76_desc_reference.h",
+      "sha256": "672686dae91d7fa8caf27e7dc28a8137aa51a0dadccfe9f0f06c98af22763ea8",
+      "bytes": 3353
+    },
+    {
+      "path": "ethernet/hotcode_functions.tsv",
+      "sha256": "e3c953219995f618f440da3ed58eac4bbe32e63f1d8816a8ebe3a915ab8f86ff",
+      "bytes": 1736
+    },
+    {
+      "path": "ethernet/ethernet_evidence.json",
+      "sha256": "daefe6f05226546f7bf3e53114b2d3fd425d394a24ca7d72e40a1d4dac6fced7",
+      "bytes": 11359
+    },
+    {
+      "path": "ethernet/disassembly/_New_swNic_send.asm",
+      "sha256": "5ffad07d5b9d88dd4e6e21a8143c79fc0397a766019ee0df1823c6dc3ddeb2d8",
+      "bytes": 8679
+    },
+    {
+      "path": "ethernet/disassembly/New_swNic_txDone.asm",
+      "sha256": "363aa933206e7158e6f8b6a4a28924e7eef6224826471d175e2438313ea63049",
+      "bytes": 3356
+    },
+    {
+      "path": "ethernet/disassembly/New_swNic_receive.asm",
+      "sha256": "7c741cfd5ece17cbe8e668d2e6be2b00e7282ceabf3052f556be448614b99402",
+      "bytes": 10322
+    },
+    {
+      "path": "switch/SWITCH_ANALYSE.md",
+      "sha256": "417444808ce5cb23dd71ca8b8895bb26c6d75ea66103f27b646b7cc9785b2684",
+      "bytes": 15896
+    },
+    {
+      "path": "switch/rtl8367d_reconstructed.c",
+      "sha256": "556b76a4e9489f8ddf96a200a3585e73c1d4c050a9efcc8f4d28b111a2f0bafd",
+      "bytes": 5298
+    },
+    {
+      "path": "switch/rtl8367d_reconstructed.h",
+      "sha256": "5ea96851f8912f856d06b97139b4611712ee5be17b2a76cf5d34570984a5740c",
+      "bytes": 1758
+    },
+    {
+      "path": "wlan/WLAN_ANALYSE.md",
+      "sha256": "6c4b9c5bbc1397852401122d376056c2b5445194099b015e25f159697200806a",
+      "bytes": 14200
+    },
+    {
+      "path": "wlan/reconstructed_c/cudy_wlan_recovered.c",
+      "sha256": "03efa9af8c8e1af0d0b9a5efafd9efd65ffd6a784ad52126e42aec67af38c792",
+      "bytes": 4987
+    },
+    {
+      "path": "wlan/reconstructed_c/cudy_wlan_recovered.h",
+      "sha256": "85bd3e85740e471d5c8706dc1c596a5457415036a2652dd45f2cb71f6686a6cb",
+      "bytes": 2118
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+From: OpenWrt RTL maintainers
+Subject: [PATCH] wifi: compute 8192XB descriptor checksum using unaligned LE access
+
+Preserve the OEM XOR/length semantics, including the DW4 field on short
+command descriptors. Avoid native u16/u32 loads on possibly unaligned buffers
+on MIPS. This package only builds the Linux RTL8832BR PCI path.
+
+--- a/phl/hal_g6/mac/mac_ax/mac_8192xb/trx_desc_8192xb.c
++++ b/phl/hal_g6/mac/mac_ax/mac_8192xb/trx_desc_8192xb.c
+@@ -14,6 +14,9 @@
+  ******************************************************************************/
+ 
+ #include "trx_desc_8192xb.h"
++#ifdef PLATFORM_LINUX
++#include <asm/unaligned.h>
++#endif
+ #if MAC_AX_8192XB_SUPPORT
+ 
+ #define RXD_RPKT_TYPE_INVALID	0xFF
+@@ -631,7 +634,7 @@
+ {
+ 	u16 chksum = 0;
+ 	u32 wddesc_size;
+-	u16 *data;
++	u8 *data;
+ 	u32 i, dw4;
+ 
+ 	if (!wddesc) {
+@@ -642,21 +645,21 @@
+ 	if (adapter->hw_info->wd_checksum_en != 1)
+ 		PLTFM_MSG_TRACE("[TRACE]chksum disable\n");
+ 
+-	dw4 = ((struct wd_body_t_v1 *)wddesc)->dword4;
+-
+-	((struct wd_body_t_v1 *)wddesc)->dword4 =
+-		SET_CLR_WORD(dw4, 0x0, AX_TXD_TXDESC_CHECKSUM);
+-
+-	data = (u16 *)(wddesc);
++	dw4 = get_unaligned_le32(wddesc + 16);
++
++	/* OEM checksum field is the low halfword of DW4. */
++	put_unaligned_le32(dw4 & 0xffff0000U, wddesc + 16);
++
++	data = wddesc;
+ 	/*unit : 4 bytes*/
+ 	wddesc_size = mac_txdesc_len_8192xb(adapter, info) >> 2;
+ 	for (i = 0; i < wddesc_size; i++)
+-		chksum ^= (*(data + 2 * i) ^ *(data + (2 * i + 1)));
++		chksum ^= get_unaligned_le16(data + 4 * i) ^
++			  get_unaligned_le16(data + 4 * i + 2);
+ 
+ 	/* *(data + 2 * i) & *(data + (2 * i + 1) have endain issue*/
+ 	/* Process eniadn issue after checksum calculation */
+-	((struct wd_body_t_v1 *)wddesc)->dword4 =
+-		SET_CLR_WORD(dw4, (u16)(chksum), AX_TXD_TXDESC_CHECKSUM);
++	put_unaligned_le32((dw4 & 0xffff0000U) | chksum, wddesc + 16);
+ 	return MACSUCCESS;
+ }
+ 

@@ -1,0 +1,11 @@
+address	size	name	confidence	proof
+0x8052a234	0xb8	New_rtl8651_rxPktPreprocess	high	Reads RX DVLANID at DW4 bits16..27, source-port bits13..15; extport CPU bit and magic VLAN 0xa530/0xa533 match GPL function
+0x8052a2ec	0x7c	rx_desc_not_empty	high	Reads CPURPDCR ring, subtracts New_rxDescRing_base, shift5, then OWN via KSEG1 if software index equals CDP index; matches GPL
+0x8052a368	0x3a0	New_swNic_receive	high	Uses New_rxDescRing[0]/New_currRxPkthdrDescIndex[0], checks checksum, allocates replacement skb, RX field decode and OWN publish; called by RX IRAM path
+0x8052a708	0x310	_New_swNic_send	high	Four args; full ring check, 32-byte descriptor, payload length+4, cache writeback, sync then uncached OWN then CPUICR TXFD; exact GPL compiled branch
+0x8052aa18	0x40	New_swNic_send	high	Disables IRQ, calls _New_swNic_send 0x8052a708 and restores IRQ state
+0x8052aa58	0x138	New_swNic_txDone	high	Reads CPUTPDCR table, subtracts New_txDescRing_base, shift5; frees SKBs until done index reaches captured CDP, no OWN test
+0x8052ab90	0xe4	New_swNic_freeTxRing	high	Loops four New_txDescRingCnt/tx_skb arrays and frees all nonnull SKBs; called by New_swNic_reInit 0x80262e88
+0x805288c0	0x8f8	re865x_start_xmit	high	net_device_ops function pointer at 0x8054d528, next to re865x_open/close; re865x_probe sets ops=0x8054d518 at 0x80659878..7c. Exact GPL body; calls NEW send and completion.
+0x805291b8	0xf54	interrupt_dsr_rx	high	re865x_open 0x8024be24 lui a1,0x8053; 0x8024bf4c addiu a1,-0x6e48; tasklet_init at 0x8024bf54. Direct New_swNic_receive call at 0x8052922c.
+0x805283f8	0x74	interrupt_dsr_tx	high	re865x_open loads 0x805283f8 and passes it to tasklet_init at 0x8024bf68; directly calls New_swNic_txDone at 0x80528400.

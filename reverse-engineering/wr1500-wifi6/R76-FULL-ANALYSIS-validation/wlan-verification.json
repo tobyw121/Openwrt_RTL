@@ -1,0 +1,18 @@
+{
+  "method": "Differential comparison against original MIPS32r2 machine code under Unicorn 24Kc. Original ELF relocation applied for checksum-to-length call. No radio hardware execution.",
+  "unicorn_package_version": "2.0.1.post1",
+  "rtl8192cd_sha256": "fb7192c9d84542eb948b50e605dfe986732a4cc63d958912640d991cdacc3c7f",
+  "rtk_wifi6_sha256": "b17226990e0f07e6efc3c04cdf0ea786aa9b301f314ecb777130be99139e3afb",
+  "txdesc_length_cases": 1000,
+  "wd_checksum_cases": 1000,
+  "rx_field_cases": 1000,
+  "all_passed": true,
+  "not_tested": [
+    "WLAN firmware execution",
+    "MMIO behavior",
+    "DMA/cache coherency",
+    "interrupt handling",
+    "RF transmission",
+    "Linux kernel ABI"
+  ]
+}

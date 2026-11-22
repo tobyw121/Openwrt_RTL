@@ -1,0 +1,356 @@
+{
+  "kernel_sha256": "7d7e41a50d6659b5c84c524205bcca25306e2e98a5949c61032810ff84fd003e",
+  "base_address": "0x80000000",
+  "descriptor_stride": 32,
+  "tx_counts": {
+    "address": "0x8063369c",
+    "values": [
+      768,
+      2,
+      2,
+      2
+    ]
+  },
+  "rx_counts": {
+    "address": "0x806336ac",
+    "values": [
+      900,
+      2,
+      2,
+      2,
+      2,
+      2
+    ]
+  },
+  "cluster_size": {
+    "value": 1700,
+    "instruction_address": "0x8024bdd8"
+  },
+  "tx_cdp_registers": {
+    "address": "0x8054d930",
+    "values": [
+      "0xb8010020",
+      "0xb8010024",
+      "0xb8010060",
+      "0xb8010064"
+    ]
+  },
+  "rx_cdp_registers": [
+    "0xb8010004",
+    "0xb8010008",
+    "0xb801000c",
+    "0xb8010010",
+    "0xb8010014",
+    "0xb8010018"
+  ],
+  "ext_port_map": {
+    "address": "0x8054d940",
+    "values": [
+      5,
+      6,
+      7,
+      5,
+      8,
+      5,
+      5,
+      5
+    ]
+  },
+  "netif_defaults": [
+    {
+      "address": "0x806335e8",
+      "name": "br-lan",
+      "is_wan": 0,
+      "interface_type": 1,
+      "vlan_id": 1,
+      "fid": 0,
+      "member_mask": "0x10b",
+      "untag_mask": "0x10b",
+      "mtu": 1500,
+      "is_slave": 0,
+      "note": "Compiled defaults; MAC placeholder omitted; runtime may change values"
+    },
+    {
+      "address": "0x80633614",
+      "name": "eth1",
+      "is_wan": 1,
+      "interface_type": 1,
+      "vlan_id": 2,
+      "fid": 0,
+      "member_mask": "0x4",
+      "untag_mask": "0x4",
+      "mtu": 1500,
+      "is_slave": 0,
+      "note": "Compiled defaults; MAC placeholder omitted; runtime may change values"
+    },
+    {
+      "address": "0x80633640",
+      "name": "pppoe-wan",
+      "is_wan": 1,
+      "interface_type": 2,
+      "vlan_id": 2,
+      "fid": 0,
+      "member_mask": "0x4",
+      "untag_mask": "0x4",
+      "mtu": 1500,
+      "is_slave": 1,
+      "note": "Compiled defaults; MAC placeholder omitted; runtime may change values"
+    }
+  ],
+  "globals": [
+    {
+      "address": "0x80683818",
+      "word_count": 6,
+      "name": "New_rxDescRing_base",
+      "provenance": "inferred from machine accesses and supplied GPL; BSS values unavailable in static flash"
+    },
+    {
+      "address": "0x80683830",
+      "word_count": 4,
+      "name": "New_txDescRing_base",
+      "provenance": "inferred from machine accesses and supplied GPL; BSS values unavailable in static flash"
+    },
+    {
+      "address": "0x80683840",
+      "word_count": 4,
+      "name": "New_txPktDoneDescIndex",
+      "provenance": "inferred from machine accesses and supplied GPL; BSS values unavailable in static flash"
+    },
+    {
+      "address": "0x80683850",
+      "word_count": 4,
+      "name": "New_currTxPkthdrDescIndex",
+      "provenance": "inferred from machine accesses and supplied GPL; BSS values unavailable in static flash"
+    },
+    {
+      "address": "0x80683860",
+      "word_count": 4,
+      "name": "New_txDescRing",
+      "provenance": "inferred from machine accesses and supplied GPL; BSS values unavailable in static flash"
+    },
+    {
+      "address": "0x80683870",
+      "word_count": 4,
+      "name": "New_txDescRingCnt",
+      "provenance": "inferred from machine accesses and supplied GPL; BSS values unavailable in static flash"
+    },
+    {
+      "address": "0x80683880",
+      "word_count": 6,
+      "name": "New_currRxPkthdrDescIndex",
+      "provenance": "inferred from machine accesses and supplied GPL; BSS values unavailable in static flash"
+    },
+    {
+      "address": "0x80683898",
+      "word_count": 6,
+      "name": "New_rxDescRing",
+      "provenance": "inferred from machine accesses and supplied GPL; BSS values unavailable in static flash"
+    },
+    {
+      "address": "0x806838b0",
+      "word_count": 6,
+      "name": "New_rxDescRingCnt",
+      "provenance": "inferred from machine accesses and supplied GPL; BSS values unavailable in static flash"
+    },
+    {
+      "address": "0x806838c8",
+      "word_count": 4,
+      "name": "tx_skb",
+      "provenance": "inferred from machine accesses and supplied GPL; BSS values unavailable in static flash"
+    },
+    {
+      "address": "0x806838d8",
+      "word_count": 6,
+      "name": "rx_skb",
+      "provenance": "inferred from machine accesses and supplied GPL; BSS values unavailable in static flash"
+    },
+    {
+      "address": "0x806811bc",
+      "word_count": 1,
+      "name": "size_of_cluster",
+      "provenance": "inferred from machine accesses and supplied GPL; BSS values unavailable in static flash"
+    },
+    {
+      "address": "0x80672644",
+      "word_count": 1,
+      "name": "_dma_cache_inv",
+      "provenance": "inferred from machine accesses and supplied GPL; BSS values unavailable in static flash"
+    },
+    {
+      "address": "0x80672648",
+      "word_count": 1,
+      "name": "_dma_cache_wback",
+      "provenance": "inferred from machine accesses and supplied GPL; BSS values unavailable in static flash"
+    },
+    {
+      "address": "0x8067264c",
+      "word_count": 1,
+      "name": "_dma_cache_wback_inv",
+      "provenance": "inferred from machine accesses and supplied GPL; BSS values unavailable in static flash"
+    }
+  ],
+  "functions": [
+    {
+      "address": "0x8052a234",
+      "size": "0xb8",
+      "name": "New_rtl8651_rxPktPreprocess",
+      "confidence": "high",
+      "proof": "Reads RX DVLANID at DW4 bits16..27, source-port bits13..15; extport CPU bit and magic VLAN 0xa530/0xa533 match GPL function",
+      "sha256": "1917a58422fa9b93954c2089d003bb2f743ea96a3c3a82bda6f9953187ef1240"
+    },
+    {
+      "address": "0x8052a2ec",
+      "size": "0x7c",
+      "name": "rx_desc_not_empty",
+      "confidence": "high",
+      "proof": "Reads CPURPDCR ring, subtracts New_rxDescRing_base, shift5, then OWN via KSEG1 if software index equals CDP index; matches GPL",
+      "sha256": "46ef678d18d139007681f71aaac749eaf2b65f36cbd0bc83035dc3f25fad699b"
+    },
+    {
+      "address": "0x8052a368",
+      "size": "0x3a0",
+      "name": "New_swNic_receive",
+      "confidence": "high",
+      "proof": "Uses New_rxDescRing[0]/New_currRxPkthdrDescIndex[0], checks checksum, allocates replacement skb, RX field decode and OWN publish; called by RX IRAM path",
+      "sha256": "243d2ca488c6864c534141cd6b5f0e32edbff79bcc8324018e76a1cd85e183fe"
+    },
+    {
+      "address": "0x8052a708",
+      "size": "0x310",
+      "name": "_New_swNic_send",
+      "confidence": "high",
+      "proof": "Four args; full ring check, 32-byte descriptor, payload length+4, cache writeback, sync then uncached OWN then CPUICR TXFD; exact GPL compiled branch",
+      "sha256": "2f8b0397ed540d330525b8a491901d60c7934e9496754693f253b2a5e218c49d"
+    },
+    {
+      "address": "0x8052aa18",
+      "size": "0x40",
+      "name": "New_swNic_send",
+      "confidence": "high",
+      "proof": "Disables IRQ, calls _New_swNic_send 0x8052a708 and restores IRQ state",
+      "sha256": "a04a5f2fbff4767baca9162d227259c51335105e6f05f8166e8d3d2c91259b90"
+    },
+    {
+      "address": "0x8052aa58",
+      "size": "0x138",
+      "name": "New_swNic_txDone",
+      "confidence": "high",
+      "proof": "Reads CPUTPDCR table, subtracts New_txDescRing_base, shift5; frees SKBs until done index reaches captured CDP, no OWN test",
+      "sha256": "ca732912758d2c4417681b0c050fb3e871714e3f87198521f48132a2014ba1e8"
+    },
+    {
+      "address": "0x8052ab90",
+      "size": "0xe4",
+      "name": "New_swNic_freeTxRing",
+      "confidence": "high",
+      "proof": "Loops four New_txDescRingCnt/tx_skb arrays and frees all nonnull SKBs; called by New_swNic_reInit 0x80262e88",
+      "sha256": "80f886f4caeecb3627e0cc7671124cd5273bff78af95d06dbde6ffcfb47943be"
+    },
+    {
+      "address": "0x805288c0",
+      "size": "0x8f8",
+      "name": "re865x_start_xmit",
+      "confidence": "high",
+      "proof": "net_device_ops function pointer at 0x8054d528, next to re865x_open/close; re865x_probe sets ops=0x8054d518 at 0x80659878..7c. Exact GPL body; calls NEW send and completion.",
+      "sha256": "0c09d11028e52c2c12c054770ad98e489182865a4681e9b7a5cc749be429ecd6"
+    },
+    {
+      "address": "0x805291b8",
+      "size": "0xf54",
+      "name": "interrupt_dsr_rx",
+      "confidence": "high",
+      "proof": "re865x_open 0x8024be24 lui a1,0x8053; 0x8024bf4c addiu a1,-0x6e48; tasklet_init at 0x8024bf54. Direct New_swNic_receive call at 0x8052922c.",
+      "sha256": "e7c195d3db81176e4100afa1701c46b8e713762f751c4e0faff76f570d2c8c9d"
+    },
+    {
+      "address": "0x805283f8",
+      "size": "0x74",
+      "name": "interrupt_dsr_tx",
+      "confidence": "high",
+      "proof": "re865x_open loads 0x805283f8 and passes it to tasklet_init at 0x8024bf68; directly calls New_swNic_txDone at 0x80528400.",
+      "sha256": "3feea38f7ce11da23e4b9a511cd7e15864502b3f35515111aa01f7cf73c58d05"
+    },
+    {
+      "address": "0x80262558",
+      "size": "0x64c",
+      "name": "New_swNic_init",
+      "confidence": "original_symbol",
+      "proof": "Recovered kallsyms plus caller",
+      "sha256": "eeb6012c1c38d7cf2166ea43531332181a7603c2b465ddae4489c1dc19c69965"
+    },
+    {
+      "address": "0x80245750",
+      "size": "0x2c4",
+      "name": "swNic_send_LEGACY",
+      "confidence": "original_symbol",
+      "proof": "Legacy pkthdr/mbuf path, not active ndo_start_xmit path",
+      "sha256": "dcbb9479eb2859268fcc8e6d6c1b36aec20aa26ca64b3a3b2a10a4eb6e4c56d1"
+    },
+    {
+      "address": "0x80245a14",
+      "size": "0x160",
+      "name": "swNic_txDone_LEGACY",
+      "confidence": "original_symbol",
+      "proof": "Legacy separate OWN-pointer ring",
+      "sha256": "bfe4793b541895cb64208d379897fa183b11c4a3d06eda3d20994f49169a8271"
+    },
+    {
+      "address": "0x8024bbf8",
+      "size": "0x410",
+      "name": "re865x_open_INITIALIZATION_EXCERPT",
+      "confidence": "original_symbol_excerpt",
+      "proof": "Includes NEW init args and RX/TX tasklet registration",
+      "sha256": "c402c6fe44092ec52f5ebb90b64e1f119bab856d388129c56d56ac23ccc6ca56"
+    },
+    {
+      "address": "0x80659780",
+      "size": "0x120",
+      "name": "re865x_probe_NETDEV_OPS_EXCERPT",
+      "confidence": "original_symbol_excerpt",
+      "proof": "Loads 0x8054d518 and installs netdev ops pointer",
+      "sha256": "e8c52070e8916b321c1ee9cf2b6ef5856e2085b83e048500fa802d0ed944f138"
+    }
+  ],
+  "callgraph": [
+    {
+      "address": "0x8065987c",
+      "relationship": "re865x_probe installs net_device_ops 0x8054d518"
+    },
+    {
+      "address": "0x8054d528",
+      "relationship": "ndo_start_xmit pointer = re865x_start_xmit 0x805288c0"
+    },
+    {
+      "address": "0x8024bde0",
+      "relationship": "re865x_open -> New_swNic_init"
+    },
+    {
+      "address": "0x8024bf54",
+      "relationship": "tasklet_init callback = interrupt_dsr_rx 0x805291b8"
+    },
+    {
+      "address": "0x8024bf68",
+      "relationship": "tasklet_init callback = interrupt_dsr_tx 0x805283f8"
+    },
+    {
+      "address": "0x80528cf0",
+      "relationship": "re865x_start_xmit -> New_swNic_send"
+    },
+    {
+      "address": "0x80528cd0",
+      "relationship": "re865x_start_xmit -> New_swNic_txDone on retry"
+    },
+    {
+      "address": "0x80528400",
+      "relationship": "interrupt_dsr_tx -> New_swNic_txDone"
+    },
+    {
+      "address": "0x8052922c",
+      "relationship": "interrupt_dsr_rx -> New_swNic_receive"
+    },
+    {
+      "address": "0x8052aa2c",
+      "relationship": "New_swNic_send -> _New_swNic_send"
+    }
+  ]
+}

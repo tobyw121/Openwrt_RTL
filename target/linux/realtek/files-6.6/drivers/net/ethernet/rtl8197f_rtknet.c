@@ -62,7 +62,7 @@
 #include <net/page_pool/helpers.h>
 
 #define DRV_NAME			"rtl8197f-rtknet"
-#define DRV_VERSION			"1.8.49-r76-oem-tx-lifetime"
+#define DRV_VERSION			"1.8.50-r76-oem-verified"
 #define MW5_ACCEL_SW_HASH_BITS		8
 #define MW5_ACCEL_SW_HASH_SIZE		(1U << MW5_ACCEL_SW_HASH_BITS)
 
@@ -2121,6 +2121,16 @@ static bool rtl8197f_rtk_tx_cdp_index_value(struct rtl8197f_rtknet_priv *priv,
 	u32 span = priv->tx_ring_size * priv->desc_stride;
 	u32 offset;
 
+	/* The reconstructed R76 NEW path uses 32-byte slots; its checked
+	 * reference normalizes KSEG0/KSEG1 aliases before validating the index.
+	 * Do not alter the existing MW5/RD05 address policy.
+	 */
+	if (!priv->is_mw5 && rtl8197f_rtk_is_r76()) {
+		if (!priv->tx_ring_size || !priv->desc_stride)
+			return false;
+		base &= 0x1fffffff;
+		cdp &= 0x1fffffff;
+	}
 	if (cdp < base || cdp >= base + span)
 		return false;
 	offset = cdp - base;
@@ -5803,6 +5813,45 @@ static void rtl8197f_rtk_iball_rx_vlan(struct rtl8197f_rtknet_priv *priv,
 	__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q), vid);
 }
 
+static bool rtl8197f_rtk_r76_rx_desc_stable(struct rtl8197f_rtknet_priv *priv,
+					struct rtl8197f_rtk_desc *desc,
+					u32 *opts1, u32 *opts2)
+{
+	u32 first[6], second[6];
+	unsigned int retry;
+
+	/* The verified NEW RX metadata spans six DWORDs. Do not route a torn
+	 * address/length/source/VLAN snapshot. Additional bounded protection;
+	 * no copying of OEM checksum-drop or extension-forwarding policies.
+	 */
+	for (retry = 0; retry < 4; retry++) {
+		dma_rmb();
+		first[0] = le32_to_cpu(READ_ONCE(desc->opts1));
+		first[1] = le32_to_cpu(READ_ONCE(desc->addr));
+		first[2] = le32_to_cpu(READ_ONCE(desc->opts2));
+		first[3] = le32_to_cpu(READ_ONCE(desc->opts3));
+		first[4] = le32_to_cpu(READ_ONCE(desc->opts4));
+		first[5] = le32_to_cpu(READ_ONCE(desc->opts5));
+		dma_rmb();
+		second[0] = le32_to_cpu(READ_ONCE(desc->opts1));
+		second[1] = le32_to_cpu(READ_ONCE(desc->addr));
+		second[2] = le32_to_cpu(READ_ONCE(desc->opts2));
+		second[3] = le32_to_cpu(READ_ONCE(desc->opts3));
+		second[4] = le32_to_cpu(READ_ONCE(desc->opts4));
+		second[5] = le32_to_cpu(READ_ONCE(desc->opts5));
+		if (!(second[0] & RTL_RTK_DESC_OWN) &&
+		    !memcmp(first, second, sizeof(first))) {
+			*opts1 = second[0];
+			*opts2 = second[2];
+			return true;
+		}
+		priv->rx_desc_stable_retry++;
+		udelay(1);
+	}
+	priv->rx_desc_unstable++;
+	return false;
+}
+
 static bool rtl8197f_rtk_mw5_rx_desc_stable(struct rtl8197f_rtknet_priv *priv,
 					       struct rtl8197f_rtk_desc *desc,
 					       u32 *opts1, u32 *opts2)
@@ -5998,7 +6047,9 @@ static int rtl8197f_rtk_rx_poll(struct rtl8197f_rtknet_priv *priv, int budget)
 		/* Re-read the entire completion, not OWN alone. If hardware is still
 		 * publishing metadata, leave the descriptor untouched and retry on the
 		 * next NAPI/watchdog pass. */
-		if (!rtl8197f_rtk_mw5_rx_desc_stable(priv, desc, &opts1, &opts2)) {
+		if ((!priv->is_mw5 && rtl8197f_rtk_is_r76()) ?
+		    !rtl8197f_rtk_r76_rx_desc_stable(priv, desc, &opts1, &opts2) :
+		    !rtl8197f_rtk_mw5_rx_desc_stable(priv, desc, &opts1, &opts2)) {
 			priv->mw5_rx_own_wait++;
 			break;
 		}
